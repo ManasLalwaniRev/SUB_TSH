@@ -382,6 +382,7 @@ export default function MainTable() {
             const apiData = await response.json();
 
             const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
+                timesheetId: item.lineNo,
                 id: item.timesheetId || item.lineNo || `item-${index}`,
                 "Date": formatDate(item.createdAt),
                 "Employee ID": item.resource_Id || "",
@@ -430,7 +431,7 @@ export default function MainTable() {
         }
 
         const requestBody = validTimesheets.map(row => ({
-            requestType: "Notification",
+            requestType: "TIMESHEET",
             // --- MODIFICATION --- Changed requesterId to 3 as requested.
             requesterId: 3,
             timesheetId: row.timesheetId,
@@ -576,7 +577,12 @@ export default function MainTable() {
 
     return (
         <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
-            {isCreateModalOpen && <TimesheetLine onClose={() => setIsCreateModalOpen(false)} />}
+            {isCreateModalOpen && 
+    <TimesheetLine 
+        onClose={() => setIsCreateModalOpen(false)} 
+        resourceId={currentUser?.username} // <-- Pass the resourceId as a prop
+    />
+}
 
             <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
                 <div className="w-full flex flex-col items-center">

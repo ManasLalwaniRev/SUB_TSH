@@ -2124,11 +2124,16 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import TimesheetDetailModal from "./TimesheetDetailModal";
 
-const showToast = (message, type = 'info') => {
-  const bgColor = type === 'success' ? '#4ade80'
-    : type === 'error' ? '#ef4444'
-      : type === 'warning' ? '#f59e0b' : '#3b82f6';
-  const toast = document.createElement('div');
+const showToast = (message, type = "info") => {
+  const bgColor =
+    type === "success"
+      ? "#4ade80"
+      : type === "error"
+      ? "#ef4444"
+      : type === "warning"
+      ? "#f59e0b"
+      : "#3b82f6";
+  const toast = document.createElement("div");
   toast.textContent = message;
   toast.style.cssText = `
     position: fixed; top: 20px; right: 20px; z-index: 9999;
@@ -2137,9 +2142,10 @@ const showToast = (message, type = 'info') => {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;
   `;
   document.body.appendChild(toast);
-  const displayTime = message.includes('import') || message.includes('Import') ? 4000 : 1000;
+  const displayTime =
+    message.includes("import") || message.includes("Import") ? 4000 : 1000;
   setTimeout(() => {
-    toast.style.opacity = '0';
+    toast.style.opacity = "0";
     setTimeout(() => document.body.removeChild(toast), 300);
   }, displayTime);
 };
@@ -2147,75 +2153,113 @@ const showToast = (message, type = 'info') => {
 const getUserIPAddress = async () => {
   try {
     const endpoints = [
-      'https://api.ipify.org?format=json',
-      'https://ipapi.co/json/',
-      'https://httpbin.org/ip'
+      "https://api.ipify.org?format=json",
+      "https://ipapi.co/json/",
+      "https://httpbin.org/ip",
     ];
     for (const url of endpoints) {
       try {
         const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
-          return data.ip || data.origin || '';
+          return data.ip || data.origin || "";
         }
-      } catch { }
+      } catch {}
     }
-    return '';
+    return "";
   } catch {
-    return '';
+    return "";
   }
 };
 
 // Updated columns without Info field
 const columnsAdmin = [
-  "All", "Status", "Date", "Employee ID", "Name", 
-  "Project ID", "PLC", "Pay Type", "RLSE Number", "PO Number", "PO Line Number", "Hours"
+  "All",
+  "Status",
+  "Date",
+  "Employee ID",
+  "Name",
+  "Project ID",
+  "PLC",
+  "Pay Type",
+  "RLSE Number",
+  "PO Number",
+  "PO Line Number",
+  "Hours",
 ];
 
-const ReasonModal = ({ isOpen, action, selectedCount, onConfirm, onCancel }) => {
-  const [reason, setReason] = useState('');
-  useEffect(() => { if (isOpen) setReason(''); }, [isOpen]);
+const ReasonModal = ({
+  isOpen,
+  action,
+  selectedCount,
+  onConfirm,
+  onCancel,
+}) => {
+  const [reason, setReason] = useState("");
+  useEffect(() => {
+    if (isOpen) setReason("");
+  }, [isOpen]);
   if (!isOpen) return null;
-  const handleConfirm = () => reason.trim() ? onConfirm(reason.trim()) : showToast('Please provide a reason.', 'warning');
-  const handleKeyPress = e => {
-    if (e.key === 'Enter' && e.ctrlKey) handleConfirm();
-    else if (e.key === 'Escape') onCancel();
+  const handleConfirm = () =>
+    reason.trim()
+      ? onConfirm(reason.trim())
+      : showToast("Please provide a reason.", "warning");
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && e.ctrlKey) handleConfirm();
+    else if (e.key === "Escape") onCancel();
   };
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onCancel}>
-      <div className="bg-white rounded-lg p-6 w-96 max-w-90vw shadow-xl" onClick={e => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-lg p-6 w-96 max-w-90vw shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            {action === 'approve' ? 'Approve' : 'Reject'} Timesheets
+            {action === "approve" ? "Approve" : "Reject"} Timesheets
           </h3>
           <p className="text-sm text-gray-600">
-            You are about to {action} {selectedCount} timesheet{selectedCount > 1 ? 's' : ''}. Please provide a reason:
+            You are about to {action} {selectedCount} timesheet
+            {selectedCount > 1 ? "s" : ""}. Please provide a reason:
           </p>
         </div>
         <div className="mb-4">
           <textarea
             value={reason}
-            onChange={e => setReason(e.target.value)}
+            onChange={(e) => setReason(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={`Enter reason for ${action === 'approve' ? 'approving' : 'rejecting'} these timesheets...`}
+            placeholder={`Enter reason for ${
+              action === "approve" ? "approving" : "rejecting"
+            } these timesheets...`}
             className="w-full h-24 p-3 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             maxLength={500}
             autoFocus
           />
           <div className="text-xs text-gray-500 mt-1">
-            {reason.length}/500 characters • Press Ctrl+Enter to confirm • Esc to cancel
+            {reason.length}/500 characters • Press Ctrl+Enter to confirm • Esc
+            to cancel
           </div>
         </div>
         <div className="flex justify-end gap-3">
-          <button onClick={onCancel} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">Cancel</button>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
           <button
             onClick={handleConfirm}
             disabled={!reason.trim()}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+              action === "approve"
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-red-600 hover:bg-red-700"
             }`}
           >
-            {action === 'approve' ? 'Approve' : 'Reject'}
+            {action === "approve" ? "Approve" : "Reject"}
           </button>
         </div>
       </div>
@@ -2235,10 +2279,10 @@ export default function Approval() {
   const [unifiedSelectAll, setUnifiedSelectAll] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
-  const [searchDate, setSearchDate] = useState('');
-  const [searchEmployeeId, setSearchEmployeeId] = useState('');
-  const [searchEmployeeName, setSearchEmployeeName] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [searchDate, setSearchDate] = useState("");
+  const [searchEmployeeId, setSearchEmployeeId] = useState("");
+  const [searchEmployeeName, setSearchEmployeeName] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const fileInputRef = useRef(null);
 
   // Add ref for current selected row to track background color
@@ -2249,23 +2293,23 @@ export default function Approval() {
 
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
-  const [userIpAddress, setUserIpAddress] = useState('');
+  const [userIpAddress, setUserIpAddress] = useState("");
 
-  // const isAdmin = currentUser?.role === "Admin";
+  // const isAdmin = currentUser?.role === "admin";
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
- 
+
   const columns = columnsAdmin;
   const colWidth = 120;
   const minTableWidth = columns.length * colWidth;
 
   // Format date to MM/DD/YYYY with leading zeros
   const formatDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       const year = date.getFullYear();
       return `${month}/${day}/${year}`;
     } catch {
@@ -2274,7 +2318,7 @@ export default function Approval() {
   };
 
   const formatHours = (hours) => {
-    if (!hours && hours !== 0) return '';
+    if (!hours && hours !== 0) return "";
     const numHours = parseFloat(hours);
     if (isNaN(numHours)) return hours;
     return numHours.toFixed(2);
@@ -2282,215 +2326,404 @@ export default function Approval() {
 
   // Convert date to YYYY-MM-DD for HTML date input
   const formatDateForDateInput = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
     } catch {
-      return '';
+      return "";
     }
   };
 
   // Convert YYYY-MM-DD from date input to MM/DD/YYYY for display and comparison
   const formatDateFromInput = (inputDate) => {
-    if (!inputDate) return '';
+    if (!inputDate) return "";
     try {
-      const date = new Date(inputDate + 'T00:00:00');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const date = new Date(inputDate + "T00:00:00");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       const year = date.getFullYear();
       return `${month}/${day}/${year}`;
     } catch {
-      return '';
+      return "";
     }
   };
 
-  
+  // const getSortedRows = (rowsToSort) => {
+  //   let sorted = [...rowsToSort];
+
+  //   if (sortConfig.key) {
+  //     sorted.sort((a, b) => {
+  //       let aVal, bVal;
+
+  //       if (sortConfig.key === 'Date') {
+  //         aVal = new Date(a.originalDate || a["Date"]);
+  //         bVal = new Date(b.originalDate || b["Date"]);
+  //         if (isNaN(aVal.getTime())) aVal = new Date(0);
+  //         if (isNaN(bVal.getTime())) bVal = new Date(0);
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       } else if (sortConfig.key === 'Employee ID') {
+  //         aVal = String(a["Employee ID"] || '').toLowerCase();
+  //         bVal = String(b["Employee ID"] || '').toLowerCase();
+  //       } else if (sortConfig.key === 'Name') {
+  //         aVal = String(a["Name"] || '').toLowerCase();
+  //         bVal = String(b["Name"] || '').toLowerCase();
+  //       } else if (sortConfig.key === 'Status') {
+  //         const getStatusPriority = (status) => {
+  //           const statusUpper = String(status || 'PENDING').toUpperCase();
+  //           switch (statusUpper) {
+  //             case 'OPEN': return 1;
+  //             case 'PENDING': return 2;
+  //             case 'APPROVED': return 3;
+  //             case 'REJECTED': return 4;
+  //             default: return 5;
+  //           }
+  //         };
+
+  //         aVal = getStatusPriority(a["Status"]);
+  //         bVal = getStatusPriority(b["Status"]);
+
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       }
+
+  //       if (sortConfig.key === 'Employee ID' || sortConfig.key === 'Name') {
+  //         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+  //         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+  //         return 0;
+  //       }
+
+  //       return 0;
+  //     });
+  //   } else {
+  //     // Default sorting when no sort is applied - FIXED: Show newest first
+  //     sorted.sort((a, b) => {
+  //       let aDate = new Date(a.originalDate || a["Date"]);
+  //       let bDate = new Date(b.originalDate || b["Date"]);
+  //       if (isNaN(aDate.getTime())) aDate = new Date(0);
+  //       if (isNaN(bDate.getTime())) bDate = new Date(0);
+  //       if (aDate.getTime() !== bDate.getTime()) {
+  //         return bDate.getTime() - aDate.getTime(); // ← FIXED: newest first
+  //       }
+  //       const aEmpId = String(a["Employee ID"] || '').toLowerCase();
+  //       const bEmpId = String(b["Employee ID"] || '').toLowerCase();
+  //       return aEmpId.localeCompare(bEmpId);
+  //     });
+  //   }
+
+  //   return sorted;
+  // };
+
+  //   const getSortedRows = (rowsToSort) => {
+  //   let sorted = [...rowsToSort];
+
+  //   if (sortConfig.key) {
+  //     sorted.sort((a, b) => {
+  //       let aVal, bVal;
+
+  //       if (sortConfig.key === 'Date') {
+  //         aVal = new Date(a.originalDate || a["Date"]);
+  //         bVal = new Date(b.originalDate || b["Date"]);
+  //         if (isNaN(aVal.getTime())) aVal = new Date(0);
+  //         if (isNaN(bVal.getTime())) bVal = new Date(0);
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       } else if (sortConfig.key === 'Line No') {
+  //         aVal = parseInt(a.lineNo) || 0;
+  //         bVal = parseInt(b.lineNo) || 0;
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       } else if (sortConfig.key === 'Employee ID') {
+  //         aVal = String(a["Employee ID"] || '').toLowerCase();
+  //         bVal = String(b["Employee ID"] || '').toLowerCase();
+  //       } else if (sortConfig.key === 'Name') {
+  //         aVal = String(a["Name"] || '').toLowerCase();
+  //         bVal = String(b["Name"] || '').toLowerCase();
+  //       } else if (sortConfig.key === 'Status') {
+  //         const getStatusPriority = (status) => {
+  //           const statusUpper = String(status || 'PENDING').toUpperCase();
+  //           switch (statusUpper) {
+  //             case 'OPEN': return 1;
+  //             case 'PENDING': return 2;
+  //             case 'APPROVED': return 3;
+  //             case 'REJECTED': return 4;
+  //             default: return 5;
+  //           }
+  //         };
+
+  //         aVal = getStatusPriority(a["Status"]);
+  //         bVal = getStatusPriority(b["Status"]);
+
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       }
+
+  //       if (sortConfig.key === 'Employee ID' || sortConfig.key === 'Name') {
+  //         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+  //         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+  //         return 0;
+  //       }
+
+  //       return 0;
+  //     });
+  //   } else {
+  //     // Default sorting - FIXED: Sort by lineNo first for proper sequence
+  //     sorted.sort((a, b) => {
+  //       // Primary sort: by lineNo (ascending for proper sequence 1,2,3...)
+  //       const aLineNo = parseInt(a.lineNo) || 0;
+  //       const bLineNo = parseInt(b.lineNo) || 0;
+  //       if (aLineNo !== bLineNo) {
+  //         return aLineNo - bLineNo; // ← FIXED: lineNo ascending
+  //       }
+
+  //       // Secondary sort: by date (newest first for same lineNo)
+  //       let aDate = new Date(a.originalDate || a["Date"]);
+  //       let bDate = new Date(b.originalDate || b["Date"]);
+  //       if (isNaN(aDate.getTime())) aDate = new Date(0);
+  //       if (isNaN(bDate.getTime())) bDate = new Date(0);
+  //       if (aDate.getTime() !== bDate.getTime()) {
+  //         return bDate.getTime() - aDate.getTime();
+  //       }
+
+  //       // Tertiary sort: by Employee ID
+  //       const aEmpId = String(a["Employee ID"] || '').toLowerCase();
+  //       const bEmpId = String(b["Employee ID"] || '').toLowerCase();
+  //       return aEmpId.localeCompare(bEmpId);
+  //     });
+  //   }
+
+  //   return sorted;
+  // };
+
   const getSortedRows = (rowsToSort) => {
-  let sorted = [...rowsToSort];
-  
-  if (sortConfig.key) {
-    sorted.sort((a, b) => {
-      let aVal, bVal;
-      
-      if (sortConfig.key === 'Date') {
-        aVal = new Date(a.originalDate || a["Date"]);
-        bVal = new Date(b.originalDate || b["Date"]);
-        if (isNaN(aVal.getTime())) aVal = new Date(0);
-        if (isNaN(bVal.getTime())) bVal = new Date(0);
-        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-      } else if (sortConfig.key === 'Line No') {
-        aVal = parseInt(a.lineNo) || 0;
-        bVal = parseInt(b.lineNo) || 0;
-        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-      } else if (sortConfig.key === 'Employee ID') {
-        aVal = String(a["Employee ID"] || '').toLowerCase();
-        bVal = String(b["Employee ID"] || '').toLowerCase();
-      } else if (sortConfig.key === 'Name') {
-        aVal = String(a["Name"] || '').toLowerCase();
-        bVal = String(b["Name"] || '').toLowerCase();
-      } else if (sortConfig.key === 'Status') {
-        const getStatusPriority = (status) => {
-          const statusUpper = String(status || 'PENDING').toUpperCase();
-          switch (statusUpper) {
-            case 'OPEN': return 1;
-            case 'PENDING': return 2;
-            case 'APPROVED': return 3;
-            case 'REJECTED': return 4;
-            default: return 5;
+    let sorted = [...rowsToSort];
+
+    if (sortConfig.key) {
+      sorted.sort((a, b) => {
+        let aVal, bVal;
+
+        // Handle different column types
+        if (sortConfig.key === "Date") {
+          aVal = new Date(a.originalDate || a["Date"]);
+          bVal = new Date(b.originalDate || b["Date"]);
+          if (isNaN(aVal.getTime())) aVal = new Date(0);
+          if (isNaN(bVal.getTime())) bVal = new Date(0);
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (sortConfig.key === "Hours") {
+          aVal = parseFloat(a["Hours"]) || 0;
+          bVal = parseFloat(b["Hours"]) || 0;
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (
+          [
+            "Employee ID",
+            "Project ID",
+            "PO Number",
+            "PO Line Number",
+            "RLSE Number",
+          ].includes(sortConfig.key)
+        ) {
+          // Numeric sorting for ID fields
+          aVal = parseInt(a[sortConfig.key]) || 0;
+          bVal = parseInt(b[sortConfig.key]) || 0;
+          if (aVal === bVal) {
+            // If numeric values are equal, fall back to string comparison
+            aVal = String(a[sortConfig.key] || "").toLowerCase();
+            bVal = String(b[sortConfig.key] || "").toLowerCase();
+            if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+            return 0;
           }
-        };
-        
-        aVal = getStatusPriority(a["Status"]);
-        bVal = getStatusPriority(b["Status"]);
-        
-        return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-      }
-      
-      if (sortConfig.key === 'Employee ID' || sortConfig.key === 'Name') {
-        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      }
-      
-      return 0;
-    });
-  } else {
-    // Default sorting - FIXED: Sort by lineNo first for proper sequence
-    sorted.sort((a, b) => {
-      // Primary sort: by lineNo (ascending for proper sequence 1,2,3...)
-      const aLineNo = parseInt(a.lineNo) || 0;
-      const bLineNo = parseInt(b.lineNo) || 0;
-      if (aLineNo !== bLineNo) {
-        return aLineNo - bLineNo; // ← FIXED: lineNo ascending
-      }
-      
-      // Secondary sort: by date (newest first for same lineNo)
-      let aDate = new Date(a.originalDate || a["Date"]);
-      let bDate = new Date(b.originalDate || b["Date"]);
-      if (isNaN(aDate.getTime())) aDate = new Date(0);
-      if (isNaN(bDate.getTime())) bDate = new Date(0);
-      if (aDate.getTime() !== bDate.getTime()) {
-        return bDate.getTime() - aDate.getTime();
-      }
-      
-      // Tertiary sort: by Employee ID
-      const aEmpId = String(a["Employee ID"] || '').toLowerCase();
-      const bEmpId = String(b["Employee ID"] || '').toLowerCase();
-      return aEmpId.localeCompare(bEmpId);
-    });
-  }
-  
-  return sorted;
-};
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (sortConfig.key === "Status") {
+          const getStatusPriority = (status) => {
+            const statusUpper = String(status || "PENDING").toUpperCase();
+            switch (statusUpper) {
+              case "OPEN":
+                return 1;
+              case "PENDING":
+                return 2;
+              case "APPROVED":
+                return 3;
+              case "REJECTED":
+                return 4;
+              default:
+                return 5;
+            }
+          };
+
+          aVal = getStatusPriority(a["Status"]);
+          bVal = getStatusPriority(b["Status"]);
+
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else {
+          // String sorting for all other columns
+          aVal = String(a[sortConfig.key] || "").toLowerCase();
+          bVal = String(b[sortConfig.key] || "").toLowerCase();
+          if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+          if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+          return 0;
+        }
+      });
+    } else {
+      // Default sorting - Sort by lineNo first for proper sequence
+      sorted.sort((a, b) => {
+        // Primary sort: by lineNo (ascending for proper sequence 1,2,3...)
+        const aLineNo = parseInt(a.lineNo) || 0;
+        const bLineNo = parseInt(b.lineNo) || 0;
+        if (aLineNo !== bLineNo) {
+          return aLineNo - bLineNo; // lineNo ascending
+        }
+
+        // Secondary sort: by date (newest first for same lineNo)
+        let aDate = new Date(a.originalDate || a["Date"]);
+        let bDate = new Date(b.originalDate || b["Date"]);
+        if (isNaN(aDate.getTime())) aDate = new Date(0);
+        if (isNaN(bDate.getTime())) bDate = new Date(0);
+        if (aDate.getTime() !== bDate.getTime()) {
+          return bDate.getTime() - aDate.getTime();
+        }
+
+        // Tertiary sort: by Employee ID
+        const aEmpId = String(a["Employee ID"] || "").toLowerCase();
+        const bEmpId = String(b["Employee ID"] || "").toLowerCase();
+        return aEmpId.localeCompare(bEmpId);
+      });
+    }
+
+    return sorted;
+  };
+
+  // const handleSort = (key) => {
+  //   if (!['Date', 'Employee ID', 'Name', 'Status'].includes(key)) return;
+
+  //   let direction = 'asc';
+  //   if (sortConfig.key === key && sortConfig.direction === 'asc') {
+  //     direction = 'desc';
+  //   }
+  //   setSortConfig({ key, direction });
+  // };
 
   const handleSort = (key) => {
-    if (!['Date', 'Employee ID', 'Name', 'Status'].includes(key)) return;
-    
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    if (key === "All") return; // Skip checkbox column
+
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
 
+  // const getSortIcon = (columnKey) => {
+  //   if (!['Date', 'Employee ID', 'Name', 'Status'].includes(columnKey)) return null;
+
+  //   if (sortConfig.key === columnKey) {
+  //     return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  //   }
+  //   return ' ⇅';
+  // };
+
   const getSortIcon = (columnKey) => {
-    if (!['Date', 'Employee ID', 'Name', 'Status'].includes(columnKey)) return null;
-    
+    if (columnKey === "All") return null; // Skip checkbox column
+
     if (sortConfig.key === columnKey) {
-      return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+      return sortConfig.direction === "asc" ? " ↑" : " ↓";
     }
-    return ' ⇅';
+    return " ⇅";
   };
 
   const getStatusStyle = (status) => {
     const statusUpper = status?.toUpperCase() || "PENDING";
-    
+
     switch (statusUpper) {
-      case 'OPEN':
+      case "OPEN":
         return {
-          backgroundColor: '#dbeafe',
-          color: '#2563eb',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
-      case 'APPROVED':
+      case "APPROVED":
         return {
-          backgroundColor: '#dcfce7',
-          color: '#16a34a',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
-      case 'REJECTED':
+      case "REJECTED":
         return {
-          backgroundColor: '#fce7f3',
-          color: '#ec4899',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#fce7f3",
+          color: "#ec4899",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
-      case 'PENDING':
+      case "PENDING":
         return {
-          backgroundColor: '#fef9c3',
-          color: '#ca8a04',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#fef9c3",
+          color: "#ca8a04",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
-      case 'NOTIFIED':
+      case "NOTIFIED":
         return {
-          backgroundColor: '#dbeafe',
-          color: '#2563eb',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
-      case 'UN-NOTIFIED':
-      case 'UNNOTIFIED':
+      case "UN-NOTIFIED":
+      case "UNNOTIFIED":
         return {
-          backgroundColor: '#dcfce7',
-          color: '#16a34a',
-          fontWeight: '600',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
       default:
         return {
-          backgroundColor: '#f3f4f6',
-          color: '#6b7280',
-          fontWeight: '500',
-          padding: '4px 8px',
-          fontSize: '11px',
-          display: 'inline-block'
+          backgroundColor: "#f3f4f6",
+          color: "#6b7280",
+          fontWeight: "500",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
         };
     }
   };
 
-  const isRowActionable = row => (row.status === 'pending' || row.status === 'open' || row.status === 'un-notified') && !row.isApproved && !row.isRejected;
+  const isRowActionable = (row) =>
+    (row.status === "pending" ||
+      row.status === "open" ||
+      row.status === "un-notified" ||
+  row.status === "submitted") &&
+
+    !row.isApproved &&
+    !row.isRejected;
 
   // Function to scroll to bottom where TimesheetDetailModal appears
   const scrollToTimesheetDetail = () => {
     setTimeout(() => {
-      const timesheetDetailElement = document.querySelector('[data-timesheet-detail]');
+      const timesheetDetailElement = document.querySelector(
+        "[data-timesheet-detail]"
+      );
       if (timesheetDetailElement) {
-        timesheetDetailElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        timesheetDetailElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
       } else {
         // Fallback: scroll to bottom of page
-        window.scrollTo({ 
-          top: document.body.scrollHeight, 
-          behavior: 'smooth' 
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth",
         });
       }
     }, 100);
@@ -2510,17 +2743,21 @@ export default function Approval() {
   };
 
   useEffect(() => {
-    getUserIPAddress().then(ip => setUserIpAddress(ip || ''));
+    getUserIPAddress().then((ip) => setUserIpAddress(ip || ""));
   }, []);
 
   useEffect(() => {
-    const userInfo = localStorage.getItem('currentUser');
+    const userInfo = localStorage.getItem("currentUser");
     if (userInfo) {
       try {
         const parsedUser = JSON.parse(userInfo);
         if (!parsedUser.username) {
-          parsedUser.username = parsedUser.id === "john" ? "john.doe" :
-            parsedUser.id === "jane" ? "jane.smith" : parsedUser.id;
+          parsedUser.username =
+            parsedUser.id === "john"
+              ? "john.doe"
+              : parsedUser.id === "jane"
+              ? "jane.smith"
+              : parsedUser.id;
         }
         setCurrentUser(parsedUser);
         setUserLoaded(true);
@@ -2542,82 +2779,190 @@ export default function Approval() {
   }, []);
 
   useEffect(() => {
-    if (userLoaded && currentUser && currentUser.username && isAdmin) fetchData();
+    if (userLoaded && currentUser && currentUser.username && isAdmin)
+      fetchData();
   }, [userLoaded, currentUser, isAdmin]);
 
+  // const fetchData = async () => {
+  //   if (!userLoaded || !currentUser || !currentUser.username || !isAdmin)
+  //     return;
+  //   try {
+  //     setLoading(true);
+  //     // Updated API endpoint
+  //     const apiUrl = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
+
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+  //     if (!response.ok)
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     const apiData = await response.json();
+
+  //     // const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
+  //     //   id: item.timesheetId || item.id || `fallback-${index}`,
+  //     //   requestId: item.requestId || item.id,
+  //     //   levelNo: item.levelNo || 1,
+  //     //   selected: false,
+  //     //   notifySelected: false,
+  //     //   isApproved: item.approvalStatus === 'APPROVED' || false,
+  //     //   isRejected: item.approvalStatus === 'REJECTED' || false,
+  //     //   isNotified: item.approvalStatus === 'NOTIFIED' || false,
+  //     //   status: item.status?.toLowerCase() || 'un-notified',
+  //     //   originalDate: item.createdAt,                           // ← UPDATED
+  //     //   "Date": formatDate(item.createdAt),                     // ← UPDATED
+  //     //   // Updated field mappings per requirements
+  //     //   "Employee ID": item.resource_Id || "",
+  //     //   "Name": item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
+  //     //   "Project ID": item.projId || "",                        // ← UPDATED
+  //     //   "Account": item.accountId || "",
+  //     //   "Org": item.organizationId || "",
+  //     //   "PLC": item.plc || "",                                  // ← UPDATED
+  //     //   "Pay Type": item.payType || "",
+  //     //   "RLSE Number": item.rlseNumber || "",
+  //     //   "Hours": formatHours(item.hours),
+  //     //   "PO Number": item.poNumber || "",
+  //     //   "PO Line Number": item.poLineNumber || "",
+  //     //   "Status": item.status || "Un-Notified",
+  //     //   "Comment": item.comment || "",
+  //     //   isNotified: ((item.status || "").toLowerCase() === "notified"),
+  //     // })) : [];
+
+  //     const mappedData = Array.isArray(apiData)
+  //       ? apiData.map((item, index) => ({
+  //           id: item.timesheetId || item.id || `fallback-${index}`,
+
+  //           requestId: item.requestId || item.id,
+  //           levelNo: item.levelNo || 1,
+  //           lineNo: item.lineNo || item.timesheetId || item.id, // ← ADD THIS LINE
+  //           selected: false,
+  //           notifySelected: false,
+  //           isApproved: item.approvalStatus === "APPROVED" || false,
+  //           isRejected: item.approvalStatus === "REJECTED" || false,
+  //           isNotified: item.approvalStatus === "NOTIFIED" || false,
+  //           status: item.status?.toLowerCase() || "un-notified",
+  //           originalDate: item.createdAt,
+  //           Date: formatDate(item.createdAt),
+  //           "Employee ID": item.resource_Id || "",
+  //           Name:
+  //             item.displayedName ||
+  //             item.employeeName ||
+  //             `Employee ${item.resource_Id}` ||
+  //             "",
+  //           "Project ID": item.projId || "",
+  //           Account: item.accountId || "",
+  //           Org: item.organizationId || "",
+  //           PLC: item.plc || "",
+  //           "Pay Type": item.payType || "",
+  //           "RLSE Number": item.rlseNumber || "",
+  //           Hours: formatHours(item.hours),
+  //           "PO Number": item.poNumber || "",
+  //           "PO Line Number": item.poLineNumber || "",
+  //           Status: item.status || "Un-Notified",
+  //           Comment: item.comment || "",
+  //           isNotified: (item.status || "").toLowerCase() === "notified",
+  //         }))
+  //       : [];
+
+  //     setRows(mappedData);
+  //   } catch (error) {
+  //     setRows([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  
   const fetchData = async () => {
-    if (!userLoaded || !currentUser || !currentUser.username || !isAdmin) return;
-    try {
-      setLoading(true);
-      // Updated API endpoint
-      const apiUrl = "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet";
-      
-      const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const apiData = await response.json();
+  if (!userLoaded || !currentUser || !currentUser.username )
+    return;
+  try {
+    setLoading(true);
+    
+    // Use the username from login response as resourceId (e.g., "9030668")
+    const resourceId = currentUser.username;
+    
+    // Updated API endpoint to use pending approvals by resource
+    const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (!response.ok)
+      throw new Error(`HTTP error! status: ${response.status}`);
+    const apiData = await response.json();
 
-      const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
-  id: item.timesheetId || item.id || `fallback-${index}`,
-  requestId: item.requestId || item.id,
-  levelNo: item.levelNo || 1,
-  lineNo: item.lineNo || item.timesheetId || item.id, // ← ADD THIS LINE
-  selected: false,
-  notifySelected: false,
-  isApproved: item.approvalStatus === 'APPROVED' || false,
-  isRejected: item.approvalStatus === 'REJECTED' || false,
-  isNotified: item.approvalStatus === 'NOTIFIED' || false,
-  status: item.status?.toLowerCase() || 'un-notified',
-  originalDate: item.createdAt,
-  "Date": formatDate(item.createdAt),
-  "Employee ID": item.resource_Id || "",
-  "Name": item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
-  "Project ID": item.projId || "",
-  "Account": item.accountId || "",
-  "Org": item.organizationId || "",
-  "PLC": item.plc || "",
-  "Pay Type": item.payType || "",
-  "RLSE Number": item.rlseNumber || "",
-  "Hours": formatHours(item.hours),
-  "PO Number": item.poNumber || "",
-  "PO Line Number": item.poLineNumber || "",
-  "Status": item.status || "Un-Notified",
-  "Comment": item.comment || "",
-  isNotified: ((item.status || "").toLowerCase() === "notified"),
-})) : [];
+    // Rest of your existing mapping code remains exactly the same
+    const mappedData = Array.isArray(apiData)
+      ? apiData.map((item, index) => ({
+          id: item.timesheetId || item.id || `fallback-${index}`,
+          requestId: item.requestId || item.id,
+          levelNo: item.levelNo || 1,
+          lineNo: item.lineNo || item.timesheetId || item.id,
+          selected: false,
+          notifySelected: false,
+          isApproved: item.approvalStatus === "APPROVED" || false,
+          isRejected: item.approvalStatus === "REJECTED" || false,
+          isNotified: item.approvalStatus === "NOTIFIED" || false,
+          status: item.status?.toLowerCase() || "un-notified",
+          originalDate: item.createdAt,
+          Date: formatDate(item.createdAt),
+          "Employee ID": item.resource_Id || "",
+          Name: item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
+          "Project ID": item.projId || "",
+          Account: item.accountId || "",
+          Org: item.organizationId || "",
+          PLC: item.plc || "",
+          "Pay Type": item.payType || "",
+          "RLSE Number": item.rlseNumber || "",
+          Hours: formatHours(item.hours),
+          "PO Number": item.poNumber || "",
+          "PO Line Number": item.poLineNumber || "",
+          approverUserId: item.approverUserId,
+          Status: item.status || "Un-Notified",
+          Comment: item.comment || "",
+          isNotified: (item.status || "").toLowerCase() === "notified",
+        }))
+      : [];
 
-      setRows(mappedData);
-    } catch (error) {
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setRows(mappedData);
+  } catch (error) {
+    console.error('Error fetching approval data:', error);
+    setRows([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getFilteredRows = () => {
     let filtered = rows;
     if (!Array.isArray(filtered)) return [];
-    
+
     if (searchDate) {
       const searchDateFormatted = formatDateFromInput(searchDate);
-      filtered = filtered.filter(row => {
+      filtered = filtered.filter((row) => {
         const rowDate = row["Date"];
         return rowDate === searchDateFormatted;
       });
     }
 
     if (searchEmployeeId.trim()) {
-      filtered = filtered.filter(row => 
-        (row["Employee ID"] || "").toLowerCase().includes(searchEmployeeId.trim().toLowerCase())
+      filtered = filtered.filter((row) =>
+        (row["Employee ID"] || "")
+          .toLowerCase()
+          .includes(searchEmployeeId.trim().toLowerCase())
       );
     }
-    
+
     if (searchEmployeeName.trim()) {
-      filtered = filtered.filter(row => 
-        (row["Name"] || "").toLowerCase().includes(searchEmployeeName.trim().toLowerCase())
+      filtered = filtered.filter((row) =>
+        (row["Name"] || "")
+          .toLowerCase()
+          .includes(searchEmployeeName.trim().toLowerCase())
       );
     }
-    
+
     return getSortedRows(filtered);
   };
 
@@ -2625,19 +2970,29 @@ export default function Approval() {
 
   // MOVED THIS useEffect AFTER filteredRows definition to fix the error
   useEffect(() => {
-    const actionableRows = filteredRows.filter(row => isRowActionable(row));
-    const notifiableRows = filteredRows.filter(row => 
-      !row.isNotified && row.status !== 'notified' && row["Status"] !== 'NOTIFIED'
+    const actionableRows = filteredRows.filter((row) => isRowActionable(row));
+    const notifiableRows = filteredRows.filter(
+      (row) =>
+        !row.isNotified &&
+        row.status !== "notified" &&
+        row["Status"] !== "NOTIFIED"
     );
-    
-    const allActionableSelected = actionableRows.length > 0 && actionableRows.every(row => row.selected);
-    const allNotifiableSelected = notifiableRows.length > 0 && notifiableRows.every(row => row.notifySelected);
-    
-    setUnifiedSelectAll(allActionableSelected && allNotifiableSelected && (actionableRows.length > 0 || notifiableRows.length > 0));
+
+    const allActionableSelected =
+      actionableRows.length > 0 && actionableRows.every((row) => row.selected);
+    const allNotifiableSelected =
+      notifiableRows.length > 0 &&
+      notifiableRows.every((row) => row.notifySelected);
+
+    setUnifiedSelectAll(
+      allActionableSelected &&
+        allNotifiableSelected &&
+        (actionableRows.length > 0 || notifiableRows.length > 0)
+    );
   }, [selectedRows, selectedNotifyRows, filteredRows]);
 
   const handleLogout = () => {
-    localStorage.removeItem('currentUser');
+    localStorage.removeItem("currentUser");
     setCurrentUser(null);
     setUserLoaded(false);
     showToast("Logged out successfully", "info");
@@ -2647,23 +3002,28 @@ export default function Approval() {
   // Unified select all handler
   const handleUnifiedSelectAll = (isSelected) => {
     setUnifiedSelectAll(isSelected);
-    
+
     const updatedRows = [...rows];
-    const actionableRows = filteredRows.filter(row => isRowActionable(row));
-    const notifiableRows = filteredRows.filter(row => 
-      !row.isNotified && row.status !== 'notified' && row["Status"] !== 'NOTIFIED'
+    const actionableRows = filteredRows.filter((row) => isRowActionable(row));
+    const notifiableRows = filteredRows.filter(
+      (row) =>
+        !row.isNotified &&
+        row.status !== "notified" &&
+        row["Status"] !== "NOTIFIED"
     );
 
     // Update select states
-    actionableRows.forEach(filteredRow => {
-      const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
-      if (actualRowIndex !== -1) updatedRows[actualRowIndex].selected = isSelected;
+    actionableRows.forEach((filteredRow) => {
+      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+      if (actualRowIndex !== -1)
+        updatedRows[actualRowIndex].selected = isSelected;
     });
 
-    // Update notify states  
-    notifiableRows.forEach(filteredRow => {
-      const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
-      if (actualRowIndex !== -1) updatedRows[actualRowIndex].notifySelected = isSelected;
+    // Update notify states
+    notifiableRows.forEach((filteredRow) => {
+      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+      if (actualRowIndex !== -1)
+        updatedRows[actualRowIndex].notifySelected = isSelected;
     });
 
     setRows(updatedRows);
@@ -2677,36 +3037,44 @@ export default function Approval() {
   const handleUnifiedRowSelect = (rowIndex, isSelected) => {
     const rowData = filteredRows[rowIndex];
     const updatedRows = [...rows];
-    const actualRowIndex = rows.findIndex(row => row.id === filteredRows[rowIndex].id);
-    
+    const actualRowIndex = rows.findIndex(
+      (row) => row.id === filteredRows[rowIndex].id
+    );
+
     // Update both selected and notifySelected if applicable
     if (isRowActionable(rowData)) {
       updatedRows[actualRowIndex].selected = isSelected;
       handleRowSelectUpdate(rowData, isSelected);
     }
-    
-    if (!rowData.isNotified && rowData.status !== 'notified' && rowData["Status"] !== 'NOTIFIED') {
+
+    if (
+      !rowData.isNotified &&
+      rowData.status !== "notified" &&
+      rowData["Status"] !== "NOTIFIED"
+    ) {
       updatedRows[actualRowIndex].notifySelected = isSelected;
       handleNotifyRowSelectUpdate(rowData, isSelected);
     }
-    
+
     setRows(updatedRows);
   };
 
   const handleRowSelectUpdate = (rowData, isSelected) => {
     if (isSelected) {
-      setSelectedRows(prev => [...prev, rowData]);
+      setSelectedRows((prev) => [...prev, rowData]);
     } else {
-      setSelectedRows(prev => prev.filter(item => item.id !== rowData.id));
+      setSelectedRows((prev) => prev.filter((item) => item.id !== rowData.id));
       setSelectAll(false);
     }
   };
 
   const handleNotifyRowSelectUpdate = (rowData, isSelected) => {
     if (isSelected) {
-      setSelectedNotifyRows(prev => [...prev, rowData]);
+      setSelectedNotifyRows((prev) => [...prev, rowData]);
     } else {
-      setSelectedNotifyRows(prev => prev.filter(item => item.id !== rowData.id));
+      setSelectedNotifyRows((prev) =>
+        prev.filter((item) => item.id !== rowData.id)
+      );
       setNotifySelectAll(false);
     }
   };
@@ -2715,63 +3083,74 @@ export default function Approval() {
     e.preventDefault();
     e.stopPropagation();
     if (actionLoading) return;
-    
+
     if (selectedNotifyRows.length === 0) {
-      showToast('Please select at least one timesheet to notify.', "warning");
+      showToast("Please select at least one timesheet to notify.", "warning");
       return;
     }
     try {
       setActionLoading(true);
-      const requestBody = selectedNotifyRows.map(row => ({
+      const requestBody = selectedNotifyRows.map((row) => ({
         requestType: "TIMESHEET",
         requesterId: 1,
         timesheetId: row.id,
         ProjectId: row["Project ID"],
-        requestData: `Notification for timesheet ${row.id}`
+        requestData: `Notification for timesheet ${row.id}`,
       }));
-      const response = await fetch('https://timesheet-latest.onrender.com/api/Approval/BulkNotify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      });
+      const response = await fetch(
+        "https://timesheet-subk.onrender.com/api/Approval/BulkNotify",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        }
+      );
       if (response.ok) {
-        showToast(`Notifications sent for ${selectedNotifyRows.length} timesheets successfully!`, "success");
-        const notifiedIds = selectedNotifyRows.map(row => row.id);
-        setRows(prevRows => prevRows.map(row => 
-          notifiedIds.includes(row.id) 
-            ? { 
-                ...row, 
-                status: "notified", 
-                "Status": "NOTIFIED", 
-                isNotified: true, 
-                notifySelected: false 
-              }
-            : row
-        ));
+        showToast(
+          `Notifications sent for ${selectedNotifyRows.length} timesheets successfully!`,
+          "success"
+        );
+        const notifiedIds = selectedNotifyRows.map((row) => row.id);
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            notifiedIds.includes(row.id)
+              ? {
+                  ...row,
+                  status: "notified",
+                  Status: "NOTIFIED",
+                  isNotified: true,
+                  notifySelected: false,
+                }
+              : row
+          )
+        );
         setSelectedNotifyRows([]);
         setNotifySelectAll(false);
-        
+
         // Refresh data after 2 seconds
         setTimeout(() => {
           fetchData();
         }, 2000);
       } else {
-        showToast('Failed to send notifications. Please try again.', "error");
+        showToast("Failed to send notifications. Please try again.", "error");
       }
     } catch (error) {
-      showToast('Failed to send notifications. Please try again.', "error");
+      showToast("Failed to send notifications. Please try again.", "error");
     } finally {
       setActionLoading(false);
     }
   };
 
   const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
-    return selectedRows.map(row => ({
+    return selectedRows.map((row) => ({
       requestId: row.requestId || row.id,
       levelNo: row.levelNo || 1,
-      approverUserId: 1,
-      comment: `${action === 'approve' ? 'Approved' : 'Rejected'} by ${currentUser.name}: ${reason}`,
-      ipAddress: ipAddress
+      // approverUserId: 1,
+      approverUserId: row.approverUserId,
+      comment: `${action === "approve" ? "Approved" : "Rejected"} by ${
+        currentUser.name
+      }: ${reason}`,
+      ipAddress: ipAddress,
     }));
   };
 
@@ -2780,7 +3159,7 @@ export default function Approval() {
       showToast("Please select at least one timesheet to approve.", "warning");
       return;
     }
-    setPendingAction('approve');
+    setPendingAction("approve");
     setShowReasonModal(true);
   };
 
@@ -2789,15 +3168,15 @@ export default function Approval() {
       showToast("Please select at least one timesheet to reject.", "warning");
       return;
     }
-    setPendingAction('reject');
+    setPendingAction("reject");
     setShowReasonModal(true);
   };
 
   const handleReasonConfirm = (reason) => {
     setShowReasonModal(false);
-    if (pendingAction === 'approve') {
+    if (pendingAction === "approve") {
       performBulkApprove(reason);
-    } else if (pendingAction === 'reject') {
+    } else if (pendingAction === "reject") {
       performBulkReject(reason);
     }
     setPendingAction(null);
@@ -2811,22 +3190,52 @@ export default function Approval() {
   const performBulkApprove = async (reason) => {
     setActionLoading(true);
     try {
-      const requestBody = buildBulkRequestBody(selectedRows, 'approve', reason, userIpAddress);
-      const response = await fetch('https://timesheet-latest.onrender.com/api/Approval/BulkApprove', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
-      });
+      const requestBody = buildBulkRequestBody(
+        selectedRows,
+        "approve",
+        reason,
+        userIpAddress
+      );
+      const response = await fetch(
+        "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        }
+      );
       if (response.ok) {
-        showToast(`Successfully approved ${selectedRows.length} timesheets with reason: "${reason}"`, "success");
-        const approvedIds = selectedRows.map(row => row.id);
-        setRows(prevRows => prevRows.map(row => approvedIds.includes(row.id) ?
-          { ...row, isApproved: true, status: 'approved', selected: false, "Status": "APPROVED" } : row));
+        showToast(
+          `Successfully approved ${selectedRows.length} timesheets with reason: "${reason}"`,
+          "success"
+        );
+        const approvedIds = selectedRows.map((row) => row.id);
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            approvedIds.includes(row.id)     
+              ? {
+                  ...row,
+                  isApproved: true,
+                  status: "approved",
+                  selected: false,
+                  Status: "APPROVED",
+                }
+              : row
+          )
+        );
         setSelectedRows([]);
         setSelectAll(false);
       } else {
-        showToast('Failed to approve some timesheets. Please try again.', "error");
+        showToast(
+          "Failed to approve some timesheets. Please try again.",
+          "error"
+        );
       }
     } catch (error) {
-      showToast('Failed to approve timesheets. Please check your connection.', "error");
+      showToast(
+        "Failed to approve timesheets. Please check your connection.",
+        "error" 
+      );
     } finally {
       setActionLoading(false);
     }
@@ -2835,28 +3244,60 @@ export default function Approval() {
   const performBulkReject = async (reason) => {
     setActionLoading(true);
     try {
-      const requestBody = buildBulkRequestBody(selectedRows, 'reject', reason, userIpAddress);
-      const response = await fetch('https://timesheet-latest.onrender.com/api/Approval/BulkReject', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
-      });
+      const requestBody = buildBulkRequestBody(
+        selectedRows,
+        "reject",
+        reason,
+        userIpAddress
+      );
+      const response = await fetch(
+        "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        }
+      );
       if (response.ok) {
-        showToast(`Successfully rejected ${selectedRows.length} timesheets with reason: "${reason}"`, "success");
-        const rejectedIds = selectedRows.map(row => row.id);
-        setRows(prevRows => prevRows.map(row => rejectedIds.includes(row.id) ?
-          { ...row, isRejected: true, status: 'rejected', selected: false, "Status": "REJECTED" } : row));
+        showToast(
+          `Successfully rejected ${selectedRows.length} timesheets with reason: "${reason}"`,
+          "success"
+        );
+        const rejectedIds = selectedRows.map((row) => row.id);
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            rejectedIds.includes(row.id)
+              ? {
+                  ...row,
+                  isRejected: true,
+                  status: "rejected",
+                  selected: false,
+                  Status: "REJECTED",
+                }
+              : row
+          )
+        );
         setSelectedRows([]);
         setSelectAll(false);
       } else {
-        showToast('Failed to reject some timesheets. Please try again.', "error");
+        showToast(
+          "Failed to reject some timesheets. Please try again.",
+          "error"
+        );
       }
     } catch (error) {
-      showToast('Failed to reject timesheets. Please check your connection.', "error");
+      showToast(
+        "Failed to reject timesheets. Please check your connection.",
+        "error"
+      );
     } finally {
       setActionLoading(false);
     }
   };
 
-  const hasPendingRows = Array.isArray(filteredRows) ? filteredRows.some(row => isRowActionable(row)) : false;
+  const hasPendingRows = Array.isArray(filteredRows)
+    ? filteredRows.some((row) => isRowActionable(row))
+    : false;
 
   // Redirect non-admin users
   if (!loading && userLoaded && currentUser && !isAdmin) {
@@ -2902,9 +3343,16 @@ export default function Approval() {
 
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
         <div className="w-full flex flex-col items-center">
-          <div className="w-full flex justify-between items-center mb-4" style={{ marginLeft: 24, marginRight: 24, width: "calc(100vw - 220px)" }}>
+          <div
+            className="w-full flex justify-between items-center mb-4"
+            style={{
+              marginLeft: 24,
+              marginRight: 24,
+              width: "calc(100vw - 220px)",
+            }}
+          >
             <h1 className="text-lg font-semibold text-gray-700">
-               Welcome, {currentUser?.name}
+              Welcome, {currentUser?.name}
             </h1>
             <div className="flex gap-2">
               <button
@@ -2915,18 +3363,29 @@ export default function Approval() {
               </button>
             </div>
           </div>
-          
-          <div className="flex gap-3 mb-3 items-center flex-wrap" style={{ marginLeft: 24, marginRight: 24, width: "calc(100vw - 220px)" }}>
+
+          <div
+            className="flex gap-3 mb-3 items-center flex-wrap"
+            style={{
+              marginLeft: 24,
+              marginRight: 24,
+              width: "calc(100vw - 220px)",
+            }}
+          >
             <div className="flex gap-2 flex-wrap">
               <DatePicker
-                selected={searchDate ? new Date(searchDate + 'T00:00:00') : null}
+                selected={
+                  searchDate ? new Date(searchDate + "T00:00:00") : null
+                }
                 onChange={(date) => {
                   if (date) {
-                    const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-                    const isoString = localDate.toISOString().split('T')[0];
+                    const localDate = new Date(
+                      date.getTime() - date.getTimezoneOffset() * 60000
+                    );
+                    const isoString = localDate.toISOString().split("T")[0];
                     setSearchDate(isoString);
                   } else {
-                    setSearchDate('');
+                    setSearchDate("");
                   }
                 }}
                 dateFormat="MM/dd/yyyy"
@@ -2938,14 +3397,14 @@ export default function Approval() {
               <input
                 type="text"
                 value={searchEmployeeId}
-                onChange={e => setSearchEmployeeId(e.target.value)}
+                onChange={(e) => setSearchEmployeeId(e.target.value)}
                 placeholder="Employee ID"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <input
                 type="text"
                 value={searchEmployeeName}
-                onChange={e => setSearchEmployeeName(e.target.value)}
+                onChange={(e) => setSearchEmployeeName(e.target.value)}
                 placeholder="Employee Name"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
@@ -2961,36 +3420,43 @@ export default function Approval() {
               maxWidth: "none",
               minWidth: 300,
               padding: "0.5rem",
-              minHeight: "350px",
-              maxHeight: "calc(100vh - 180px)",
+              // minHeight: "350px",
+              // maxHeight: "calc(100vh - 180px)",
               overflow: "hidden",
               marginBottom: "20px",
               display: "flex",
-              flexDirection: "column"
+              flexDirection: "column",
             }}
           >
-            <div className="flex justify-between items-center mb-2 w-full" style={{ flexShrink: 0 }}>
+            <div
+              className="flex justify-between items-center mb-2 w-full"
+              style={{ flexShrink: 0 }}
+            >
               <div className="flex gap-2">
-                {hasPendingRows && (
+                { isAdmin && (
                   <>
                     <button
                       onClick={handleBulkApproveClick}
                       disabled={actionLoading || selectedRows.length === 0}
                       className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionLoading ? "Processing..." : `Approve (${selectedRows.length})`}
+                      {actionLoading
+                        ? "Processing..."
+                        : `Approve (${selectedRows.length})`}
                     </button>
                     <button
                       onClick={handleBulkRejectClick}
                       disabled={actionLoading || selectedRows.length === 0}
                       className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {actionLoading ? "Processing..." : `Reject (${selectedRows.length})`}
+                      {actionLoading
+                        ? "Processing..."
+                        : `Reject (${selectedRows.length})`}
                     </button>
                   </>
                 )}
               </div>
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 <button
                   onClick={handleNotifyClick}
                   disabled={actionLoading || selectedNotifyRows.length === 0}
@@ -2998,19 +3464,19 @@ export default function Approval() {
                 >
                   {actionLoading ? "Sending..." : `Notify (${selectedNotifyRows.length})`}
                 </button>
-              </div>
+              </div> */}
             </div>
-            
+
             <div
               style={{
                 overflowX: "auto",
                 overflowY: "auto",
-                maxHeight: "calc(100vh - 180px)",
-                minHeight: "200px",
+                // maxHeight: "calc(100vh - 180px)",
+                // minHeight: "200px",
                 width: "100%",
                 flex: 1,
                 border: "1px solid #e5e7eb",
-                borderRadius: "4px"
+                borderRadius: "4px",
               }}
             >
               <table
@@ -3018,42 +3484,73 @@ export default function Approval() {
                   borderCollapse: "collapse",
                   fontSize: "11px",
                   minWidth: `${minTableWidth}px`,
-                  width: "max-content"
+                  width: "max-content",
                 }}
               >
-                <thead style={{ position: "sticky", top: 0, backgroundColor: "#f8fafc", zIndex: 10, borderBottom: "2px solid #e2e8f0" }}>
+                <thead
+                  style={{
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "#f8fafc",
+                    zIndex: 10,
+                    borderBottom: "2px solid #e2e8f0",
+                  }}
+                >
                   <tr>
-                    {columns.map(col => (
+                    {columns.map((col) => (
                       <th
                         key={col}
                         style={{
                           border: "1px solid #d1d5db",
                           padding: "8px",
                           fontSize: "12px",
-                          minWidth: col === "All" ? "80px" : col === "Status" ? "150px" : `${colWidth}px`,
+                          minWidth:
+                            col === "All"
+                              ? "80px"
+                              : col === "Status"
+                              ? "150px"
+                              : `${colWidth}px`,
                           fontWeight: "bold",
                           color: "#1e40af",
                           textAlign: "center",
                           whiteSpace: "nowrap",
                           backgroundColor: "#f1f5f9",
-                          cursor: ['Date', 'Employee ID', 'Name', 'Status'].includes(col) ? "pointer" : "default",
-                          userSelect: "none"
+                          // cursor: ['Date', 'Employee ID', 'Name', 'Status'].includes(col) ? "pointer" : "default",
+                          cursor: col !== "All" ? "pointer" : "default",
+                          userSelect: "none",
                         }}
-                        onClick={() => ['Date', 'Employee ID', 'Name', 'Status'].includes(col) && handleSort(col)}
+                        // onClick={() => ['Date', 'Employee ID', 'Name', 'Status'].includes(col) && handleSort(col)}
+                        onClick={() => col !== "All" && handleSort(col)} // Changed this line
                       >
                         {col === "All" ? (
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px", justifyContent: "center" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              justifyContent: "center",
+                            }}
+                          >
                             <input
                               type="checkbox"
                               checked={unifiedSelectAll}
-                              onChange={e => handleUnifiedSelectAll(e.target.checked)}
+                              onChange={(e) =>
+                                handleUnifiedSelectAll(e.target.checked)
+                              }
                               className="cursor-pointer"
                               disabled={!hasPendingRows}
                             />
-                            <span style={{ fontSize: "11px", fontWeight: "normal" }}>All</span>
+                            <span
+                              style={{ fontSize: "11px", fontWeight: "normal" }}
+                            >
+                              All
+                            </span>
                           </div>
                         ) : (
-                          <span>{col}{getSortIcon(col)}</span>
+                          <span>
+                            {col}
+                            {getSortIcon(col)}
+                          </span>
                         )}
                       </th>
                     ))}
@@ -3063,25 +3560,36 @@ export default function Approval() {
                   {filteredRows.length > 0 ? (
                     filteredRows.map((row, rdx) => (
                       <tr
-                        key={`${row.requestId || row.id || rdx}-${row["Employee ID"] || ''}-${rdx}`}
+                        key={`${row.requestId || row.id || rdx}-${
+                          row["Employee ID"] || ""
+                        }-${rdx}`}
                         style={{
-                          backgroundColor: currentSelectedRowId === row.id 
-                            ? "#e0f2fe"  // Light cyan for currently selected row
-                            : row.selected || row.notifySelected
-                            ? "#dbeafe"  // Light blue for checked rows
-                            : rdx % 2 === 0 ? "#f9fafb" : "white",
+                          backgroundColor:
+                            currentSelectedRowId === row.id
+                              ? "#e0f2fe" // Light cyan for currently selected row
+                              : row.selected || row.notifySelected
+                              ? "#dbeafe" // Light blue for checked rows
+                              : rdx % 2 === 0
+                              ? "#f9fafb"
+                              : "white",
                           cursor: "pointer",
                           // Add subtle border for current selected row
                           // border: currentSelectedRowId === row.id ? "2px solid #0891b2" : "1px solid transparent"
                         }}
                         onClick={() => handleRowClick(row)}
-                        onMouseEnter={e =>
-                          !row.selected && !row.notifySelected && currentSelectedRowId !== row.id && 
-                          (e.target.closest("tr").style.backgroundColor = "#f3f4f6")
+                        onMouseEnter={(e) =>
+                          !row.selected &&
+                          !row.notifySelected &&
+                          currentSelectedRowId !== row.id &&
+                          (e.target.closest("tr").style.backgroundColor =
+                            "#f3f4f6")
                         }
-                        onMouseLeave={e =>
-                          !row.selected && !row.notifySelected && currentSelectedRowId !== row.id && 
-                          (e.target.closest("tr").style.backgroundColor = rdx % 2 === 0 ? "#f9fafb" : "white")
+                        onMouseLeave={(e) =>
+                          !row.selected &&
+                          !row.notifySelected &&
+                          currentSelectedRowId !== row.id &&
+                          (e.target.closest("tr").style.backgroundColor =
+                            rdx % 2 === 0 ? "#f9fafb" : "white")
                         }
                       >
                         {columns.map((col) => (
@@ -3091,28 +3599,43 @@ export default function Approval() {
                               border: "1px solid #e5e7eb",
                               padding: "8px",
                               fontSize: "11px",
-                              minWidth: col === "All" ? "80px" : col === "Status" ? "150px" : `${colWidth}px`,
+                              minWidth:
+                                col === "All"
+                                  ? "80px"
+                                  : col === "Status"
+                                  ? "150px"
+                                  : `${colWidth}px`,
                               whiteSpace: "nowrap",
                               textAlign: "center",
-                              ...(col === "Status" ? {} : {})
-                            }}>
+                              ...(col === "Status" ? {} : {}),
+                            }}
+                          >
                             {col === "Status" ? (
-                              <span style={getStatusStyle(row[col] || "PENDING")}>
+                              <span
+                                style={getStatusStyle(row[col] || "PENDING")}
+                              >
                                 {row[col] || "PENDING"}
                               </span>
                             ) : col === "All" ? (
                               <input
                                 type="checkbox"
-                                checked={(row.selected || false) || (row.notifySelected || false)}
-                                onChange={e => {
+                                checked={
+                                  row.selected ||
+                                  false ||
+                                  row.notifySelected ||
+                                  false
+                                }
+                                onChange={(e) => {
                                   e.stopPropagation();
                                   handleUnifiedRowSelect(rdx, e.target.checked);
                                 }}
-                                onClick={e => e.stopPropagation()}
+                                onClick={(e) => e.stopPropagation()}
                                 className="cursor-pointer"
                                 disabled={
-                                  !isRowActionable(row) && 
-                                  (row.isNotified || (row["Status"] || "").toLowerCase() === "notified")
+                                  !isRowActionable(row) &&
+                                  (row.isNotified ||
+                                    (row["Status"] || "").toLowerCase() ===
+                                      "notified")
                                 }
                               />
                             ) : (
@@ -3130,8 +3653,9 @@ export default function Approval() {
                           textAlign: "center",
                           padding: "20px",
                           fontStyle: "italic",
-                          color: "#666"
-                        }}>
+                          color: "#666",
+                        }}
+                      >
                         No approval data available
                       </td>
                     </tr>
@@ -3143,12 +3667,16 @@ export default function Approval() {
 
           {/* TimesheetDetailModal as component below table */}
           {selectedTimesheetData && (
-            <div 
-              className="w-full" 
-              style={{ marginLeft: 24, marginRight: 24, width: "calc(100vw - 220px)" }}
+            <div
+              className="w-full"
+              style={{
+                marginLeft: 24,
+                marginRight: 24,
+                width: "calc(100vw - 220px)",
+              }}
               data-timesheet-detail
             >
-              <TimesheetDetailModal 
+              <TimesheetDetailModal
                 timesheetData={selectedTimesheetData}
                 onClose={handleCloseDetail}
               />
@@ -3159,4 +3687,3 @@ export default function Approval() {
     </div>
   );
 }
-

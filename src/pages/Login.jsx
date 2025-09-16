@@ -80,7 +80,7 @@ export default function Login() {
         const userInfo = {
           id: loginData.id || user.toLowerCase().replace(/[^a-zA-Z0-9]/g, ''),
           name: loginData.name || user,
-          role: loginData.Role, // Use Role from API response (User/Admin)
+          role: loginData.role, // Use Role from API response (User/Admin)
           username: loginData.username || user.toLowerCase(),
           ...loginData // Include any additional data from API
         };
@@ -90,14 +90,14 @@ export default function Login() {
         // Store user info in localStorage
         localStorage.setItem('currentUser', JSON.stringify(userInfo));
         
-        // Show success message and navigate to dashboard (same route for both roles)
-        if (loginData.Role === "User") {
-          showToast("Welcome User! Redirecting to timesheet portal...", "success");
-        } else if (loginData.Role === "Admin") {
-          showToast("Welcome Admin! Redirecting to admin portal...", "success");
-        } else {
-          showToast("Welcome! Logging you in...", "success");
-        }
+        // // Show success message and navigate to dashboard (same route for both roles)
+        // if (loginData.Role === "User") {
+        //   showToast("Welcome User! Redirecting to timesheet portal...", "success");
+        // } else if (loginData.Role === "Admin") {
+        //   showToast("Welcome Admin! Redirecting to admin portal...", "success");
+        // } else {
+        //   showToast("Welcome! Logging you in...", "success");
+        // }
         
         // Navigate to dashboard for both roles - MainTable will handle the role-based UI and API calls
         setTimeout(() => {
@@ -178,7 +178,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-indigo-900 to-blue-950">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-xs relative">
         <h2 className="text-xl font-bold text-center mb-6 text-blue-900">
-           Timesheet Approval Workflow
+           Subcontractor Timesheet
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="relative">
@@ -194,7 +194,7 @@ export default function Login() {
               required
               disabled={isLoading}
             />
-            {showSuggestions && filteredSuggestions.length > 0 && !isLoading && (
+            {/* {showSuggestions && filteredSuggestions.length > 0 && !isLoading && (
               <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-b-md shadow-lg z-20 max-h-32 overflow-auto">
                 <div className="p-2 text-xs text-gray-500 font-medium border-b">Suggestions:</div>
                 {filteredSuggestions.map((suggestion, index) => (
@@ -216,7 +216,7 @@ export default function Login() {
                   </div>
                 ))}
               </div>
-            )}
+            )} */}
           </div>
           <input
             className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
