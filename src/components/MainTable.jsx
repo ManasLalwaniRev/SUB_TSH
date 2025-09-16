@@ -272,9 +272,6 @@
 //         </div>
 //     );
 // }
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -369,6 +366,40 @@ export default function MainTable() {
         }
     }, [userLoaded, currentUser]);
 
+    const fetchAndMapResourceNames = async (initialRows) => {
+        const uniqueResourceIds = [...new Set(
+            initialRows.map(row => row["Employee ID"]).filter(id => id)
+        )];
+
+        if (uniqueResourceIds.length === 0) return;
+
+        const namePromises = uniqueResourceIds.map(id =>
+            fetch(`https://timesheet-subk.onrender.com/api/PurchaseOrders/ByResourceDetails/${id}`)
+                .then(res => res.ok ? res.json() : null)
+                .catch(err => {
+                    console.error(`Failed to fetch details for resource ${id}`, err);
+                    return null;
+                })
+        );
+        
+        const results = await Promise.all(namePromises);
+        
+        const nameMap = {};
+        results.forEach((poData, index) => {
+            const resourceId = uniqueResourceIds[index];
+            if (poData && poData.length > 0 && poData[0].resourceName) {
+                nameMap[resourceId] = poData[0].resourceName;
+            }
+        });
+        
+        setRows(currentRows =>
+            currentRows.map(row => ({
+                ...row,
+                "Name": nameMap[row["Employee ID"]] || `Employee ${row["Employee ID"]}`,
+            }))
+        );
+    };
+
     const fetchData = async () => {
         if (!currentUser) return;
         setLoading(true);
@@ -386,7 +417,7 @@ export default function MainTable() {
                 id: item.timesheetId || item.lineNo || `item-${index}`,
                 "Date": formatDate(item.createdAt),
                 "Employee ID": item.resource_Id || "",
-                "Name": item.displayedName || `Employee ${item.resource_Id}` || "",
+                "Name": item.displayedName || `Loading...`,
                 "Project ID": item.projId || "",
                 "PLC": item.plc || "",
                 "Pay Type": item.payType || "",
@@ -400,6 +431,11 @@ export default function MainTable() {
             })) : [];
 
             setRows(mappedData);
+
+            if (mappedData.length > 0) {
+                fetchAndMapResourceNames(mappedData);
+            }
+
         } catch (error) {
             console.error("Failed to fetch data:", error);
             showToast('Failed to load timesheet data.', "error");
@@ -414,53 +450,41 @@ export default function MainTable() {
             showToast("No timesheets selected for notification.", "warning");
             return;
         }
-
         const selectedTimesheets = rows.filter(row => selectedRows.has(row.id));
-
         const validTimesheets = selectedTimesheets.filter(
             row => row.timesheetId != null && row.projId != null
         );
-
         if (validTimesheets.length !== selectedTimesheets.length) {
             showToast("Some selected items had missing data and were not notified.", "warning");
         }
-
         if (validTimesheets.length === 0) {
             showToast("No valid timesheets to notify.", "error");
             return;
         }
-
         const requestBody = validTimesheets.map(row => ({
             requestType: "TIMESHEET",
-            // --- MODIFICATION --- Changed requesterId to 3 as requested.
             requesterId: 3,
             timesheetId: row.timesheetId,
             requestData: `Notification for ${row.Hours} hours on ${row.Date}.`,
             projectId: row.projId
         }));
-
         try {
             const response = await fetch("https://timesheet-subk.onrender.com/api/Approval/BulkNotify", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestBody),
             });
-
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Server responded with ${response.status}: ${errorText || "Internal Server Error"}`);
             }
-
             showToast(`${validTimesheets.length} timesheet(s) notified successfully!`, "success");
-
             setRows(currentRows =>
                 currentRows.map(row =>
                     selectedRows.has(row.id) ? { ...row, Status: 'NOTIFIED' } : row
                 )
             );
-
             setSelectedRows(new Set());
-
         } catch (error) {
             console.error("Failed to notify timesheets:", error);
             showToast(`Error: ${error.message}`, "error");
@@ -567,22 +591,23 @@ export default function MainTable() {
             }
             return null;
         }
-
         if (col === 'Status') {
             return <span className={getStatusStyle(row[col])}>{row[col]}</span>;
         }
-
         return row[col];
     };
 
     return (
         <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
-            {isCreateModalOpen && 
-    <TimesheetLine 
-        onClose={() => setIsCreateModalOpen(false)} 
-        resourceId={currentUser?.username} // <-- Pass the resourceId as a prop
-    />
-}
+            {isCreateModalOpen &&
+                <TimesheetLine
+                    onClose={() => {
+                        setIsCreateModalOpen(false);
+                        fetchData(); // Refresh data after closing the create modal
+                    }}
+                    resourceId={currentUser?.username}
+                />
+            }
 
             <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
                 <div className="w-full flex flex-col items-center">
@@ -618,7 +643,6 @@ export default function MainTable() {
                                 </div>
                             )}
                         </div>
-
                         <div className="overflow-auto max-h-[75vh]">
                             <table className="w-full text-xs border-collapse">
                                 <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8fafc', zIndex: 10, borderBottom: '2px solid #e2e8f0' }}>
