@@ -29,7 +29,7 @@
 //         { id: 3, selected: false, description: 'Universal Time-Off', project: 'LEAVE.00.ABCDZX', plc: 'ANALYST', payType: 'UTO', poNumber: 'RDS0424-2', rlseNumber: '2', poLineNumber: '5', hours: { mon: 2, tue: 5, wed: 4, thu: 4, fri: 4, sat: 0, sun: 0 } },
 //     ]);
 
-//     const dayHeaders = ['Mon 08/11', 'Tue 08/12', 'Wed 08/13', 'Thu 08/14', 'Fri 08/15', 'Sat 08/16', 'Sun 08/17'];
+//     const dayHeaders = ['Mon 09/15', 'Tue 08/16', 'Wed 08/17', 'Thu 08/18', 'Fri 08/19', 'Sat 08/20', 'Sun 08/21'];
 //     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 //     const handleInputChange = (id, field, value) => {
@@ -183,7 +183,7 @@ export default function TimesheetLine({ onClose, onAddSuccess, resourceId }) { /
     const [lines, setLines] = useState([createEmptyLine(1)]);
     const [selectedLines, setSelectedLines] = useState(new Set());
 
-    const dayHeaders = ['Mon 08/11', 'Tue 08/12', 'Wed 08/13', 'Thu 08/14', 'Fri 08/15', 'Sat 08/16', 'Sun 08/17'];
+    const dayHeaders = ['Mon 09/15', 'Tue 08/16', 'Wed 08/17', 'Thu 08/18', 'Fri 08/19', 'Sat 08/20', 'Sun 08/21'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
     const handleInputChange = (id, field, value) => {
