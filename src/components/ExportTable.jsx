@@ -107,7 +107,7 @@
 //     if (!userLoaded || !currentUser || !currentUser.username) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByUser?userName=${encodeURIComponent(currentUser.username)}&status=Approved`;
+//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByUser?userName=${encodeURIComponent(currentUser.username)}&status=Approved`;
 //       const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
 //       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 //       const apiData = await response.json();
@@ -178,7 +178,7 @@
     
 //     try {
 //       setActionLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
 //         method: 'GET',
 //       });
 //       if (response.ok) {
@@ -532,7 +532,7 @@
 //     if (!userLoaded || !currentUser) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { 
 //         method: 'GET', 
 //         headers: { 'Content-Type': 'application/json' } 
@@ -1036,7 +1036,7 @@
 //     if (!userLoaded || !currentUser) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { 
 //         method: 'GET', 
 //         headers: { 'Content-Type': 'application/json' } 
@@ -1160,7 +1160,7 @@
 //       setActionLoading(true);
       
 //       // Get the full CSV from the export API
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
 //         method: 'GET',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -1559,7 +1559,7 @@
 //     try {
 //       setLoading(true);
 //       // fetch all approved timesheets
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
 //       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 //       const apiData = await response.json();
@@ -1697,7 +1697,7 @@
 //       console.log(JSON.stringify(payload));
 
 //       // Send POST request with selected data
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -2008,12 +2008,26 @@ const showToast = (message, type = 'info') => {
   }, 1000);
 };
 
+// const columnsExport = [
+//   "Date", "Employee ID","Timesheet Type Code", "Name", "Fiscal Year", "Period",
+//   "Project ID", "PLC", "Pay Type","RLSE Number", 
+// "PO Number",
+// "PO Line Number",
+//   "Hours", "Seq No", "Comment",
+// ];
+
 const columnsExport = [
-  "Date", "Employee ID","Timesheet Type Code", "Name", "Fiscal Year", "Period",
-  "Project ID", "PLC", "Pay Type","RLSE Number", 
-"PO Number",
-"PO Line Number",
-  "Hours", "Seq No", "Comment",
+  "Status", 
+  "Date", 
+  "Employee ID", 
+  "Name", 
+  "Project ID", 
+  "PLC", 
+  "Pay Type", 
+  "RLSE Number", 
+  "PO Number", 
+  "PO Line Number", 
+  "Hours"
 ];
 
 export default function ExportTable() {
@@ -2030,8 +2044,9 @@ export default function ExportTable() {
   const [selectAll, setSelectAll] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // const isAdmin = currentUser?.role === "admin";
+  // const isAdmin = currentUser?.role === "Admin";
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
+ 
   const columns = ['Select', ...columnsExport];
   const colWidth = 120;
   const minTableWidth = columns.length * colWidth;
@@ -2061,62 +2076,179 @@ export default function ExportTable() {
   // Get sorted rows with arrow
   const getSortedRows = (rowsToSort) => {
     let sorted = [...rowsToSort];
+
     if (sortConfig.key) {
       sorted.sort((a, b) => {
         let aVal, bVal;
-        if (sortConfig.key === 'Date') {
+
+        // Handle different column types
+        if (sortConfig.key === "Date") {
           aVal = new Date(a.originalDate || a["Date"]);
           bVal = new Date(b.originalDate || b["Date"]);
           if (isNaN(aVal.getTime())) aVal = new Date(0);
           if (isNaN(bVal.getTime())) bVal = new Date(0);
-          return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
-        } else if (sortConfig.key === 'Employee ID') {
-          aVal = String(a["Employee ID"] || '').toLowerCase();
-          bVal = String(b["Employee ID"] || '').toLowerCase();
-        } else if (sortConfig.key === 'Name') {
-          aVal = String(a["Name"] || '').toLowerCase();
-          bVal = String(b["Name"] || '').toLowerCase();
-        }
-        if (sortConfig.key === 'Employee ID' || sortConfig.key === 'Name') {
-          if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-          if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (sortConfig.key === "Hours") {
+          aVal = parseFloat(a["Hours"]) || 0;
+          bVal = parseFloat(b["Hours"]) || 0;
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (
+          [
+            "Employee ID",
+            "Project ID",
+            "PO Number",
+            "PO Line Number",
+            "RLSE Number",
+          ].includes(sortConfig.key)
+        ) {
+          // Numeric sorting for ID fields
+          aVal = parseInt(a[sortConfig.key]) || 0;
+          bVal = parseInt(b[sortConfig.key]) || 0;
+          if (aVal === bVal) {
+            // If numeric values are equal, fall back to string comparison
+            aVal = String(a[sortConfig.key] || "").toLowerCase();
+            bVal = String(b[sortConfig.key] || "").toLowerCase();
+            if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+            if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+            return 0;
+          }
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else if (sortConfig.key === "Status") {
+          const getStatusPriority = (status) => {
+            const statusUpper = String(status || "PENDING").toUpperCase();
+            switch (statusUpper) {
+              case "OPEN":
+                return 1;
+              case "PENDING":
+                return 2;
+              case "APPROVED":
+                return 3;
+              case "REJECTED":
+                return 4;
+              default:
+                return 5;
+            }
+          };
+
+          aVal = getStatusPriority(a["Status"]);
+          bVal = getStatusPriority(b["Status"]);
+
+          return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
+        } else {
+          // String sorting for all other columns
+          aVal = String(a[sortConfig.key] || "").toLowerCase();
+          bVal = String(b[sortConfig.key] || "").toLowerCase();
+          if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+          if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
           return 0;
         }
-        return 0;
       });
     } else {
-      // Default sorting when no sort is applied
+      // Default sorting - Sort by lineNo first for proper sequence
       sorted.sort((a, b) => {
+        // Primary sort: by lineNo (ascending for proper sequence 1,2,3...)
+        const aLineNo = parseInt(a.lineNo) || 0;
+        const bLineNo = parseInt(b.lineNo) || 0;
+        if (aLineNo !== bLineNo) {
+          return aLineNo - bLineNo; // lineNo ascending
+        }
+
+        // Secondary sort: by date (newest first for same lineNo)
         let aDate = new Date(a.originalDate || a["Date"]);
         let bDate = new Date(b.originalDate || b["Date"]);
         if (isNaN(aDate.getTime())) aDate = new Date(0);
         if (isNaN(bDate.getTime())) bDate = new Date(0);
         if (aDate.getTime() !== bDate.getTime()) {
-          return aDate.getTime() - bDate.getTime();
+          return bDate.getTime() - aDate.getTime();
         }
-        const aEmpId = String(a["Employee ID"] || '').toLowerCase();
-        const bEmpId = String(b["Employee ID"] || '').toLowerCase();
+
+        // Tertiary sort: by Employee ID
+        const aEmpId = String(a["Employee ID"] || "").toLowerCase();
+        const bEmpId = String(b["Employee ID"] || "").toLowerCase();
         return aEmpId.localeCompare(bEmpId);
       });
     }
+
     return sorted;
   };
 
+  // const getSortedRows = (rowsToSort) => {
+  //   let sorted = [...rowsToSort];
+  //   if (sortConfig.key) {
+  //     sorted.sort((a, b) => {
+  //       let aVal, bVal;
+  //       if (sortConfig.key === 'Date') {
+  //         aVal = new Date(a.originalDate || a["Date"]);
+  //         bVal = new Date(b.originalDate || b["Date"]);
+  //         if (isNaN(aVal.getTime())) aVal = new Date(0);
+  //         if (isNaN(bVal.getTime())) bVal = new Date(0);
+  //         return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
+  //       } else if (sortConfig.key === 'Employee ID') {
+  //         aVal = String(a["Employee ID"] || '').toLowerCase();
+  //         bVal = String(b["Employee ID"] || '').toLowerCase();
+  //       } else if (sortConfig.key === 'Name') {
+  //         aVal = String(a["Name"] || '').toLowerCase();
+  //         bVal = String(b["Name"] || '').toLowerCase();
+  //       }
+  //       if (sortConfig.key === 'Employee ID' || sortConfig.key === 'Name') {
+  //         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+  //         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+  //         return 0;
+  //       }
+  //       return 0;
+  //     });
+  //   } else {
+  //     // Default sorting when no sort is applied
+  //     sorted.sort((a, b) => {
+  //       let aDate = new Date(a.originalDate || a["Date"]);
+  //       let bDate = new Date(b.originalDate || b["Date"]);
+  //       if (isNaN(aDate.getTime())) aDate = new Date(0);
+  //       if (isNaN(bDate.getTime())) bDate = new Date(0);
+  //       if (aDate.getTime() !== bDate.getTime()) {
+  //         return aDate.getTime() - bDate.getTime();
+  //       }
+  //       const aEmpId = String(a["Employee ID"] || '').toLowerCase();
+  //       const bEmpId = String(b["Employee ID"] || '').toLowerCase();
+  //       return aEmpId.localeCompare(bEmpId);
+  //     });
+  //   }
+  //   return sorted;
+  // };
+
+  // const handleSort = (key) => {
+  //   if (!['Date', 'Employee ID', 'Name'].includes(key)) return;
+  //   let direction = 'asc';
+  //   if (sortConfig.key === key && sortConfig.direction === 'asc') {
+  //     direction = 'desc';
+  //   }
+  //   setSortConfig({ key, direction });
+  // };
+  
   const handleSort = (key) => {
-    if (!['Date', 'Employee ID', 'Name'].includes(key)) return;
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    if (key === "All") return; // Skip checkbox column
+
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (columnKey) => {
-    if (!['Date', 'Employee ID', 'Name'].includes(columnKey)) return null;
+  // const getSortIcon = (columnKey) => {
+  //   if (!['Date', 'Employee ID', 'Name'].includes(columnKey)) return null;
+  //   if (sortConfig.key === columnKey) {
+  //     return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  //   }
+  //   return ' ⇅';
+  // };
+  
+   const getSortIcon = (columnKey) => {
+    if (columnKey === "All") return null; // Skip checkbox column
+
     if (sortConfig.key === columnKey) {
-      return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+      return sortConfig.direction === "asc" ? " ↑" : " ↓";
     }
-    return ' ⇅';
+    return " ⇅";
   };
 
   useEffect(() => {
@@ -2145,44 +2277,105 @@ export default function ExportTable() {
     }
   }, [userLoaded, currentUser]);
 
-  const fetchExportData = async () => {
-    if (!userLoaded || !currentUser) return;
-    try {
-      setLoading(true);
-      // fetch all approved timesheets
-      const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
-      const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const apiData = await response.json();
-      const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
-        id: item.timesheetId || item.id || `export-${index}`,
-        originalDate: item.timesheetDate,
-        originalItem: item, // Store original item for POST payload
-        "Date": formatDate(item.timesheetDate),
-        "Employee ID": item.employee?.employeeId || item.employeeId || "",
-        "Name": item.displayedName || item.employeeName || `Employee ${item.employee?.employeeId || item.employeeId}` || "",
-        "Timesheet Type Code": item.timesheetTypeCode || "",
+  // const fetchExportData = async () => {
+  //   if (!userLoaded || !currentUser) return;
+  //   try {
+  //     setLoading(true);
+  //     // fetch all approved timesheets
+  //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvalsByStatus?status=Approved`;
+  //     const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+  //     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  //     const apiData = await response.json();
+  //     const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
+  //       id: item.timesheetId || item.id || `export-${index}`,
+  //       originalDate: item.timesheetDate,
+  //       originalItem: item, // Store original item for POST payload
+  //       "Date": formatDate(item.timesheetDate),
+  //       "Employee ID": item.employee?.employeeId || item.employeeId || "",
+  //       "Name": item.displayedName || item.employeeName || `Employee ${item.employee?.employeeId || item.employeeId}` || "",
+  //       "Timesheet Type Code": item.timesheetTypeCode || "",
 
-        "Fiscal Year": item.fiscalYear || "",
-        "Period": item.period || "",
-        "Project ID": item.projectId || "",
-        "PLC": item.projectLaborCategory || "",
-        "Pay Type": item.payType || "",
-        "Hours": formatHours(item.hours),
-        "Seq No": item.sequenceNumber || "",
-        "Comment": item.comment || "",
-        // "IP Address": item.ipAddress || ""
-      })) : [];
-      setRows(mappedData);
-      setSelectedRows(new Set());
-      setSelectAll(false);
-    } catch (error) {
-      showToast('Failed to load export data. Please check your connection.', "error");
-      setRows([]);
-    } finally {
-      setLoading(false);
+  //       "Fiscal Year": item.fiscalYear || "",
+  //       "Period": item.period || "",
+  //       "Project ID": item.projectId || "",
+  //       "PLC": item.projectLaborCategory || "",
+  //       "Pay Type": item.payType || "",
+  //       "Hours": formatHours(item.hours),
+  //       "Seq No": item.sequenceNumber || "",
+  //       "Comment": item.comment || "",
+  //       // "IP Address": item.ipAddress || ""
+  //     })) : [];
+  //     setRows(mappedData);
+  //     setSelectedRows(new Set());
+  //     setSelectAll(false);
+  //   } catch (error) {
+  //     showToast('Failed to load export data. Please check your connection.', "error");
+  //     setRows([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  
+  const fetchExportData = async () => {
+  if (!userLoaded || !currentUser) return;
+  try {
+    setLoading(true);
+    
+    // Use approvalUserId or username from login response as resourceId
+    const resourceId =  currentUser.username;
+    
+    if (!resourceId) {
+      showToast('User resource ID not found. Please login again.', "error");
+      navigate("/");
+      return;
     }
-  };
+    
+    // Updated API URL with resourceId parameter
+    const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvalsByStatus?status=Approved&resourceId=${resourceId}`;
+    
+    const response = await fetch(apiUrl, { 
+      method: 'GET', 
+      headers: { 'Content-Type': 'application/json' } 
+    });
+    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const apiData = await response.json();
+    
+    const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
+      id: item.timesheetId || item.id || `export-${index}`,
+      originalDate: item.timesheetDate,
+      originalItem: item,
+      Status: item.status || "Un-Notified",
+      // "Date": formatDate(item.timesheetDate),
+      // "Employee ID": item.employee?.employeeId || item.employeeId || "",
+       Date: formatDate(item.createdAt),
+          "Employee ID": item.resource_Id || "",
+      "Name": item.displayedName || item.employeeName || `Employee ${item.employee?.employeeId || item.employeeId}` || "",
+      "Timesheet Type Code": item.timesheetTypeCode || "",
+      "Fiscal Year": item.fiscalYear || "",
+      "Period": item.period || "",
+      "Project ID": item.projId || "",
+      "PLC": item.plc || "",
+      "Pay Type": item.payType || "",
+      "RLSE Number": item.rlseNumber || "", // Add missing fields
+      "PO Number": item.poNumber || "",
+      "PO Line Number": item.poLineNumber || "",
+      "Hours": formatHours(item.hours),
+      "Seq No": item.sequenceNumber || "",
+      "Comment": item.comment || "",
+    })) : [];
+    
+    setRows(mappedData);
+    setSelectedRows(new Set());
+    setSelectAll(false);
+  } catch (error) {
+    console.error('Fetch error:', error);
+    showToast('Failed to load export data. Please check your connection.', "error");
+    setRows([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getFilteredRows = () => {
     let filtered = rows;
@@ -2295,7 +2488,7 @@ export default function ExportTable() {
       };
 
       // Send POST request with selected data
-      const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
+      const response = await fetch('https://timesheet-subk.onrender.com/api/SubkTimesheet/export-csv', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2465,8 +2658,8 @@ export default function ExportTable() {
               maxWidth: "none",
               minWidth: 300,
               padding: "0.5rem",
-              minHeight: "350px",
-              maxHeight: "calc(100vh - 180px)",
+              // minHeight: "350px",
+              // maxHeight: "calc(100vh - 180px)",
               overflow: "hidden",
               marginBottom: "20px",
               display: "flex",
@@ -2490,8 +2683,8 @@ export default function ExportTable() {
               style={{
                 overflowX: "auto",
                 overflowY: "auto",
-                maxHeight: "calc(100vh - 180px)",
-                minHeight: "200px",
+                // maxHeight: "calc(100vh - 180px)",
+                // minHeight: "200px",
                 width: "100%",
                 flex: 1,
                 border: "1px solid #e5e7eb",
@@ -2506,7 +2699,7 @@ export default function ExportTable() {
                   width: "max-content"
                 }}
               >
-                <thead style={{ position: "sticky", top: 0, backgroundColor: "#f8fafc", zIndex: 10, borderBottom: "2px solid #e2e8f0" }}>
+                {/* <thead style={{ position: "sticky", top: 0, backgroundColor: "#f8fafc", zIndex: 10, borderBottom: "2px solid #e2e8f0" }}>
                   <tr>
                     {columns.map((col, index) => (
                       <th
@@ -2542,7 +2735,48 @@ export default function ExportTable() {
                       </th>
                     ))}
                   </tr>
-                </thead>
+                </thead> */}
+                <thead style={{ position: "sticky", top: 0, backgroundColor: "#f8fafc", zIndex: 10, borderBottom: "2px solid #e2e8f0" }}>
+  <tr>
+    {columns.map((col, index) => (
+      <th
+        key={col}
+        style={{
+          border: "1px solid #d1d5db",
+          padding: "8px",
+          fontSize: "12px",
+          minWidth: index === 0 ? "80px" : `${colWidth}px`,
+          fontWeight: "bold",
+          color: "#1e40af",
+          textAlign: "center",
+          whiteSpace: "nowrap",
+          backgroundColor: "#f1f5f9",
+          cursor: col === 'Select' ? "default" : "pointer", // All columns except Select are clickable
+          userSelect: "none"
+        }}
+        onClick={() => col !== 'Select' && handleSort(col)} // All columns except Select are sortable
+      >
+        {col === 'Select' ? (
+          <div className="flex items-center justify-center gap-1">
+            <input
+              type="checkbox"
+              checked={selectAll}
+              onChange={handleSelectAll}
+              className="cursor-pointer"
+              title="Select All"
+            />
+            <span style={{ fontSize: "11px" }}>All</span>
+          </div>
+        ) : (
+          <span>
+            {col}{getSortIcon(col)}
+          </span>
+        )}
+      </th>
+    ))}
+  </tr>
+</thead>
+
                 <tbody>
                   {filteredRows.length > 0 ? (
                     filteredRows.map((row, rdx) => (

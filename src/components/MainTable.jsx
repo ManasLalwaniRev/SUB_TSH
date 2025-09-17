@@ -619,7 +619,7 @@ export default function MainTable() {
     const existingDatesForUser = new Set(rows.map(row => row.Date));
 
     return (
-        <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
+        <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto ml-5">
             {isModalOpen &&
                 <TimesheetLine
                     onClose={() => {
