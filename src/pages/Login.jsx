@@ -79,9 +79,10 @@ export default function Login() {
         // Create user info based on API response
         const userInfo = {
           id: loginData.id || user.toLowerCase().replace(/[^a-zA-Z0-9]/g, ''),
-          name: loginData.name || user,
+          name: loginData.fullName || loginData.name || user, // ← Change this line
           role: loginData.role, // Use Role from API response (User/Admin)
           username: loginData.username || user.toLowerCase(),
+          approvalUserId: loginData.approvalUserId, // ← Add this line
           ...loginData // Include any additional data from API
         };
 
