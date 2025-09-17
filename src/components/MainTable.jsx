@@ -652,7 +652,7 @@ export default function MainTable() {
                                         className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
                                         disabled={selectedRows.size === 0 || isNotifying}
                                     >
-                                        {isNotifying ? 'Notifying...' : `Notify (${selectedRows.size})`}
+                                        {isNotifying ? 'Notifying...' : `Submit (${selectedRows.size})`}
                                     </button>
                                     <button
                                         onClick={handleHeaderEditClick}
