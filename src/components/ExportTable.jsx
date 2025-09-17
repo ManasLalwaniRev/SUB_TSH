@@ -107,7 +107,7 @@
 //     if (!userLoaded || !currentUser || !currentUser.username) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByUser?userName=${encodeURIComponent(currentUser.username)}&status=Approved`;
+//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByUser?userName=${encodeURIComponent(currentUser.username)}&status=Approved`;
 //       const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
 //       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 //       const apiData = await response.json();
@@ -178,7 +178,7 @@
     
 //     try {
 //       setActionLoading(true);
-//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
 //         method: 'GET',
 //       });
 //       if (response.ok) {
@@ -532,7 +532,7 @@
 //     if (!userLoaded || !currentUser) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { 
 //         method: 'GET', 
 //         headers: { 'Content-Type': 'application/json' } 
@@ -1036,7 +1036,7 @@
 //     if (!userLoaded || !currentUser) return;
 //     try {
 //       setLoading(true);
-//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { 
 //         method: 'GET', 
 //         headers: { 'Content-Type': 'application/json' } 
@@ -1160,7 +1160,7 @@
 //       setActionLoading(true);
       
 //       // Get the full CSV from the export API
-//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
 //         method: 'GET',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -1559,7 +1559,7 @@
 //     try {
 //       setLoading(true);
 //       // fetch all approved timesheets
-//       const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+//       const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
 //       const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
 //       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 //       const apiData = await response.json();
@@ -1697,7 +1697,7 @@
 //       console.log(JSON.stringify(payload));
 
 //       // Send POST request with selected data
-//       const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
+//       const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
 //         method: 'POST',
 //         headers: {
 //           'Content-Type': 'application/json',
@@ -2030,9 +2030,8 @@ export default function ExportTable() {
   const [selectAll, setSelectAll] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
 
-  // const isAdmin = currentUser?.role === "Admin";
+  // const isAdmin = currentUser?.role === "admin";
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
- 
   const columns = ['Select', ...columnsExport];
   const colWidth = 120;
   const minTableWidth = columns.length * colWidth;
@@ -2151,7 +2150,7 @@ export default function ExportTable() {
     try {
       setLoading(true);
       // fetch all approved timesheets
-      const apiUrl = `https://timesheet-latest.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
+      const apiUrl = `https://timesheet-subk.onrender.com/api/Timesheet/pending-approvalsByStatus?status=Approved`;
       const response = await fetch(apiUrl, { method: 'GET', headers: { 'Content-Type': 'application/json' } });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const apiData = await response.json();
@@ -2296,7 +2295,7 @@ export default function ExportTable() {
       };
 
       // Send POST request with selected data
-      const response = await fetch('https://timesheet-latest.onrender.com/api/Timesheet/export-csv', {
+      const response = await fetch('https://timesheet-subk.onrender.com/api/Timesheet/export-csv', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
