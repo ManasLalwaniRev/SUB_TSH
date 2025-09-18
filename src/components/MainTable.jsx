@@ -273,9 +273,6 @@
 //     );
 // }
 
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -287,7 +284,7 @@ import TimesheetDetailModal from "./TimesheetDetailModal.jsx";
 const showToast = (message, type = 'info') => {
     const bgColor = type === 'success' ? '#4ade80'
         : type === 'error' ? '#ef4444'
-        : type === 'warning' ? '#f59e0b' : '#3b82f6';
+            : type === 'warning' ? '#f59e0b' : '#3b82f6';
     const toast = document.createElement('div');
     toast.textContent = message;
     toast.style.cssText = `
@@ -334,22 +331,22 @@ export default function MainTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [timesheetToEdit, setTimesheetToEdit] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [selectedRows, setSelectedRows] = useState(new Set());
+    const [selectedRowId, setSelectedRowId] = useState(null);
     const [selectedTimesheetData, setSelectedTimesheetData] = useState(null);
     const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
     const [hoveredRowId, setHoveredRowId] = useState(null);
     const [isNotifying, setIsNotifying] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const userRole = currentUser?.role?.toLowerCase();
     const isUser = userRole === 'user';
     const canNotify = userRole && !["admin", "pm"].includes(userRole);
 
     const baseColumns = [
-        "Status", "Date", "Employee ID", "Name",
-        "Project ID", "PLC", "Pay Type", "RLSE Number", "PO Number", "PO Line Number", "Hours"
+        "Status", "Date", "Employee ID", "Name", "Hours"
     ];
 
-    const columns = isUser ? ["All", ...baseColumns] : baseColumns;
+    const columns = isUser ? ["Select", ...baseColumns] : baseColumns;
     
     const formatHours = (hours) => {
         const num = parseFloat(hours);
@@ -366,22 +363,6 @@ export default function MainTable() {
         if (s === 'SUBMITTED') return `${baseStyle} bg-purple-100 text-purple-800`;
         return `${baseStyle} bg-gray-100 text-gray-800`;
     };
-
-    useEffect(() => {
-    if (rows.length > 0) {
-        const ids = rows.map(row => row.id);
-        const uniqueIds = new Set(ids);
-        if (ids.length !== uniqueIds.size) {
-            console.warn("DUPLICATE ID PROBLEM DETECTED!");
-            const idCounts = ids.reduce((acc, id) => {
-                acc[id] = (acc[id] || 0) + 1;
-                return acc;
-            }, {});
-            const duplicates = Object.keys(idCounts).filter(id => idCounts[id] > 1);
-            console.error("The following IDs are duplicated in your data:", duplicates);
-        }
-    }
-}, [rows]);
 
     useEffect(() => {
         const userInfo = localStorage.getItem('currentUser');
@@ -402,11 +383,8 @@ export default function MainTable() {
         setLoading(true);
 
         try {
-            // Step 1: Fetch the main timesheet data
-            let apiUrl = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
-            if (currentUser.role && currentUser.role.toLowerCase() !== 'admin') {
-                apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${currentUser.username}`;
-            }
+            const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${currentUser.username}`;
+            
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response failed while fetching timesheets.');
             
@@ -416,7 +394,6 @@ export default function MainTable() {
                 return;
             }
 
-            // Step 2: Fetch all employee names based on the results
             const uniqueResourceIds = [...new Set(apiData.map(item => item.resource_Id).filter(id => id))];
             const nameMap = new Map();
 
@@ -435,24 +412,29 @@ export default function MainTable() {
                 });
             }
 
-            // Step 3: Map the final data with names included
-            const mappedData = apiData.map((item, index) => ({
-                ...item,
-                // This robust ID ensures we never have 'undefined'
-                id: String(item.timesheetId || item.lineNo || `temp-id-${index}`),
-                "Date": formatDate(item.timesheet_Date),
-                "Employee ID": item.resource_Id || "",
-                "Name": nameMap.get(item.resource_Id) || item.displayedName || `Employee ${item.resource_Id}`,
-                "Project ID": item.projId || "",
-                "PLC": item.plc || "",
-                "Pay Type": item.payType || "",
-                "RLSE Number": item.rlseNumber || "",
-                "Hours": formatHours(item.hours),
-                "PO Number": item.poNumber || "",
-                "PO Line Number": item.poLineNumber || "",
-                "Status": item.status || "OPEN",
-            }));
-            setRows(mappedData);
+            const timesheetMap = new Map();
+            apiData.forEach(item => {
+                const date = formatDate(item.timesheet_Date);
+                if (timesheetMap.has(date)) {
+                    const existing = timesheetMap.get(date);
+                    existing.Hours += item.hours;
+                    existing.allTimesheets.push(item); 
+                } else {
+                    timesheetMap.set(date, {
+                        ...item,
+                        id: date,
+                        "Date": date,
+                        "Employee ID": item.resource_Id || "",
+                        "Name": nameMap.get(item.resource_Id) || item.displayedName || `Employee ${item.resource_Id}`,
+                        "Hours": item.hours,
+                        "Project ID": item.projId || "",
+                        "Status": item.status || "OPEN",
+                        allTimesheets: [item]
+                    });
+                }
+            });
+
+            setRows(Array.from(timesheetMap.values()));
 
         } catch (error) {
             console.error("Failed to fetch data:", error);
@@ -464,49 +446,47 @@ export default function MainTable() {
     };
 
     const handleNotify = async () => {
-        if (selectedRows.size === 0) {
-            showToast('Please select at least one timesheet to notify.', 'warning');
+        if (!selectedRowId) {
+            showToast('Please select a timesheet to submit.', 'warning');
             return;
         }
-        if (!window.confirm(`Are you sure you want to notify ${selectedRows.size} timesheet(s)? This will submit them for approval.`)) {
+        if (!window.confirm(`Are you sure you want to submit the selected timesheet?`)) {
             return;
         }
         setIsNotifying(true);
         try {
-            const timesheetIdsToUpdate = [...selectedRows];
-            const selectedRowObjects = rows.filter(row => timesheetIdsToUpdate.includes(row.id));
+            const selectedRowObject = rows.find(row => row.id === selectedRowId);
             const requesterId = currentUser.approvalUserId;
             if (!requesterId) {
                 throw new Error('Your user profile is missing an Approval User ID.');
             }
-            const payload = selectedRowObjects.map(row => ({
+            const payload = selectedRowObject.allTimesheets.map(ts => ({
                 requestType: "TIMESHEET",
                 requesterId: requesterId,
-                timesheetId: parseInt(row.id, 10),
-                requestData: `Approval requested for week ending ${row.Date}.`,
-                projectId: row["Project ID"]
+                timesheetId: ts.timesheetId,
+                requestData: `Approval requested for week ending ${selectedRowObject.Date}.`,
+                ProjectId: ts.projId
             }));
+
             const notifyUrl = 'https://timesheet-subk.onrender.com/api/Approval/BulkNotify';
             const notifyResponse = await fetch(notifyUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             if (!notifyResponse.ok) {
                 const errorData = await notifyResponse.text();
-                throw new Error(errorData || 'Failed to submit timesheets for notification.');
+                throw new Error(errorData || 'Failed to submit timesheet for notification.');
             }
             setRows(currentRows =>
                 currentRows.map(row =>
-                    timesheetIdsToUpdate.includes(row.id) ? { ...row, Status: 'SUBMITTED' } : row
+                    row.id === selectedRowId ? { ...row, Status: 'SUBMITTED' } : row
                 )
             );
-            setSelectedRows(new Set());
-            showToast(`Successfully notified ${payload.length} timesheet(s).`, 'success');
+            setSelectedRowId(null);
+            showToast(`Successfully submitted 1 timesheet.`, 'success');
         } catch (error) {
-            console.error("Failed to notify timesheets:", error);
+            console.error("Failed to notify timesheet:", error);
             showToast(error.message, 'error');
         } finally {
             setIsNotifying(false);
@@ -514,36 +494,25 @@ export default function MainTable() {
     };
 
     const handleSort = (key) => {
-        if (['All'].includes(key)) return;
+        if (['Select'].includes(key)) return;
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
         setSortConfig({ key, direction });
     };
 
     const getSortIcon = (key) => {
-        if (['All'].includes(key) || sortConfig.key !== key) return ' ⇅';
+        if (['Select'].includes(key) || sortConfig.key !== key) return ' ⇅';
         return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
     };
     
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
-            const openRowIds = rows.filter(row => row.Status === 'OPEN').map(row => row.id);
-            setSelectedRows(new Set(openRowIds));
-        } else {
-            setSelectedRows(new Set());
-        }
-    };
-
     const handleRowClick = (rowData) => {
-        setSelectedRows(new Set([rowData.id]));
+        setSelectedRowId(rowData.id);
         setSelectedTimesheetData(rowData);
         setCurrentSelectedRowId(rowData.id);
     };
 
     const handleRowSelect = (rowId) => {
-        const newSelection = new Set(selectedRows);
-        newSelection.has(rowId) ? newSelection.delete(rowId) : newSelection.add(rowId);
-        setSelectedRows(newSelection);
+        setSelectedRowId(rowId);
     };
 
     const sortedAndFilteredRows = [...rows]
@@ -567,6 +536,49 @@ export default function MainTable() {
         setCurrentSelectedRowId(null);
     };
 
+    const handleSaveDetails = async (updatedLines) => {
+        if (!updatedLines || updatedLines.length === 0) {
+            showToast("No data to save.", "error");
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const savePromises = updatedLines.map(line => {
+                if (typeof line.id === 'string' && line.id.startsWith('temp-')) {
+                    // This is a new line, so we do a POST
+                } else {
+                    // This is an existing line, so we do a PUT
+                    return fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/${line.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(line)
+                    });
+                }
+            });
+    
+            const responses = await Promise.all(savePromises.filter(p => p));
+            let allOk = true;
+            for (const response of responses) {
+                if (!response.ok) {
+                    allOk = false;
+                    const errorText = await response.text();
+                    showToast(`Failed to save a line: ${errorText}`, 'error');
+                    break;
+                }
+            }
+            if (allOk) {
+                showToast("Timesheet updated successfully!", "success");
+                handleCloseDetail();
+                fetchData();
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            showToast(error.message, "error");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('currentUser');
         navigate("/");
@@ -577,22 +589,13 @@ export default function MainTable() {
         setIsModalOpen(true);
     };
 
-    const handleHeaderEditClick = () => {
-        const selectedRowId = [...selectedRows][0];
-        const selectedRowObject = rows.find(row => row.id === selectedRowId);
-        if (selectedRowObject) {
-            setTimesheetToEdit(selectedRowObject);
-            setIsModalOpen(true);
-        }
-    };
-
     const renderTableCell = (row, col) => {
-    if (col === 'All') {
-        // Just return the input element, not the whole <td>
+    if (col === 'Select') {
         return (
             isUser && <input
-                type="checkbox"
-                checked={selectedRows.has(row.id)}
+                type="radio"
+                name="timesheet-select"
+                checked={selectedRowId === row.id}
                 onChange={() => handleRowSelect(row.id)}
                 className="cursor-pointer"
                 disabled={row.Status?.toUpperCase() !== 'OPEN'}
@@ -602,26 +605,19 @@ export default function MainTable() {
     if (col === 'Status') {
         return <span className={getStatusStyle(row[col])}>{row[col]}</span>;
     }
+    if (col === 'Hours') {
+        return formatHours(row[col]);
+    }
     return row[col];
 };
 
-    let isEditButtonDisabled = true;
-    if (selectedRows.size === 1) {
-        const selectedRowId = [...selectedRows][0];
-        const selectedRow = rows.find(row => row.id === selectedRowId);
-        if (selectedRow?.Status?.toUpperCase() === 'OPEN') {
-            isEditButtonDisabled = false;
-        }
-    }
-
-    const openRows = rows.filter(row => row.Status === 'OPEN');
-    const isAllOpenSelected = openRows.length > 0 && openRows.every(row => selectedRows.has(row.id));
     const existingDatesForUser = new Set(rows.map(row => row.Date));
 
     return (
         <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto ml-5">
             {isModalOpen &&
                 <TimesheetLine
+                    currentUser={currentUser}
                     onClose={() => {
                         setIsModalOpen(false);
                         setTimesheetToEdit(null);
@@ -650,19 +646,11 @@ export default function MainTable() {
                                     <button
                                         onClick={handleNotify}
                                         className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
-                                        disabled={selectedRows.size === 0 || isNotifying}
+                                        disabled={!selectedRowId || isNotifying}
                                     >
-                                        {isNotifying ? 'Notifying...' : `Submit (${selectedRows.size})`}
-                                    </button>
-                                    <button
-                                        onClick={handleHeaderEditClick}
-                                        className={`bg-yellow-500 text-white px-4 py-1.5 rounded text-xs ${isEditButtonDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-yellow-600'}`}
-                                        disabled={isEditButtonDisabled}
-                                    >
-                                        Edit
+                                        {isNotifying ? 'Submitting...' : `Submit`}
                                     </button>
                                     <button onClick={handleCreateClick} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs">Create</button>
-                                    <button className="bg-blue-600 text-white px-4 py-1.5 rounded text-xs">Import</button>
                                 </div>
                             )}
                         </div>
@@ -672,11 +660,8 @@ export default function MainTable() {
                                     <tr>
                                         {columns.map(col => (
                                             <th key={col} className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-gray-200 cursor-pointer select-none" onClick={() => handleSort(col)}>
-                                                {col === 'All' && isUser ? (
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <input type="checkbox" checked={isAllOpenSelected} onChange={handleSelectAll} />
-                                                        <span className="text-xs font-normal">All</span>
-                                                    </div>
+                                                {col === 'Select' && isUser ? (
+                                                    <span>Select</span>
                                                 ) : (
                                                     <span>{col}{getSortIcon(col)}</span>
                                                 )}
@@ -689,7 +674,7 @@ export default function MainTable() {
                                         <tr><td colSpan={columns.length} className="text-center p-5 italic text-gray-500">Loading...</td></tr>
                                     ) : sortedAndFilteredRows.length > 0 ? (
                                         sortedAndFilteredRows.map(row => {
-                                            const isSelected = selectedRows.has(row.id);
+                                            const isSelected = selectedRowId === row.id;
                                             const isCurrent = currentSelectedRowId === row.id;
                                             const isHovered = hoveredRowId === row.id;
                                             let bgColorClass = 'bg-white';
@@ -703,15 +688,14 @@ export default function MainTable() {
                                                     onMouseLeave={() => setHoveredRowId(null)}
                                                 >
                                                     {columns.map(col => (
-    <td 
-        key={`${row.id}-${col}`} // <-- Creates a truly unique key for every cell
-        className="border p-2 text-center whitespace-nowrap"
-        // Stop row click from firing when interacting with the checkbox
-        onClick={col === 'All' ? (e) => e.stopPropagation() : undefined}
-    >
-        {renderTableCell(row, col)}
-    </td>
-))}
+                                                        <td
+                                                            key={`${row.id}-${col}`}
+                                                            className="border p-2 text-center whitespace-nowrap"
+                                                            onClick={col === 'Select' ? (e) => e.stopPropagation() : undefined}
+                                                        >
+                                                            {renderTableCell(row, col)}
+                                                        </td>
+                                                    ))}
                                                 </tr>
                                             );
                                         })
@@ -725,12 +709,15 @@ export default function MainTable() {
                 </div>
                 {selectedTimesheetData && (
                     <div className="w-full mt-6" data-timesheet-detail>
-                        <TimesheetDetailModal timesheetData={selectedTimesheetData} onClose={handleCloseDetail} />
+                        <TimesheetDetailModal 
+                            timesheetData={selectedTimesheetData} 
+                            onClose={handleCloseDetail}
+                            onSave={handleSaveDetails}
+                            isSaving={isSaving}
+                        />
                     </div>
                 )}
             </div>
         </div>
     );
 }
-
-

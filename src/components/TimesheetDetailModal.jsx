@@ -344,287 +344,280 @@
 
 // export default TimesheetDetailModal;
 
+import React, { useState, useEffect } from 'react';
 
-import { useState, useEffect } from "react";
-import "./datepicker.css";
+// --- SVG Icons ---
+const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
+const CopyIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
+const TrashIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
 
-const TimesheetDetailModal = ({ timesheetData, onClose }) => {
-  const [apiData, setApiData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch data from API when component mounts
-  useEffect(() => {
-    if (timesheetData) {
-      fetchTimesheetData();
-    }
-  }, [timesheetData]);
-
-  const fetchTimesheetData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const response = await fetch('https://timesheet-subk.onrender.com/api/SubkTimesheet');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('API Response:', data);
-      setApiData(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('API Error:', err);
-      setError(err.message);
-      setApiData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!timesheetData) return null;
-
-  // Get the selected line data based on the lineNo from timesheetData
-  const getSelectedLineData = () => {
-    if (loading || error || apiData.length === 0) return null;
-
-    // Get lineNo from the passed timesheet data
-    const selectedLineNo = timesheetData.lineNo || 
-                          timesheetData.id || 
-                          timesheetData["Employee ID"];
-    
-    console.log('Looking for lineNo:', selectedLineNo);
-    console.log('Available lines:', apiData.map(item => item.lineNo || item.timesheetId || item.id));
-
-    // Find the line that matches the selected line number
-    const selectedLine = apiData.find(item => 
-      (item.lineNo && item.lineNo.toString() === selectedLineNo.toString()) ||
-      (item.timesheetId && item.timesheetId.toString() === selectedLineNo.toString()) ||
-      (item.id && item.id.toString() === selectedLineNo.toString())
-    );
-    
-    if (!selectedLine) {
-      console.log('No matching line found for:', selectedLineNo);
-      return null;
-    }
-
-    console.log('Found selected line:', selectedLine);
-    return selectedLine;
-  };
-
-  // Get timesheet hours for the selected line
-  const getTimesheetHours = () => {
-    const selectedLine = getSelectedLineData();
-    
-    if (!selectedLine || !selectedLine.timesheetHours) {
-      return [];
-    }
-
-    // Sort by date to ensure proper order
-    return selectedLine.timesheetHours.sort((a, b) => new Date(a.ts_Date) - new Date(b.ts_Date));
-  };
-
-  // Format date for display (only MM/DD without day name)
-  const formatDateHeader = (dateString) => {
-    if (!dateString) return '';
-    
-    try {
-      // Parse date parts to avoid timezone conversion
-      const dateParts = dateString.split('-');
-      if (dateParts.length === 3) {
-        const month = String(parseInt(dateParts[1])).padStart(2, '0');
-        const day = String(parseInt(dateParts[2])).padStart(2, '0');
-        return `${month}/${day}`;
-      }
-      return dateString;
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Calculate total hours for the selected line
-  const calculateTotalHours = () => {
-    const timesheetHours = getTimesheetHours();
-    return timesheetHours.reduce((total, entry) => {
-      return total + (parseFloat(entry.hours) || 0);
-    }, 0).toFixed(2);
-  };
-
-  // Get unique dates for header columns
-  const getWeekDates = () => {
-    const timesheetHours = getTimesheetHours();
-    if (timesheetHours.length === 0) return [];
-    
-    const dates = [...new Set(timesheetHours.map(entry => entry.ts_Date))].sort();
-    return dates;
-  };
-
-  // Create data structure for table display
-  const getTableData = () => {
-    const selectedLine = getSelectedLineData();
-    const timesheetHours = getTimesheetHours();
-    const weekDates = getWeekDates();
-
-    if (!selectedLine || timesheetHours.length === 0) {
-      return { lineData: {}, weekDates: [], selectedLine: null };
-    }
-
-    // Create a map of date -> hours for easy lookup
-    const dateHoursMap = {};
-    timesheetHours.forEach(entry => {
-      dateHoursMap[entry.ts_Date] = parseFloat(entry.hours) || 0;
-    });
-
-    return { 
-      lineData: dateHoursMap, 
-      weekDates, 
-      selectedLine 
+// --- ActionButton Component ---
+const ActionButton = ({ children, onClick, variant = 'secondary', icon, className = '', disabled = false }) => {
+    const baseClasses = "inline-flex items-center justify-center px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150";
+    const variants = {
+        primary: "border-transparent text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 focus:ring-indigo-500",
+        secondary: "border-gray-300 text-gray-800 bg-white hover:bg-gray-50 focus:ring-indigo-500 font-semibold",
     };
-  };
-
-  const { lineData, weekDates, selectedLine } = getTableData();
-  const totalHours = calculateTotalHours();
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-xl border border-gray-300 p-6">
-        <div className="flex justify-center items-center h-32">
-          <div className="text-lg text-gray-600">Loading timesheet data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg shadow-xl border border-gray-300 p-6">
-        <div className="flex justify-center items-center h-32">
-          <div className="text-lg text-red-600">Error: {error}</div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden max-w-6xl">
-      {/* Header - Simple title with close button */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Timesheet Detail
-        </h3>
-        <button
-          onClick={onClose}
-          className="text-gray-600 hover:text-gray-800 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
-          title="Close"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Scrollable Content */}
-      <div className="p-4 max-h-96 overflow-auto">
-        {!selectedLine ? (
-          <div className="text-center py-8 text-gray-500">
-            No timesheet data found for the selected line
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs border-collapse border border-gray-400 min-w-max">
-              {/* Table Header */}
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border border-gray-400 px-3 py-2 text-center font-medium text-gray-800 min-w-24">
-                    Line Number
-                  </th>
-                  {weekDates.map((date, index) => (
-                    <th key={index} className="border border-gray-400 px-3 py-2 text-center font-medium text-gray-800 min-w-20">
-                      {formatDateHeader(date)}
-                    </th>
-                  ))}
-                  <th className="border border-gray-400 px-3 py-2 text-center font-medium text-gray-800 min-w-16">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-
-              {/* Table Body */}
-              <tbody>
-                {/* Line Data Row */}
-                <tr className="bg-white">
-                  <td className="border border-gray-400 px-3 py-2 text-center font-medium">
-                    Line {selectedLine.lineNo || selectedLine.timesheetId || selectedLine.id}
-                  </td>
-                  {weekDates.map((date, index) => (
-                    <td key={index} className="border border-gray-400 px-3 py-2 text-center">
-                      {lineData[date] || 0}
-                    </td>
-                  ))}
-                  <td className="border border-gray-400 px-3 py-2 text-center font-medium text-blue-800">
-                    {totalHours}
-                  </td>
-                </tr>
-
-                {/* Regular Hours Row */}
-                <tr className="bg-blue-100 font-medium">
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold">
-                    Regular
-                  </td>
-                  {weekDates.map((date, index) => (
-                    <td key={index} className="border border-gray-400 px-3 py-2 text-center font-medium">
-                      {(lineData[date] || 0).toFixed(2)}
-                    </td>
-                  ))}
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold text-blue-800">
-                    {totalHours}
-                  </td>
-                </tr>
-
-                {/* Overtime Row */}
-                <tr className="bg-yellow-100 font-medium">
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold">
-                    Overtime
-                  </td>
-                  {weekDates.map((date, index) => (
-                    <td key={index} className="border border-gray-400 px-3 py-2 text-center font-medium">
-                      0.00
-                    </td>
-                  ))}
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold text-yellow-800">
-                    0.00
-                  </td>
-                </tr>
-
-                {/* Total Row */}
-                <tr className="bg-green-200 font-bold">
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold">
-                    Total
-                  </td>
-                  {weekDates.map((date, index) => (
-                    <td key={index} className="border border-gray-400 px-3 py-2 text-center font-bold">
-                      {(lineData[date] || 0).toFixed(2)}
-                    </td>
-                  ))}
-                  <td className="border border-gray-400 px-3 py-2 text-center font-bold text-green-800">
-                    {totalHours}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
-        <button
-          onClick={onClose}
-          className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  );
+    const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
+    return ( <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variants[variant]} ${className} ${disabledClasses}`}>{icon && <span className="mr-2">{icon}</span>}{children}</button> );
 };
 
-export default TimesheetDetailModal;
+// --- Toast Notification ---
+const showToast = (message, type = 'info') => {
+    const toast = document.createElement('div');
+    const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500 text-black', info: 'bg-blue-500' };
+    toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses['info']}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => { document.body.removeChild(toast); }, 3000);
+};
+
+// --- Initial empty line structure ---
+const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
+
+// --- CascadingSelect Component ---
+const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
+
+// --- Data for the period dropdown ---
+const timePeriods = [
+    { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
+    { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
+    { label: 'Mon 9/22 - Sun 9/28', dates: ['Mon 09/22', 'Tue 09/23', 'Wed 09/24', 'Thu 09/25', 'Fri 09/26', 'Sat 09/27', 'Sun 09/28'] },
+];
+
+// --- Helper Functions ---
+const formatDate = (dateInput) => {
+    if (!dateInput) return '';
+    let date;
+    if (dateInput instanceof Date) {
+        date = dateInput;
+    } else {
+        const dateOnlyString = String(dateInput).split('T')[0];
+        const parts = dateOnlyString.split('-');
+        if (parts.length !== 3) return dateInput;
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        date = new Date(Date.UTC(year, month, day));
+    }
+    if (isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
+};
+
+export default function TimesheetDetailModal({ timesheetData, onClose, onSave, isSaving }) {
+    const [lines, setLines] = useState([]);
+    const [selectedLines, setSelectedLines] = useState(new Set());
+    const [isLoading, setIsLoading] = useState(true);
+    const [purchaseOrderData, setPurchaseOrderData] = useState([]);
+    const [isEditable, setIsEditable] = useState(false);
+    
+    const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    
+    useEffect(() => {
+        if (timesheetData) {
+            setIsEditable(timesheetData.Status?.toUpperCase() === 'OPEN');
+            fetchTimesheetDetails();
+        }
+    }, [timesheetData]);
+
+    const fetchTimesheetDetails = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${timesheetData["Employee ID"]}`);
+            if (!response.ok) throw new Error('Failed to fetch timesheet details');
+            const data = await response.json();
+            
+            const poResponse = await fetch(`https://timesheet-subk.onrender.com/api/PurchaseOrders/ByResourceDetails/${timesheetData["Employee ID"]}`);
+            if(!poResponse.ok) throw new Error('Failed to fetch purchase order details');
+            const poData = await poResponse.json();
+            const poDataArray = Array.isArray(poData) ? poData : [];
+            setPurchaseOrderData(poDataArray);
+            
+            const filteredData = data.filter(item => formatDate(item.timesheet_Date) === timesheetData.Date);
+
+            const mappedLines = filteredData.map(item => {
+                const matchingPoEntry = poDataArray.find(po => 
+                    po.project?.includes(item.projId) &&
+                    po.plcCd?.includes(item.plc) &&
+                    po.purchaseOrder?.includes(item.poNumber)
+                );
+    
+                const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+                const hourIdsData = {};
+                if (item.timesheetHours) {
+                    item.timesheetHours.forEach(hourEntry => {
+                        const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+                        if (!isNaN(date.getTime())) {
+                            const dayKey = dayKeyMapping[date.getUTCDay()];
+                            if (dayKey) {
+                                hoursData[dayKey] = hourEntry.hours;
+                                hourIdsData[dayKey] = hourEntry.id;
+                            }
+                        }
+                    });
+                }
+    
+                return {
+                    id: item.timesheetId,
+                    description: item.description || '',
+                    project: item.projId || '',
+                    plc: item.plc || '',
+                    payType: item.payType || 'SR',
+                    workOrder: matchingPoEntry ? `${matchingPoEntry.wa_Code} - ${matchingPoEntry.resourceDesc[0]}` : (item.workOrder || ''),
+                    poNumber: item.poNumber || '',
+                    rlseNumber: item.rlseNumber || '',
+                    poLineNumber: item.poLineNumber || '',
+                    hours: hoursData,
+                    hourIds: hourIdsData
+                };
+            });
+            setLines(mappedLines);
+
+        } catch (error) {
+            showToast(error.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const handleSelectChange = (id, fieldName, value) => {
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
+
+                if (fieldName === 'workOrder') {
+                    const [waCode, desc] = value.split(' - ');
+                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+                    if (selectedWorkOrderData) {
+                        updatedLine.description = desc || '';
+                        updatedLine.project = selectedWorkOrderData.project[0] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[0] || '';
+                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[0] || '';
+                    } else {
+                        updatedLine.description = '';
+                        updatedLine.project = '';
+                        updatedLine.plc = '';
+                        updatedLine.poNumber = '';
+                        updatedLine.rlseNumber = '';
+                        updatedLine.poLineNumber = '';
+                    }
+                }
+                return updatedLine;
+            }
+            return line;
+        }));
+    };
+
+    const handleHourChange = (id, day, value) => {
+        const numValue = parseFloat(value);
+        if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+            showToast('Hours must be between 0 and 24.', 'warning');
+            return;
+        }
+        setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line));
+    };
+
+    const addLine = () => {
+        const newId = `temp-${Date.now()}`;
+        setLines(prevLines => [...prevLines, createEmptyLine(newId)]);
+    };
+    
+    const handleSelectLine = (id) => {
+        const newSelection = new Set(selectedLines);
+        newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
+        setSelectedLines(newSelection);
+    };
+
+    const deleteLines = () => {
+        if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning');
+        setLines(lines.filter(line => !selectedLines.has(line.id)));
+        setSelectedLines(new Set());
+    };
+
+    const copyLines = () => {
+        if (selectedLines.size === 0) return showToast('Please select at least one line to copy.', 'warning');
+        let maxId = lines.length > 0 ? Math.max(...lines.map(l => typeof l.id === 'number' ? l.id : 0)) : 0;
+        const newLines = lines.filter(line => selectedLines.has(line.id)).map(line => ({ ...line, id: ++maxId }));
+        setLines([...lines, ...newLines]);
+        setSelectedLines(new Set());
+    };
+
+    const handleSave = () => {
+        if (onSave) {
+            onSave(lines);
+        }
+    };
+    
+    if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
+
+    return (
+        <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
+            <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">View / Edit Timesheet</h3>
+                {isEditable &&
+                    <div className="flex items-center gap-2">
+                        <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
+                        <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
+                        <ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>
+                    </div>
+                }
+            </div>
+            <div className="p-4 max-h-96 overflow-auto">
+                <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
+                    <table className="w-full text-sm min-w-[1600px]">
+                        <thead className="bg-slate-100/70 border-b border-gray-200/80">
+                            <tr>{['', 'Line', 'Work Order', 'Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...timePeriods[0].dates, 'Total'].map(header => <th key={header} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{header}</th>)}</tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200/80 bg-white/50">
+                            {lines.map((line, index) => {
+                                const workOrderOptions = purchaseOrderData.flatMap(item => 
+                                    item.resourceDesc.map((desc, i) => ({
+                                        value: `${item.wa_Code} - ${desc}`,
+                                        label: `${item.wa_Code} - ${desc}`
+                                    }))
+                                );
+                                const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
+                                return (
+                                <tr key={line.id} className="hover:bg-slate-50/50">
+                                    <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} /></td>
+                                    <td className="p-3 text-center text-gray-500">{index + 1}</td>
+                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} disabled={!isEditable} /></td>
+                                    <td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly/></td>
+                                    <td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]">
+                                        <select value={line.payType} onChange={e => handleSelectChange(line.id, 'payType', e.target.value)} className="w-full bg-white p-1.5 border border-gray-200 rounded-md" disabled={!isEditable}>
+                                            <option value="SR">SR (Subcontractor Regular)</option>
+                                            <option value="SO">SO (Subcontractor Overtime)</option>
+                                        </select>
+                                    </td>
+                                    <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={day === 'sat' || day === 'sun' || !isEditable} /></td>)}
+                                    <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
+                                </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
+                <button onClick={onClose} className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
+                {isEditable &&
+                    <button 
+                        onClick={handleSave} 
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                        disabled={isSaving}
+                    >
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                }
+            </div>
+        </div>
+    );
+};

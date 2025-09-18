@@ -133,6 +133,7 @@
 //         </div>
 //     );
 // }
+
 import React, { useState, useEffect } from 'react';
 
 // --- SVG Icons ---
@@ -162,10 +163,10 @@ const showToast = (message, type = 'info') => {
 };
 
 // --- Initial empty line structure ---
-const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', payType: '', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
+const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
 
 // --- CascadingSelect Component ---
-const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select> );
+const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
 
 // --- Data for the period dropdown ---
 const timePeriods = [
@@ -191,7 +192,7 @@ const formatDateForComparison = (dateInput) => {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
 
-export default function TimesheetLine({ onClose, resourceId, existingTimesheetDates = [], timesheetToEdit = null }) {
+export default function TimesheetLine({ onClose, resourceId, existingTimesheetDates = [], timesheetToEdit = null, currentUser }) {
     const [purchaseOrderData, setPurchaseOrderData] = useState([]);
     const [lines, setLines] = useState([]);
     const [selectedLines, setSelectedLines] = useState(new Set());
@@ -203,9 +204,6 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const dayHeaders = selectedPeriod.dates;
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    
-    const fieldHierarchy = ['project', 'plc', 'poNumber', 'rlseNumber', 'poLineNumber'];
-    const fieldApiMap = { project: 'project', plc: 'plcCd', poNumber: 'purchaseOrderNumber', rlseNumber: 'purchaseOrderRelease', poLineNumber: 'poLineNumber' };
 
     useEffect(() => {
         try {
@@ -237,7 +235,8 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     description: timesheetToEdit?.description || '',
                     project: timesheetToEdit?.projId || '',
                     plc: timesheetToEdit?.plc || '',
-                    payType: timesheetToEdit?.payType || '',
+                    payType: timesheetToEdit?.payType || 'SR',
+                    workOrder: timesheetToEdit?.workOrder || '',
                     poNumber: timesheetToEdit?.poNumber || '',
                     rlseNumber: timesheetToEdit?.rlseNumber || '',
                     poLineNumber: timesheetToEdit?.poLineNumber || '',
@@ -269,6 +268,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 setPurchaseOrderData(Array.isArray(data) ? data : []);
+
             } catch (error) {
                 console.error("Failed to fetch purchase orders:", error);
                 showToast("Could not load purchase order data.", "error");
@@ -292,43 +292,30 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             setIsPeriodInvalid(false);
         }
     }, [selectedPeriod, existingTimesheetDates, isEditMode]);
-
-    const getDropdownOptions = (targetField, currentLine) => {
-        if (!purchaseOrderData || purchaseOrderData.length === 0) return [];
-        let filteredData = [...purchaseOrderData];
-        for (const field of fieldHierarchy) {
-            if (field === targetField) break;
-            const selectedValue = currentLine[field];
-            if (selectedValue) {
-                filteredData = filteredData.filter(item => String(item[fieldApiMap[field]]) === String(selectedValue));
-            } else {
-                return [];
-            }
-        }
-        const options = [...new Set(filteredData.map(item => item[fieldApiMap[targetField]]))];
-        return options.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
-    };
-
+    
     const handleSelectChange = (id, fieldName, value) => {
         setLines(currentLines => currentLines.map(line => {
             if (line.id === id) {
                 const updatedLine = { ...line, [fieldName]: value };
-                const changedFieldIndex = fieldHierarchy.indexOf(fieldName);
-                if (changedFieldIndex !== -1) {
-                    for (let i = changedFieldIndex + 1; i < fieldHierarchy.length; i++) {
-                        updatedLine[fieldHierarchy[i]] = '';
-                    }
-                    let currentField = fieldName;
-                    while (true) {
-                        const currentFieldIndex = fieldHierarchy.indexOf(currentField);
-                        const nextFieldIndex = currentFieldIndex + 1;
-                        if (nextFieldIndex >= fieldHierarchy.length) break;
-                        const nextField = fieldHierarchy[nextFieldIndex];
-                        const nextOptions = getDropdownOptions(nextField, updatedLine);
-                        if (nextOptions.length === 1) {
-                            updatedLine[nextField] = nextOptions[0];
-                            currentField = nextField;
-                        } else { break; }
+
+                if (fieldName === 'workOrder') {
+                    const [waCode, desc] = value.split(' - ');
+                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+
+                    if (selectedWorkOrderData) {
+                        updatedLine.description = desc || '';
+                        updatedLine.project = selectedWorkOrderData.project[0] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[0] || '';
+                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[0] || '';
+                    } else {
+                        updatedLine.description = '';
+                        updatedLine.project = '';
+                        updatedLine.plc = '';
+                        updatedLine.poNumber = '';
+                        updatedLine.rlseNumber = '';
+                        updatedLine.poLineNumber = '';
                     }
                 }
                 return updatedLine;
@@ -336,22 +323,20 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             return line;
         }));
     };
-    
+
     const handleHourChange = (id, day, value) => {
-        if (value === '') {
-            setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: 0 } } : line));
-            return;
-        }
         const numValue = parseFloat(value);
-        if (isNaN(numValue)) return;
-        if (numValue > 24 || numValue < 0 || numValue % 0.5 !== 0) {
-            showToast('Hours must be between 0 and 24, in 0.5 increments.', 'warning');
+        if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+            showToast('Hours must be between 0 and 24.', 'warning');
             return;
         }
         setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line));
     };
 
-    const addLine = () => setLines([...lines, createEmptyLine(lines.length > 0 ? Math.max(...lines.map(l => l.id)) + 1 : 1)]);
+    const addLine = () => {
+        const newId = `temp-${Date.now()}`;
+        setLines(prevLines => [...prevLines, createEmptyLine(newId)]);
+    };
     
     const handleSelectLine = (id) => {
         const newSelection = new Set(selectedLines);
@@ -367,7 +352,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
 
     const copyLines = () => {
         if (selectedLines.size === 0) return showToast('Please select at least one line to copy.', 'warning');
-        let maxId = lines.length > 0 ? Math.max(...lines.map(l => l.id)) : 0;
+        let maxId = lines.length > 0 ? Math.max(...lines.map(l => typeof l.id === 'number' ? l.id : 0)) : 0;
         const newLines = lines.filter(line => selectedLines.has(line.id)).map(line => ({ ...line, id: ++maxId }));
         setLines([...lines, ...newLines]);
         setSelectedLines(new Set());
@@ -376,7 +361,6 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     const handleSubmit = async () => {
         const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
 
-        // --- CREATE MODE LOGIC ---
         if (!isEditMode) {
             for (const line of lines) {
                 if (!line.project || !line.poLineNumber) {
@@ -393,7 +377,34 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                 });
 
                 const createPayload = {
-                    lineNo: 0, description: line.description, projId: line.project, plc: line.plc, payType: line.payType, poNumber: line.poNumber, rlseNumber: line.rlseNumber || "0", resource_Id: String(resourceId), pm_User_Id: "", vend_Id: "", poLineNumber: parseInt(line.poLineNumber, 10) || 0, rvsnNumber: 0, createdAt: now, timesheet_Date: weekEndDateAsISO, createdBy: String(resourceId), updatedAt: now, updatedBy: String(resourceId), timesheetHours: timesheetHours, hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)), status: "OPEN", requestId: 0, approverUserId: 0, approvalStatus: "PENDING", displayedName: "", comment: "", ipAddress: "", approvedBy: ""
+                    lineNo: 0, 
+                    description: line.description, 
+                    projId: line.project, 
+                    plc: line.plc, 
+                    workOrder: line.workOrder.split(' - ')[0], 
+                    payType: line.payType, 
+                    poNumber: line.poNumber, 
+                    rlseNumber: line.rlseNumber || "0", 
+                    resource_Id: String(resourceId), 
+                    pm_User_Id: String(currentUser?.approvalUserId || ""), 
+                    vend_Id: "", 
+                    poLineNumber: parseInt(line.poLineNumber, 10) || 0, 
+                    rvsnNumber: 0, 
+                    createdAt: now, 
+                    timesheet_Date: weekEndDateAsISO, 
+                    createdBy: String(resourceId), 
+                    updatedAt: now, 
+                    updatedBy: String(resourceId), 
+                    timesheetHours: timesheetHours, 
+                    hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)), 
+                    status: "OPEN", 
+                    requestId: 0, 
+                    approverUserId: 0, 
+                    approvalStatus: "PENDING", 
+                    displayedName: "", 
+                    comment: "", 
+                    ipAddress: "", 
+                    approvedBy: ""
                 };
 
                 try {
@@ -412,85 +423,15 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             onClose();
             return;
         }
-
-        // --- EDIT MODE LOGIC ---
-        try {
-            const now = new Date().toISOString();
-            const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
-            const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
-            
-            const primaryLine = lines.find(l => l.id === timesheetToEdit.id) || lines[0];
-            if (!primaryLine) {
-                showToast("No data to save.", 'error');
-                return;
-            }
-
-            let combinedHoursData = [];
-            let totalHours = 0;
-
-            for (const line of lines) {
-                 if (!line.project || !line.poLineNumber) {
-                    showToast(`Missing required info for line ${line.id}.`, 'warning');
-                    return;
-                }
-                const lineHours = days.map((day, index) => {
-                    const dateParts = dayHeaders[index].split(' ')[1].split('/');
-                    const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
-                    return {
-                        id: line.hourIds?.[day] || 0,
-                        ts_Date: dateForApi,
-                        hours: line.hours[day] || 0
-                    };
-                });
-                combinedHoursData.push(...lineHours);
-                totalHours += Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
-            }
-
-            const updatePayload = {
-                ...timesheetToEdit,
-                description: primaryLine.description,
-                projId: primaryLine.project,
-                plc: primaryLine.plc,
-                payType: primaryLine.payType,
-                poNumber: primaryLine.poNumber,
-                rlseNumber: primaryLine.rlseNumber,
-                poLineNumber: primaryLine.poLineNumber,
-                timesheetHours: combinedHoursData,
-                hours: parseFloat(totalHours.toFixed(2)),
-                updatedAt: now,
-                updatedBy: String(resourceId),
-            };
-
-            const updateUrl = `${API_URL}/${timesheetToEdit.id}`;
-            const response = await fetch(updateUrl, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatePayload)
-            });
-
-            if (!response.ok) {
-                let errorData;
-                try { errorData = await response.json(); } 
-                catch { errorData = { title: await response.text() }; }
-                throw new Error(errorData.title || 'Update failed');
-            }
-            
-            showToast('Timesheet updated successfully!', 'success');
-            onClose();
-
-        } catch (error) {
-            console.error('API submission error:', error);
-            showToast(error.message, 'error');
-        }
     };
     
     if (isLoading) { return <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading Data...</div></div>; }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 z-50">
-            <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-100 shadow-2xl rounded-2xl p-6 md:p-8 w-full max-w-[1600px] mx-auto my-4 overflow-y-auto max-h-[95vh]">
+            <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-100 shadow-2xl rounded-2xl p-6 md:p-8 w-full max-w-[90vw] mx-auto my-4 overflow-y-auto max-h-[95vh]">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">{isEditMode ? 'Edit Timesheet' : 'Create Timesheet'}</h2>
+                    <h2 className="text-2xl font-bold text-gray-800">{isEditMode ? 'View / Edit Timesheet' : 'Create Timesheet'}</h2>
                     <div className="flex items-center gap-4 flex-wrap">
                         <div className="flex flex-col items-start"> 
                             <div className="flex items-center gap-2">
@@ -517,30 +458,37 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                         </div>
                     </div>
                 </div>
-                <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm" style={{ overflowX: 'auto' }}>
+                <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
                     <table className="w-full text-sm min-w-[1600px]">
                         <thead className="bg-slate-100/70 border-b border-gray-200/80">
-                             <tr>{['', 'Line', 'Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...dayHeaders, 'Total'].map(header => <th key={header} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{header}</th>)}</tr>
+                            <tr>{['', 'Line', 'Work Order', 'Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...timePeriods[0].dates, 'Total'].map(header => <th key={header} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{header}</th>)}</tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200/80 bg-white/50">
                             {lines.map((line, index) => {
-                                const projectOptions = getDropdownOptions('project', line);
-                                const plcOptions = getDropdownOptions('plc', line);
-                                const poNumberOptions = getDropdownOptions('poNumber', line);
-                                const rlseNumberOptions = getDropdownOptions('rlseNumber', line);
-                                const poLineNumberOptions = getDropdownOptions('poLineNumber', line);
+                                const workOrderOptions = purchaseOrderData.flatMap(item => 
+                                    item.resourceDesc.map((desc, i) => ({
+                                        value: `${item.wa_Code} - ${desc}`,
+                                        label: `${item.wa_Code} - ${desc}`
+                                    }))
+                                );
                                 const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
                                 return (
                                 <tr key={line.id} className="hover:bg-slate-50/50">
                                     <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} /></td>
                                     <td className="p-3 text-center text-gray-500">{index + 1}</td>
-                                    <td className="p-2 min-w-[200px]"><input type="text" value={line.description} onChange={e => handleSelectChange(line.id, 'description', e.target.value)} className="w-full bg-white p-1.5 border border-gray-200 rounded-md"/></td>
-                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="Project" options={projectOptions} value={line.project} onChange={e => handleSelectChange(line.id, 'project', e.target.value)} /></td>
-                                    <td className="p-2 min-w-[120px]"><CascadingSelect label="PLC" options={plcOptions} value={line.plc} onChange={e => handleSelectChange(line.id, 'plc', e.target.value)} disabled={!line.project} /></td>
-                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.payType} onChange={e => handleSelectChange(line.id, 'payType', e.target.value)} className="w-full bg-white p-1.5 border border-gray-200 rounded-md"/></td>
-                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="PO" options={poNumberOptions} value={line.poNumber} onChange={e => handleSelectChange(line.id, 'poNumber', e.target.value)} disabled={!line.plc} /></td>
-                                    <td className="p-2 min-w-[120px]"><CascadingSelect label="RLSE" options={rlseNumberOptions} value={line.rlseNumber} onChange={e => handleSelectChange(line.id, 'rlseNumber', e.target.value)} disabled={!line.poNumber} /></td>
-                                    <td className="p-2 min-w-[120px]"><CascadingSelect label="PO Line" options={poLineNumberOptions} value={line.poLineNumber} onChange={e => handleSelectChange(line.id, 'poLineNumber', e.target.value)} disabled={!line.rlseNumber} /></td>
+                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} /></td>
+                                    <td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly/></td>
+                                    <td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]">
+                                        <select value={line.payType} onChange={e => handleSelectChange(line.id, 'payType', e.target.value)} className="w-full bg-white p-1.5 border border-gray-200 rounded-md">
+                                            <option value="SR">SR (Subcontractor Regular)</option>
+                                            <option value="SO">SO (Subcontractor Overtime)</option>
+                                        </select>
+                                    </td>
+                                    <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
+                                    <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={day === 'sat' || day === 'sun'} /></td>)}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>

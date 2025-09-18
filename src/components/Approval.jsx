@@ -5076,12 +5076,12 @@ const columnsAdmin = [
   "Date",
   "Employee ID",
   "Name",
-  "Project ID",
-  "PLC",
-  "Pay Type",
-  "RLSE Number",
-  "PO Number",
-  "PO Line Number",
+  // "Project ID",
+  // "PLC",
+  // "Pay Type",
+  // "RLSE Number",
+  // "PO Number",
+  // "PO Line Number",
   "Hours",
 ];
 
@@ -5196,7 +5196,7 @@ export default function Approval() {
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
 
   const columns = columnsAdmin;
-  const colWidth = 120;
+  const colWidth = 150;
   const minTableWidth = columns.length * colWidth;
 
   // Format date to MM/DD/YYYY with leading zeros
@@ -5537,6 +5537,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       case "APPROVED":
         return {
@@ -5546,6 +5547,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       case "REJECTED":
         return {
@@ -5555,6 +5557,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       case "PENDING":
         return {
@@ -5564,6 +5567,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       case "NOTIFIED":
         return {
@@ -5573,6 +5577,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       case "UN-NOTIFIED":
       case "UNNOTIFIED":
@@ -5583,6 +5588,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
       default:
         return {
@@ -5592,6 +5598,7 @@ export default function Approval() {
           padding: "4px 8px",
           fontSize: "11px",
           display: "inline-block",
+          borderRadius: "9999px",
         };
     }
   };
@@ -6057,8 +6064,9 @@ export default function Approval() {
       showToast("Please select at least one timesheet to approve.", "warning");
       return;
     }
-    setPendingAction("approve");
-    setShowReasonModal(true);
+    // setPendingAction("approve");
+    // setShowReasonModal(true);
+    performBulkApprove("Bulk approved"); // Add default reason here
   };
 
   const handleBulkRejectClick = () => {
@@ -6108,27 +6116,21 @@ export default function Approval() {
           "success"
         );
         const approvedIds = selectedRows.map((row) => row.id);
-        // setRows((prevRows) =>
-        //   prevRows.map((row) =>
-        //     approvedIds.includes(row.id)     
-        //       ? {
-        //           ...row,
-        //           isApproved: true,
-        //           status: "approved",
-        //           selected: false,
-        //           Status: "APPROVED",
-        //         }
-        //       : row
-        //   )
-        // );
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            approvedIds.includes(row.id)     
+              ? {
+                  ...row,
+                  isApproved: true,
+                  status: "approved",
+                  selected: false,
+                  Status: "APPROVED",
+                }
+              : row
+          )
+        );
 
-        // CHANGE: Remove approved rows immediately instead of updating them
-      setRows((prevRows) =>
-        prevRows.filter((row) => !approvedIds.includes(row.id))
-      );
-      
-        setSelectedRows([]);
-        setSelectAll(false);
+       
        
       } else {
         showToast(
@@ -6323,8 +6325,9 @@ export default function Approval() {
               marginLeft: 24,
               marginRight: 24,
               width: "calc(100vw - 220px)",
-              maxWidth: "none",
-              minWidth: 300,
+              // 
+               maxWidth: "1200px", // Add maximum width
+    minWidth: "800px", // Set minimum width for the 6 columns
               padding: "0.5rem",
               // minHeight: "350px",
               // maxHeight: "calc(100vh - 180px)",
@@ -6389,8 +6392,10 @@ export default function Approval() {
                 style={{
                   borderCollapse: "collapse",
                   fontSize: "11px",
-                  minWidth: `${minTableWidth}px`,
-                  width: "max-content",
+                  // minWidth: `${minTableWidth}px`,
+                  // width: "max-content",
+                  width: "100%", // Use full width of container instead of minWidth
+    tableLayout: "fixed" // Add fixed layout for better control
                 }}
               >
                 <thead
