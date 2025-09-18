@@ -135,10 +135,12 @@
 // }
 import React, { useState, useEffect } from 'react';
 
-// --- SVG Icons, ActionButton, showToast, etc. ---
+// --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
 const CopyIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
 const TrashIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
+
+// --- ActionButton Component ---
 const ActionButton = ({ children, onClick, variant = 'secondary', icon, className = '', disabled = false }) => {
     const baseClasses = "inline-flex items-center justify-center px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150";
     const variants = {
@@ -148,6 +150,8 @@ const ActionButton = ({ children, onClick, variant = 'secondary', icon, classNam
     const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
     return ( <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variants[variant]} ${className} ${disabledClasses}`}>{icon && <span className="mr-2">{icon}</span>}{children}</button> );
 };
+
+// --- Toast Notification ---
 const showToast = (message, type = 'info') => {
     const toast = document.createElement('div');
     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500 text-black', info: 'bg-blue-500' };
@@ -156,13 +160,21 @@ const showToast = (message, type = 'info') => {
     document.body.appendChild(toast);
     setTimeout(() => { document.body.removeChild(toast); }, 3000);
 };
+
+// --- Initial empty line structure ---
 const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', payType: '', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
+
+// --- CascadingSelect Component ---
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select> );
+
+// --- Data for the period dropdown ---
 const timePeriods = [
     { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
     { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
     { label: 'Mon 9/22 - Sun 9/28', dates: ['Mon 09/22', 'Tue 09/23', 'Wed 09/24', 'Thu 09/25', 'Fri 09/26', 'Sat 09/27', 'Sun 09/28'] },
 ];
+
+// --- Helper Functions ---
 const getWeekEndDateFromPeriod = (period) => {
     if (!period?.dates?.length) return null;
     const lastDayString = period.dates[period.dates.length - 1];
@@ -171,6 +183,7 @@ const getWeekEndDateFromPeriod = (period) => {
     const date = new Date(Date.UTC(2025, parseInt(month, 10) - 1, parseInt(day, 10)));
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
+
 const formatDateForComparison = (dateInput) => {
     if (!dateInput) return '';
     const date = new Date(dateInput);
@@ -199,7 +212,9 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             if (isEditMode && timesheetToEdit) {
                 const editDateStr = formatDateForComparison(timesheetToEdit?.timesheet_Date);
                 const matchingPeriod = timePeriods.find(period => getWeekEndDateFromPeriod(period) === editDateStr);
-                if (matchingPeriod) setSelectedPeriod(matchingPeriod);
+                if (matchingPeriod) {
+                    setSelectedPeriod(matchingPeriod);
+                }
                 
                 const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
                 const hourIdsData = {};
@@ -216,6 +231,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                         }
                     }
                 });
+
                 const initialLine = {
                     id: timesheetToEdit?.id,
                     description: timesheetToEdit?.description || '',
@@ -293,75 +309,75 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         return options.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
     };
 
-    const handleSelectChange = (id, fieldName, value) => { /* ... unchanged ... */ };
-    const handleHourChange = (id, day, value) => { /* ... unchanged ... */ };
+    const handleSelectChange = (id, fieldName, value) => {
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
+                const changedFieldIndex = fieldHierarchy.indexOf(fieldName);
+                if (changedFieldIndex !== -1) {
+                    for (let i = changedFieldIndex + 1; i < fieldHierarchy.length; i++) {
+                        updatedLine[fieldHierarchy[i]] = '';
+                    }
+                    let currentField = fieldName;
+                    while (true) {
+                        const currentFieldIndex = fieldHierarchy.indexOf(currentField);
+                        const nextFieldIndex = currentFieldIndex + 1;
+                        if (nextFieldIndex >= fieldHierarchy.length) break;
+                        const nextField = fieldHierarchy[nextFieldIndex];
+                        const nextOptions = getDropdownOptions(nextField, updatedLine);
+                        if (nextOptions.length === 1) {
+                            updatedLine[nextField] = nextOptions[0];
+                            currentField = nextField;
+                        } else { break; }
+                    }
+                }
+                return updatedLine;
+            }
+            return line;
+        }));
+    };
+    
+    const handleHourChange = (id, day, value) => {
+        if (value === '') {
+            setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: 0 } } : line));
+            return;
+        }
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) return;
+        if (numValue > 24 || numValue < 0 || numValue % 0.5 !== 0) {
+            showToast('Hours must be between 0 and 24, in 0.5 increments.', 'warning');
+            return;
+        }
+        setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line));
+    };
+
     const addLine = () => setLines([...lines, createEmptyLine(lines.length > 0 ? Math.max(...lines.map(l => l.id)) + 1 : 1)]);
-    const handleSelectLine = (id) => { /* ... unchanged ... */ };
-    const deleteLines = () => { /* ... unchanged ... */ };
-    const copyLines = () => { /* ... unchanged ... */ };
+    
+    const handleSelectLine = (id) => {
+        const newSelection = new Set(selectedLines);
+        newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
+        setSelectedLines(newSelection);
+    };
+
+    const deleteLines = () => {
+        if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning');
+        setLines(lines.filter(line => !selectedLines.has(line.id)));
+        setSelectedLines(new Set());
+    };
+
+    const copyLines = () => {
+        if (selectedLines.size === 0) return showToast('Please select at least one line to copy.', 'warning');
+        let maxId = lines.length > 0 ? Math.max(...lines.map(l => l.id)) : 0;
+        const newLines = lines.filter(line => selectedLines.has(line.id)).map(line => ({ ...line, id: ++maxId }));
+        setLines([...lines, ...newLines]);
+        setSelectedLines(new Set());
+    };
 
     const handleSubmit = async () => {
         const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
 
-        if (isEditMode) {
-            const line = lines[0];
-            if (!line) return showToast('No data to save.', 'error');
-
-            const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
-            const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
-            const now = new Date().toISOString();
-
-            if (!line.project || !line.poLineNumber) {
-                return showToast(`Missing required info for the line.`, 'warning');
-            }
-
-            const timesheetHours = days.map((day, index) => {
-                const dateParts = dayHeaders[index].split(' ')[1].split('/');
-                const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
-                return {
-                    id: line.hourIds?.[day] || 0,
-                    ts_Date: dateForApi,
-                    hours: line.hours[day] || 0
-                };
-            });
-
-            const payload = {
-                ...timesheetToEdit,
-                description: line.description,
-                projId: line.project,
-                plc: line.plc,
-                payType: line.payType,
-                poNumber: line.poNumber,
-                rlseNumber: line.rlseNumber || "0",
-                poLineNumber: parseInt(line.poLineNumber, 10) || 0,
-                timesheet_Date: weekEndDateAsISO,
-                updatedAt: now,
-                updatedBy: String(resourceId),
-                timesheetHours: timesheetHours,
-                hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
-            };
-
-            try {
-                const updateUrl = `${API_URL}/${timesheetToEdit.id}`;
-                const response = await fetch(updateUrl, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) {
-                    let errorData;
-                    try { errorData = await response.json(); } 
-                    catch { errorData = { title: await response.text() }; }
-                    throw new Error(errorData.title || 'Update failed');
-                }
-                showToast('Timesheet updated successfully!', 'success');
-                onClose();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-
-        } else {
-            // CREATE Mode
+        // --- CREATE MODE LOGIC ---
+        if (!isEditMode) {
             for (const line of lines) {
                 if (!line.project || !line.poLineNumber) {
                     showToast(`Missing required info for line ${line.id}.`, 'warning');
@@ -375,9 +391,11 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
                     return { id: 0, ts_Date: dateForApi, hours: line.hours[day] || 0 };
                 });
+
                 const createPayload = {
                     lineNo: 0, description: line.description, projId: line.project, plc: line.plc, payType: line.payType, poNumber: line.poNumber, rlseNumber: line.rlseNumber || "0", resource_Id: String(resourceId), pm_User_Id: "", vend_Id: "", poLineNumber: parseInt(line.poLineNumber, 10) || 0, rvsnNumber: 0, createdAt: now, timesheet_Date: weekEndDateAsISO, createdBy: String(resourceId), updatedAt: now, updatedBy: String(resourceId), timesheetHours: timesheetHours, hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)), status: "OPEN", requestId: 0, approverUserId: 0, approvalStatus: "PENDING", displayedName: "", comment: "", ipAddress: "", approvedBy: ""
                 };
+
                 try {
                     const response = await fetch(API_URL, {
                         method: 'POST',
@@ -392,6 +410,77 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             }
             showToast('Timesheets created successfully!', 'success');
             onClose();
+            return;
+        }
+
+        // --- EDIT MODE LOGIC ---
+        try {
+            const now = new Date().toISOString();
+            const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
+            const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
+            
+            const primaryLine = lines.find(l => l.id === timesheetToEdit.id) || lines[0];
+            if (!primaryLine) {
+                showToast("No data to save.", 'error');
+                return;
+            }
+
+            let combinedHoursData = [];
+            let totalHours = 0;
+
+            for (const line of lines) {
+                 if (!line.project || !line.poLineNumber) {
+                    showToast(`Missing required info for line ${line.id}.`, 'warning');
+                    return;
+                }
+                const lineHours = days.map((day, index) => {
+                    const dateParts = dayHeaders[index].split(' ')[1].split('/');
+                    const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+                    return {
+                        id: line.hourIds?.[day] || 0,
+                        ts_Date: dateForApi,
+                        hours: line.hours[day] || 0
+                    };
+                });
+                combinedHoursData.push(...lineHours);
+                totalHours += Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
+            }
+
+            const updatePayload = {
+                ...timesheetToEdit,
+                description: primaryLine.description,
+                projId: primaryLine.project,
+                plc: primaryLine.plc,
+                payType: primaryLine.payType,
+                poNumber: primaryLine.poNumber,
+                rlseNumber: primaryLine.rlseNumber,
+                poLineNumber: primaryLine.poLineNumber,
+                timesheetHours: combinedHoursData,
+                hours: parseFloat(totalHours.toFixed(2)),
+                updatedAt: now,
+                updatedBy: String(resourceId),
+            };
+
+            const updateUrl = `${API_URL}/${timesheetToEdit.id}`;
+            const response = await fetch(updateUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload)
+            });
+
+            if (!response.ok) {
+                let errorData;
+                try { errorData = await response.json(); } 
+                catch { errorData = { title: await response.text() }; }
+                throw new Error(errorData.title || 'Update failed');
+            }
+            
+            showToast('Timesheet updated successfully!', 'success');
+            onClose();
+
+        } catch (error) {
+            console.error('API submission error:', error);
+            showToast(error.message, 'error');
         }
     };
     
@@ -421,14 +510,11 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                             </div>
                             {isPeriodInvalid && (<p className="text-xs text-red-600 font-semibold mt-1">Warning: A timesheet for this period already exists.</p>)}
                         </div>
-                        {/* Buttons are now correctly hidden in Edit Mode */}
-                        {!isEditMode && (
-                            <div className="flex items-center gap-2">
-                                <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
-                                <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
-                                <ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                            <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
+                            <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
+                            <ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>
+                        </div>
                     </div>
                 </div>
                 <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm" style={{ overflowX: 'auto' }}>
