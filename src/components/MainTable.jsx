@@ -336,7 +336,8 @@ export default function MainTable() {
     const [isSaving, setIsSaving] = useState(false);
 
     const userRole = currentUser?.role?.toLowerCase();
-    const canNotify = userRole && !["admin", "pm"].includes(userRole);
+    // const canNotify = userRole && !["admin", "pm"].includes(userRole);
+    const canNotify = !!currentUser;
 
     const columns = [
         "Status", "Date", "Hours"
