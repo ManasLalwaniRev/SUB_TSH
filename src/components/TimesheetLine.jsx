@@ -451,7 +451,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             ProjId: line.project,
             Plc: line.plc,
             WorkOrder: line.wa_Code,         // Ensure this uses the stored wa_Code
-        PmUserID: line.pmUserID,
+        pm_User_Id: line.pmUserID,
             PayType: line.payType,
             PoNumber: line.poNumber,
             RlseNumber: line.rlseNumber || "0",

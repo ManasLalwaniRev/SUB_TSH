@@ -374,8 +374,7 @@ const showToast = (message, type = 'info') => {
 };
 
 // --- Initial empty line structure ---
-const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
-
+const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', wa_Code: '', pmUserID: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
 // --- CascadingSelect Component ---
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
 
@@ -480,13 +479,13 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             console.log("3. Filtered Data (this is what will be displayed):", filteredData);
 
             const mappedLines = filteredData.map(item => {
-                const matchingPoEntry = poDataArray.find(po =>
-                    po.project?.includes(item.projId) &&
-                    po.plcCd?.includes(item.plc) &&
-                    po.purchaseOrder?.includes(item.poNumber)
-                );
-    
-                const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+                const matchingPoEntry = poDataArray.find(po => 
+        po.project?.includes(item.projId) &&
+        po.plcCd?.includes(item.plc) &&
+        po.purchaseOrder?.includes(item.poNumber)
+    );
+
+    const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
                 const hourIdsData = {};
                 if (item.timesheetHours) {
                     item.timesheetHours.forEach(hourEntry => {
@@ -502,18 +501,20 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                 }
     
                 return {
-                    id: item.timesheetId,
-                    description: item.description || '',
-                    project: item.projId || '',
-                    plc: item.plc || '',
-                    payType: item.payType || 'SR',
-                    workOrder: matchingPoEntry ? `${matchingPoEntry.wa_Code} - ${matchingPoEntry.resourceDesc[0]}` : (item.workOrder || ''),
-                    poNumber: item.poNumber || '',
-                    rlseNumber: item.rlseNumber || '',
-                    poLineNumber: item.poLineNumber || '',
-                    hours: hoursData,
-                    hourIds: hourIdsData
-                };
+    id: item.timesheetId,
+    description: item.description || '',
+    project: item.projId || '',
+    plc: item.plc || '',
+    payType: item.payType || 'SR',
+    workOrder: matchingPoEntry ? `${matchingPoEntry.wa_Code} - ${matchingPoEntry.resourceDesc[0]}` : (item.workOrder || ''),
+    wa_Code: matchingPoEntry?.wa_Code || '', // <-- ADD THIS LINE
+    pmUserID: matchingPoEntry?.pmUserId || '', // <-- ADD THIS LINE (note the lowercase 'd')
+    poNumber: item.poNumber || '',
+    rlseNumber: item.rlseNumber || '',
+    poLineNumber: item.poLineNumber || '',
+    hours: hoursData,
+    hourIds: hourIdsData
+};
             });
             setLines(mappedLines);
             // Create a deep copy for the initial state so it doesn't get mutated
@@ -527,35 +528,59 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
     
     const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                const updatedLine = { ...line, [fieldName]: value };
-    
-                if (fieldName === 'workOrder') {
-                    const [waCode, desc] = value.split(' - ');
-                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-    
-                    if (selectedWorkOrderData) {
-                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-                        if (descIndex > -1) {
-                            updatedLine.description = desc || '';
-                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                        } else {
-                            Object.assign(updatedLine, { description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '' });
-                        }
-                    } else {
-                        Object.assign(updatedLine, { description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '' });
-                    }
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            // Create a new updatedLine object to work with
+            let updatedLine = { ...line, [fieldName]: value };
+
+            if (fieldName === 'workOrder') {
+                // If the user clears the selection, reset the line to a blank state
+                if (!value) {
+                    // Create a new empty line, but keep the original ID
+                    const emptyLine = createEmptyLine(id);
+                    return { ...emptyLine, id: line.id }; 
                 }
-                return updatedLine;
+
+                const [waCode, desc] = value.split(' - ');
+                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+                
+                if (selectedWorkOrderData) {
+                    // Capture the top-level data immediately after finding a match
+                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code || '';
+                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; // Note the lowercase 'd'
+
+                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+
+                    if (descIndex > -1) {
+                        // If the specific description is found, populate all related fields
+                        updatedLine.description = desc || '';
+                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                    } else {
+                        // If only the WA Code matched but not the description,
+                        // clear only the description-dependent fields.
+                        updatedLine.description = '';
+                        updatedLine.project = '';
+                        updatedLine.plc = '';
+                        updatedLine.poNumber = '';
+                        updatedLine.rlseNumber = '';
+                        updatedLine.poLineNumber = '';
+                    }
+                } else {
+                    // If no matching work order code was found at all, reset the line
+                    const emptyLine = createEmptyLine(id);
+                    return { ...emptyLine, id: line.id };
+                }
             }
-            return line;
-        }));
-    };
+            // Return the new, fully updated line object
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);

@@ -5019,7 +5019,7 @@ import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
-import TimesheetDetailModal from "./TimesheetDetailModal";
+import TimesheetApprovalModal from "./TimesheetApprovalModal";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -5179,8 +5179,13 @@ export default function Approval() {
   const [searchDate, setSearchDate] = useState("");
   const [searchEmployeeId, setSearchEmployeeId] = useState("");
   const [searchEmployeeName, setSearchEmployeeName] = useState("");
+  const [selectedResourceId, setSelectedResourceId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  const fileInputRef = useRef(null);
+  // const fileInputRef = useRef(null);
+
+  const timesheetDetailsRef = useRef(null);
+
 
   // Add ref for current selected row to track background color
   const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
@@ -5525,94 +5530,183 @@ export default function Approval() {
     return " ⇅";
   };
 
+  // const getStatusStyle = (status) => {
+  //   const statusUpper = status?.toUpperCase() || "PENDING";
+
+  //   switch (statusUpper) {
+  //     case "OPEN":
+  //       return {
+  //         backgroundColor: "#dbeafe",
+  //         color: "#2563eb",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     case "APPROVED":
+  //       return {
+  //         backgroundColor: "#dcfce7",
+  //         color: "#16a34a",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     case "REJECTED":
+  //       return {
+  //         backgroundColor: "#fce7f3",
+  //         color: "#ec4899",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     case "PENDING":
+  //       return {
+  //         backgroundColor: "#fef9c3",
+  //         color: "#ca8a04",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     case "NOTIFIED":
+  //       return {
+  //         backgroundColor: "#dbeafe",
+  //         color: "#2563eb",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     case "UN-NOTIFIED":
+  //     case "UNNOTIFIED":
+  //       return {
+  //         backgroundColor: "#dcfce7",
+  //         color: "#16a34a",
+  //         fontWeight: "600",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //     default:
+  //       return {
+  //         backgroundColor: "#f3f4f6",
+  //         color: "#6b7280",
+  //         fontWeight: "500",
+  //         padding: "4px 8px",
+  //         fontSize: "11px",
+  //         display: "inline-block",
+  //         borderRadius: "9999px",
+  //       };
+  //   }
+  // };
   const getStatusStyle = (status) => {
-    const statusUpper = status?.toUpperCase() || "PENDING";
-
-    switch (statusUpper) {
-      case "OPEN":
-        return {
-          backgroundColor: "#dbeafe",
-          color: "#2563eb",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "APPROVED":
-        return {
-          backgroundColor: "#dcfce7",
-          color: "#16a34a",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "REJECTED":
-        return {
-          backgroundColor: "#fce7f3",
-          color: "#ec4899",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "PENDING":
-        return {
-          backgroundColor: "#fef9c3",
-          color: "#ca8a04",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "NOTIFIED":
-        return {
-          backgroundColor: "#dbeafe",
-          color: "#2563eb",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "UN-NOTIFIED":
-      case "UNNOTIFIED":
-        return {
-          backgroundColor: "#dcfce7",
-          color: "#16a34a",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      default:
-        return {
-          backgroundColor: "#f3f4f6",
-          color: "#6b7280",
-          fontWeight: "500",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
+    // Convert to proper case instead of uppercase
+    const statusProper = status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || "Pending";
+    
+    switch (status?.toUpperCase()) {
+        case "OPEN":
+            return {
+                backgroundColor: "#dbeafe",
+                color: "#2563eb",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        case "APPROVED":
+            return {
+                backgroundColor: "#dcfce7",
+                color: "#16a34a",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        case "REJECTED":
+            return {
+                backgroundColor: "#fce7f3",
+                color: "#ec4899",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        case "PENDING":
+            return {
+                backgroundColor: "#fef9c3",
+                color: "#ca8a04",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        case "NOTIFIED":
+            return {
+                backgroundColor: "#dbeafe",
+                color: "#2563eb",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        case "UN-NOTIFIED":
+        case "UNNOTIFIED":
+            return {
+                backgroundColor: "#dcfce7",
+                color: "#16a34a",
+                fontWeight: "600",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
+        default:
+            return {
+                backgroundColor: "#f3f4f6",
+                color: "#6b7280",
+                fontWeight: "500",
+                padding: "4px 8px",
+                fontSize: "11px",
+                display: "inline-block",
+                borderRadius: "9999px",
+            };
     }
-  };
+};
 
-  const isRowActionable = (row) =>
-    (row.status === "pending" ||
-      row.status === "open" ||
-      row.status === "un-notified" ||
-  row.status === "submitted") &&
+  // const isRowActionable = (row) =>
+  //   (row.status === "pending" ||
+  //     row.status === "open" ||
+  //     row.status === "un-notified" ||
+  // row.status === "submitted") &&
 
-    !row.isApproved &&
-    !row.isRejected;
+  //   !row.isApproved &&
+  //   !row.isRejected;
 
   // Function to scroll to bottom where TimesheetDetailModal appears
+  const isRowActionable = (row) => {
+    const status = row.status?.toLowerCase();
+    // Disable rows that are already approved or rejected
+    return (
+        status === "pending" || 
+        status === "open" || 
+        status === "un-notified" || 
+        status === "submitted"
+    ) && !row.isApproved && !row.isRejected && status !== "approved" && status !== "rejected";
+};
+
   const scrollToTimesheetDetail = () => {
     setTimeout(() => {
       const timesheetDetailElement = document.querySelector(
@@ -5634,17 +5728,71 @@ export default function Approval() {
   };
 
   // Handle row click to show details
-  const handleRowClick = (rowData) => {
-    setSelectedTimesheetData(rowData);
-    setCurrentSelectedRowId(rowData.id); // Set current selected row for background color
-    scrollToTimesheetDetail(); // Scroll to show timesheet detail
-  };
+  // const handleRowClick = (rowData) => {
+  //   setSelectedTimesheetData(rowData);
+  //   setCurrentSelectedRowId(rowData.id); // Set current selected row for background color
+  //   scrollToTimesheetDetail(); // Scroll to show timesheet detail
+  // };
+//   const handleRowClick = (rowData, event) => {
+//   // Don't trigger row click if clicking on checkbox
+//   if (event?.target?.type === 'checkbox') {
+//     return;
+//   }
+  
+//   // Map the data correctly for the modal
+//   const mappedData = {
+//     "Employee ID": rowData["Employee ID"],
+//     "Date": rowData["Timesheet Date"] || rowData.originalDate,
+//     "Status": rowData["Status"],
+//     "Name": rowData["Name"],
+//     // Include all original data
+//     ...rowData
+//   };
+  
+//   console.log("Row clicked, mapped data:", mappedData); // Debug log
+  
+//   setSelectedTimesheetData(mappedData);
+//   setCurrentSelectedRowId(rowData.id);
+//   scrollToTimesheetDetail();
+// };
+
+// const handleRowClick = (rowData) => {
+//   setSelectedResourceId(rowData["Employee ID"] || rowData.resource_Id);
+//   setShowModal(true);
+// };
+
+const handleRowClick = (rowData, event) => {
+  // Don't trigger row click if clicking on checkbox
+  if (event?.target?.type === 'checkbox') {
+    return;
+  }
+  
+  // Set the selected resource ID and current row ID for highlighting
+  setSelectedResourceId(rowData["Employee ID"]);
+  setCurrentSelectedRowId(rowData.id);
+  
+  // Auto scroll to timesheet details after a short delay to ensure component renders
+  setTimeout(() => {
+    if (timesheetDetailsRef.current) {
+      timesheetDetailsRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start',
+        inline: 'nearest'
+      });
+    }
+  }, 100);
+};
+
+
 
   // Close detail view
-  const handleCloseDetail = () => {
-    setSelectedTimesheetData(null);
-    setCurrentSelectedRowId(null); // Clear selected row background
-  };
+  // const handleCloseDetail = () => {
+  //   setSelectedTimesheetData(null);
+  //   setCurrentSelectedRowId(null); // Clear selected row background
+  // };
+  const handleCloseDetails = () => {
+  setSelectedResourceId(null);
+};
 
   useEffect(() => {
     getUserIPAddress().then((ip) => setUserIpAddress(ip || ""));
@@ -5815,8 +5963,9 @@ export default function Approval() {
           Date: formatDate(item.timesheet_Date),
            "Timesheet Date": formatDate(item.timesheet_Date), // Map to timesheet_Date from API
           "Employee ID": item.resource_Id || "",
-          Name: item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
-          "Project ID": item.projId || "",
+          // Name: item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
+          // "Project ID": item.projId || "",
+          Name: item.displayedName || item.employeeName || "Employee",
           Account: item.accountId || "",
           Org: item.organizationId || "",
           PLC: item.plc || "",
@@ -5906,30 +6055,72 @@ export default function Approval() {
   };
 
   // Unified select all handler
+  // const handleUnifiedSelectAll = (isSelected) => {
+  //   setUnifiedSelectAll(isSelected);
+
+  //   const updatedRows = [...rows];
+  //   const actionableRows = filteredRows.filter((row) => isRowActionable(row));
+  //   const notifiableRows = filteredRows.filter(
+  //     (row) =>
+  //       !row.isNotified &&
+  //       row.status !== "notified" &&
+  //       row["Status"] !== "NOTIFIED"
+  //   );
+
+  //   // Update select states
+  //   actionableRows.forEach((filteredRow) => {
+  //     const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+  //     if (actualRowIndex !== -1)
+  //       updatedRows[actualRowIndex].selected = isSelected;
+  //   });
+
+  //   // Update notify states
+  //   notifiableRows.forEach((filteredRow) => {
+  //     const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+  //     if (actualRowIndex !== -1)
+  //       updatedRows[actualRowIndex].notifySelected = isSelected;
+  //   });
+
+  //   setRows(updatedRows);
+  //   setSelectedRows(isSelected ? [...actionableRows] : []);
+  //   setSelectedNotifyRows(isSelected ? [...notifiableRows] : []);
+  //   setSelectAll(isSelected);
+  //   setNotifySelectAll(isSelected);
+  // };
   const handleUnifiedSelectAll = (isSelected) => {
     setUnifiedSelectAll(isSelected);
-
     const updatedRows = [...rows];
-    const actionableRows = filteredRows.filter((row) => isRowActionable(row));
+    
+    // Only select actionable rows (not approved/rejected)
+    const actionableRows = filteredRows.filter(row => 
+        isRowActionable(row) && 
+        row.status?.toLowerCase() !== "approved" && 
+        row.status?.toLowerCase() !== "rejected"
+    );
+    
     const notifiableRows = filteredRows.filter(
-      (row) =>
-        !row.isNotified &&
-        row.status !== "notified" &&
-        row["Status"] !== "NOTIFIED"
+        row => 
+            !row.isNotified && 
+            row.status !== "notified" && 
+            row["Status"]?.toLowerCase() !== "notified" &&
+            row.status?.toLowerCase() !== "approved" &&
+            row.status?.toLowerCase() !== "rejected"
     );
 
-    // Update select states
+    // Update select states for actionable rows only
     actionableRows.forEach((filteredRow) => {
-      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
-      if (actualRowIndex !== -1)
-        updatedRows[actualRowIndex].selected = isSelected;
+        const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
+        if (actualRowIndex !== -1) {
+            updatedRows[actualRowIndex].selected = isSelected;
+        }
     });
 
-    // Update notify states
+    // Update notify states for notifiable rows only
     notifiableRows.forEach((filteredRow) => {
-      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
-      if (actualRowIndex !== -1)
-        updatedRows[actualRowIndex].notifySelected = isSelected;
+        const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
+        if (actualRowIndex !== -1) {
+            updatedRows[actualRowIndex].notifySelected = isSelected;
+        }
     });
 
     setRows(updatedRows);
@@ -5937,7 +6128,8 @@ export default function Approval() {
     setSelectedNotifyRows(isSelected ? [...notifiableRows] : []);
     setSelectAll(isSelected);
     setNotifySelectAll(isSelected);
-  };
+};
+
 
   // Unified row select handler
   const handleUnifiedRowSelect = (rowIndex, isSelected) => {
@@ -6488,6 +6680,10 @@ export default function Approval() {
                           cursor: "pointer",
                           // Add subtle border for current selected row
                           // border: currentSelectedRowId === row.id ? "2px solid #0891b2" : "1px solid transparent"
+                           // Add opacity for disabled rows
+        opacity: (row["Status"] || "").toLowerCase() === "approved" || 
+                 (row["Status"] || "").toLowerCase() === "rejected" ? 0.7 : 1
+    
                         }}
                         onClick={() => handleRowClick(row)}
                         onMouseEnter={(e) =>
@@ -6505,7 +6701,7 @@ export default function Approval() {
                             rdx % 2 === 0 ? "#f9fafb" : "white")
                         }
                       >
-                        {columns.map((col) => (
+                        {/* {columns.map((col) => (
                           <td
                             key={col}
                             style={{
@@ -6555,7 +6751,54 @@ export default function Approval() {
                               row[col] || ""
                             )}
                           </td>
-                        ))}
+                        ))} */}
+                        {columns.map((col) => (
+    <td
+        key={col}
+        style={{
+            border: "1px solid #e5e7eb",
+            padding: "8px",
+            fontSize: "11px",
+            minWidth:
+                col === "All"
+                    ? "80px"
+                    : col === "Status"
+                    ? "150px"
+                    : `${colWidth}px`,
+            whiteSpace: "nowrap",
+            textAlign: "center",
+        }}
+    >
+        {col === "Status" ? (
+            <span style={getStatusStyle(row[col] || "PENDING")}>
+                {/* Display status in proper case */}
+                {(row[col] || "Pending").charAt(0).toUpperCase() + (row[col] || "Pending").slice(1).toLowerCase()}
+            </span>
+        ) : col === "All" ? (
+            <input
+                type="checkbox"
+                checked={row.selected || false || row.notifySelected || false}
+                onChange={(e) => {
+                    e.stopPropagation();
+                    handleUnifiedRowSelect(rdx, e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="cursor-pointer"
+                // Updated disabled condition to include approved status
+                disabled={
+                    !isRowActionable(row) || 
+                    row.isNotified || 
+                    (row["Status"] || "").toLowerCase() === "notified" ||
+                    (row["Status"] || "").toLowerCase() === "approved" ||
+                    (row["Status"] || "").toLowerCase() === "rejected"
+                }
+            />
+        ) : (
+            row[col] || ""
+        )}
+    </td>
+))}
+
                       </tr>
                     ))
                   ) : (
@@ -6578,25 +6821,31 @@ export default function Approval() {
             </div>
           </div>
 
-          {/* TimesheetDetailModal as component below table */}
-          {selectedTimesheetData && (
+           {/* ADD TIMESHEET APPROVAL VIEW HERE - INLINE BELOW TABLE */}
+          {selectedResourceId && (
             <div
-              className="w-full"
+              ref={timesheetDetailsRef}
               style={{
                 marginLeft: 24,
                 marginRight: 24,
                 width: "calc(100vw - 220px)",
+                minWidth: "800px",
               }}
-              data-timesheet-detail
             >
-              <TimesheetDetailModal
-                timesheetData={selectedTimesheetData}
-                onClose={handleCloseDetail}
+              <TimesheetApprovalModal
+                resourceId={selectedResourceId}
+                onClose={() => {
+                  setSelectedResourceId(null);
+                  setCurrentSelectedRowId(null);
+                }}
               />
             </div>
           )}
+ 
         </div>
       </div>
+    
+    
     </div>
   );
 }
