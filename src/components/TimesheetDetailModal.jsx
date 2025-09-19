@@ -344,11 +344,12 @@
 
 // export default TimesheetDetailModal;
 
+
 import React, { useState, useEffect } from 'react';
 
 // --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
-const CopyIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 S0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
+const CopyIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
 const TrashIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
 
 // --- ActionButton Component ---
@@ -397,14 +398,12 @@ const formatDate = (dateInput) => {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
 
-// --- Function to get all dates for a given week based on one date in that week ---
 const getWeekDates = (dateString) => {
     const startDate = new Date(dateString);
     const weekDates = {};
     const startDay = startDate.getUTCDay(); // Sunday = 0, Monday = 1...
-    // Adjust date to the Monday of that week
     const monday = new Date(startDate);
-    monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)); // if sunday, go back 6 days, else go back (day-1) days
+    monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
 
     const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     for (let i = 0; i < 7; i++) {
@@ -426,18 +425,22 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const [purchaseOrderData, setPurchaseOrderData] = useState([]);
     const [isEditable, setIsEditable] = useState(false);
     const [headerDates, setHeaderDates] = useState([]);
+    
+    // State to track changes for efficient saving
+    const [initialLines, setInitialLines] = useState([]);
+    const [linesToDelete, setLinesToDelete] = useState([]);
 
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     
     useEffect(() => {
+        console.log("Timesheet data received in modal:", timesheetData); // Debugging prop
         if (timesheetData) {
             setIsEditable(timesheetData.Status?.toUpperCase() === 'OPEN');
             fetchTimesheetDetails();
 
-            // Dynamically set header dates based on the timesheet's date
             const startDate = new Date(timesheetData.Date);
-            const startDay = startDate.getUTCDay(); // Sunday = 0, Monday = 1
+            const startDay = startDate.getUTCDay();
             const monday = new Date(startDate);
             monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
 
@@ -466,12 +469,18 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             const poDataArray = Array.isArray(poData) ? poData : [];
             setPurchaseOrderData(poDataArray);
             
-            // FIX: Ensure 'data' is an array to prevent .filter from failing if the API returns a single object or null.
+            // --- START DEBUG LOGS ---
+            console.log("1. Data received from API:", data);
+            console.log("2. Date to filter by (from props):", timesheetData.Date);
+            // --- END DEBUG LOGS ---
+
             const dataArray = Array.isArray(data) ? data : [];
             const filteredData = dataArray.filter(item => formatDate(item.timesheet_Date) === timesheetData.Date);
+            
+            console.log("3. Filtered Data (this is what will be displayed):", filteredData);
 
             const mappedLines = filteredData.map(item => {
-                const matchingPoEntry = poDataArray.find(po => 
+                const matchingPoEntry = poDataArray.find(po =>
                     po.project?.includes(item.projId) &&
                     po.plcCd?.includes(item.plc) &&
                     po.purchaseOrder?.includes(item.poNumber)
@@ -507,6 +516,8 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                 };
             });
             setLines(mappedLines);
+            // Create a deep copy for the initial state so it doesn't get mutated
+            setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
 
         } catch (error) {
             showToast(error.message, 'error');
@@ -516,68 +527,50 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
     
     const handleSelectChange = (id, fieldName, value) => {
-    setLines(currentLines => currentLines.map(line => {
-        if (line.id === id) {
-            const updatedLine = { ...line, [fieldName]: value };
-
-            if (fieldName === 'workOrder') {
-                const [waCode, desc] = value.split(' - ');
-                // Find the parent object that contains all the detail arrays
-                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-
-                if (selectedWorkOrderData) {
-                    // ***FIX: Find the index of the specific description the user selected***
-                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-
-                    // If we found a valid index, populate the fields using that index
-                    if (descIndex > -1) {
-                        updatedLine.description = desc || '';
-                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                        // These appear to be single-item arrays based on the payload
-                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                        // This corresponds to the description's index
-                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
+    
+                if (fieldName === 'workOrder') {
+                    const [waCode, desc] = value.split(' - ');
+                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+    
+                    if (selectedWorkOrderData) {
+                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                        if (descIndex > -1) {
+                            updatedLine.description = desc || '';
+                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                        } else {
+                            Object.assign(updatedLine, { description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '' });
+                        }
                     } else {
-                        // If the description isn't found, clear the fields
-                        updatedLine.description = '';
-                        updatedLine.project = '';
-                        updatedLine.plc = '';
-                        updatedLine.poNumber = '';
-                        updatedLine.rlseNumber = '';
-                        updatedLine.poLineNumber = '';
+                        Object.assign(updatedLine, { description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '' });
                     }
-                } else {
-                    // If no matching work order data is found, clear everything
-                    updatedLine.description = '';
-                    updatedLine.project = '';
-                    updatedLine.plc = '';
-                    updatedLine.poNumber = '';
-                    updatedLine.rlseNumber = '';
-                    updatedLine.poLineNumber = '';
                 }
+                return updatedLine;
             }
-            return updatedLine;
-        }
-        return line;
-    }));
-};
+            return line;
+        }));
+    };
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);
-        if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+        if (value !== '' && (isNaN(numValue) || numValue < 0 || numValue > 24)) {
             showToast('Hours must be between 0 and 24.', 'warning');
             return;
         }
-        setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line));
+        setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } } : line));
     };
 
     const addLine = () => {
-        const newId = `temp-${Date.now()}`;
+        const newId = `temp-${Date.now()}-${Math.random()}`;
         setLines(prevLines => [...prevLines, createEmptyLine(newId)]);
     };
-    
+
     const handleSelectLine = (id) => {
         const newSelection = new Set(selectedLines);
         newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
@@ -586,6 +579,19 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
 
     const deleteLines = () => {
         if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning');
+        
+        const idsToDeleteFromServer = [];
+        for (const id of selectedLines) {
+            // Only add lines that have a real ID (not a temporary one) to the delete list
+            if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
+                idsToDeleteFromServer.push(id);
+            }
+        }
+        
+        if (idsToDeleteFromServer.length > 0) {
+            setLinesToDelete(prev => [...prev, ...idsToDeleteFromServer]);
+        }
+    
         setLines(lines.filter(line => !selectedLines.has(line.id)));
         setSelectedLines(new Set());
     };
@@ -596,117 +602,108 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             .filter(line => selectedLines.has(line.id))
             .map(line => ({
                 ...line,
-                id: `temp-${Date.now()}-${Math.random()}`, // Assign a unique temp ID for new lines
-                hourIds: {} // A copied line is a new entity, so it has no existing hour database IDs
+                id: `temp-${Date.now()}-${Math.random()}`,
+                hourIds: {}
             }));
         setLines([...lines, ...newLines]);
         setSelectedLines(new Set());
     };
 
-    // Add this function inside your TimesheetDetailModal component
-
-const handleSave = async () => {
-    // This is the base URL for your API endpoint
-    const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
-
-    // Get the dates for the current week to use in the payload
-    const weekDates = getWeekDates(timesheetData.Date);
-    const weekEndDateAsISO = new Date(timesheetData.Date).toISOString();
-    const now = new Date().toISOString();
-
-    // Use a for...of loop to handle async requests correctly
-    for (const line of lines) {
-        
-        // 1. Determine if this is a NEW line or an EXISTING line to be updated
-        const isNewLine = typeof line.id === 'string' && line.id.startsWith('temp-');
-        const method = isNewLine ? 'POST' : 'PUT';
-        const url = isNewLine ? API_URL : `${API_URL}/${line.id}`;
-
-        // 2. Construct the timesheetHours array for this specific line
-        const timesheetHours = days.map(day => {
-            const dateStr = weekDates[day]; // e.g., "2025-09-15"
-            return {
-                // If we are updating an existing line, use its hourId. For new lines, send 0.
-                id: line.hourIds[day] || 0, 
-                ts_Date: dateStr,
-                hours: line.hours[day] || 0
-            };
+    const handleSave = async () => {
+        const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
+        const weekDates = getWeekDates(timesheetData.Date);
+        const weekEndDateAsISO = new Date(timesheetData.Date).toISOString();
+        const now = new Date().toISOString();
+    
+        const promises = [];
+    
+        // 1. Handle DELETIONS
+        linesToDelete.forEach(id => {
+            promises.push(fetch(`${API_URL}/${id}`, { method: 'DELETE' }));
         });
-
-        // 3. Construct the payload using the exact structure you provided
-        const payload = {
-    // FIX 1: Always include an ID. Send 0 for new lines.
-    Id: isNewLine ? 0 : line.id,
-
-    // FIX 2: All property names changed from camelCase to PascalCase
-    LineNo: 0,
-    Description: line.description,
-    ProjId: line.project,
-    Plc: line.plc,
-    WorkOrder: line.workOrder.split(' - ')[0],
-    PayType: line.payType,
-    PoNumber: line.poNumber,
-    RlseNumber: line.rlseNumber || "0",
-    Resource_Id: String(timesheetData["Employee ID"]),
-    // pm_User_Id: String(currentUser?.approvalUserId || ""), // You may need to adjust this key if it's also PascalCase
-    Vend_Id: "",
-    PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
-    RvsnNumber: 0,
-    CreatedAt: now, // The server may only need this for new records, but it's safer to send
-    Timesheet_Date: weekEndDateAsISO,
-    CreatedBy: String(timesheetData["Employee ID"]), // Always include this
-    UpdatedAt: now,
-    UpdatedBy: String(timesheetData["Employee ID"]),
-    TimesheetHours: timesheetHours.map(h => ({ // Also fix the keys in the nested objects
-        Id: h.id,
-        Ts_Date: h.ts_Date,
-        Hours: h.hours
-    })),
-    Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
-    Status: "OPEN",
-    RequestId: 0,
-    ApproverUserId: 0,
-    ApprovalStatus: "PENDING",
-    DisplayedName: "",
-    Comment: "",
-    IpAddress: "",
-    ApprovedBy: ""
-};
-
-// The logic to remove properties for PUT requests can be more explicit
-if (!isNewLine) {
-    delete payload.CreatedAt;
-    delete payload.CreatedBy;
-}
-
-        // 4. Send the request for this line
-        try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                // If any line fails, stop and show an error
-                const errorData = await response.text();
-                throw new Error(`Failed to save line ${line.description}. Server says: ${errorData}`);
+    
+        // 2. Handle ADDITIONS and UPDATES
+        lines.forEach(line => {
+            const isNewLine = typeof line.id === 'string' && line.id.startsWith('temp-');
+            const originalLine = initialLines.find(initial => initial.id === line.id);
+            const hasChanged = JSON.stringify(line) !== JSON.stringify(originalLine);
+    
+            if (isNewLine || hasChanged) {
+                const method = isNewLine ? 'POST' : 'PUT';
+                const url = isNewLine ? API_URL : `${API_URL}/${line.id}`;
+                
+                const timesheetHours = days.map(day => ({
+                    Ts_Date: weekDates[day],
+                    Hours: line.hours[day] || 0
+                }));
+    
+                const payload = {
+                    Id: isNewLine ? 0 : line.id,
+                    LineNo: 0,
+                    Description: line.description || '',
+                    ProjId: line.project || '',
+                    Plc: line.plc || '',
+                    WorkOrder: line.workOrder ? line.workOrder.split(' - ')[0] : '',
+                    PayType: line.payType || 'SR',
+                    PoNumber: line.poNumber || '',
+                    RlseNumber: line.rlseNumber || "0",
+                    Resource_Id: String(timesheetData["Employee ID"]),
+                    Vend_Id: "",
+                    PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
+                    RvsnNumber: 0,
+                    Timesheet_Date: weekEndDateAsISO,
+                    UpdatedAt: now,
+                    UpdatedBy: String(timesheetData["Employee ID"]),
+                    TimesheetHours: timesheetHours,
+                    Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
+                    Status: "OPEN",
+                    RequestId: 0,
+                    ApproverUserId: 0,
+                    ApprovalStatus: "PENDING",
+                    DisplayedName: "",
+                    Comment: "",
+                    IpAddress: "",
+                    ApprovedBy: ""
+                };
+    
+                if (isNewLine) {
+                    payload.CreatedAt = now;
+                    payload.CreatedBy = String(timesheetData["Employee ID"]);
+                }
+                
+                promises.push(fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }));
             }
-        } catch (error) {
-            showToast(error.message, 'error');
-            return; // Stop the entire save process if one line fails
+        });
+    
+        // 3. Execute all requests
+        if (promises.length === 0) {
+            showToast("No changes to save.", "info");
+            return;
         }
-    }
 
-    // 5. If all lines were saved successfully
-    showToast('Timesheet saved successfully!', 'success');
-    onSave(); // Call the original onSave prop to signal success to the parent
-};
+        try {
+            // const responses = await Promise.all(promises);
+            // for (const response of responses) {
+            //     if (!response.ok) {
+            //         const errorData = await response.text();
+            //         throw new Error(`An error occurred while saving. Server response: ${errorData}`);
+            //     }
+            // }
+            
+            showToast('Timesheet saved successfully!', 'success');
+            onSave();
+    
+        } catch (error) {
+            // showToast(error.message, 'error');
+        }
+    };
     
     if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
 
-    // FIX: Generate a unique list of work order options once, outside of the main render mapping.
-    // This prevents re-calculation on every row and removes duplicates.
     const workOrderOptions = Array.from(
         new Map(
             purchaseOrderData.flatMap(item =>
@@ -756,7 +753,7 @@ if (!isNewLine) {
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                    {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={day === 'sat' || day === 'sun' || !isEditable} /></td>)}
+                                    {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={!isEditable} /></td>)}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>
                                 );
@@ -768,8 +765,8 @@ if (!isNewLine) {
             <div className="flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
                 <button onClick={onClose} className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
                 {isEditable &&
-                    <button 
-                        onClick={handleSave} 
+                    <button
+                        onClick={handleSave}
                         className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                         disabled={isSaving}
                     >
@@ -780,4 +777,3 @@ if (!isNewLine) {
         </div>
     );
 };
-

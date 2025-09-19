@@ -164,13 +164,20 @@ const showToast = (message, type = 'info') => {
 };
 
 // --- Initial empty line structure ---
-const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
+const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', wa_Code: '', pmUserID: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
 
 // --- CascadingSelect Component ---
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
 
 // --- Data for the period dropdown ---
 const timePeriods = [
+    { label: 'Mon 7/21 - Sun 7/27', dates: ['Mon 07/21', 'Tue 07/22', 'Wed 07/23', 'Thu 07/24', 'Fri 07/25', 'Sat 07/26', 'Sun 07/27'] },
+{ label: 'Mon 7/28 - Sun 8/3',  dates: ['Mon 07/28', 'Tue 07/29', 'Wed 07/30', 'Thu 07/31', 'Fri 08/01', 'Sat 08/02', 'Sun 08/03'] },
+{ label: 'Mon 8/4 - Sun 8/10',  dates: ['Mon 08/04', 'Tue 08/05', 'Wed 08/06', 'Thu 08/07', 'Fri 08/08', 'Sat 08/09', 'Sun 08/10'] },
+{ label: 'Mon 8/11 - Sun 8/17', dates: ['Mon 08/11', 'Tue 08/12', 'Wed 08/13', 'Thu 08/14', 'Fri 08/15', 'Sat 08/16', 'Sun 08/17'] },
+{ label: 'Mon 8/18 - Sun 8/24', dates: ['Mon 08/18', 'Tue 08/19', 'Wed 08/20', 'Thu 08/21', 'Fri 08/22', 'Sat 08/23', 'Sun 08/24'] },
+{ label: 'Mon 8/25 - Sun 8/31', dates: ['Mon 08/25', 'Tue 08/26', 'Wed 08/27', 'Thu 08/28', 'Fri 08/29', 'Sat 08/30', 'Sun 08/31'] },
+{ label: 'Mon 9/1 - Sun 9/7',   dates: ['Mon 09/01', 'Tue 09/02', 'Wed 09/03', 'Thu 09/04', 'Fri 09/05', 'Sat 09/06', 'Sun 09/07'] },
     { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
     { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
 ];
@@ -252,6 +259,9 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     plc: timesheetToEdit?.plc || '',
                     payType: timesheetToEdit?.payType || 'SR',
                     workOrder: fullWorkOrderString, // Use the reconstructed string
+                    wa_Code: poEntry?.wa_Code || '',
+                    // pmUserID: poEntry?.pmUserID || '',
+                    pmUserID: poEntry?.pmUserId || '', // Correct: lowercase 'd'
                     poNumber: timesheetToEdit?.poNumber || '',
                     rlseNumber: timesheetToEdit?.rlseNumber || '',
                     poLineNumber: timesheetToEdit?.poLineNumber || '',
@@ -309,36 +319,68 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
 
     // ✅ FIX #2: CORRECTED handleSelectChange FUNCTION
     const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                const updatedLine = { ...line, [fieldName]: value };
-                if (fieldName === 'workOrder') {
-                    const [waCode, desc] = value.split(' - ');
-                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                    if (selectedWorkOrderData) {
-                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            const updatedLine = { ...line, [fieldName]: value };
 
-                        if (descIndex > -1) {
-                            updatedLine.description = desc || '';
-                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                        } else {
-                            updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = '';
-                            updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
-                        }
-                    } else {
-                        updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = '';
-                        updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
-                    }
+            if (fieldName === 'workOrder') {
+                // If the user clears the selection, clear all related fields
+                if (!value) {
+                    updatedLine.description = '';
+                    updatedLine.project = '';
+                    updatedLine.plc = '';
+                    updatedLine.poNumber = '';
+                    updatedLine.rlseNumber = '';
+                    updatedLine.poLineNumber = '';
+                    updatedLine.wa_Code = '';
+                    updatedLine.pmUserId = '';
+                    return updatedLine;
                 }
-                return updatedLine;
+
+                const [waCode, desc] = value.split(' - ');
+                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+
+                if (selectedWorkOrderData) {
+                    // ✅ FIX: Set these properties immediately and DON'T clear them later
+                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
+                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; // Correct: lowercase 'd'
+
+                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+
+                    // Now, handle the fields that depend on the specific description
+                    if (descIndex > -1) {
+                        updatedLine.description = desc || '';
+                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                    } else {
+                        // If only the wa_Code matched but not the description, just clear the description-specific fields
+                        updatedLine.description = '';
+                        updatedLine.project = '';
+                        updatedLine.plc = '';
+                        updatedLine.poNumber = '';
+                        updatedLine.rlseNumber = '';
+                        updatedLine.poLineNumber = '';
+                    }
+                } else {
+                    // If the wa_code itself wasn't found, clear everything
+                    updatedLine.description = '';
+                    updatedLine.project = '';
+                    updatedLine.plc = '';
+                    updatedLine.poNumber = '';
+                    updatedLine.rlseNumber = '';
+                    updatedLine.poLineNumber = '';
+                    updatedLine.wa_Code = '';
+                    updatedLine.pmUserID = '';
+                }
             }
-            return line;
-        }));
-    };
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);
@@ -408,7 +450,8 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             Description: line.description,
             ProjId: line.project,
             Plc: line.plc,
-            WorkOrder: line.workOrder.split(' - ')[0],
+            WorkOrder: line.wa_Code,         // Ensure this uses the stored wa_Code
+        PmUserID: line.pmUserID,
             PayType: line.payType,
             PoNumber: line.poNumber,
             RlseNumber: line.rlseNumber || "0",
