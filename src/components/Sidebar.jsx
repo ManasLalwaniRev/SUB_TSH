@@ -1693,13 +1693,13 @@ export default function Sidebar() {
                 
                 <div className="flex-grow">
                     {/* Timesheet: Show for Admin and User only, NOT for PM */}
-                    {!isPM && (
+                    {(isAdmin || isUser || isPM) && (
                         <SidebarItem icon={<Clock className="h-5 w-5" />} text="Timesheet" to="/dashboard/timesheet" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
                     {/* Approval: Show for Admin and PM only */}
                     {(isAdmin || isPM) && (
-                        <SidebarItem icon={<CheckSquare className="h-5 w-5" />} text="Approval" to="/dashboard/approval" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        <SidebarItem icon={<CheckSquare className="h-5 w-5" />} text="Enquiry" to="/dashboard/approval" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
                     {/* Export: Show for Admin and PM only */}
@@ -1714,7 +1714,7 @@ export default function Sidebar() {
                     
                     {/* Users: Show for Admin and User only, NOT for PM */}
                     {!isPM && (
-                         <SidebarItem icon={<Users className="h-5 w-5" />} text={isUser ? "Password" : "Users"} to="/dashboard/users" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                         <SidebarItem icon={<Users className="h-5 w-5" />} text={isUser ? "My Profile" : "Users"} to="/dashboard/users" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
                     {/* Groups: Show for Admin only */}

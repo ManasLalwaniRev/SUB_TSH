@@ -326,12 +326,9 @@ export default function MainTable() {
     const [currentUser, setCurrentUser] = useState(null);
     const [userLoaded, setUserLoaded] = useState(false);
     const [searchDate, setSearchDate] = useState(null);
-    const [searchEmployeeId, setSearchEmployeeId] = useState('');
-    const [searchEmployeeName, setSearchEmployeeName] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [timesheetToEdit, setTimesheetToEdit] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [selectedRowId, setSelectedRowId] = useState(null);
     const [selectedTimesheetData, setSelectedTimesheetData] = useState(null);
     const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
     const [hoveredRowId, setHoveredRowId] = useState(null);
@@ -339,15 +336,12 @@ export default function MainTable() {
     const [isSaving, setIsSaving] = useState(false);
 
     const userRole = currentUser?.role?.toLowerCase();
-    const isUser = userRole === 'user';
     const canNotify = userRole && !["admin", "pm"].includes(userRole);
 
-    const baseColumns = [
-        "Status", "Date", "Employee ID", "Name", "Hours"
+    const columns = [
+        "Status", "Date", "Hours"
     ];
 
-    const columns = isUser ? ["Select", ...baseColumns] : baseColumns;
-    
     const formatHours = (hours) => {
         const num = parseFloat(hours);
         return isNaN(num) ? '0.00' : num.toFixed(2);
@@ -418,11 +412,11 @@ export default function MainTable() {
                 if (timesheetMap.has(date)) {
                     const existing = timesheetMap.get(date);
                     existing.Hours += item.hours;
-                    existing.allTimesheets.push(item); 
+                    existing.allTimesheets.push(item);
                 } else {
                     timesheetMap.set(date, {
                         ...item,
-                        id: date,
+                        id: item.timesheetId || item.lineNo,
                         "Date": date,
                         "Employee ID": item.resource_Id || "",
                         "Name": nameMap.get(item.resource_Id) || item.displayedName || `Employee ${item.resource_Id}`,
@@ -438,7 +432,7 @@ export default function MainTable() {
 
         } catch (error) {
             console.error("Failed to fetch data:", error);
-            showToast('Failed to load timesheet data.', "error");
+            showToast('No Timesheet Found', "error");
             setRows([]);
         } finally {
             setLoading(false);
@@ -446,8 +440,12 @@ export default function MainTable() {
     };
 
     const handleNotify = async () => {
-        if (!selectedRowId) {
+        if (!selectedTimesheetData) {
             showToast('Please select a timesheet to submit.', 'warning');
+            return;
+        }
+        if (selectedTimesheetData.Status?.toUpperCase() !== 'OPEN') {
+            showToast('Only timesheets with "OPEN" status can be submitted.', 'warning');
             return;
         }
         if (!window.confirm(`Are you sure you want to submit the selected timesheet?`)) {
@@ -455,36 +453,59 @@ export default function MainTable() {
         }
         setIsNotifying(true);
         try {
-            const selectedRowObject = rows.find(row => row.id === selectedRowId);
             const requesterId = currentUser.approvalUserId;
             if (!requesterId) {
                 throw new Error('Your user profile is missing an Approval User ID.');
             }
-            const payload = selectedRowObject.allTimesheets.map(ts => ({
-                requestType: "TIMESHEET",
-                requesterId: requesterId,
-                timesheetId: ts.timesheetId,
-                requestData: `Approval requested for week ending ${selectedRowObject.Date}.`,
-                ProjectId: ts.projId
+            
+            const payload = selectedTimesheetData.allTimesheets.map(ts => ({
+                requestType: 'TIMESHEET',
+                requesterId: Number(requesterId),
+                timesheetId: Number(ts.lineNo) || Number(ts.timesheetId) || 0,
+                requestData: `Approval requested for week ending ${selectedTimesheetData.Date}.`,
+                projectId: String(ts.projId || '')
             }));
-
+            
             const notifyUrl = 'https://timesheet-subk.onrender.com/api/Approval/BulkNotify';
             const notifyResponse = await fetch(notifyUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
+            
             if (!notifyResponse.ok) {
-                const errorData = await notifyResponse.text();
-                throw new Error(errorData || 'Failed to submit timesheet for notification.');
+                const responseClone = notifyResponse.clone();
+                let errorData = 'Failed to submit timesheet for notification.';
+                
+                try {
+                    const contentType = notifyResponse.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorJson = await notifyResponse.json();
+                        if (errorJson && errorJson.errors) {
+                            errorData = Object.values(errorJson.errors).flat().join(' ');
+                        } else if (errorJson.title) {
+                            errorData = errorJson.title;
+                        } else if (errorJson.message) {
+                            errorData = errorJson.message;
+                        }
+                    } else {
+                        errorData = await responseClone.text() || errorData;
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing response:', parseError);
+                    errorData = `HTTP ${notifyResponse.status}: ${notifyResponse.statusText}`;
+                }
+                throw new Error(errorData);
             }
+            
             setRows(currentRows =>
                 currentRows.map(row =>
-                    row.id === selectedRowId ? { ...row, Status: 'SUBMITTED' } : row
+                    row.id === selectedTimesheetData.id ? { ...row, Status: 'SUBMITTED' } : row
                 )
             );
-            setSelectedRowId(null);
-            showToast(`Successfully submitted 1 timesheet.`, 'success');
+            setSelectedTimesheetData(null);
+            setCurrentSelectedRowId(null);
+            showToast(`Successfully submitted timesheet.`, 'success');
         } catch (error) {
             console.error("Failed to notify timesheet:", error);
             showToast(error.message, 'error');
@@ -494,33 +515,24 @@ export default function MainTable() {
     };
 
     const handleSort = (key) => {
-        if (['Select'].includes(key)) return;
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
         setSortConfig({ key, direction });
     };
 
     const getSortIcon = (key) => {
-        if (['Select'].includes(key) || sortConfig.key !== key) return ' ⇅';
+        if (sortConfig.key !== key) return ' ⇅';
         return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
     };
     
     const handleRowClick = (rowData) => {
-        setSelectedRowId(rowData.id);
         setSelectedTimesheetData(rowData);
         setCurrentSelectedRowId(rowData.id);
     };
 
-    const handleRowSelect = (rowId) => {
-        setSelectedRowId(rowId);
-    };
-
     const sortedAndFilteredRows = [...rows]
         .filter(row => {
-            const dateMatch = !searchDate || row.Date === formatDate(searchDate);
-            const idMatch = !searchEmployeeId || row['Employee ID']?.toLowerCase().includes(searchEmployeeId.toLowerCase());
-            const nameMatch = !searchEmployeeName || row.Name?.toLowerCase().includes(searchEmployeeName.toLowerCase());
-            return dateMatch && idMatch && nameMatch;
+            return !searchDate || row.Date === formatDate(searchDate);
         })
         .sort((a, b) => {
             if (!sortConfig.key) return 0;
@@ -555,7 +567,7 @@ export default function MainTable() {
                     });
                 }
             });
-    
+
             const responses = await Promise.all(savePromises.filter(p => p));
             let allOk = true;
             for (const response of responses) {
@@ -590,26 +602,14 @@ export default function MainTable() {
     };
 
     const renderTableCell = (row, col) => {
-    if (col === 'Select') {
-        return (
-            isUser && <input
-                type="radio"
-                name="timesheet-select"
-                checked={selectedRowId === row.id}
-                onChange={() => handleRowSelect(row.id)}
-                className="cursor-pointer"
-                disabled={row.Status?.toUpperCase() !== 'OPEN'}
-            />
-        );
-    }
-    if (col === 'Status') {
-        return <span className={getStatusStyle(row[col])}>{row[col]}</span>;
-    }
-    if (col === 'Hours') {
-        return formatHours(row[col]);
-    }
-    return row[col];
-};
+        if (col === 'Status') {
+            return <span className={getStatusStyle(row[col])}>{row[col]}</span>;
+        }
+        if (col === 'Hours') {
+            return formatHours(row[col]);
+        }
+        return row[col];
+    };
 
     const existingDatesForUser = new Set(rows.map(row => row.Date));
 
@@ -634,11 +634,30 @@ export default function MainTable() {
                         <h1 className="text-lg font-semibold text-gray-700">Welcome, {currentUser?.name}</h1>
                         <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button>
                     </div>
-                    <div className="flex gap-3 mb-3 items-center flex-wrap px-6 w-full">
-                        <DatePicker selected={searchDate} onChange={setSearchDate} dateFormat="MM/dd/yyyy" placeholderText="MM/DD/YYYY" className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" isClearable />
-                        <input type="text" value={searchEmployeeId} onChange={e => setSearchEmployeeId(e.target.value)} placeholder="Employee ID" className="border border-gray-300 rounded px-3 py-1.5 text-xs" />
-                        <input type="text" value={searchEmployeeName} onChange={e => setSearchEmployeeName(e.target.value)} placeholder="Employee Name" className="border border-gray-300 rounded px-3 py-1.5 text-xs" />
-                    </div>
+                    <div className="flex gap-4 mb-3 items-center flex-wrap px-6 w-full">
+    <DatePicker 
+        selected={searchDate} 
+        onChange={setSearchDate} 
+        dateFormat="MM/dd/yyyy" 
+        placeholderText="Filter by Date (MM/DD/YYYY)" 
+        className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" 
+        isClearable 
+    />
+    {/* START: Added label for the disabled Employee ID box */}
+    <div className="flex items-center">
+        <label htmlFor="employeeId" className="mr-2 text-xs font-semibold text-gray-600">
+            Employee ID
+        </label>
+        <input
+            id="employeeId"
+            type="text"
+            value={currentUser?.username || ''}
+            className="border border-gray-300 rounded px-3 py-1.5 text-xs bg-gray-100 cursor-not-allowed"
+            disabled
+        />
+    </div>
+    {/* END: Added label */}
+</div>
                     <div className="border border-gray-300 rounded bg-white shadow-md p-2 w-full max-w-[calc(100vw-220px)] mx-auto">
                         <div className="flex justify-end items-center mb-2">
                             {canNotify && (
@@ -646,7 +665,7 @@ export default function MainTable() {
                                     <button
                                         onClick={handleNotify}
                                         className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
-                                        disabled={!selectedRowId || isNotifying}
+                                        disabled={!selectedTimesheetData || selectedTimesheetData.Status?.toUpperCase() !== 'OPEN' || isNotifying}
                                     >
                                         {isNotifying ? 'Submitting...' : `Submit`}
                                     </button>
@@ -660,11 +679,7 @@ export default function MainTable() {
                                     <tr>
                                         {columns.map(col => (
                                             <th key={col} className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-gray-200 cursor-pointer select-none" onClick={() => handleSort(col)}>
-                                                {col === 'Select' && isUser ? (
-                                                    <span>Select</span>
-                                                ) : (
-                                                    <span>{col}{getSortIcon(col)}</span>
-                                                )}
+                                                <span>{col}{getSortIcon(col)}</span>
                                             </th>
                                         ))}
                                     </tr>
@@ -674,12 +689,10 @@ export default function MainTable() {
                                         <tr><td colSpan={columns.length} className="text-center p-5 italic text-gray-500">Loading...</td></tr>
                                     ) : sortedAndFilteredRows.length > 0 ? (
                                         sortedAndFilteredRows.map(row => {
-                                            const isSelected = selectedRowId === row.id;
                                             const isCurrent = currentSelectedRowId === row.id;
                                             const isHovered = hoveredRowId === row.id;
                                             let bgColorClass = 'bg-white';
                                             if (isCurrent) bgColorClass = 'bg-sky-100';
-                                            else if (isSelected) bgColorClass = 'bg-blue-100';
                                             else if (isHovered) bgColorClass = 'bg-gray-50';
                                             return (
                                                 <tr key={row.id} className={`${bgColorClass} cursor-pointer`}
@@ -691,7 +704,6 @@ export default function MainTable() {
                                                         <td
                                                             key={`${row.id}-${col}`}
                                                             className="border p-2 text-center whitespace-nowrap"
-                                                            onClick={col === 'Select' ? (e) => e.stopPropagation() : undefined}
                                                         >
                                                             {renderTableCell(row, col)}
                                                         </td>
@@ -709,8 +721,8 @@ export default function MainTable() {
                 </div>
                 {selectedTimesheetData && (
                     <div className="w-full mt-6" data-timesheet-detail>
-                        <TimesheetDetailModal 
-                            timesheetData={selectedTimesheetData} 
+                        <TimesheetDetailModal
+                            timesheetData={selectedTimesheetData}
                             onClose={handleCloseDetail}
                             onSave={handleSaveDetails}
                             isSaving={isSaving}

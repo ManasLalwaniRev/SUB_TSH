@@ -172,7 +172,7 @@ const CascadingSelect = ({ label, options, value, onChange, disabled = false }) 
 const timePeriods = [
     { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
     { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
-    { label: 'Mon 9/22 - Sun 9/28', dates: ['Mon 09/22', 'Tue 09/23', 'Wed 09/24', 'Thu 09/25', 'Fri 09/26', 'Sat 09/27', 'Sun 09/28'] },
+    // { label: 'Mon 9/22 - Sun 9/28', dates: ['Mon 09/22', 'Tue 09/23', 'Wed 09/24', 'Thu 09/25', 'Fri 09/26', 'Sat 09/27', 'Sun 09/28'] },
 ];
 
 // --- Helper Functions ---
@@ -293,23 +293,28 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         }
     }, [selectedPeriod, existingTimesheetDates, isEditMode]);
     
-    const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                const updatedLine = { ...line, [fieldName]: value };
+    // ...WITH THIS NEW VERSION
+const handleSelectChange = (id, fieldName, value) => {
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            const updatedLine = { ...line, [fieldName]: value };
+            if (fieldName === 'workOrder') {
+                const [waCode, desc] = value.split(' - ');
+                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+                if (selectedWorkOrderData) {
+                    // Find the index of the specific description the user selected
+                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
 
-                if (fieldName === 'workOrder') {
-                    const [waCode, desc] = value.split(' - ');
-                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-
-                    if (selectedWorkOrderData) {
+                    // If we found a valid index, populate the fields using that index
+                    if (descIndex > -1) {
                         updatedLine.description = desc || '';
-                        updatedLine.project = selectedWorkOrderData.project[0] || '';
-                        updatedLine.plc = selectedWorkOrderData.plcCd[0] || '';
+                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
                         updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
                         updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
                     } else {
+                        // If the description isn't found, clear the fields
                         updatedLine.description = '';
                         updatedLine.project = '';
                         updatedLine.plc = '';
@@ -317,12 +322,21 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                         updatedLine.rlseNumber = '';
                         updatedLine.poLineNumber = '';
                     }
+                } else {
+                    // If no matching work order data is found, clear everything
+                    updatedLine.description = '';
+                    updatedLine.project = '';
+                    updatedLine.plc = '';
+                    updatedLine.poNumber = '';
+                    updatedLine.rlseNumber = '';
+                    updatedLine.poLineNumber = '';
                 }
-                return updatedLine;
             }
-            return line;
-        }));
-    };
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);

@@ -5073,7 +5073,7 @@ const getUserIPAddress = async () => {
 const columnsAdmin = [
   "All",
   "Status",
-  "Date",
+  "Timesheet Date",
   "Employee ID",
   "Name",
   // "Project ID",
@@ -5397,9 +5397,9 @@ export default function Approval() {
         let aVal, bVal;
 
         // Handle different column types
-        if (sortConfig.key === "Date") {
-          aVal = new Date(a.originalDate || a["Date"]);
-          bVal = new Date(b.originalDate || b["Date"]);
+        if (sortConfig.key === "Timesheet Date") {
+          aVal = new Date(a.originalDate || a["Timesheet Date"]);
+          bVal = new Date(b.originalDate || b["Timesheet Date"]);
           if (isNaN(aVal.getTime())) aVal = new Date(0);
           if (isNaN(bVal.getTime())) bVal = new Date(0);
           return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
@@ -5469,8 +5469,8 @@ export default function Approval() {
         }
 
         // Secondary sort: by date (newest first for same lineNo)
-        let aDate = new Date(a.originalDate || a["Date"]);
-        let bDate = new Date(b.originalDate || b["Date"]);
+        let aDate = new Date(a.originalDate || a[" Timesheet Date"]);
+        let bDate = new Date(b.originalDate || b[" Timesheet Date"]);
         if (isNaN(aDate.getTime())) aDate = new Date(0);
         if (isNaN(bDate.getTime())) bDate = new Date(0);
         if (aDate.getTime() !== bDate.getTime()) {
@@ -5810,8 +5810,10 @@ export default function Approval() {
           isRejected: item.approvalStatus === "REJECTED" || false,
           isNotified: item.approvalStatus === "NOTIFIED" || false,
           status: item.status?.toLowerCase() || "un-notified",
-          originalDate: item.createdAt,
-          Date: formatDate(item.createdAt),
+          // originalDate: item.createdAt,
+           originalDate: item.timesheet_Date || item.timesheetDate, // Map to timesheet_Date first
+          Date: formatDate(item.timesheet_Date),
+           "Timesheet Date": formatDate(item.timesheet_Date), // Map to timesheet_Date from API
           "Employee ID": item.resource_Id || "",
           Name: item.displayedName || item.employeeName || `Employee ${item.resource_Id}` || "",
           "Project ID": item.projId || "",
@@ -6326,7 +6328,7 @@ export default function Approval() {
               marginRight: 24,
               width: "calc(100vw - 220px)",
               // 
-               maxWidth: "1200px", // Add maximum width
+              //  maxWidth: "1200px", // Add maximum width
     minWidth: "800px", // Set minimum width for the 6 columns
               padding: "0.5rem",
               // minHeight: "350px",
@@ -6395,7 +6397,7 @@ export default function Approval() {
                   // minWidth: `${minTableWidth}px`,
                   // width: "max-content",
                   width: "100%", // Use full width of container instead of minWidth
-    tableLayout: "fixed" // Add fixed layout for better control
+    tableLayout: "auto" // Add fixed layout for better control
                 }}
               >
                 <thead
