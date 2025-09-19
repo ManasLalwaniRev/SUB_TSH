@@ -374,9 +374,85 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     };
 
     const handleSubmit = async () => {
-        // ... Your existing handleSubmit logic remains unchanged ...
-        // This function will now work correctly because the `lines` state will have the proper data.
-    };
+    const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
+
+    // Loop through each line the user has added to the grid
+    for (const line of lines) {
+        // 1. Basic Validation
+        if (!line.project || !line.poLineNumber) {
+            showToast(`Please complete the Work Order for "${line.description || 'the new line'}".`, 'warning');
+            return; // Stop the entire submission if any line is incomplete
+        }
+
+        // 2. Determine if we are creating (POST) or updating (PUT)
+        const method = isEditMode ? 'PUT' : 'POST';
+        const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
+
+        // 3. Prepare dates and hours data for the payload
+        const now = new Date().toISOString();
+        const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
+        const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
+        const timesheetHours = days.map((day, index) => {
+            const dateParts = selectedPeriod.dates[index].split(' ')[1].split('/');
+            const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+            return {
+                Id: isEditMode ? (line.hourIds[day] || 0) : 0,
+                Ts_Date: dateForApi,
+                Hours: line.hours[day] || 0
+            };
+        });
+
+        // 4. Build the payload with PascalCase keys
+        const payload = {
+            Id: isEditMode ? line.id : 0,
+            Description: line.description,
+            ProjId: line.project,
+            Plc: line.plc,
+            WorkOrder: line.workOrder.split(' - ')[0],
+            PayType: line.payType,
+            PoNumber: line.poNumber,
+            RlseNumber: line.rlseNumber || "0",
+            Resource_Id: String(resourceId),
+            PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
+            Timesheet_Date: weekEndDateAsISO,
+            UpdatedAt: now,
+            UpdatedBy: String(resourceId),
+            TimesheetHours: timesheetHours,
+            Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
+            Status: "OPEN",
+            ApprovalStatus: "PENDING"
+            // Add other required fields your API might need
+        };
+
+        // Add creation-specific fields only when not in edit mode
+        if (!isEditMode) {
+            payload.CreatedAt = now;
+            payload.CreatedBy = String(resourceId);
+        }
+
+        // 5. Send the request to the server
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Submission failed: ${errorText}`);
+            }
+        } catch (error) {
+            showToast(error.message, 'error');
+            return; // Stop if any line fails to submit
+        }
+    }
+
+    // 6. If all lines were submitted successfully
+    showToast(`Timesheet ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+    onClose(); // Close the modal and refresh the parent data
+};
+
+
 
     // ✅ PERFORMANCE OPTIMIZATION: Memoize work order options
     const workOrderOptions = useMemo(() => {
