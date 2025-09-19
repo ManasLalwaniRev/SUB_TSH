@@ -453,7 +453,6 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
 };
 
 
-
     // ✅ PERFORMANCE OPTIMIZATION: Memoize work order options
     const workOrderOptions = useMemo(() => {
         if (!purchaseOrderData) return [];
