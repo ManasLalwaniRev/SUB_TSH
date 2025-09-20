@@ -5197,6 +5197,49 @@ export default function Approval() {
   const [pendingAction, setPendingAction] = useState(null);
   const [userIpAddress, setUserIpAddress] = useState("");
 
+  // Add this useEffect to set the default search date
+
+useEffect(() => {
+
+    const today = new Date();
+
+    // Get today's date components based on UTC
+
+    const year = today.getUTCFullYear();
+
+    const month = today.getUTCMonth();
+
+    const day = today.getUTCDate();
+
+    const dayOfWeek = today.getUTCDay(); // 0 for Sunday (UTC)
+ 
+    // Create a new Date object for today, firmly in UTC
+
+    const todayUTC = new Date(Date.UTC(year, month, day));
+ 
+    // Calculate the upcoming Sunday by adding days to the UTC date
+
+    // The (% 7) handles the case where today is already Sunday
+
+    const daysToAdd = (7 - dayOfWeek) % 7;
+
+    todayUTC.setUTCDate(todayUTC.getUTCDate() + daysToAdd);
+ 
+    // Format the final UTC date into a "YYYY-MM-DD" string for the state
+
+    const finalYear = todayUTC.getUTCFullYear();
+
+    const finalMonth = String(todayUTC.getUTCMonth() + 1).padStart(2, '0');
+
+    const finalDay = String(todayUTC.getUTCDate()).padStart(2, '0');
+
+    const formattedDateForState = `${finalYear}-${finalMonth}-${finalDay}`;
+ 
+    setSearchDate(formattedDateForState);
+ 
+}, []); // Empty dependency array ensures this runs only once
+ 
+
   // const isAdmin = currentUser?.role === "admin";
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
 
@@ -6466,7 +6509,7 @@ const handleRowClick = (rowData, event) => {
             </div>
           </div>
 
-          <div
+          {/* <div
             className="flex gap-3 mb-3 items-center flex-wrap"
             style={{
               marginLeft: 24,
@@ -6511,7 +6554,127 @@ const handleRowClick = (rowData, event) => {
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
-          </div>
+          </div> */}
+
+          {/* START: New Filter Section */}
+<fieldset
+
+            className="border border-gray-300 rounded-md p-4 mb-4"
+
+            style={{
+
+              marginLeft: 24,
+
+              marginRight: 24,
+
+              width: "calc(100vw - 220px)",
+
+            }}
+>
+<legend className="text-sm font-semibold text-gray-600 px-2">Filters</legend>
+<div className="flex items-center gap-6 flex-wrap">
+
+              {/* Date Filter */}
+<div className="flex items-center">
+<label htmlFor="filterDate" className="mr-2 text-xs font-semibold text-gray-600">
+
+                  Date
+</label>
+<DatePicker
+
+                  id="filterDate"
+
+                  selected={
+
+                    searchDate ? new Date(searchDate + "T00:00:00") : null
+
+                  }
+
+                  onChange={(date) => {
+
+                    if (date) {
+
+                      const localDate = new Date(
+
+                        date.getTime() - date.getTimezoneOffset() * 60000
+
+                      );
+
+                      const isoString = localDate.toISOString().split("T")[0];
+
+                      setSearchDate(isoString);
+
+                    } else {
+
+                      setSearchDate("");
+
+                    }
+
+                  }}
+
+                  dateFormat="MM/dd/yyyy"
+
+                  placeholderText="MM/DD/YYYY"
+
+                  className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+
+                  showPopperArrow={false}
+
+                  autoComplete="off"
+
+                />
+</div>
+ 
+              {/* Employee ID Filter */}
+<div className="flex items-center">
+<label htmlFor="filterEmpId" className="mr-2 text-xs font-semibold text-gray-600">
+
+                  Employee ID
+</label>
+<input
+
+                  id="filterEmpId"
+
+                  type="text"
+
+                  value={searchEmployeeId}
+
+                  onChange={(e) => setSearchEmployeeId(e.target.value)}
+
+                  placeholder="Employee ID"
+
+                  className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+
+                />
+</div>
+ 
+              {/* Employee Name Filter */}
+<div className="flex items-center">
+<label htmlFor="filterEmpName" className="mr-2 text-xs font-semibold text-gray-600">
+
+                  Employee Name
+</label>
+<input
+
+                  id="filterEmpName"
+
+                  type="text"
+
+                  value={searchEmployeeName}
+
+                  onChange={(e) => setSearchEmployeeName(e.target.value)}
+
+                  placeholder="Employee Name"
+
+                  className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+
+                />
+</div>
+</div>
+</fieldset>
+
+          {/* END: New Filter Section */}
+
 
           <div
             className="border border-gray-300 rounded bg-white shadow"
@@ -6574,12 +6737,13 @@ const handleRowClick = (rowData, event) => {
               style={{
                 overflowX: "auto",
                 overflowY: "auto",
-                // maxHeight: "calc(100vh - 180px)",
-                // minHeight: "200px",
+                maxHeight: "calc(100vh - 400px)",
+                minHeight: "300px",
                 width: "100%",
                 flex: 1,
                 border: "1px solid #e5e7eb",
                 borderRadius: "4px",
+                 scrollBehavior: "smooth", 
               }}
             >
               <table
@@ -6589,7 +6753,7 @@ const handleRowClick = (rowData, event) => {
                   // minWidth: `${minTableWidth}px`,
                   // width: "max-content",
                   width: "100%", // Use full width of container instead of minWidth
-    tableLayout: "auto" // Add fixed layout for better control
+    tableLayout: "fixed" // Add fixed layout for better control
                 }}
               >
                 <thead
@@ -6597,8 +6761,10 @@ const handleRowClick = (rowData, event) => {
                     position: "sticky",
                     top: 0,
                     backgroundColor: "#f8fafc",
-                    zIndex: 10,
+                    zIndex: 20,
                     borderBottom: "2px solid #e2e8f0",
+                     // Add shadow under header
+        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
                   }}
                 >
                   <tr>

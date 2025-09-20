@@ -1699,11 +1699,11 @@ export default function Sidebar() {
                     
                     {/* Approval: Show for Admin and PM only */}
                     {(isAdmin || isPM) && (
-                        <SidebarItem icon={<CheckSquare className="h-5 w-5" />} text="Enquiry" to="/dashboard/approval" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        <SidebarItem icon={<CheckSquare className="h-5 w-5" />} text="Enquiry / Approve " to="/dashboard/approval" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
                     {/* Export: Show for Admin and PM only */}
-                    {(isAdmin || isPM) && (
+                    {(isAdmin ) && (
                         <SidebarItem icon={<Download className="h-5 w-5" />} text="Export" to="/dashboard/export" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
