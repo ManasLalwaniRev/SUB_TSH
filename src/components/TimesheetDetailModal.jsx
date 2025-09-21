@@ -161,32 +161,46 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
 
     const handleHourChange = (id, day, value) => {
     const numValue = parseFloat(value);
-    
-    // Return early if the input is empty
-    if (value === '') { 
-        // Allow the state update to handle setting the value to 0
+
+    // Perform simple, immediate validation first
+    if (value === '') {
+        // Let the state updater handle setting the value to 0
     } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
         showToast('Hours for a single entry must be between 0 and 24.', 'warning');
         return;
     } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
-        // This is the new validation for .0 and .5 increments
         showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
         return;
     }
 
-    const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
-    const newColumnTotal = otherLinesTotal + (numValue || 0);
-
-    if (newColumnTotal > 24) {
-        showToast(`Total hours for this day cannot exceed 24.`, 'warning');
-        return;
-    }
-
     setLines(currentLines => {
+        // ✅ FIX: Move the column validation INSIDE the state updater
+        // This ensures it always runs on the most recent list of lines
+        const otherLinesTotal = currentLines
+            .filter(line => line.id !== id)
+            .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+
+        const newColumnTotal = otherLinesTotal + (numValue || 0);
+
+        if (newColumnTotal > 24) {
+            showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+            return currentLines; // Abort the update by returning the original state
+        }
+
+        // If validation passes, proceed with the update
         const indexToUpdate = currentLines.findIndex(line => line.id === id);
-        if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
+        if (indexToUpdate === -1) {
+            console.error("Could not find line with id:", id);
+            return currentLines;
+        }
         const newLines = [...currentLines];
-        const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
+        const updatedLine = {
+            ...newLines[indexToUpdate],
+            hours: {
+                ...newLines[indexToUpdate].hours,
+                [day]: value === '' ? 0 : numValue
+            }
+        };
         newLines[indexToUpdate] = updatedLine;
         return newLines;
     });
@@ -195,9 +209,57 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
     const deleteLines = () => { if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning'); const idsToDeleteFromServer = []; for (const id of selectedLines) { if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) { idsToDeleteFromServer.push(id); } } if (idsToDeleteFromServer.length > 0) { setLinesToDelete(prev => [...prev, ...idsToDeleteFromServer]); } setLines(lines.filter(line => !selectedLines.has(line.id))); setSelectedLines(new Set()); };
-    const copyLines = () => { if (selectedLines.size === 0) { showToast('Please select at least one line to copy.', 'warning'); return; } const newLines = lines.filter(line => selectedLines.has(line.id)).map(line => ({ ...line, hours: { ...line.hours }, id: `temp-${nextId.current++}`, hourIds: {} })); setLines(currentLines => [...currentLines, ...newLines]); setSelectedLines(new Set()); };
+const copyLines = () => {
+    if (selectedLines.size === 0) {
+        showToast('Please select at least one line to copy.', 'warning');
+        return;
+    }
 
+    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+
+    // ✅ VALIDATION: Check if this copy action will exceed daily limits
+    const potentialTotals = { ...dailyTotals }; // Create a copy of the current totals
+    let validationFailed = false;
+
+    linesToCopy.forEach(lineToCopy => {
+        days.forEach(day => {
+            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+            if (potentialTotals[day] > 24) {
+                validationFailed = true;
+            }
+        });
+    });
+
+    if (validationFailed) {
+        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
+        return; // Abort the copy operation
+    }
+
+    // If validation passes, proceed with copying
+    const newLines = linesToCopy.map(line => ({
+        ...line,
+        hours: { ...line.hours },
+        id: `temp-${nextId.current++}`,
+        hourIds: {}
+    }));
+
+    setLines(currentLines => [...currentLines, ...newLines]);
+    setSelectedLines(new Set());
+};
     const handleSave = async () => {
+        const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+    lines.forEach(line => {
+        days.forEach(day => {
+            finalTotals[day] += parseFloat(line.hours[day]) || 0;
+        });
+    });
+
+    const invalidDay = days.find(day => finalTotals[day] > 24);
+
+    if (invalidDay) {
+        showToast(`Save failed: Total hours for one or more days exceed 24. Please correct the entries.`, 'error');
+        return; // Abort the save
+    }
         const promises = [];
         const weekDates = getWeekDates(timesheetData.Date);
         const API_BASE_URL = "https://timesheet-subk.onrender.com";

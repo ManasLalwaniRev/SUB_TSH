@@ -354,7 +354,7 @@ export default function MainTable() {
         const s = status;
         if (s === 'Open') return `${baseStyle} bg-blue-100 text-blue-800`;
         if (s === 'Approved') return `${baseStyle} bg-green-100 text-green-800`;
-        if (s === 'Rejected') return `${baseStyle} bg-red-100 text-red-800`;
+        if (s?.toLowerCase() === 'rejected') return `${baseStyle} bg-red-100 text-red-800`;
         if (s === 'Pending') return `${baseStyle} bg-yellow-100 text-yellow-800`;
         if (s === 'Submitted') return `${baseStyle} bg-purple-100 text-purple-800`;
         return `${baseStyle} bg-gray-100 text-gray-800`;
@@ -456,10 +456,11 @@ export default function MainTable() {
             showToast('Please select a timesheet to submit.', 'warning');
             return;
         }
-        if (selectedTimesheetData.Status?.toUpperCase() !== 'OPEN') {
-            showToast('Only timesheets with "OPEN" status can be submitted.', 'warning');
-            return;
-        }
+        const allowedStatuses = ['OPEN', 'REJECTED'];
+if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
+    showToast('Only timesheets with "OPEN" or "REJECTED" status can be submitted.', 'warning');
+    return;
+}
         if (!window.confirm(`Are you sure you want to submit the selected timesheet?`)) {
             return;
         }
@@ -617,8 +618,10 @@ export default function MainTable() {
     const renderTableCell = (row, col) => {
         const key = col === "Timesheet End Date" ? "Date" : col;
         if (key === 'Status') {
-            return <span className={getStatusStyle(row[key])}>{row[key]}</span>;
-        }
+    const status = row[key] || '';
+    const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    return <span className={getStatusStyle(status)}>{formattedStatus}</span>;
+}
         if (key === 'Hours') {
             return formatHours(row[key]);
         }
@@ -689,8 +692,7 @@ export default function MainTable() {
                                     <button
                                         onClick={handleNotify}
                                         className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
-                                        disabled={!selectedTimesheetData || selectedTimesheetData.Status?.toUpperCase() !== 'OPEN' || isNotifying}
-                                    >
+                                        disabled={!selectedTimesheetData || !['OPEN', 'REJECTED'].includes(selectedTimesheetData.Status?.toUpperCase()) || isNotifying}                                    >
                                         {isNotifying ? 'Submitting...' : `Submit`}
                                     </button>
                                     <button onClick={handleCreateClick} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs">Create</button>

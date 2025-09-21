@@ -3852,6 +3852,7 @@ export default function ExportTable() {
 
   // Generate columns dynamically: Select + dynamic columns from API
   const columns = ["Select", ...dynamicColumns];
+
   const colWidth = 120;
   const minTableWidth = columns.length * colWidth;
 
@@ -3882,7 +3883,7 @@ export default function ExportTable() {
     // Handle specific field mappings
     const fieldMappings = {
       timesheet_Date: "Timesheet Date",
-      resource_Id: "Employee ID",
+      resource_Id: "Resource ID",
       displayedName: "Name",
       employeeName: "Employee Name",
       resourceName: "Resource Name",
@@ -3900,6 +3901,9 @@ export default function ExportTable() {
       createdAt: "Created At",
       updatedAt: "Updated At",
       batchId: "Batch ID",
+      vend_Id: "Vendor ID",
+      vend_Name: "Vendor Name",
+      resource_Desc: "Resource Description",
     };
 
     if (fieldMappings[fieldName]) {
@@ -4145,6 +4149,111 @@ export default function ExportTable() {
   //   }
   // };
   // Updated fetch function to dynamically build columns with Status first
+  // const fetchExportData = async () => {
+  //   if (!userLoaded || !currentUser) return;
+  //   try {
+  //     setLoading(true);
+
+  //     const resourceId = currentUser.username;
+
+  //     if (!resourceId) {
+  //       showToast("User resource ID not found. Please login again.", "error");
+  //       navigate("/");
+  //       return;
+  //     }
+
+  //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
+
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+
+  //     if (!response.ok)
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     const apiData = await response.json();
+
+  //     if (Array.isArray(apiData) && apiData.length > 0) {
+  //       // Extract all unique keys from the first item to build dynamic columns
+  //       const firstItem = apiData[0];
+  //       const allKeys = Object.keys(firstItem);
+
+  //       // Filter out internal fields
+  //       const filteredKeys = allKeys.filter(
+  //         (key) =>
+  //           !["id", "timesheetId", "_id", "__v", "originalItem"].includes(key)
+  //       );
+
+  //       // Separate Status and other columns
+  //       const statusKey = filteredKeys.find(
+  //         (key) => formatColumnName(key).toLowerCase() === "status"
+  //       );
+  //       const otherKeys = filteredKeys.filter(
+  //         (key) => formatColumnName(key).toLowerCase() !== "status"
+  //       );
+
+  //       // Build display columns with Status first, then others
+  //       const displayColumns = [];
+  //       if (statusKey) {
+  //         displayColumns.push(formatColumnName(statusKey));
+  //       }
+  //       displayColumns.push(...otherKeys.map((key) => formatColumnName(key)));
+
+  //       setDynamicColumns(displayColumns);
+
+  //       const mappedData = apiData.map((item, index) => {
+  //         const mappedRow = {
+  //           id: item.timesheetId || item.id || `export-${index}`,
+  //           originalDate:
+  //             item.timesheet_Date || item.timesheetDate || item.createdAt,
+  //           originalItem: item,
+  //         };
+
+  //         // Map all fields from API response to display columns
+  //         allKeys.forEach((key) => {
+  //           const displayKey = formatColumnName(key);
+  //           let value = item[key];
+
+  //           // Special formatting for different data types
+  //           if (
+  //             key === "timesheet_Date" ||
+  //             key.toLowerCase().includes("date")
+  //           ) {
+  //             value = formatDate(value);
+  //           } else if (key === "hours" || key.toLowerCase().includes("hour")) {
+  //             value = formatHours(value);
+  //           } else if (value === null || value === undefined) {
+  //             value = "";
+  //           } else {
+  //             value = String(value);
+  //           }
+
+  //           mappedRow[displayKey] = value;
+  //         });
+
+  //         return mappedRow;
+  //       });
+
+  //       setRows(mappedData);
+  //     } else {
+  //       setDynamicColumns([]);
+  //       setRows([]);
+  //     }
+
+  //     setSelectedRows(new Set());
+  //     setSelectAll(false);
+  //   } catch (error) {
+  //     console.error("Fetch error:", error);
+  //     showToast(
+  //       "Failed to load export data. Please check your connection.",
+  //       "error"
+  //     );
+  //     setRows([]);
+  //     setDynamicColumns([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const fetchExportData = async () => {
     if (!userLoaded || !currentUser) return;
     try {
@@ -4170,7 +4279,7 @@ export default function ExportTable() {
       const apiData = await response.json();
 
       if (Array.isArray(apiData) && apiData.length > 0) {
-        // Extract all unique keys from the first item to build dynamic columns
+        // Extract all unique keys from the first item
         const firstItem = apiData[0];
         const allKeys = Object.keys(firstItem);
 
@@ -4180,23 +4289,63 @@ export default function ExportTable() {
             !["id", "timesheetId", "_id", "__v", "originalItem"].includes(key)
         );
 
-        // Separate Status and other columns
+        // Define desired column order keys (lowercase)
+        const desiredOrder = [
+          "status",
+          "resource_id",
+          "resource_name",
+          "resource_desc",
+          "plc",
+          "paytype",
+          "vend_id",
+          "vend_name",
+          "hours_date",
+          "hours",
+          "amt",
+        ];
+
+        // Lowercase filtered keys for matching
+        const lowerFilteredKeys = filteredKeys.map((k) => k.toLowerCase());
+
+        // Find keys in desired order that exist in filtered keys
+        const orderedKeys = desiredOrder.filter((k) =>
+          lowerFilteredKeys.includes(k)
+        );
+
+        // Other keys not in desired order
+        const remainingKeys = filteredKeys.filter(
+          (key) => !orderedKeys.includes(key.toLowerCase())
+        );
+
+        // Compose final columns with correct casing from filteredKeys
+        const finalColumns = [];
+
+        // Add Status column with proper casing from filteredKeys
         const statusKey = filteredKeys.find(
-          (key) => formatColumnName(key).toLowerCase() === "status"
+          (k) => k.toLowerCase() === "status"
         );
-        const otherKeys = filteredKeys.filter(
-          (key) => formatColumnName(key).toLowerCase() !== "status"
-        );
+        if (statusKey) finalColumns.push(statusKey);
 
-        // Build display columns with Status first, then others
-        const displayColumns = [];
-        if (statusKey) {
-          displayColumns.push(formatColumnName(statusKey));
-        }
-        displayColumns.push(...otherKeys.map((key) => formatColumnName(key)));
+        // Add rest of desired ordered keys except status
+        orderedKeys.forEach((orderedKey) => {
+          if (orderedKey !== "status") {
+            const key = filteredKeys.find(
+              (k) => k.toLowerCase() === orderedKey
+            );
+            if (key) finalColumns.push(key);
+          }
+        });
 
+        // Add remaining columns after ordered columns
+        finalColumns.push(...remainingKeys);
+
+        // Format column names for display
+        const displayColumns = finalColumns.map((key) => formatColumnName(key));
+
+        // Set dynamic columns in the custom order
         setDynamicColumns(displayColumns);
 
+        // Map API data to rows with formatted keys and values
         const mappedData = apiData.map((item, index) => {
           const mappedRow = {
             id: item.timesheetId || item.id || `export-${index}`,
@@ -4205,12 +4354,10 @@ export default function ExportTable() {
             originalItem: item,
           };
 
-          // Map all fields from API response to display columns
           allKeys.forEach((key) => {
             const displayKey = formatColumnName(key);
             let value = item[key];
 
-            // Special formatting for different data types
             if (
               key === "timesheet_Date" ||
               key.toLowerCase().includes("date")
@@ -5214,7 +5361,7 @@ export default function ExportTable() {
                 type="text"
                 value={searchVendID}
                 onChange={(e) => setSearchVendID(e.target.value)}
-                placeholder="VEND ID"
+                placeholder="VENDOR ID"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
 
