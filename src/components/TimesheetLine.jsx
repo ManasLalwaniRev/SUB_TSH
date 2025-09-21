@@ -134,8 +134,7 @@
 //     );
 // }
 
-
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 // --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
@@ -172,12 +171,12 @@ const CascadingSelect = ({ label, options, value, onChange, disabled = false }) 
 // --- Data for the period dropdown ---
 const timePeriods = [
     { label: 'Mon 7/21 - Sun 7/27', dates: ['Mon 07/21', 'Tue 07/22', 'Wed 07/23', 'Thu 07/24', 'Fri 07/25', 'Sat 07/26', 'Sun 07/27'] },
-{ label: 'Mon 7/28 - Sun 8/3',  dates: ['Mon 07/28', 'Tue 07/29', 'Wed 07/30', 'Thu 07/31', 'Fri 08/01', 'Sat 08/02', 'Sun 08/03'] },
-{ label: 'Mon 8/4 - Sun 8/10',  dates: ['Mon 08/04', 'Tue 08/05', 'Wed 08/06', 'Thu 08/07', 'Fri 08/08', 'Sat 08/09', 'Sun 08/10'] },
-{ label: 'Mon 8/11 - Sun 8/17', dates: ['Mon 08/11', 'Tue 08/12', 'Wed 08/13', 'Thu 08/14', 'Fri 08/15', 'Sat 08/16', 'Sun 08/17'] },
-{ label: 'Mon 8/18 - Sun 8/24', dates: ['Mon 08/18', 'Tue 08/19', 'Wed 08/20', 'Thu 08/21', 'Fri 08/22', 'Sat 08/23', 'Sun 08/24'] },
-{ label: 'Mon 8/25 - Sun 8/31', dates: ['Mon 08/25', 'Tue 08/26', 'Wed 08/27', 'Thu 08/28', 'Fri 08/29', 'Sat 08/30', 'Sun 08/31'] },
-{ label: 'Mon 9/1 - Sun 9/7',   dates: ['Mon 09/01', 'Tue 09/02', 'Wed 09/03', 'Thu 09/04', 'Fri 09/05', 'Sat 09/06', 'Sun 09/07'] },
+    { label: 'Mon 7/28 - Sun 8/3',  dates: ['Mon 07/28', 'Tue 07/29', 'Wed 07/30', 'Thu 07/31', 'Fri 08/01', 'Sat 08/02', 'Sun 08/03'] },
+    { label: 'Mon 8/4 - Sun 8/10',  dates: ['Mon 08/04', 'Tue 08/05', 'Wed 08/06', 'Thu 08/07', 'Fri 08/08', 'Sat 08/09', 'Sun 08/10'] },
+    { label: 'Mon 8/11 - Sun 8/17', dates: ['Mon 08/11', 'Tue 08/12', 'Wed 08/13', 'Thu 08/14', 'Fri 08/15', 'Sat 08/16', 'Sun 08/17'] },
+    { label: 'Mon 8/18 - Sun 8/24', dates: ['Mon 08/18', 'Tue 08/19', 'Wed 08/20', 'Thu 08/21', 'Fri 08/22', 'Sat 08/23', 'Sun 08/24'] },
+    { label: 'Mon 8/25 - Sun 8/31', dates: ['Mon 08/25', 'Tue 08/26', 'Wed 08/27', 'Thu 08/28', 'Fri 08/29', 'Sat 08/30', 'Sun 08/31'] },
+    { label: 'Mon 9/1 - Sun 9/7',   dates: ['Mon 09/01', 'Tue 09/02', 'Wed 09/03', 'Thu 09/04', 'Fri 09/05', 'Sat 09/06', 'Sun 09/07'] },
     { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
     { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
 ];
@@ -212,11 +211,9 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
-    // ✅ FIX #1: CORRECTED useEffect TO LOAD DATA FOR EDITING
     useEffect(() => {
-        // In edit mode, we must wait for the purchase order data to load first.
         if (isEditMode && (!purchaseOrderData || purchaseOrderData.length === 0)) {
-            return; // Do nothing until the PO data is ready
+            return;
         }
 
         try {
@@ -240,10 +237,8 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     }
                 });
 
-                // Reconstruct the full work order string for the dropdown
                 let fullWorkOrderString = '';
                 const poEntry = purchaseOrderData.find(po => po.project?.includes(timesheetToEdit.projId));
-
                 if (poEntry) {
                     const projectIndex = poEntry.project.indexOf(timesheetToEdit.projId);
                     if (projectIndex > -1) {
@@ -258,10 +253,9 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     project: timesheetToEdit?.projId || '',
                     plc: timesheetToEdit?.plc || '',
                     payType: timesheetToEdit?.payType || 'SR',
-                    workOrder: fullWorkOrderString, // Use the reconstructed string
+                    workOrder: fullWorkOrderString,
                     wa_Code: poEntry?.wa_Code || '',
-                    // pmUserID: poEntry?.pmUserID || '',
-                    pmUserID: poEntry?.pmUserId || '', // Correct: lowercase 'd'
+                    pmUserID: poEntry?.pmUserId || '',
                     poNumber: timesheetToEdit?.poNumber || '',
                     rlseNumber: timesheetToEdit?.rlseNumber || '',
                     poLineNumber: timesheetToEdit?.poLineNumber || '',
@@ -270,7 +264,6 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                 };
                 setLines([initialLine]);
             } else {
-                // This logic is for creating a new timesheet
                 setLines([createEmptyLine(1)]);
             }
         } catch (error) {
@@ -278,7 +271,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             showToast("Could not load timesheet data for editing.", "error");
             onClose();
         }
-    }, [isEditMode, timesheetToEdit, purchaseOrderData]); // Dependency array updated
+    }, [isEditMode, timesheetToEdit, purchaseOrderData]);
 
     useEffect(() => {
         if (!resourceId) {
@@ -317,81 +310,79 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         }
     }, [selectedPeriod, existingTimesheetDates, isEditMode]);
 
-    // ✅ FIX #2: CORRECTED handleSelectChange FUNCTION
     const handleSelectChange = (id, fieldName, value) => {
-    setLines(currentLines => currentLines.map(line => {
-        if (line.id === id) {
-            const updatedLine = { ...line, [fieldName]: value };
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
 
-            if (fieldName === 'workOrder') {
-                // If the user clears the selection, clear all related fields
-                if (!value) {
-                    updatedLine.description = '';
-                    updatedLine.project = '';
-                    updatedLine.plc = '';
-                    updatedLine.poNumber = '';
-                    updatedLine.rlseNumber = '';
-                    updatedLine.poLineNumber = '';
-                    updatedLine.wa_Code = '';
-                    updatedLine.pmUserId = '';
-                    return updatedLine;
-                }
-
-                const [waCode, desc] = value.split(' - ');
-                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-
-                if (selectedWorkOrderData) {
-                    // ✅ FIX: Set these properties immediately and DON'T clear them later
-                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
-                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; // Correct: lowercase 'd'
-
-                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-
-                    // Now, handle the fields that depend on the specific description
-                    if (descIndex > -1) {
-                        updatedLine.description = desc || '';
-                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                    } else {
-                        // If only the wa_Code matched but not the description, just clear the description-specific fields
-                        updatedLine.description = '';
-                        updatedLine.project = '';
-                        updatedLine.plc = '';
-                        updatedLine.poNumber = '';
-                        updatedLine.rlseNumber = '';
-                        updatedLine.poLineNumber = '';
+                if (fieldName === 'workOrder') {
+                    if (!value) {
+                        updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserId = '';
+                        return updatedLine;
                     }
-                } else {
-                    // If the wa_code itself wasn't found, clear everything
-                    updatedLine.description = '';
-                    updatedLine.project = '';
-                    updatedLine.plc = '';
-                    updatedLine.poNumber = '';
-                    updatedLine.rlseNumber = '';
-                    updatedLine.poLineNumber = '';
-                    updatedLine.wa_Code = '';
-                    updatedLine.pmUserID = '';
+
+                    const [waCode, desc] = value.split(' - ');
+                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+
+                    if (selectedWorkOrderData) {
+                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
+                        updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
+
+                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+
+                        if (descIndex > -1) {
+                            updatedLine.description = desc || '';
+                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                        } else {
+                            updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
+                        }
+                    } else {
+                         updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = '';
+                    }
                 }
+                return updatedLine;
             }
-            return updatedLine;
-        }
-        return line;
-    }));
-};
+            return line;
+        }));
+    };
 
     const handleHourChange = (id, day, value) => {
-        const numValue = parseFloat(value);
-        if (!isNaN(numValue) && numValue >= 0 && numValue <= 24) {
-            setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line));
-        } else if (value === '') {
-             setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: 0 } } : line));
-        } else {
-            showToast('Hours must be between 0 and 24.', 'warning');
-        }
-    };
+    const numValue = parseFloat(value);
+
+    if (value === '') {
+        // Allow the state update to handle setting the value to 0
+    } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+        showToast('Hours for a single entry must be between 0 and 24.', 'warning');
+        return;
+    } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
+        // This is the new validation for .0 and .5 increments
+        showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
+        return;
+    }
+
+    const otherLinesTotal = lines
+        .filter(line => line.id !== id)
+        .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+
+    const newColumnTotal = otherLinesTotal + (numValue || 0);
+
+    if (newColumnTotal > 24) {
+        showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+        return;
+    }
+
+    setLines(currentLines =>
+        currentLines.map(line =>
+            line.id === id
+            ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } }
+            : line
+        )
+    );
+};
 
     const addLine = () => setLines(prev => [...prev, createEmptyLine(`temp-${Date.now()}`)]);
     const handleSelectLine = (id) => {
@@ -416,90 +407,78 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     };
 
     const handleSubmit = async () => {
-    const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
+        const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
 
-    // Loop through each line the user has added to the grid
-    for (const line of lines) {
-        // 1. Basic Validation
-        if (!line.project || !line.poLineNumber) {
-            showToast(`Please complete the Work Order for "${line.description || 'the new line'}".`, 'warning');
-            return; // Stop the entire submission if any line is incomplete
-        }
-
-        // 2. Determine if we are creating (POST) or updating (PUT)
-        const method = isEditMode ? 'PUT' : 'POST';
-        const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
-
-        // 3. Prepare dates and hours data for the payload
-        const now = new Date().toISOString();
-        const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
-        const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
-        const timesheetHours = days.map((day, index) => {
-            const dateParts = selectedPeriod.dates[index].split(' ')[1].split('/');
-            const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
-            return {
-                Id: isEditMode ? (line.hourIds[day] || 0) : 0,
-                Ts_Date: dateForApi,
-                Hours: line.hours[day] || 0
-            };
-        });
-
-        // 4. Build the payload with PascalCase keys
-        const payload = {
-            Id: isEditMode ? line.id : 0,
-            Description: line.description,
-            ProjId: line.project,
-            Plc: line.plc,
-            WorkOrder: line.wa_Code,         // Ensure this uses the stored wa_Code
-        pm_User_Id: line.pmUserID,
-            PayType: line.payType,
-            PoNumber: line.poNumber,
-            RlseNumber: line.rlseNumber || "0",
-            Resource_Id: String(resourceId),
-            PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
-            Timesheet_Date: weekEndDateAsISO,
-            UpdatedAt: now,
-            UpdatedBy: String(resourceId),
-            TimesheetHours: timesheetHours,
-            Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
-            Status: "OPEN",
-            ApprovalStatus: "PENDING"
-            // Add other required fields your API might need
-        };
-
-        // Add creation-specific fields only when not in edit mode
-        if (!isEditMode) {
-            payload.CreatedAt = now;
-            payload.CreatedBy = String(resourceId);
-        }
-
-        // 5. Send the request to the server
-        try {
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Submission failed: ${errorText}`);
+        for (const line of lines) {
+            if (!line.project || !line.poLineNumber) {
+                showToast(`Please complete the Work Order for "${line.description || 'the new line'}".`, 'warning');
+                return;
             }
-        } catch (error) {
-            showToast(error.message, 'error');
-            return; // Stop if any line fails to submit
+
+            const method = isEditMode ? 'PUT' : 'POST';
+            const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
+
+            const now = new Date().toISOString();
+            const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
+            const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
+            const timesheetHours = days.map((day, index) => {
+                const dateParts = selectedPeriod.dates[index].split(' ')[1].split('/');
+                const dateForApi = `2025-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+                return {
+                    Id: isEditMode ? (line.hourIds[day] || 0) : 0,
+                    Ts_Date: dateForApi,
+                    Hours: line.hours[day] || 0
+                };
+            });
+
+            const payload = {
+                Id: isEditMode ? line.id : 0,
+                Description: line.description,
+                ProjId: line.project,
+                Plc: line.plc,
+                WorkOrder: line.wa_Code,
+                pm_User_Id: line.pmUserID,
+                PayType: line.payType,
+                PoNumber: line.poNumber,
+                RlseNumber: line.rlseNumber || "0",
+                Resource_Id: String(resourceId),
+                PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
+                Timesheet_Date: weekEndDateAsISO,
+                UpdatedAt: now,
+                UpdatedBy: String(resourceId),
+                TimesheetHours: timesheetHours,
+                Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
+                Status: "OPEN",
+                ApprovalStatus: "PENDING"
+            };
+
+            if (!isEditMode) {
+                payload.CreatedAt = now;
+                payload.CreatedBy = String(resourceId);
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Submission failed: ${errorText}`);
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+                return;
+            }
         }
-    }
 
-    // 6. If all lines were submitted successfully
-    showToast(`Timesheet ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
-    onClose(); // Close the modal and refresh the parent data
-};
+        showToast(`Timesheet ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
+        onClose();
+    };
 
-
-    // ✅ PERFORMANCE OPTIMIZATION: Memoize work order options
     const workOrderOptions = useMemo(() => {
         if (!purchaseOrderData) return [];
-        // Use a Map to ensure unique values
         const uniqueOptions = new Map();
         purchaseOrderData.forEach(item => {
             item.resourceDesc.forEach(desc => {
@@ -509,6 +488,18 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         });
         return Array.from(uniqueOptions.values());
     }, [purchaseOrderData]);
+    
+    const dailyTotals = useMemo(() => {
+        const totals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+        lines.forEach(line => {
+            days.forEach(day => {
+                totals[day] += parseFloat(line.hours[day]) || 0;
+            });
+        });
+        return totals;
+    }, [lines, days]);
+
+    const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
 
     if (isLoading) { return <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div className="text-white text-xl">Loading Data...</div></div>; }
 
@@ -568,12 +559,27 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                                         <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                        {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={day === 'sat' || day === 'sun'} /></td>)}
+                                        {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed`} disabled={day === 'sat' || day === 'sun'} /></td>)}
                                         <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                     </tr>
                                 );
                             })}
                         </tbody>
+                        <tfoot className="bg-slate-200/80 font-semibold">
+                            <tr className="border-t-2 border-gray-300">
+                                <td colSpan="10" className="p-3 text-right text-gray-800">Total Hours</td>
+                                {days.map(day => (
+                                    <td key={day} className="p-2 text-center">
+                                        <div className={`w-20 p-1.5 ${day === 'sat' || day === 'sun' ? 'text-gray-400' : ''}`}>
+                                            {dailyTotals[day].toFixed(2)}
+                                        </div>
+                                    </td>
+                                ))}
+                                <td className="p-3 text-right font-bold text-blue-700 pr-4">
+                                    {grandTotal.toFixed(2)}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">

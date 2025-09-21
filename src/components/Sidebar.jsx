@@ -1709,7 +1709,7 @@ export default function Sidebar() {
                     
                     {/* Work Assignment: Show for Admin only */}
                     {isAdmin && (
-                        <SidebarItem icon={<Briefcase className="h-5 w-5" />} text="Work Assignment" to="/dashboard/work-assignment" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        <SidebarItem icon={<Briefcase className="h-5 w-5" />} text="Work Order" to="/dashboard/work-assignment" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
                     
                     {/* Users: Show for Admin and User only, NOT for PM */}
@@ -1718,12 +1718,12 @@ export default function Sidebar() {
                     )}
                     
                     {/* Groups: Show for Admin only */}
-                    {isAdmin && (
+                    {/* {isAdmin && (
                         <>
                             <SidebarItem icon={<Users className="h-5 w-5" />} text="Manage Groups" to="/dashboard/groups/manage-groups" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                             <SidebarItem icon={<GitBranch className="h-5 w-5" />} text="Manage Workflow" to="/dashboard/groups/manage-workflow" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                         </>
-                    )}
+                    )} */}
                 </div>
                 
                 <div className="pt-2 mt-2 border-t border-green-200">

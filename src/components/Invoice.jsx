@@ -1026,6 +1026,7 @@
 
 import React, { useRef } from "react";
 import logoImg from "../assets/image.png";
+
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 

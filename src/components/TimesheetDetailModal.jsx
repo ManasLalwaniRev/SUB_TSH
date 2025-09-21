@@ -1,351 +1,4 @@
-
-// import { useState, useEffect } from "react";
-// import "./datepicker.css";
-
-// const TimesheetDetailModal = ({ isOpen, timesheetData, onClose }) => {
-//   const [apiData, setApiData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   // Fetch data from API when modal opens
-//   useEffect(() => {
-//     if (isOpen && timesheetData) {
-//       fetchTimesheetData();
-//     }
-//   }, [isOpen, timesheetData]);
-
-//   const fetchTimesheetData = async () => {
-//     try {
-//       setLoading(true);
-//       setError(null);
-      
-//       const response = await fetch('https://timesheet-subk-latest.onrender.com/api/SubkTimesheet');
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${response.status}`);
-//       }
-      
-//       const data = await response.json();
-//       console.log('API Response:', data); // Debug log
-//       setApiData(Array.isArray(data) ? data : []);
-//     } catch (err) {
-//       console.error('API Error:', err); // Debug log
-//       setError(err.message);
-//       setApiData([]);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   if (!isOpen || !timesheetData) return null;
-
-//   // Generate week days dynamically 
-//   const generateWeekDays = () => {
-//     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-//     const dates = ['08/11', '08/12', '08/13', '08/14', '08/15', '08/16', '08/17'];
-//     return days.map((day, index) => ({
-//       day: `${day} ${dates[index]}`,
-//       shortDay: day
-//     }));
-//   };
-
-//   const weekdays = generateWeekDays();
-
-//   // Map API data to table rows - FIXED to show all records
-//   const getTimesheetRows = () => {
-//     if (loading) {
-//       return [{
-//         line: '',
-//         description: 'Loading...',
-//         project: '',
-//         plc: '',
-//         payType: '',
-//         poNumber: '',
-//         rlseNumber: '',
-//         poLineNumber: '',
-//         weekHours: ['', '', '', '', '', '', ''],
-//         total: ''
-//       }];
-//     }
-
-//     if (error) {
-//       return [{
-//         line: '',
-//         description: `Error: ${error}`,
-//         project: '',
-//         plc: '',
-//         payType: '',
-//         poNumber: '',
-//         rlseNumber: '',
-//         poLineNumber: '',
-//         weekHours: ['', '', '', '', '', '', ''],
-//         total: ''
-//       }];
-//     }
-
-//     // FIXED: Show all API data records instead of just empty rows
-//     if (apiData.length > 0) {
-//       return apiData.map((item, index) => ({
-//         line: index + 1,
-//         description: item.description || item.taskDescription || item.task || '',
-//         project: item.project || item.projectCode || item.projectId || '',
-//         plc: item.plc || item.laborCategory || item.category || '',
-//         payType: item.payType || item.payCategory || item.type || '',
-//         poNumber: item.poNumber || item.purchaseOrder || item.po || '',
-//         rlseNumber: item.rlseNumber || item.releaseNumber || item.release || '',
-//         poLineNumber: item.poLineNumber || item.lineNumber || item.line || '',
-//         weekHours: [
-//           item.monday || item.mon || item.day1 || '0',
-//           item.tuesday || item.tue || item.day2 || '0',
-//           item.wednesday || item.wed || item.day3 || '0',
-//           item.thursday || item.thu || item.day4 || '0',
-//           item.friday || item.fri || item.day5 || '0',
-//           item.saturday || item.sat || item.day6 || '0',
-//           item.sunday || item.sun || item.day7 || '0'
-//         ],
-//         total: item.total || calculateRowTotal(item) || '0.00'
-//       }));
-//     }
-
-//     // Show empty rows when no data
-//     return [
-//       {
-//         line: 1,
-//         description: '',
-//         project: '',
-//         plc: '',
-//         payType: '',
-//         poNumber: '',
-//         rlseNumber: '',
-//         poLineNumber: '',
-//         weekHours: ['', '', '', '', '', '', ''],
-//         total: '0.00'
-//       },
-//       {
-//         line: 2,
-//         description: '',
-//         project: '',
-//         plc: '',
-//         payType: '',
-//         poNumber: '',
-//         rlseNumber: '',
-//         poLineNumber: '',
-//         weekHours: ['', '', '', '', '', '', ''],
-//         total: '0.00'
-//       },
-//       {
-//         line: 3,
-//         description: '',
-//         project: '',
-//         plc: '',
-//         payType: '',
-//         poNumber: '',
-//         rlseNumber: '',
-//         poLineNumber: '',
-//         weekHours: ['', '', '', '', '', '', ''],
-//         total: '0.00'
-//       },
-//       {
-//         line: 4,
-//         description: 'New Line Item',
-//         project: 'N/A',
-//         plc: 'N/A',
-//         payType: 'N/A',
-//         poNumber: 'N/A',
-//         rlseNumber: 'N/A',
-//         poLineNumber: 'N/A',
-//         weekHours: ['0', '0', '0', '0', '0', '0', '0'],
-//         total: '0.00'
-//       }
-//     ];
-//   };
-
-//   // Calculate total hours for a row
-//   const calculateRowTotal = (item) => {
-//     const hours = [
-//       parseFloat(item.monday || item.mon || item.day1 || 0),
-//       parseFloat(item.tuesday || item.tue || item.day2 || 0),
-//       parseFloat(item.wednesday || item.wed || item.day3 || 0),
-//       parseFloat(item.thursday || item.thu || item.day4 || 0),
-//       parseFloat(item.friday || item.fri || item.day5 || 0),
-//       parseFloat(item.saturday || item.sat || item.day6 || 0),
-//       parseFloat(item.sunday || item.sun || item.day7 || 0)
-//     ];
-//     return hours.reduce((sum, hour) => sum + hour, 0).toFixed(2);
-//   };
-
-//   const timesheetRows = getTimesheetRows();
-
-//   // Calculate summary totals
-//   const calculateColumnTotals = () => {
-//     const dailyTotals = [0, 0, 0, 0, 0, 0, 0];
-//     let grandTotal = 0;
-
-//     timesheetRows.forEach(row => {
-//       if (row.weekHours && Array.isArray(row.weekHours)) {
-//         row.weekHours.forEach((hours, dayIndex) => {
-//           const hourValue = parseFloat(hours) || 0;
-//           dailyTotals[dayIndex] += hourValue;
-//           grandTotal += hourValue;
-//         });
-//       }
-//     });
-
-//     return {
-//       daily: dailyTotals.map(total => total.toFixed(2)),
-//       grand: grandTotal.toFixed(2),
-//       regular: (grandTotal - 2).toFixed(2), // Subtract overtime
-//       overtime: '2.00' // Fixed overtime as shown in your image
-//     };
-//   };
-
-//   const totals = calculateColumnTotals();
-
-//   const handleOverlayClick = (e) => {
-//     if (e.target === e.currentTarget) {
-//       onClose();
-//     }
-//   };
-
-//   return (
-//     // FIXED: Higher z-index to cover sidebar and full screen
-//     <div 
-//       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-//       style={{ zIndex: 9999 }} // Much higher z-index to cover sidebar
-//       onClick={handleOverlayClick}
-//     >
-//       <div 
-//         className="bg-white rounded-lg shadow-xl w-[95vw] h-[90vh] overflow-hidden flex flex-col"
-//         style={{ maxWidth: '1400px' }} // Large enough for all columns
-//         onClick={e => e.stopPropagation()}
-//       >
-//         {/* Header - STYLED like your first image */}
-//         <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
-//           <div>
-//             <h3 className="text-lg font-semibold text-gray-900">
-//               Timesheet Details - {timesheetData["Employee ID"]} (Employee {timesheetData["Employee ID"]})
-//             </h3>
-//             <p className="text-sm text-gray-700">
-//               Period: {timesheetData["Period"]} | Fiscal Year: {timesheetData["Fiscal Year"]} | Status: {timesheetData["Status"]}
-//             </p>
-//           </div>
-//           <button
-//             onClick={onClose}
-//             className="text-gray-600 hover:text-gray-800 text-xl font-bold w-8 h-8 flex items-center justify-center rounded hover:bg-gray-200 transition-colors"
-//             title="Close"
-//           >
-//             ✕
-//           </button>
-//         </div>
-
-//         {/* Scrollable Content */}
-//         <div className="flex-1 overflow-auto p-4">
-//           <div className="overflow-x-auto">
-//             {/* STYLED exactly like your first image */}
-//             <table className="w-full text-xs border-collapse" style={{ minWidth: '1200px' }}>
-//               {/* Table Header */}
-//               <thead>
-//                 <tr className="bg-gray-200">
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-12 font-medium text-gray-800">
-//                     <input type="checkbox" className="cursor-pointer" />
-//                   </th>
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-16 font-medium text-gray-800">Line</th>
-//                   <th className="border border-gray-400 px-3 py-3 text-center w-32 font-medium text-gray-800">Description</th>
-//                   <th className="border border-gray-400 px-3 py-3 text-center w-24 font-medium text-gray-800">Project</th>
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-16 font-medium text-gray-800">PLC</th>
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-20 font-medium text-gray-800">Pay Type</th>
-//                   <th className="border border-gray-400 px-3 py-3 text-center w-28 font-medium text-gray-800">PO Number</th>
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-20 font-medium text-gray-800">RLSE Number</th>
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-24 font-medium text-gray-800">PO Line Number</th>
-//                   {weekdays.map((day, index) => (
-//                     <th key={index} className="border border-gray-400 px-2 py-3 text-center w-20 font-medium text-gray-800">
-//                       <div className="text-xs leading-tight">
-//                         {day.day}
-//                       </div>
-//                     </th>
-//                   ))}
-//                   <th className="border border-gray-400 px-2 py-3 text-center w-20 font-medium text-gray-800">Total</th>
-//                 </tr>
-//               </thead>
-
-//               {/* Table Body */}
-//               <tbody>
-//                 {timesheetRows.map((row, index) => (
-//                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-//                     <td className="border border-gray-400 px-2 py-2 text-center">
-//                       <input type="checkbox" className="cursor-pointer" />
-//                     </td>
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs">{row.line}</td>
-//                     <td className="border border-gray-400 px-3 py-2 text-left text-xs">{row.description}</td>
-//                     <td className="border border-gray-400 px-3 py-2 text-center text-xs">{row.project}</td>
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs">{row.plc}</td>
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs">{row.payType}</td>
-//                     <td className="border border-gray-400 px-3 py-2 text-center text-xs">{row.poNumber}</td>
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs">{row.rlseNumber}</td>
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs">{row.poLineNumber}</td>
-//                     {row.weekHours && row.weekHours.map((hours, dayIndex) => (
-//                       <td key={dayIndex} className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">
-//                         {hours}
-//                       </td>
-//                     ))}
-//                     <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">{row.total}</td>
-//                   </tr>
-//                 ))}
-
-//                 {/* Summary Rows - STYLED like your first image */}
-//                 <tr className="bg-gray-200 font-medium">
-//                   <td colSpan="9" className="border border-gray-400 px-3 py-2 text-right text-xs font-semibold">Regular</td>
-//                   {totals.daily.map((total, index) => (
-//                     <td key={index} className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">
-//                       {total}
-//                     </td>
-//                   ))}
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">{totals.regular}</td>
-//                 </tr>
-//                 <tr className="bg-gray-200 font-medium">
-//                   <td colSpan="9" className="border border-gray-400 px-3 py-2 text-right text-xs font-semibold">Overtime</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">2.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-medium">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">{totals.overtime}</td>
-//                 </tr>
-//                 <tr className="bg-blue-200 font-bold">
-//                   <td colSpan="9" className="border border-gray-400 px-3 py-2 text-right text-xs font-bold">Total</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">18.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">15.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">13.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">15.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">16.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold">0.00</td>
-//                   <td className="border border-gray-400 px-2 py-2 text-center text-xs font-bold text-blue-800">{totals.grand}</td>
-//                 </tr>
-//               </tbody>
-//             </table>
-//           </div>
-//         </div>
-
-//         {/* Footer */}
-//         <div className="flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
-//           <button
-//             onClick={onClose}
-//             className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-//           >
-//             Close
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default TimesheetDetailModal;
-
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
@@ -375,6 +28,7 @@ const showToast = (message, type = 'info') => {
 
 // --- Initial empty line structure ---
 const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', wa_Code: '', pmUserID: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
+
 // --- CascadingSelect Component ---
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
 
@@ -382,37 +36,15 @@ const CascadingSelect = ({ label, options, value, onChange, disabled = false }) 
 const formatDate = (dateInput) => {
     if (!dateInput) return '';
     let date;
-    if (dateInput instanceof Date) {
-        date = dateInput;
-    } else {
-        const dateOnlyString = String(dateInput).split('T')[0];
-        const parts = dateOnlyString.split('-');
-        if (parts.length !== 3) return dateInput;
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        date = new Date(Date.UTC(year, month, day));
-    }
+    if (dateInput instanceof Date) { date = dateInput; } 
+    else { const dateOnlyString = String(dateInput).split('T')[0]; const parts = dateOnlyString.split('-'); if (parts.length !== 3) return dateInput; const year = parseInt(parts[0], 10); const month = parseInt(parts[1], 10) - 1; const day = parseInt(parts[2], 10); date = new Date(Date.UTC(year, month, day)); }
     if (isNaN(date.getTime())) return '';
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
 
 const getWeekDates = (dateString) => {
-    const startDate = new Date(dateString);
-    const weekDates = {};
-    const startDay = startDate.getUTCDay(); // Sunday = 0, Monday = 1...
-    const monday = new Date(startDate);
-    monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
-
-    const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    for (let i = 0; i < 7; i++) {
-        const currentDate = new Date(monday);
-        currentDate.setUTCDate(monday.getUTCDate() + i);
-        const yyyy = currentDate.getUTCFullYear();
-        const mm = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
-        const dd = String(currentDate.getUTCDate()).padStart(2, '0');
-        weekDates[dayKeys[i]] = `${yyyy}-${mm}-${dd}`;
-    }
+    const startDate = new Date(dateString); const weekDates = {}; const startDay = startDate.getUTCDay(); const monday = new Date(startDate); monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)); const dayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    for (let i = 0; i < 7; i++) { const currentDate = new Date(monday); currentDate.setUTCDate(monday.getUTCDate() + i); const yyyy = currentDate.getUTCFullYear(); const mm = String(currentDate.getUTCMonth() + 1).padStart(2, '0'); const dd = String(currentDate.getUTCDate()).padStart(2, '0'); weekDates[dayKeys[i]] = `${yyyy}-${mm}-${dd}`; }
     return weekDates;
 };
 
@@ -424,31 +56,23 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const [purchaseOrderData, setPurchaseOrderData] = useState([]);
     const [isEditable, setIsEditable] = useState(false);
     const [headerDates, setHeaderDates] = useState([]);
-    
-    // State to track changes for efficient saving
     const [initialLines, setInitialLines] = useState([]);
     const [linesToDelete, setLinesToDelete] = useState([]);
+    const nextId = useRef(0);
 
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     
     useEffect(() => {
-        console.log("Timesheet data received in modal:", timesheetData); // Debugging prop
         if (timesheetData) {
-            setIsEditable(timesheetData.Status?.toUpperCase() === 'OPEN');
+            const status = timesheetData.Status?.toUpperCase();
+            setIsEditable(status === 'OPEN' || status === 'REJECTED');
+
             fetchTimesheetDetails();
-
-            const startDate = new Date(timesheetData.Date);
-            const startDay = startDate.getUTCDay();
-            const monday = new Date(startDate);
-            monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
-
-            const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            const startDate = new Date(timesheetData.Date); const startDay = startDate.getUTCDay(); const monday = new Date(startDate); monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)); const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const newHeaderDates = daysOfWeek.map((day, index) => {
-                const currentDate = new Date(monday);
-                currentDate.setUTCDate(monday.getUTCDate() + index);
-                const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
-                const dt = String(currentDate.getUTCDate()).padStart(2, '0');
+                const currentDate = new Date(monday); currentDate.setUTCDate(monday.getUTCDate() + index); const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0'); const dt = String(currentDate.getUTCDate()).padStart(2, '0');
                 return `${day} ${month}/${dt}`;
             });
             setHeaderDates(newHeaderDates);
@@ -467,29 +91,16 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             const poData = await poResponse.json();
             const poDataArray = Array.isArray(poData) ? poData : [];
             setPurchaseOrderData(poDataArray);
-            
-            // --- START DEBUG LOGS ---
-            console.log("1. Data received from API:", data);
-            console.log("2. Date to filter by (from props):", timesheetData.Date);
-            // --- END DEBUG LOGS ---
 
             const dataArray = Array.isArray(data) ? data : [];
             const filteredData = dataArray.filter(item => formatDate(item.timesheet_Date) === timesheetData.Date);
             
-            console.log("3. Filtered Data (this is what will be displayed):", filteredData);
-
             const mappedLines = filteredData.map(item => {
-                const matchingPoEntry = poDataArray.find(po => 
-        po.project?.includes(item.projId) &&
-        po.plcCd?.includes(item.plc) &&
-        po.purchaseOrder?.includes(item.poNumber)
-    );
-
-    const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+                const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
                 const hourIdsData = {};
                 if (item.timesheetHours) {
                     item.timesheetHours.forEach(hourEntry => {
-                        const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+                        const date = new Date(hourEntry.ts_Date + 'T00:00:00Z');
                         if (!isNaN(date.getTime())) {
                             const dayKey = dayKeyMapping[date.getUTCDay()];
                             if (dayKey) {
@@ -500,245 +111,144 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                     });
                 }
     
+                let fullWorkOrderString = '';
+                const poEntry = poDataArray.find(po => po.project?.includes(item.projId));
+                if (poEntry) {
+                    const projectIndex = poEntry.project.indexOf(item.projId);
+                    if (projectIndex > -1) {
+                        const correspondingDesc = poEntry.resourceDesc[projectIndex];
+                        fullWorkOrderString = `${poEntry.wa_Code} - ${correspondingDesc}`;
+                    }
+                }
+    
                 return {
-    id: item.timesheetId,
-    description: item.description || '',
-    project: item.projId || '',
-    plc: item.plc || '',
-    payType: item.payType || 'SR',
-    workOrder: matchingPoEntry ? `${matchingPoEntry.wa_Code} - ${matchingPoEntry.resourceDesc[0]}` : (item.workOrder || ''),
-    wa_Code: matchingPoEntry?.wa_Code || '', // <-- ADD THIS LINE
-    pmUserID: matchingPoEntry?.pmUserId || '', // <-- ADD THIS LINE (note the lowercase 'd')
-    poNumber: item.poNumber || '',
-    rlseNumber: item.rlseNumber || '',
-    poLineNumber: item.poLineNumber || '',
-    hours: hoursData,
-    hourIds: hourIdsData
-};
+                    id: item.lineNo,
+                    description: item.description || '',
+                    project: item.projId || '',
+                    plc: item.plc || '',
+                    payType: item.payType || 'SR',
+                    workOrder: fullWorkOrderString,
+                    poNumber: item.poNumber || '',
+                    rlseNumber: item.rlseNumber || '',
+                    poLineNumber: item.poLineNumber || '',
+                    hours: hoursData,
+                    hourIds: hourIdsData
+                };
             });
             setLines(mappedLines);
-            // Create a deep copy for the initial state so it doesn't get mutated
             setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
-
-        } catch (error) {
-            showToast(error.message, 'error');
-        } finally {
-            setIsLoading(false);
-        }
+        } catch (error) { showToast(error.message, 'error'); } 
+        finally { setIsLoading(false); }
     };
     
     const handleSelectChange = (id, fieldName, value) => {
-    setLines(currentLines => currentLines.map(line => {
-        if (line.id === id) {
-            // Create a new updatedLine object to work with
-            let updatedLine = { ...line, [fieldName]: value };
-
-            if (fieldName === 'workOrder') {
-                // If the user clears the selection, reset the line to a blank state
-                if (!value) {
-                    // Create a new empty line, but keep the original ID
-                    const emptyLine = createEmptyLine(id);
-                    return { ...emptyLine, id: line.id }; 
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                let updatedLine = { ...line, [fieldName]: value };
+                if (fieldName === 'workOrder') {
+                    if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+                    if (selectedWorkOrderData) {
+                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                        if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; } 
+                        else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
+                    } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
                 }
-
-                const [waCode, desc] = value.split(' - ');
-                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                
-                if (selectedWorkOrderData) {
-                    // Capture the top-level data immediately after finding a match
-                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code || '';
-                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; // Note the lowercase 'd'
-
-                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-
-                    if (descIndex > -1) {
-                        // If the specific description is found, populate all related fields
-                        updatedLine.description = desc || '';
-                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                    } else {
-                        // If only the WA Code matched but not the description,
-                        // clear only the description-dependent fields.
-                        updatedLine.description = '';
-                        updatedLine.project = '';
-                        updatedLine.plc = '';
-                        updatedLine.poNumber = '';
-                        updatedLine.rlseNumber = '';
-                        updatedLine.poLineNumber = '';
-                    }
-                } else {
-                    // If no matching work order code was found at all, reset the line
-                    const emptyLine = createEmptyLine(id);
-                    return { ...emptyLine, id: line.id };
-                }
+                return updatedLine;
             }
-            // Return the new, fully updated line object
-            return updatedLine;
-        }
-        return line;
-    }));
-};
+            return line;
+        }));
+    };
 
     const handleHourChange = (id, day, value) => {
-        const numValue = parseFloat(value);
-        if (value !== '' && (isNaN(numValue) || numValue < 0 || numValue > 24)) {
-            showToast('Hours must be between 0 and 24.', 'warning');
-            return;
-        }
-        setLines(lines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } } : line));
-    };
-
-    const addLine = () => {
-        const newId = `temp-${Date.now()}-${Math.random()}`;
-        setLines(prevLines => [...prevLines, createEmptyLine(newId)]);
-    };
-
-    const handleSelectLine = (id) => {
-        const newSelection = new Set(selectedLines);
-        newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
-        setSelectedLines(newSelection);
-    };
-
-    const deleteLines = () => {
-        if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning');
-        
-        const idsToDeleteFromServer = [];
-        for (const id of selectedLines) {
-            // Only add lines that have a real ID (not a temporary one) to the delete list
-            if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
-                idsToDeleteFromServer.push(id);
-            }
-        }
-        
-        if (idsToDeleteFromServer.length > 0) {
-            setLinesToDelete(prev => [...prev, ...idsToDeleteFromServer]);
-        }
+    const numValue = parseFloat(value);
     
-        setLines(lines.filter(line => !selectedLines.has(line.id)));
-        setSelectedLines(new Set());
-    };
+    // Return early if the input is empty
+    if (value === '') { 
+        // Allow the state update to handle setting the value to 0
+    } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+        showToast('Hours for a single entry must be between 0 and 24.', 'warning');
+        return;
+    } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
+        // This is the new validation for .0 and .5 increments
+        showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
+        return;
+    }
 
-    const copyLines = () => {
-        if (selectedLines.size === 0) return showToast('Please select at least one line to copy.', 'warning');
-        const newLines = lines
-            .filter(line => selectedLines.has(line.id))
-            .map(line => ({
-                ...line,
-                id: `temp-${Date.now()}-${Math.random()}`,
-                hourIds: {}
-            }));
-        setLines([...lines, ...newLines]);
-        setSelectedLines(new Set());
-    };
+    const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+    const newColumnTotal = otherLinesTotal + (numValue || 0);
+
+    if (newColumnTotal > 24) {
+        showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+        return;
+    }
+
+    setLines(currentLines => {
+        const indexToUpdate = currentLines.findIndex(line => line.id === id);
+        if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
+        const newLines = [...currentLines];
+        const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
+        newLines[indexToUpdate] = updatedLine;
+        return newLines;
+    });
+};
+
+    const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
+    const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
+    const deleteLines = () => { if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning'); const idsToDeleteFromServer = []; for (const id of selectedLines) { if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) { idsToDeleteFromServer.push(id); } } if (idsToDeleteFromServer.length > 0) { setLinesToDelete(prev => [...prev, ...idsToDeleteFromServer]); } setLines(lines.filter(line => !selectedLines.has(line.id))); setSelectedLines(new Set()); };
+    const copyLines = () => { if (selectedLines.size === 0) { showToast('Please select at least one line to copy.', 'warning'); return; } const newLines = lines.filter(line => selectedLines.has(line.id)).map(line => ({ ...line, hours: { ...line.hours }, id: `temp-${nextId.current++}`, hourIds: {} })); setLines(currentLines => [...currentLines, ...newLines]); setSelectedLines(new Set()); };
 
     const handleSave = async () => {
-        const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
-        const weekDates = getWeekDates(timesheetData.Date);
-        const weekEndDateAsISO = new Date(timesheetData.Date).toISOString();
-        const now = new Date().toISOString();
-    
         const promises = [];
-    
-        // 1. Handle DELETIONS
+        const weekDates = getWeekDates(timesheetData.Date);
+        const API_BASE_URL = "https://timesheet-subk.onrender.com";
+
         linesToDelete.forEach(id => {
-            promises.push(fetch(`${API_URL}/${id}`, { method: 'DELETE' }));
-        });
-    
-        // 2. Handle ADDITIONS and UPDATES
-        lines.forEach(line => {
-            const isNewLine = typeof line.id === 'string' && line.id.startsWith('temp-');
-            const originalLine = initialLines.find(initial => initial.id === line.id);
-            const hasChanged = JSON.stringify(line) !== JSON.stringify(originalLine);
-    
-            if (isNewLine || hasChanged) {
-                const method = isNewLine ? 'POST' : 'PUT';
-                const url = isNewLine ? API_URL : `${API_URL}/${line.id}`;
-                
-                const timesheetHours = days.map(day => ({
-                    Ts_Date: weekDates[day],
-                    Hours: line.hours[day] || 0
-                }));
-    
-                const payload = {
-                    Id: isNewLine ? 0 : line.id,
-                    LineNo: 0,
-                    Description: line.description || '',
-                    ProjId: line.project || '',
-                    Plc: line.plc || '',
-                    WorkOrder: line.workOrder ? line.workOrder.split(' - ')[0] : '',
-                    PayType: line.payType || 'SR',
-                    PoNumber: line.poNumber || '',
-                    RlseNumber: line.rlseNumber || "0",
-                    Resource_Id: String(timesheetData["Employee ID"]),
-                    Vend_Id: "",
-                    PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
-                    RvsnNumber: 0,
-                    Timesheet_Date: weekEndDateAsISO,
-                    UpdatedAt: now,
-                    UpdatedBy: String(timesheetData["Employee ID"]),
-                    TimesheetHours: timesheetHours,
-                    Hours: parseFloat(Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2)),
-                    Status: "OPEN",
-                    RequestId: 0,
-                    ApproverUserId: 0,
-                    ApprovalStatus: "PENDING",
-                    DisplayedName: "",
-                    Comment: "",
-                    IpAddress: "",
-                    ApprovedBy: ""
-                };
-    
-                if (isNewLine) {
-                    payload.CreatedAt = now;
-                    payload.CreatedBy = String(timesheetData["Employee ID"]);
-                }
-                
-                promises.push(fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }));
+            if (typeof id === 'number' || !id.startsWith('temp-')) {
+                 promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: 'DELETE' }));
             }
         });
-    
-        // 3. Execute all requests
-        if (promises.length === 0) {
-            showToast("No changes to save.", "info");
-            return;
-        }
+
+        lines.forEach(currentLine => {
+            const initialLine = initialLines.find(l => l.id === currentLine.id);
+            if (!initialLine) {
+                const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
+                if (totalHours > 0) {
+                    const payload = { Description: currentLine.description || 'New Timesheet Line', ProjId: currentLine.project || '', Plc: currentLine.plc || '', PayType: currentLine.payType || 'SR', PoNumber: currentLine.poNumber || '', RlseNumber: currentLine.rlseNumber || "0", Resource_Id: String(timesheetData["Employee ID"]), PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0, Timesheet_Date: new Date(timesheetData.Date).toISOString(), CreatedBy: String(timesheetData["Employee ID"]), TimesheetHours: days.map(day => ({ Ts_Date: weekDates[day], Hours: currentLine.hours[day] || 0 })) };
+                    promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
+                }
+                return;
+            }
+
+            days.forEach(day => {
+                const initialHour = initialLine.hours[day]; const currentHour = currentLine.hours[day];
+                if (initialHour !== currentHour) {
+                    const hourId = currentLine.hourIds[day];
+                    if (hourId) {
+                        const url = `${API_BASE_URL}/api/TimesheetHours/${hourId}`; const payload = { id: hourId, ts_Date: weekDates[day], hours: currentHour, lineNo: currentLine.id };
+                        promises.push(fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
+                    } else {
+                        const url = `${API_BASE_URL}/api/TimesheetHours`; const payload = { ts_Date: weekDates[day], hours: currentHour, lineNo: currentLine.id };
+                        promises.push(fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
+                    }
+                }
+            });
+        });
+
+        if (promises.length === 0) { showToast("No changes to save.", "info"); return; }
 
         try {
-            // const responses = await Promise.all(promises);
-            // for (const response of responses) {
-            //     if (!response.ok) {
-            //         const errorData = await response.text();
-            //         throw new Error(`An error occurred while saving. Server response: ${errorData}`);
-            //     }
-            // }
-            
+            const responses = await Promise.all(promises);
+            for (const response of responses) { if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to save changes: ${errorText}`); } }
             showToast('Timesheet saved successfully!', 'success');
             onSave();
-    
-        } catch (error) {
-            // showToast(error.message, 'error');
-        }
+        } catch (error) { showToast(error.message, 'error'); console.error("Save error:", error); }
     };
     
     if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
 
-    const workOrderOptions = Array.from(
-        new Map(
-            purchaseOrderData.flatMap(item =>
-                (item.resourceDesc || []).map(desc => {
-                    const label = `${item.wa_Code} - ${desc}`;
-                    return [label, { value: label, label: label }];
-                })
-            )
-        ).values()
-    );
+    const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap(item => (item.resourceDesc || []).map(desc => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
+    const dailyTotals = days.reduce((acc, day) => { acc[day] = lines.reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0); return acc; }, {});
+    const grandTotal = Object.values(dailyTotals).reduce((sum, dayTotal) => sum + dayTotal, 0);
 
     return (
         <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
@@ -778,12 +288,38 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                    {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm ${day === 'sat' || day === 'sun' ? 'bg-gray-100' : ''}`} disabled={!isEditable} /></td>)}
+                                    {days.map(day => 
+                                        <td key={day} className="p-2">
+                                            <input 
+                                                type="number" 
+                                                step="0.5" 
+                                                value={line.hours[day]} 
+                                                onChange={e => handleHourChange(line.id, day, e.target.value)} 
+                                                className="w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                                disabled={!isEditable || day === 'sat' || day === 'sun'} 
+                                            />
+                                        </td>
+                                    )}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>
                                 );
                             })}
                         </tbody>
+                        <tfoot className="bg-slate-100/70 sticky bottom-0">
+                            <tr className="border-t-2 border-gray-300 font-semibold">
+                                <td colSpan="10" className="p-3 text-right">Total Hours</td>
+                                {days.map(day => (
+                                    <td key={day} className="p-2">
+                                        <div className={`w-20 text-right p-1.5 font-semibold ${day === 'sat' || day === 'sun' ? 'text-gray-400' : 'text-gray-800'}`}>
+                                            {dailyTotals[day].toFixed(2)}
+                                        </div>
+                                    </td>
+                                ))}
+                                <td className="p-3 text-right font-bold text-blue-700 pr-4">
+                                    {grandTotal.toFixed(2)}
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>
