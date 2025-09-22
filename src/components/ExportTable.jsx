@@ -3877,6 +3877,22 @@ export default function ExportTable() {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   };
 
+  // status badge base style and helper
+  const baseStyle =
+    "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
+  const statusClass = (s) => {
+    const su = String(s || "").toUpperCase();
+    if (su === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
+    if (
+      su === "INV_GEN" ||
+      su === "INVOICEGENERATED" ||
+      su === "INVOICE_GENERATED"
+    )
+      return `${baseStyle} bg-yellow-100 text-yellow-800`;
+    if (su === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
+    return `${baseStyle} bg-gray-100 text-gray-700`;
+  };
+
   const formatHours = (hours) => {
     if (!hours && hours !== 0) return "";
     const numHours = parseFloat(hours);
@@ -3913,10 +3929,10 @@ export default function ExportTable() {
     // Handle specific field mappings
     const fieldMappings = {
       timesheet_Date: "Timesheet Date",
-      resource_Id: "Resource ID",
+      resource_Id: "Employee ID",
       displayedName: "Name",
       employeeName: "Employee Name",
-      resourceName: "Resource Name",
+      resource_Name: "Employee Name",
       projId: "Project ID",
       projectId: "Project ID",
       plc: "PLC",
@@ -3933,7 +3949,7 @@ export default function ExportTable() {
       batchId: "Batch ID",
       vend_Id: "Vendor ID",
       vend_Name: "Vendor Name",
-      resource_Desc: "Resource Description",
+      resource_Desc: "Employee Description",
     };
 
     if (fieldMappings[fieldName]) {
@@ -4300,7 +4316,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
+      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -4330,6 +4346,8 @@ export default function ExportTable() {
           "resource_desc",
           "plc",
           "paytype",
+          "hours",
+          "amt",
           "vend_id",
           "vend_name",
           "hours_date",
@@ -5388,7 +5406,7 @@ export default function ExportTable() {
                 type="text"
                 value={searchPOID}
                 onChange={(e) => setSearchPOID(e.target.value)}
-                placeholder="PO ID"
+                placeholder="PO Number"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
 
@@ -5397,7 +5415,7 @@ export default function ExportTable() {
                 type="text"
                 value={searchVendID}
                 onChange={(e) => setSearchVendID(e.target.value)}
-                placeholder="VENDOR ID"
+                placeholder="Vendor Id"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
 
@@ -5406,7 +5424,7 @@ export default function ExportTable() {
                 type="text"
                 value={searchPOReleaseNo}
                 onChange={(e) => setSearchPOReleaseNo(e.target.value)}
-                placeholder="PO RELEASE NO"
+                placeholder="PO Release Number"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               <div className="flex items-center gap-3 mb-2">
@@ -5707,6 +5725,15 @@ export default function ExportTable() {
                                 onChange={() => handleRowSelect(row.id)}
                                 className="cursor-pointer"
                               />
+                            ) : col === "Status" ? (
+                              // render status as colored badge
+                              <span
+                                className={statusClass(
+                                  row[col] || row.Status || row.status
+                                )}
+                              >
+                                {row[col] || row.Status || row.status || ""}
+                              </span>
                             ) : (
                               row[col] || ""
                             )}

@@ -1539,11 +1539,19 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
       invoiceAmount: totalAmount,
       createdBy: "Test",
       updatedBy: "Test",
+      billTo: invoice.billTo,
+      remitTo: invoice.remitTo,
+      po_Number: invoice.poNumber,
+      currency: invoice.currency,
       invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
         // timesheetLineNo: line.poLine,
         timesheetLineNo: line.line_No,
         mappedHours: line.hours,
         mappedAmount: line.amount,
+        rate: line.rate,
+        employee: line.employee,
+        vendor: line.vendor,
+        plc: line.plc,
         createdBy: "Test",
         updatedBy: "Test",
       })),
@@ -1690,13 +1698,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
             </div>
             <div style={addressBlockStyle}>
               <span style={boldTextStyle}>Bill To: {"\n"}</span>
-              {invoice.billTo ||
-                `SSAI
-10210 GREENBELT RD
-SUITE 600
-LANHAM
-MD
-20706`}
+              {invoice.billTo || `Ashburn, VA 20147`}
             </div>
             <div>
               <span style={boldTextStyle}>Buyer: </span>
@@ -1730,12 +1732,7 @@ MD
             </div>
             <div style={addressBlockStyle}>
               <span style={boldTextStyle}>Remit To: {"\n"}</span>
-              {invoice.remitTo ||
-                `Vertex Aerospace, LLC
-PO Box 192
-Grasonville
-MD
-21638`}
+              {invoice.remitTo || `Ashburn, VA 20147`}
             </div>
             <div>
               <span style={boldTextStyle}>Terms: </span>
