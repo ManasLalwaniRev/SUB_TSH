@@ -7445,16 +7445,33 @@ export default function Approval() {
 };
 
   // Updated isRowActionable function to include approved status for checkbox enabling
-  const isRowActionable = (row) => {
-    const status = row.status?.toLowerCase();
-    return (
-        status === "pending" || 
-        status === "open" || 
-        status === "un-notified" || 
-        status === "submitted" ||
-        status === "approved"  // Allow approved rows to be actionable for reject only
-    ) && !row.isRejected && status !== "rejected";
-  };
+  // const isRowActionable = (row) => {
+  //   const status = row.status?.toLowerCase();
+  //   return (
+  //       status === "pending" || 
+  //       status === "open" || 
+  //       status === "un-notified" || 
+  //       status === "submitted" ||
+  //       status === "approved"  // Allow approved rows to be actionable for reject only
+  //   ) && !row.isRejected && status !== "rejected";
+  // };
+//   const isRowActionable = (row) => {
+//   const status = row.status?.toLowerCase();
+//   return (status === "pending" || status === "open" || status === "un-notified" || status === "submitted" || status === "approved") && !row.isRejected && status !== "rejected";
+// };
+
+const isRowActionable = (row) => {
+  const status = row.status?.toLowerCase();
+  return (status === "pending" || status === "open" || status === "un-notified" || status === "submitted") && !row.isRejected && status !== "rejected";
+};
+
+// Create a separate function for approved rows that can only be rejected
+const isApprovedRowRejectableOnly = (row) => {
+  const status = row.status?.toLowerCase();
+  return status === "approved" && !row.isRejected;
+};
+
+
 
   const scrollToTimesheetDetail = () => {
     setTimeout(() => {
@@ -7538,77 +7555,241 @@ export default function Approval() {
     if (userLoaded && currentUser && currentUser.username)
       fetchData();
   }, [userLoaded, currentUser]);
+
+  // CORRECTED: More robust grouping function with debugging
+const groupDuplicateTimesheets = (timesheets) => {
+  console.log("Input timesheets for grouping:", timesheets);
   
-  const fetchData = async () => {
-    if (!userLoaded || !currentUser || !currentUser.username)
-      return;
-    try {
-      setLoading(true);
+  if (!Array.isArray(timesheets) || timesheets.length === 0) {
+    return [];
+  }
+  
+  // Create a map to group by Employee ID + Timesheet Date
+  const groupMap = new Map();
+  
+  timesheets.forEach((timesheet, index) => {
+    const employeeId = String(timesheet["Employee ID"] || "").trim();
+    const timesheetDate = timesheet.originalDate || timesheet["Timesheet Date"];
+    const key = `${employeeId}|${timesheetDate}`;
+    
+    console.log(`Processing row ${index}:`, {
+      employeeId,
+      timesheetDate, 
+      key,
+      hours: timesheet.Hours
+    });
+    
+    if (groupMap.has(key)) {
+      // Group exists - sum the hours
+      const existingEntry = groupMap.get(key);
+      const currentHours = parseFloat(timesheet.Hours) || 0;
+      const existingHours = parseFloat(existingEntry.Hours) || 0;
+      const summedHours = existingHours + currentHours;
       
-      const resourceId = currentUser.username;
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
-
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+      console.log(`Combining hours: ${existingHours} + ${currentHours} = ${summedHours}`);
       
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const apiData = await response.json();
-
-      const mappedData = Array.isArray(apiData)
-        ? apiData.map((item, index) => ({
-            id: item.timesheetId || item.id || `fallback-${index}`,
-            requestId: item.requestId || item.id,
-            levelNo: item.levelNo || 1,
-            lineNo: item.lineNo || item.timesheetId || item.id,
-            selected: false,
-            notifySelected: false,
-            isApproved: item.approvalStatus === "APPROVED" || false,
-            isRejected: item.approvalStatus === "REJECTED" || false,
-            isNotified: item.approvalStatus === "NOTIFIED" || false,
-            status: item.status?.toLowerCase() || "un-notified",
-            originalDate: item.timesheet_Date || item.timesheetDate,
-            Date: formatDate(item.timesheet_Date),
-            "Timesheet Date": formatDate(item.timesheet_Date),
-            "Employee ID": item.resource_Id || "",
-            Name: item.displayedName || item.employeeName || "Employee",
-            Account: item.accountId || "",
-            Org: item.organizationId || "",
-            PLC: item.plc || "",
-            "Pay Type": item.payType || "",
-            "RLSE Number": item.rlseNumber || "",
-            Hours: formatHours(item.hours),
-            "PO Number": item.poNumber || "",
-            "PO Line Number": item.poLineNumber || "",
-            approverUserId: item.approverUserId,
-            Status: item.status || "Un-Notified",
-            Comment: item.comment || "",
-            isNotified: (item.status || "").toLowerCase() === "notified",
-          }))
-        : [];
-
-      setRows(mappedData);
-    } catch (error) {
-      console.error('Error fetching approval data:', error);
-      setRows([]);
-    } finally {
-      setLoading(false);
+      existingEntry.Hours = formatHours ? formatHours(summedHours) : summedHours.toFixed(2);
+      
+      // Combine metadata for bulk operations
+      existingEntry.combinedIds = existingEntry.combinedIds || [existingEntry.id];
+      existingEntry.combinedIds.push(timesheet.id);
+      
+      existingEntry.combinedRequestIds = existingEntry.combinedRequestIds || [existingEntry.requestId];
+      if (timesheet.requestId && !existingEntry.combinedRequestIds.includes(timesheet.requestId)) {
+        existingEntry.combinedRequestIds.push(timesheet.requestId);
+      }
+      
+      existingEntry.combinedLineNos = existingEntry.combinedLineNos || [existingEntry.lineNo];
+      if (timesheet.lineNo && !existingEntry.combinedLineNos.includes(timesheet.lineNo)) {
+        existingEntry.combinedLineNos.push(timesheet.lineNo);
+      }
+      
+    } else {
+      // First entry for this key
+      const groupedEntry = { ...timesheet };
+      groupedEntry.combinedIds = [timesheet.id];
+      groupedEntry.combinedRequestIds = [timesheet.requestId];
+      groupedEntry.combinedLineNos = [timesheet.lineNo];
+      groupMap.set(key, groupedEntry);
+      
+      console.log(`Created new group for key: ${key}`, groupedEntry);
     }
-  };
+  });
+  
+  const result = Array.from(groupMap.values());
+  console.log("Final grouped result:", result);
+  return result;
+};
+
+
+
+
+const fetchData = async () => {
+  if (!userLoaded || !currentUser || !currentUser.username) return;
+  
+  try {
+    setLoading(true);
+    
+    // Use existing resourceId from currentUser.username 
+    const resourceId = currentUser.username;
+    const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+    console.log("Fetching from:", apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+    console.log("Raw API Response:", apiData);
+
+    // Transform the nested structure into flat rows
+    const flattenedData = [];
+    
+    if (Array.isArray(apiData)) {
+      apiData.forEach((timesheetEntry, entryIndex) => {
+        console.log(`Processing timesheet entry ${entryIndex}:`, timesheetEntry);
+        
+        if (timesheetEntry.timesheetHours && Array.isArray(timesheetEntry.timesheetHours)) {
+          timesheetEntry.timesheetHours.forEach((dailyHour, hourIndex) => {
+            console.log(`Processing daily hour ${hourIndex}:`, dailyHour);
+            
+            // Create row for each daily entry
+            const row = {
+              id: dailyHour.id,
+              requestId: timesheetEntry.requestId,
+              levelNo: timesheetEntry.levelNo || 1,
+              lineNo: timesheetEntry.lineNo,
+              selected: false,
+              notifySelected: false,
+              isApproved: timesheetEntry.status?.toLowerCase() === "approved",
+              isRejected: timesheetEntry.status?.toLowerCase() === "rejected", 
+              isNotified: timesheetEntry.status?.toLowerCase() === "notified",
+              
+              // Display fields matching your existing structure
+              status: timesheetEntry.status?.toLowerCase(), 
+              "Status": timesheetEntry.status,
+              "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
+              "Employee ID": timesheetEntry.resource_Id,
+              "Name": timesheetEntry.resource_Name || timesheetEntry.displayedName,
+              "Hours": formatHours(dailyHour.hours),
+              
+              // Additional fields for operations
+              originalDate: timesheetEntry.timesheet_Date,
+              approverUserId: timesheetEntry.approverUserId,
+              "Comment": timesheetEntry.comment || "",
+            };
+            
+            flattenedData.push(row);
+            console.log(`Added flattened row:`, row);
+          });
+        }
+      });
+    }
+
+    console.log("All flattened data before grouping:", flattenedData);
+
+    // Apply grouping to combine duplicate Employee ID + Date entries
+    const groupedData = groupDuplicateTimesheets(flattenedData);
+    console.log("Final grouped data:", groupedData);
+    
+    setRows(groupedData);
+    
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    showToast(`Error fetching data: ${error.message}`, "error");
+    setRows([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  
+  // const fetchData = async () => {
+  //   if (!userLoaded || !currentUser || !currentUser.username)
+  //     return;
+  //   try {
+  //     setLoading(true);
+      
+  //     const resourceId = currentUser.username;
+  //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+      
+  //     if (!response.ok)
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     const apiData = await response.json();
+
+  //     const mappedData = Array.isArray(apiData)
+  //       ? apiData.map((item, index) => ({
+  //           id: item.timesheetId || item.id || `fallback-${index}`,
+  //           requestId: item.requestId || item.id,
+  //           levelNo: item.levelNo || 1,
+  //           lineNo: item.lineNo || item.timesheetId || item.id,
+  //           selected: false,
+  //           notifySelected: false,
+  //           isApproved: item.approvalStatus === "APPROVED" || false,
+  //           isRejected: item.approvalStatus === "REJECTED" || false,
+  //           isNotified: item.approvalStatus === "NOTIFIED" || false,
+  //           status: item.status?.toLowerCase() || "un-notified",
+  //           originalDate: item.timesheet_Date || item.timesheetDate,
+  //           Date: formatDate(item.timesheet_Date),
+  //           "Timesheet Date": formatDate(item.timesheet_Date),
+  //           "Employee ID": item.resource_Id || "",
+  //           Name: item.displayedName || item.employeeName || "Employee",
+  //           Account: item.accountId || "",
+  //           Org: item.organizationId || "",
+  //           PLC: item.plc || "",
+  //           "Pay Type": item.payType || "",
+  //           "RLSE Number": item.rlseNumber || "",
+  //           Hours: formatHours(item.hours),
+  //           "PO Number": item.poNumber || "",
+  //           "PO Line Number": item.poLineNumber || "",
+  //           approverUserId: item.approverUserId,
+  //           Status: item.status || "Un-Notified",
+  //           Comment: item.comment || "",
+  //           isNotified: (item.status || "").toLowerCase() === "notified",
+  //         }))
+  //       : [];
+
+  //     setRows(mappedData);
+  //   } catch (error) {
+  //     console.error('Error fetching approval data:', error);
+  //     setRows([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const getFilteredRows = () => {
     let filtered = rows;
     if (!Array.isArray(filtered)) return [];
 
+    // if (searchDate) {
+    //   const searchDateFormatted = formatDateFromInput(searchDate);
+    //   filtered = filtered.filter((row) => {
+    //     const rowDate = row["Date"];
+    //     return rowDate === searchDateFormatted;
+    //   });
+    // }
+
     if (searchDate) {
-      const searchDateFormatted = formatDateFromInput(searchDate);
-      filtered = filtered.filter((row) => {
-        const rowDate = row["Date"];
-        return rowDate === searchDateFormatted;
-      });
-    }
+  const searchDateFormatted = formatDateFromInput(searchDate);
+  filtered = filtered.filter(row => {
+    const rowDate = row["Timesheet Date"];  // Use correct field name
+    return rowDate === searchDateFormatted;
+  });
+}
+
 
     if (searchEmployeeId.trim()) {
       filtered = filtered.filter((row) =>
@@ -7667,11 +7848,15 @@ export default function Approval() {
     const updatedRows = [...rows];
     
     // Only select actionable rows (including approved for reject-only functionality)
+    // const actionableRows = filteredRows.filter(row => 
+    //     isRowActionable(row) && 
+    //     row.status?.toLowerCase() !== "rejected"
+    // );
     const actionableRows = filteredRows.filter(row => 
-        isRowActionable(row) && 
-        row.status?.toLowerCase() !== "rejected"
-    );
-    
+    (isRowActionable(row) || isApprovedRowRejectableOnly(row)) && 
+    row.status?.toLowerCase() !== "rejected"
+);
+
     const notifiableRows = filteredRows.filter(
         row => 
             !row.isNotified && 
@@ -7708,10 +7893,16 @@ export default function Approval() {
       (row) => row.id === filteredRows[rowIndex].id
     );
 
-    if (isRowActionable(rowData)) {
-      updatedRows[actualRowIndex].selected = isSelected;
-      handleRowSelectUpdate(rowData, isSelected);
-    }
+    // if (isRowActionable(rowData)) {
+    //   updatedRows[actualRowIndex].selected = isSelected;
+    //   handleRowSelectUpdate(rowData, isSelected);
+    // }
+
+    if (isRowActionable(rowData) || isApprovedRowRejectableOnly(rowData)) {
+  updatedRows[actualRowIndex].selected = isSelected;
+  handleRowSelectUpdate(rowData, isSelected);
+}
+
 
     if (
       !rowData.isNotified &&
@@ -7838,14 +8029,34 @@ export default function Approval() {
     performBulkApprove("Bulk approved");
   };
 
+  // const handleBulkRejectClick = () => {
+  //   if (selectedRows.length === 0) {
+  //     showToast("Please select at least one timesheet to reject.", "warning");
+  //     return;
+  //   }
+  //   setPendingAction("reject");
+  //   setShowReasonModal(true);
+  // };
+  
   const handleBulkRejectClick = () => {
-    if (selectedRows.length === 0) {
-      showToast("Please select at least one timesheet to reject.", "warning");
-      return;
-    }
-    setPendingAction("reject");
-    setShowReasonModal(true);
-  };
+  if (selectedRows.length === 0) {
+    showToast("Please select at least one timesheet to reject.", "warning");
+    return;
+  }
+
+  // Allow rejection of approved status
+  const hasNonRejectableRows = selectedRows.some(row => 
+    row["Status"]?.toLowerCase() === "rejected"
+  );
+  
+  if (hasNonRejectableRows) {
+    showToast("Cannot reject already rejected timesheets.", "warning");
+    return;
+  }
+
+  setPendingAction("reject");
+  setShowReasonModal(true);
+};
 
   const handleReasonConfirm = (reason) => {
     setShowReasonModal(false);
@@ -8128,13 +8339,30 @@ export default function Approval() {
     {isAdmin && (
       <>
         {(() => {
-          const approveEligibleCount = selectedRows.filter(row => 
-            (row["Status"] || "").toLowerCase() !== "approved"
-          ).length;
+          // const approveEligibleCount = selectedRows.filter(row => 
+          //   (row["Status"] || "").toLowerCase() !== "approved"
+          // ).length;
           
-          const hasApprovedSelected = selectedRows.some(row => 
-            (row["Status"] || "").toLowerCase() === "approved"
-          );
+          // const hasApprovedSelected = selectedRows.some(row => 
+          //   (row["Status"] || "").toLowerCase() === "approved"
+          // );
+
+//           const approveEligibleCount = selectedRows.filter(row => row["Status"]?.toLowerCase() !== "approved" && row["Status"]?.toLowerCase() !== "rejected").length;
+// const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
+
+const approveEligibleCount = selectedRows.filter(row => 
+  row["Status"]?.toLowerCase() !== "approved" && 
+  row["Status"]?.toLowerCase() !== "rejected"
+).length;
+
+const rejectEligibleCount = selectedRows.filter(row => 
+  row["Status"]?.toLowerCase() !== "rejected"
+).length;
+
+const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
+const hasOnlyApprovedSelected = selectedRows.every(row => row["Status"]?.toLowerCase() === "approved");
+
+
 
           return (
             <>
@@ -8152,13 +8380,20 @@ export default function Approval() {
               </button>
               
               {/* Always show Reject button when rows are selected */}
-              <button
+              {/* <button
                 onClick={handleBulkRejectClick}
                 disabled={actionLoading || selectedRows.length === 0}
                 className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading ? "Processing..." : `Reject (${selectedRows.length})`}
-              </button>
+              </button> */}
+              <button
+  onClick={handleBulkRejectClick}
+  disabled={actionLoading || rejectEligibleCount === 0}
+  className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  {actionLoading ? "Processing..." : `Reject (${rejectEligibleCount})`}
+</button>
             </>
           );
         })()}
@@ -8325,13 +8560,16 @@ export default function Approval() {
                                 onClick={(e) => e.stopPropagation()}
                                 className="cursor-pointer"
                                 // Updated disabled condition: Enable checkbox for approved status
-                                disabled={
-                                  !isRowActionable(row) || 
-                                  row.isNotified || 
-                                  (row["Status"] || "").toLowerCase() === "notified" ||
-                                  (row["Status"] || "").toLowerCase() === "rejected"
-                                  // Removed: (row["Status"] || "").toLowerCase() === "approved" ||
-                                }
+                                // disabled={!isRowActionable(row) || row.isNotified || (row["Status"]?.toLowerCase() === "notified") || (row["Status"]?.toLowerCase() === "rejected")}
+                                 disabled={
+  !(isRowActionable(row) || isApprovedRowRejectableOnly(row)) || 
+  row.isNotified || 
+  (row.status?.toLowerCase() === "notified") || 
+  (row.status?.toLowerCase() === "rejected")
+}
+
+
+
                               />
                             ) : (
                               row[col] || ""
