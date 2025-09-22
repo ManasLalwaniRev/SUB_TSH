@@ -3951,6 +3951,7 @@ export default function ExportTable() {
       vend_Id: "Vendor ID",
       vend_Name: "Vendor Name",
       resource_Desc: "Employee Description",
+      glc: "GLC",
     };
 
     if (fieldMappings[fieldName]) {
@@ -4348,12 +4349,13 @@ export default function ExportTable() {
           "plc",
           "paytype",
           "hours",
+          "perhrrate",
           "amt",
           "vend_id",
           "vend_name",
           "hours_date",
           "hours",
-          "amt",
+          // "amt",
         ];
 
         // Lowercase filtered keys for matching
@@ -4602,7 +4604,7 @@ export default function ExportTable() {
 
     const statusCodes = [];
     if (statusFilter.approved) statusCodes.push("APPROVED");
-    if (statusFilter.invoiceGenerated) statusCodes.push("INV_GEN");
+    if (statusFilter.invoiceGenerated) statusCodes.push("INOVICEGENERATED");
     if (statusFilter.exported) statusCodes.push("EXPORTED");
 
     if (statusCodes.length > 0) {
@@ -5428,6 +5430,7 @@ export default function ExportTable() {
                 placeholder="PO Release Number"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
+              {/* Status Filter */}
               <div className="flex items-center gap-3 mb-2">
                 <label className="flex items-center gap-1 text-xs">
                   <input
