@@ -35,7 +35,7 @@ const groupColumns = [
     "Resource Name",
     "PLC CD",
     "PLC Desc",
-    "EMail ID",
+    "Email ID",
     "Project",
     "PM USER_ID",
     "PM NAME",
