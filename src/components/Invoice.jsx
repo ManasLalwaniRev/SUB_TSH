@@ -1490,7 +1490,7 @@ import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const InvoiceViewer = ({ data }) => {
+const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   const invoiceRef = useRef();
 
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -1507,20 +1507,74 @@ const InvoiceViewer = ({ data }) => {
     return groups;
   }, {});
 
+  // const handleDownloadPdf = async () => {
+  //   if (!invoiceRef.current) return;
+  //   const input = invoiceRef.current;
+  //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //   const imgData = canvas.toDataURL("image/png");
+  //   const pdf = new jsPDF({
+  //     orientation: "portrait",
+  //     unit: "mm",
+  //     format: "a4",
+  //   });
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  //   pdf.save("invoice.pdf");
+  // };
+
   const handleDownloadPdf = async () => {
-    if (!invoiceRef.current) return;
+    if (!invoiceRef.current || !invoice) {
+      console.warn("Invoice content or data is missing.");
+      return;
+    }
     const input = invoiceRef.current;
-    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("invoice.pdf");
+    const totalAmount = invoice.lineItems.reduce(
+      (acc, line) => acc + line.amount,
+      0
+    );
+    const invoicePayload = {
+      invoiceNumber: invoice.invoiceId,
+      invoiceDate: new Date(invoice.period).toISOString(),
+      invoiceAmount: totalAmount,
+      createdBy: "Test",
+      updatedBy: "Test",
+      invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+        // timesheetLineNo: line.poLine,
+        timesheetLineNo: line.line_No,
+        mappedHours: line.hours,
+        mappedAmount: line.amount,
+        createdBy: "Test",
+        updatedBy: "Test",
+      })),
+    };
+
+    try {
+      const response = await fetch(
+        "https://timesheet-subk.onrender.com/api/Invoices",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(invoicePayload),
+        }
+      );
+      if (!response.ok)
+        throw new Error(`Failed to create invoice: ${response.status}`);
+
+      const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("invoice.pdf");
+    } catch (error) {
+      console.error("Error creating invoice or generating PDF:", error);
+    }
   };
 
   const containerStyle = {
@@ -1582,6 +1636,33 @@ const InvoiceViewer = ({ data }) => {
     margin: "20px auto 0",
     padding: "10px 20px",
     backgroundColor: "#2563eb",
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+  };
+
+  const buttonContainerStyle = {
+    display: "flex",
+    justifyContent: "center",
+    gap: "10px", // space between buttons
+    marginTop: "20px",
+  };
+
+  const confirm = {
+    padding: "10px 20px",
+    backgroundColor: "#2563eb",
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+  };
+
+  const cancel = {
+    padding: "10px 20px",
+    backgroundColor: "#eb370fff",
     color: "#fff",
     fontWeight: "500",
     borderRadius: "4px",
@@ -1692,7 +1773,8 @@ MD
                   <tr key={index}>
                     <td style={tdStyle}>{item.plc || ""}</td>
                     <td style={tdStyle}>
-                      {item.vendor || item.employee || ""}
+                      {/* {item.vendor || item.employee || ""} */}
+                      {[item.vendor, item.employee].filter(Boolean).join(" \n")}
                     </td>
                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
                     <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
@@ -1710,9 +1792,14 @@ MD
           Total Amount Due: ${invoice.totalAmount.toFixed(2)}
         </div>
       </div>
-      <button onClick={handleDownloadPdf} style={buttonStyle}>
-        Download PDF
-      </button>
+      <div style={buttonContainerStyle}>
+        <button onClick={handleDownloadPdf} style={confirm}>
+          Confirm
+        </button>
+        <button onClick={() => setInvoiceModalVisible(false)} style={cancel}>
+          Cancel
+        </button>
+      </div>
     </>
   );
 };

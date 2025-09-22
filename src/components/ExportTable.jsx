@@ -1,4 +1,5 @@
-// import { useState, useEffect } from "react";
+// import { u
+// eState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 
 // const showToast = (message, type = 'info') => {
@@ -3871,12 +3872,41 @@ export default function ExportTable() {
     }
   };
 
+  const toTitleCase = (str) => {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   const formatHours = (hours) => {
     if (!hours && hours !== 0) return "";
     const numHours = parseFloat(hours);
     if (isNaN(numHours)) return hours;
     return numHours.toFixed(2);
   };
+
+  useEffect(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    // Calculate date for Monday (subtract days from today)
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+    // Calculate date for Sunday (add days to today)
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    // Format YYYY-MM-DD strings
+    const formatDate = (d) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    setStartDate(formatDate(monday));
+    setEndDate(formatDate(sunday));
+  }, []); // Run once on mount
 
   // Convert API field names to display names
   const formatColumnName = (fieldName) => {
@@ -3917,6 +3947,9 @@ export default function ExportTable() {
       .replace(/\b\w/g, (l) => l.toUpperCase())
       .trim();
   };
+
+  //format date
+  // Add this useEffect to set the default search date
 
   // Get sorted rows with arrow
   const getSortedRows = (rowsToSort) => {
@@ -4358,7 +4391,10 @@ export default function ExportTable() {
             const displayKey = formatColumnName(key);
             let value = item[key];
 
-            if (
+            if (key === statusKey) {
+              // Apply camel case only for status values
+              value = toTitleCase(value);
+            } else if (
               key === "timesheet_Date" ||
               key.toLowerCase().includes("date")
             ) {
@@ -4547,7 +4583,7 @@ export default function ExportTable() {
 
     const statusCodes = [];
     if (statusFilter.approved) statusCodes.push("APPROVED");
-    if (statusFilter.invoiceGenerated) statusCodes.push("INVOICE_GENERATED");
+    if (statusFilter.invoiceGenerated) statusCodes.push("INV_GEN");
     if (statusFilter.exported) statusCodes.push("EXPORTED");
 
     if (statusCodes.length > 0) {
@@ -5420,6 +5456,11 @@ export default function ExportTable() {
                   setSearchVendID("");
                   setSearchPOReleaseNo("");
                   setColumnFilters({});
+                  setStatusFilter({
+                    approved: false,
+                    invoiceGenerated: false,
+                    exported: false,
+                  });
                 }}
                 className="bg-gray-500 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-600 transition-colors"
               >
@@ -5472,7 +5513,7 @@ export default function ExportTable() {
               style={{ flexShrink: 0 }}
             >
               <div className="flex gap-2">
-                <button
+                {/* <button
                   onClick={handleExportClick}
                   type="button"
                   disabled={actionLoading || selectedRows.size === 0}
@@ -5481,7 +5522,7 @@ export default function ExportTable() {
                   {actionLoading
                     ? "Processing..."
                     : `Export Selected (${selectedRows.size})`}
-                </button>
+                </button> */}
                 {/* <button
                   onClick={handleGenerateInvoice}
                   type="button"
@@ -5501,7 +5542,7 @@ export default function ExportTable() {
                 >
                   {actionLoading
                     ? "Processing..."
-                    : `Generate Invoice (${selectedRows.size})`}
+                    : `Preview Invoice (${selectedRows.size})`}
                 </button>
 
                 {invoiceModalVisible && (
@@ -5548,7 +5589,10 @@ export default function ExportTable() {
                       >
                         &times;
                       </button>
-                      <InvoiceViewer data={showInvoice} />
+                      <InvoiceViewer
+                        data={showInvoice}
+                        setInvoiceModalVisible={setInvoiceModalVisible}
+                      />
                     </div>
                   </div>
                 )}
