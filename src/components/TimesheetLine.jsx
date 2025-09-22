@@ -313,44 +313,54 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     }, [selectedPeriod, existingTimesheetDates, isEditMode]);
 
     const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                const updatedLine = { ...line, [fieldName]: value };
+    // ✅ VALIDATION: Check for duplicate Work Order before updating state
+    if (fieldName === 'workOrder' && value) {
+        const isDuplicate = lines.some(line => line.id !== id && line.workOrder === value);
+        if (isDuplicate) {
+            showToast("This Work Order has already been selected on another line.", "warning");
+            return; // Abort the change
+        }
+    }
 
-                if (fieldName === 'workOrder') {
-                    if (!value) {
-                        updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserId = '';
-                        return updatedLine;
-                    }
+    // If validation passes, proceed with the state update
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            const updatedLine = { ...line, [fieldName]: value };
 
-                    const [waCode, desc] = value.split(' - ');
-                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-
-                    if (selectedWorkOrderData) {
-                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
-                        updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
-
-                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-
-                        if (descIndex > -1) {
-                            updatedLine.description = desc || '';
-                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                        } else {
-                            updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
-                        }
-                    } else {
-                         updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = '';
-                    }
+            if (fieldName === 'workOrder') {
+                if (!value) {
+                    updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserId = '';
+                    return updatedLine;
                 }
-                return updatedLine;
+
+                const [waCode, desc] = value.split(' - ');
+                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+
+                if (selectedWorkOrderData) {
+                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
+                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
+
+                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+
+                    if (descIndex > -1) {
+                        updatedLine.description = desc || '';
+                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                    } else {
+                        updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
+                    }
+                } else {
+                     updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = '';
+                }
             }
-            return line;
-        }));
-    };
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
     const numValue = parseFloat(value);
