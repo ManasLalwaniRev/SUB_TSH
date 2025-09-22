@@ -208,8 +208,35 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
 
     const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
-    const deleteLines = () => { if (selectedLines.size === 0) return showToast('Please select at least one line to delete.', 'warning'); const idsToDeleteFromServer = []; for (const id of selectedLines) { if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) { idsToDeleteFromServer.push(id); } } if (idsToDeleteFromServer.length > 0) { setLinesToDelete(prev => [...prev, ...idsToDeleteFromServer]); } setLines(lines.filter(line => !selectedLines.has(line.id))); setSelectedLines(new Set()); };
-const copyLines = () => {
+const deleteLines = () => {
+    if (selectedLines.size === 0) {
+        showToast('Please select at least one line to delete.', 'warning');
+        return;
+    }
+    
+    // This functional update ensures we are working with the most current state
+    setLines(currentLines => {
+        const idsToDeleteFromServer = [];
+        for (const id of selectedLines) {
+            // Check if the ID is a real server ID (not a temporary one)
+            if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
+                idsToDeleteFromServer.push(id);
+            }
+        }
+        
+        if (idsToDeleteFromServer.length > 0) {
+            // Also use a functional update for the delete queue
+            // A Set is used to prevent adding the same ID multiple times
+            setLinesToDelete(prev => [...new Set([...prev, ...idsToDeleteFromServer])]);
+        }
+    
+        // Filter the most current lines to remove the selected ones from the UI
+        return currentLines.filter(line => !selectedLines.has(line.id));
+    });
+
+    // Clear the selection after the delete is queued
+    setSelectedLines(new Set());
+};const copyLines = () => {
     if (selectedLines.size === 0) {
         showToast('Please select at least one line to copy.', 'warning');
         return;
