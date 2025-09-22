@@ -143,22 +143,32 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
     
     const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                let updatedLine = { ...line, [fieldName]: value };
-                if (fieldName === 'workOrder') {
-                    if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                    if (selectedWorkOrderData) {
-                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-                        if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; } 
-                        else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
-                    } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
-                }
-                return updatedLine;
+    // ✅ VALIDATION: Check for duplicate Work Order before updating state
+    if (fieldName === 'workOrder' && value) { // Check only when a work order is selected
+        const isDuplicate = lines.some(line => line.id !== id && line.workOrder === value);
+        if (isDuplicate) {
+            showToast("This Work Order has already been selected on another line.", "warning");
+            return; // Abort the change
+        }
+    }
+
+    // If validation passes, proceed with the state update
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            let updatedLine = { ...line, [fieldName]: value };
+            if (fieldName === 'workOrder') {
+                if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+                if (selectedWorkOrderData) {
+                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                    if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; }
+                    else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
+                } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
             }
-            return line;
-        }));
-    };
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);
