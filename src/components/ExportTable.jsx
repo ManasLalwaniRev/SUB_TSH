@@ -3885,8 +3885,9 @@ export default function ExportTable() {
     if (su === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
     if (
       su === "INV_GEN" ||
-      su === "INVOICEGENERATED" ||
-      su === "INVOICE_GENERATED"
+      su === "INVOICE GENERATED" ||
+      su === "INVOICE_GENERATED" ||
+      su === "INVOICEGENERATED"
     )
       return `${baseStyle} bg-yellow-100 text-yellow-800`;
     if (su === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
