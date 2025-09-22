@@ -58,6 +58,7 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const [headerDates, setHeaderDates] = useState([]);
     const [initialLines, setInitialLines] = useState([]);
     const [linesToDelete, setLinesToDelete] = useState([]);
+    const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
     const nextId = useRef(0);
 
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -160,135 +161,89 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
 
     const handleHourChange = (id, day, value) => {
-    const numValue = parseFloat(value);
-
-    // Perform simple, immediate validation first
-    if (value === '') {
-        // Let the state updater handle setting the value to 0
-    } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
-        showToast('Hours for a single entry must be between 0 and 24.', 'warning');
-        return;
-    } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
-        showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
-        return;
-    }
-
-    setLines(currentLines => {
-        // ✅ FIX: Move the column validation INSIDE the state updater
-        // This ensures it always runs on the most recent list of lines
-        const otherLinesTotal = currentLines
-            .filter(line => line.id !== id)
-            .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
-
-        const newColumnTotal = otherLinesTotal + (numValue || 0);
-
-        if (newColumnTotal > 24) {
-            showToast(`Total hours for this day cannot exceed 24.`, 'warning');
-            return currentLines; // Abort the update by returning the original state
+        const numValue = parseFloat(value);
+    
+        if (value === '') {
+            // Allow the state update to handle setting the value to 0
+        } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+            showToast('Hours for a single entry must be between 0 and 24.', 'warning');
+            return;
+        } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
+            showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
+            return;
         }
 
-        // If validation passes, proceed with the update
-        const indexToUpdate = currentLines.findIndex(line => line.id === id);
-        if (indexToUpdate === -1) {
-            console.error("Could not find line with id:", id);
-            return currentLines;
-        }
-        const newLines = [...currentLines];
-        const updatedLine = {
-            ...newLines[indexToUpdate],
-            hours: {
-                ...newLines[indexToUpdate].hours,
-                [day]: value === '' ? 0 : numValue
+        setLines(currentLines => {
+            const otherLinesTotal = currentLines
+                .filter(line => line.id !== id)
+                .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+    
+            const newColumnTotal = otherLinesTotal + (numValue || 0);
+    
+            if (newColumnTotal > 24) {
+                showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+                return currentLines;
             }
-        };
-        newLines[indexToUpdate] = updatedLine;
-        return newLines;
-    });
-};
+    
+            const indexToUpdate = currentLines.findIndex(line => line.id === id);
+            if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
+            const newLines = [...currentLines];
+            const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
+            newLines[indexToUpdate] = updatedLine;
+            return newLines;
+        });
+    };
 
     const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
+    
+    const deleteLines = () => {
+        if (selectedLines.size === 0) {
+            showToast('Please select at least one line to delete.', 'warning');
+            return;
+        }
+        const originalStatus = timesheetData.Status?.toUpperCase();
+        if (originalStatus === 'REJECTED') {
+            showToast("For rejected timesheets, lines will have their hours zeroed out upon saving.", "info");
+            setLines(currentLines =>
+                currentLines.map(line => {
+                    if (selectedLines.has(line.id)) {
+                        return { ...line, hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 } };
+                    }
+                    return line;
+                })
+            );
+        } else {
+            setLines(currentLines => {
+                const idsToDeleteFromServer = [];
+                for (const id of selectedLines) {
+                    if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
+                        idsToDeleteFromServer.push(id);
+                    }
+                }
+                if (idsToDeleteFromServer.length > 0) {
+                    setLinesToDelete(prev => [...new Set([...prev, ...idsToDeleteFromServer])]);
+                }
+                return currentLines.filter(line => !selectedLines.has(line.id));
+            });
+        }
+        setSelectedLines(new Set());
+    };
+    
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
-const deleteLines = () => {
-    if (selectedLines.size === 0) {
-        showToast('Please select at least one line to delete.', 'warning');
-        return;
-    }
     
-    // This functional update ensures we are always working with the most current state
-    setLines(currentLines => {
-        const idsToDeleteFromServer = [];
-        for (const id of selectedLines) {
-            // Check if the ID is a real server ID (not a temporary one)
-            if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
-                idsToDeleteFromServer.push(id);
-            }
-        }
-        
-        if (idsToDeleteFromServer.length > 0) {
-            // Also use a functional update for the delete queue
-            // A Set is used to prevent adding the same ID multiple times
-            setLinesToDelete(prev => [...new Set([...prev, ...idsToDeleteFromServer])]);
-        }
-    
-        // Filter the most current lines to remove the selected ones from the UI
-        return currentLines.filter(line => !selectedLines.has(line.id));
-    });
+    const copyLines = () => { if (selectedLines.size === 0) { showToast('Please select at least one line to copy.', 'warning'); return; } const linesToCopy = lines.filter(line => selectedLines.has(line.id)); const potentialTotals = { ...dailyTotals }; let validationFailed = false; linesToCopy.forEach(lineToCopy => { days.forEach(day => { potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0; if (potentialTotals[day] > 24) { validationFailed = true; } }); }); if (validationFailed) { showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error"); return; } const newLines = linesToCopy.map(line => ({ ...line, hours: { ...line.hours }, id: `temp-${nextId.current++}`, hourIds: {} })); setLines(currentLines => [...currentLines, ...newLines]); setSelectedLines(new Set()); };
 
-    // Clear the selection after the delete is queued
-    setSelectedLines(new Set());
-};
-
-const copyLines = () => {
-    if (selectedLines.size === 0) {
-        showToast('Please select at least one line to copy.', 'warning');
-        return;
-    }
-
-    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
-
-    // ✅ VALIDATION: Check if this copy action will exceed daily limits
-    const potentialTotals = { ...dailyTotals }; // Create a copy of the current totals
-    let validationFailed = false;
-
-    linesToCopy.forEach(lineToCopy => {
-        days.forEach(day => {
-            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
-            if (potentialTotals[day] > 24) {
-                validationFailed = true;
-            }
-        });
-    });
-
-    if (validationFailed) {
-        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
-        return; // Abort the copy operation
-    }
-
-    // If validation passes, proceed with copying
-    const newLines = linesToCopy.map(line => ({
-        ...line,
-        hours: { ...line.hours },
-        id: `temp-${nextId.current++}`,
-        hourIds: {}
-    }));
-
-    setLines(currentLines => [...currentLines, ...newLines]);
-    setSelectedLines(new Set());
-};
     const handleSave = async () => {
+        setIsCurrentlySaving(true);
         const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
-    lines.forEach(line => {
-        days.forEach(day => {
-            finalTotals[day] += parseFloat(line.hours[day]) || 0;
-        });
-    });
+        lines.forEach(line => { days.forEach(day => { finalTotals[day] += parseFloat(line.hours[day]) || 0; }); });
+        const invalidDay = days.find(day => finalTotals[day] > 24);
+        if (invalidDay) {
+            showToast(`Save failed: Total hours for one or more days exceed 24.`, 'error');
+            setIsCurrentlySaving(false);
+            return;
+        }
 
-    const invalidDay = days.find(day => finalTotals[day] > 24);
-
-    if (invalidDay) {
-        showToast(`Save failed: Total hours for one or more days exceed 24. Please correct the entries.`, 'error');
-        return; // Abort the save
-    }
         const promises = [];
         const weekDates = getWeekDates(timesheetData.Date);
         const API_BASE_URL = "https://timesheet-subk.onrender.com";
@@ -298,7 +253,6 @@ const copyLines = () => {
                  promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: 'DELETE' }));
             }
         });
-
         lines.forEach(currentLine => {
             const initialLine = initialLines.find(l => l.id === currentLine.id);
             if (!initialLine) {
@@ -309,7 +263,6 @@ const copyLines = () => {
                 }
                 return;
             }
-
             days.forEach(day => {
                 const initialHour = initialLine.hours[day]; const currentHour = currentLine.hours[day];
                 if (initialHour !== currentHour) {
@@ -325,14 +278,19 @@ const copyLines = () => {
             });
         });
 
-        if (promises.length === 0) { showToast("No changes to save.", "info"); return; }
+        if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
 
         try {
             const responses = await Promise.all(promises);
             for (const response of responses) { if (!response.ok) { const errorText = await response.text(); throw new Error(`Failed to save changes: ${errorText}`); } }
             showToast('Timesheet saved successfully!', 'success');
             onSave();
-        } catch (error) { showToast(error.message, 'error'); console.error("Save error:", error); }
+            setTimeout(() => { window.location.reload(); }, 1000);
+        } catch (error) { 
+            showToast(error.message, 'error'); 
+            console.error("Save error:", error);
+            setIsCurrentlySaving(false);
+        }
     };
     
     if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
@@ -419,10 +377,10 @@ const copyLines = () => {
                 {isEditable &&
                     <button
                         onClick={handleSave}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                        disabled={isSaving}
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isSaving || isCurrentlySaving}
                     >
-                        {isSaving ? 'Saving...' : 'Save Changes'}
+                        {isCurrentlySaving ? 'Saving...' : 'Save Changes'}
                     </button>
                 }
             </div>
