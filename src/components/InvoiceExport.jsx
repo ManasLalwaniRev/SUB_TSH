@@ -343,15 +343,29 @@ export default function InvoiceExport() {
         setSelectAll(false);
     }, [invoices, filterInvoiceNumber]);
 
-    const getResponsiveTableStyle = () => {
+//     const getResponsiveTableStyle = () => {
+//     return {
+//         height: 'calc(100vh - 280px)', // Adjust 280px based on your header + filters + margins
+//         minHeight: '250px',
+//         maxHeight: '70vh'
+//     };
+// };
+
+    // Format date helper - MM-DD-YYYY format
+   
+    // Enhanced responsive table function
+const getResponsiveTableStyle = () => {
+    const headerHeight = 120; // Header section height
+    const filterHeight = 80;  // Filter section height
+    const marginPadding = 100; // Extra margins and padding
+    
     return {
-        height: 'calc(100vh - 280px)', // Adjust 280px based on your header + filters + margins
-        minHeight: '250px',
+        height: `calc(100vh - ${headerHeight + filterHeight + marginPadding}px)`,
+        minHeight: '400px',
         maxHeight: '70vh'
     };
 };
-
-    // Format date helper - MM-DD-YYYY format
+   
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
@@ -532,38 +546,198 @@ const handlePreview = async (invoice) => {
 
 
     // Export to CSV function - only selected invoices
-    const exportToCSV = () => {
-        const invoicesToExport = filteredInvoices.filter((invoice, index) => 
-            selectedInvoices.has(invoice.invoiceId || index)
-        );
+    // const exportToCSV = () => {
+    //     const invoicesToExport = filteredInvoices.filter((invoice, index) => 
+    //         selectedInvoices.has(invoice.invoiceId || index)
+    //     );
         
-        if (invoicesToExport.length === 0) {
-            alert('Please select invoices to export');
-            return;
+    //     if (invoicesToExport.length === 0) {
+    //         alert('Please select invoices to export');
+    //         return;
+    //     }
+
+    //     const headers = ['Invoice Number', 'Invoice Date', 'Invoice Amount', 'Currency', 'Created At'];
+    //     const csvContent = [
+    //         headers.join(','),
+    //         ...invoicesToExport.map(invoice => [
+    //             `"${invoice.invoiceNumber || ''}"`,
+    //             `"${formatDate(invoice.invoiceDate)}"`,
+    //             `"${invoice.invoiceAmount || 0}"`,
+    //             `"${invoice.currency || 'USD'}"`,
+    //             `"${formatDate(invoice.createdAt)}"`
+    //         ].join(','))
+    //     ].join('\n');
+
+    //     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    //     const link = document.createElement('a');
+    //     const url = URL.createObjectURL(blob);
+    //     link.setAttribute('href', url);
+    //     link.setAttribute('download', `selected_invoices_export_${new Date().toISOString().split('T')[0]}.csv`);
+    //     link.style.visibility = 'hidden';
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    // };
+
+    // Export function using API - selected invoices
+// Export function using POST API with column headers in payload
+// Export function using POST API with InvoiceId as URL parameter and column values in payload
+const exportToCSV = async () => {
+    const invoicesToExport = filteredInvoices.filter((invoice, index) => 
+        selectedInvoices.has(invoice.invoiceId || index)
+    );
+    
+    if (invoicesToExport.length === 0) {
+        alert('Please select invoices to export');
+        return;
+    }
+
+    try {
+        // Show loading state
+        const exportButton = document.querySelector('[data-export-button]');
+        if (exportButton) {
+            exportButton.disabled = true;
+            exportButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
         }
 
-        const headers = ['Invoice Number', 'Invoice Date', 'Invoice Amount', 'Currency', 'Created At'];
-        const csvContent = [
-            headers.join(','),
-            ...invoicesToExport.map(invoice => [
-                `"${invoice.invoiceNumber || ''}"`,
-                `"${formatDate(invoice.invoiceDate)}"`,
-                `"${invoice.invoiceAmount || 0}"`,
-                `"${invoice.currency || 'USD'}"`,
-                `"${formatDate(invoice.createdAt)}"`
-            ].join(','))
-        ].join('\n');
+        // Process exports for each selected invoice
+        for (let i = 0; i < invoicesToExport.length; i++) {
+            const invoice = invoicesToExport[i];
+            const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+            
+            if (!invoiceId) {
+                console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+                continue;
+            }
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `selected_invoices_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+            try {
+                // Prepare column header VALUES (actual data) in payload
+                const columnHeaderValues = [
+                    invoice.invoiceNumber || '',
+                    formatDate(invoice.invoiceDate) || '',
+                    invoice.invoiceAmount || 0,
+                    invoice.currency || 'USD',
+                    formatDate(invoice.createdAt) || '',
+                    // Add more actual values as needed for PLC, Vendor Employee, etc.
+                    'PLC001', // Default or actual PLC value
+                    invoice.createdBy || 'Employee', // Vendor Employee
+                    '40.00', // Current Hrs/Qty - replace with actual value
+                    ((invoice.invoiceAmount || 0) / 40).toFixed(2), // Rate
+                    '0.00', // Additional Amount
+                    (invoice.invoiceAmount || 0).toFixed(2), // Current Amount
+                    '40.00', // Cumulative Hrs/Qty
+                    (invoice.invoiceAmount || 0).toFixed(2) // Cumulative Amount
+                ];
+
+                // Prepare the payload with column header VALUES
+                const payload = {
+                    ColumnHeaderValues: columnHeaderValues,
+                    // Add any additional configuration if needed
+                    IncludeHeaders: true,
+                    ExportFormat: 'CSV'
+                };
+
+                console.log('Sending InvoiceId as parameter:', invoiceId);
+                console.log('Sending payload with column values:', payload);
+
+                // Make POST API call with InvoiceId as URL parameter and column values in payload
+                const response = await fetch(
+                    `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(invoiceId)}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'text/csv, application/csv, application/octet-stream, */*',
+                            'Content-Type': 'application/json',
+                            // Add authorization header if your API requires it
+                            // 'Authorization': `Bearer ${yourTokenHere}`,
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+
+                if (!response.ok) {
+                    // Get error details from response
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.text();
+                        if (errorData) {
+                            errorMessage += ` - ${errorData}`;
+                        }
+                    } catch (e) {
+                        // Ignore if can't parse error
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                // Get the file as blob
+                const blob = await response.blob();
+                
+                // Check if the response is actually a file or an error
+                if (blob.type && blob.type.includes('application/json')) {
+                    // If it's JSON, it might be an error response
+                    const text = await blob.text();
+                    console.error('Received JSON instead of file:', text);
+                    throw new Error('Server returned an error instead of a file');
+                }
+                
+                // Extract filename from Content-Disposition header or use default
+                let filename = `invoice_${invoiceId}_export.csv`;
+                const contentDisposition = response.headers.get('Content-Disposition');
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                    }
+                }
+
+                // Create download link and trigger download
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(link);
+                
+                // Add small delay between downloads
+                if (i < invoicesToExport.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+
+            } catch (invoiceError) {
+                console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+                alert(`Failed to export invoice ${invoiceId}: ${invoiceError.message}`);
+            }
+        }
+
+        // Show success message
+        const successMessage = invoicesToExport.length === 1 
+            ? 'Invoice exported successfully!' 
+            : `${invoicesToExport.length} invoices exported successfully!`;
+        
+        alert(successMessage);
+
+    } catch (error) {
+        console.error('Error during export process:', error);
+        alert(`Export failed: ${error.message}`);
+    } finally {
+        // Reset button state
+        const exportButton = document.querySelector('[data-export-button]');
+        if (exportButton) {
+            exportButton.disabled = false;
+            exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+        }
+    }
+};
+
+
 
     if (loading) {
         return (
@@ -613,7 +787,7 @@ const handlePreview = async (invoice) => {
                             {/* <span className="text-sm text-gray-600">
                                 Selected: {selectedInvoices.size} / {filteredInvoices.length} invoices
                             </span> */}
-                            <button
+                            {/* <button
                                 onClick={exportToCSV}
                                 disabled={selectedInvoices.size === 0}
                                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
@@ -624,7 +798,21 @@ const handlePreview = async (invoice) => {
                             >
                                 <Download className="h-4 w-4 mr-2" />
                                 Export ({selectedInvoices.size})
-                            </button>
+                            </button> */}
+                            <button
+    onClick={exportToCSV}
+    disabled={selectedInvoices.size === 0}
+    data-export-button
+    className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+        selectedInvoices.size === 0
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-green-600 text-white hover:bg-green-700'
+    }`}
+>
+    <Download className="h-4 w-4 mr-2" />
+    Export ({selectedInvoices.size})
+</button>
+
                         </div>
                     </div>
                 </div>
@@ -668,7 +856,7 @@ const handlePreview = async (invoice) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col" style={getResponsiveTableStyle()}>
                                 <table className="min-w-full">
                                     <thead className="bg-gray-50 sticky">
                                         <tr>
