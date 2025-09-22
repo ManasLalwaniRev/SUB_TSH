@@ -419,6 +419,10 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     };
 
     const handleSubmit = async () => {
+         if (grandTotal === 0) {
+        showToast("Cannot submit a timesheet with zero hours.", "warning");
+        return; // Stop the submission
+    }
         const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
 
         for (const line of lines) {

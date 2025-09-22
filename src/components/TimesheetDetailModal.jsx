@@ -254,6 +254,13 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             return;
         }
 
+        const grandTotal = Object.values(finalTotals).reduce((sum, total) => sum + total, 0);
+    if (grandTotal === 0) {
+        showToast("Cannot save a timesheet with zero hours.", "warning");
+        setIsCurrentlySaving(false); // Make sure to unlock the button
+        return; // Stop the submission
+    }
+
         const promises = [];
         const weekDates = getWeekDates(timesheetData.Date);
         const API_BASE_URL = "https://timesheet-subk.onrender.com";
