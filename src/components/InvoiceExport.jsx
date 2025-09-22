@@ -287,7 +287,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Receipt, Filter, Download, X, Eye } from "lucide-react";
-import InvoiceViewer from "./Invoice";
+import InvoiceViewer from "./InvoiceViewer";
 
 export default function InvoiceExport() {
     const [invoices, setInvoices] = useState([]);
@@ -343,6 +343,14 @@ export default function InvoiceExport() {
         setSelectAll(false);
     }, [invoices, filterInvoiceNumber]);
 
+    const getResponsiveTableStyle = () => {
+    return {
+        height: 'calc(100vh - 280px)', // Adjust 280px based on your header + filters + margins
+        minHeight: '250px',
+        maxHeight: '70vh'
+    };
+};
+
     // Format date helper - MM-DD-YYYY format
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
@@ -394,9 +402,102 @@ export default function InvoiceExport() {
     };
 
     // Handle preview click
-    const handlePreview = (invoice) => {
-        // Transform invoice data to match InvoiceViewer expected format
+    // const handlePreview = (invoice) => {
+    //     // Transform invoice data to match InvoiceViewer expected format
+    //     const transformedData = [{
+    //         invoiceId: invoice.invoiceNumber,
+    //         invoiceDate: formatDate(invoice.invoiceDate),
+    //         period: formatDate(invoice.invoiceDate),
+    //         currency: invoice.currency || 'USD',
+    //         totalAmount: invoice.invoiceAmount || 0,
+    //         lineItems: [
+    //             {
+    //                 poLine: "Default PO Line",
+    //                 plc: "PLC001",
+    //                 vendor: "Vendor",
+    //                 employee: invoice.createdBy || "Employee",
+    //                 hours: 40.00,
+    //                 rate: (invoice.invoiceAmount || 0) / 40,
+    //                 amount: invoice.invoiceAmount || 0,
+    //                 line_No: 1
+    //             }
+    //         ],
+    //         // Default values for other fields
+    //         billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+    //         buyer: "Clore, Heather J",
+    //         purchaseOrderId: "2181218010",
+    //         releaseNumber: "3",
+    //         changeOrderNumber: "0",
+    //         poStartEndDate: "12/10/18 to 12/08/24",
+    //         remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+    //         terms: "PAYNPD",
+    //         amountDue: invoice.invoiceAmount || 0
+    //     }];
+        
+    //     setPreviewData(transformedData);
+    //     setPreviewModalVisible(true);
+    // };
+
+    // Handle preview click
+const handlePreview = async (invoice) => {
+    try {
+        // Set loading state if you want to show a loading indicator
+        setPreviewModalVisible(true);
+        setPreviewData(null); // Clear previous data
+        
+        // Fetch data from the preview API
+        const response = await fetch(
+            `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(invoice.invoiceNumber)}`
+        );
+        
+        if (!response.ok) {
+            throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+        }
+        
+        const apiData = await response.json();
+        
+        // Transform the API data to match InvoiceViewer expected format
         const transformedData = [{
+            invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+            invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+            period: formatDate(apiData.period || apiData.invoiceDate || invoice.invoiceDate),
+            currency: apiData.currency || invoice.currency || 'USD',
+            totalAmount: apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0,
+            
+            // Transform line items from API response
+            lineItems: (apiData.lineItems || apiData.invoiceTimesheetLines || []).map((item, index) => ({
+                poLine: item.poLine || item.timesheetLineNo || "Default PO Line",
+                plc: item.plc || "PLC001",
+                vendor: item.vendor || "Vendor",
+                employee: item.employee || item.createdBy || "Employee",
+                hours: item.hours || item.mappedHours || 40.00,
+                rate: item.rate || (item.mappedAmount || 0) / (item.mappedHours || 40) || 0,
+                amount: item.amount || item.mappedAmount || 0,
+                line_No: item.line_No || item.timesheetLineNo || index + 1
+            })),
+            
+            // Use API data if available, otherwise use defaults
+            billTo: apiData.billTo || "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+            buyer: apiData.buyer || "Clore, Heather J",
+            purchaseOrderId: apiData.purchaseOrderId || "2181218010",
+            releaseNumber: apiData.releaseNumber || "3",
+            changeOrderNumber: apiData.changeOrderNumber || "0",
+            poStartEndDate: apiData.poStartEndDate || "12/10/18 to 12/08/24",
+            remitTo: apiData.remitTo || "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+            terms: apiData.terms || "PAYNPD",
+            amountDue: apiData.amountDue || apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0
+        }];
+        
+        setPreviewData(transformedData);
+        
+    } catch (error) {
+        console.error('Error fetching invoice preview:', error);
+        
+        // Show error message or fallback to original data
+        alert(`Failed to load invoice preview: ${error.message}`);
+        
+        // Optional: Use original transformation as fallback
+        const fallbackData = [{
             invoiceId: invoice.invoiceNumber,
             invoiceDate: formatDate(invoice.invoiceDate),
             period: formatDate(invoice.invoiceDate),
@@ -414,7 +515,6 @@ export default function InvoiceExport() {
                     line_No: 1
                 }
             ],
-            // Default values for other fields
             billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
             buyer: "Clore, Heather J",
             purchaseOrderId: "2181218010",
@@ -426,9 +526,10 @@ export default function InvoiceExport() {
             amountDue: invoice.invoiceAmount || 0
         }];
         
-        setPreviewData(transformedData);
-        setPreviewModalVisible(true);
-    };
+        setPreviewData(fallbackData);
+    }
+};
+
 
     // Export to CSV function - only selected invoices
     const exportToCSV = () => {
@@ -509,9 +610,9 @@ export default function InvoiceExport() {
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-600">
+                            {/* <span className="text-sm text-gray-600">
                                 Selected: {selectedInvoices.size} / {filteredInvoices.length} invoices
-                            </span>
+                            </span> */}
                             <button
                                 onClick={exportToCSV}
                                 disabled={selectedInvoices.size === 0}
@@ -569,33 +670,48 @@ export default function InvoiceExport() {
                         ) : (
                             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                                 <table className="min-w-full">
-                                    <thead className="bg-gray-50">
+                                    <thead className="bg-gray-50 sticky">
                                         <tr>
-                                            <th className="px-6 py-3 text-left border-b border-gray-200">
+                                            {/* <th className="px-6 py-3 text-left border-b border-gray-200">
                                                 <input
                                                     type="checkbox"
+                                                    text="All"
                                                     checked={selectAll}
                                                     onChange={(e) => handleSelectAll(e.target.checked)}
                                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                                 />
+                                            </th> */}
+                                            <th className="px-6 py-3 text-left border-b border-gray-200">
+    <div className="flex items-center space-x-2">
+        <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+        />
+        <span className="text-xs font-medium text-gray-500 tracking-wider">
+            All
+        </span>
+    </div>
+</th>
+
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
+                                                Invoice Number
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                INVOICE NUMBER
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
+                                                Invoice Date
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                INVOICE DATE
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
+                                                Amount
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                AMOUNT
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200">
+                                                Currency
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                CURRENCY
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
+                                                Created At
                                             </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                CREATED AT
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                                                ACTION
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200">
+                                                Action
                                             </th>
                                         </tr>
                                     </thead>
@@ -609,20 +725,20 @@ export default function InvoiceExport() {
                                                             type="checkbox"
                                                             checked={selectedInvoices.has(invoiceId)}
                                                             onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked)}
-                                                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                                            className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                                         />
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
                                                         {invoice.invoiceNumber || 'N/A'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                         {formatDate(invoice.invoiceDate)}
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
                                                         {formatCurrency(invoice.invoiceAmount, invoice.currency)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
                                                             {invoice.currency || 'USD'}
                                                         </span>
                                                     </td>
@@ -632,7 +748,7 @@ export default function InvoiceExport() {
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                                         <button
                                                             onClick={() => handlePreview(invoice)}
-                                                            className="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                                            className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
                                                         >
                                                             <Eye className="h-4 w-4 mr-1" />
                                                             Preview

@@ -214,7 +214,7 @@ const deleteLines = () => {
         return;
     }
     
-    // This functional update ensures we are working with the most current state
+    // This functional update ensures we are always working with the most current state
     setLines(currentLines => {
         const idsToDeleteFromServer = [];
         for (const id of selectedLines) {
@@ -236,7 +236,9 @@ const deleteLines = () => {
 
     // Clear the selection after the delete is queued
     setSelectedLines(new Set());
-};const copyLines = () => {
+};
+
+const copyLines = () => {
     if (selectedLines.size === 0) {
         showToast('Please select at least one line to copy.', 'warning');
         return;
