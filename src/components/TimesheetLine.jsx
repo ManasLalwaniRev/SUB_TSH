@@ -179,6 +179,8 @@ const timePeriods = [
     { label: 'Mon 9/1 - Sun 9/7',   dates: ['Mon 09/01', 'Tue 09/02', 'Wed 09/03', 'Thu 09/04', 'Fri 09/05', 'Sat 09/06', 'Sun 09/07'] },
     { label: 'Mon 9/8 - Sun 9/14', dates: ['Mon 09/08', 'Tue 09/09', 'Wed 09/10', 'Thu 09/11', 'Fri 09/12', 'Sat 09/13', 'Sun 09/14'] },
     { label: 'Mon 9/15 - Sun 9/21', dates: ['Mon 09/15', 'Tue 09/16', 'Wed 09/17', 'Thu 09/18', 'Fri 09/19', 'Sat 09/20', 'Sun 09/21'] },
+    { label: 'Mon 9/22 - Sun 9/28', dates: ['Mon 09/22', 'Tue 09/23', 'Wed 09/24', 'Thu 09/25', 'Fri 09/26', 'Sat 09/27', 'Sun 09/28']}
+
 ];
 
 // --- Helper Functions ---
