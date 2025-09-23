@@ -1569,17 +1569,43 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
       if (!response.ok)
         throw new Error(`Failed to create invoice: ${response.status}`);
 
+      // const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+      // const imgData = canvas.toDataURL("image/png");
+      // const pdf = new jsPDF({
+      //   orientation: "portrait",
+      //   unit: "mm",
+      //   format: "a4",
+      // });
+      // const pdfWidth = pdf.internal.pageSize.getWidth();
+      // const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      // pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      // pdf.save("invoice.pdf");
+      const pdf = new jsPDF("p", "mm", "a4");
       const canvas = await html2canvas(input, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      let heightLeft = pdfImgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - pdfImgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+        heightLeft -= pdfHeight;
+      }
+
       pdf.save("invoice.pdf");
+
+      // window.location.reload();
     } catch (error) {
       console.error("Error creating invoice or generating PDF:", error);
     }
@@ -1615,6 +1641,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
     fontFamily: "monospace",
     fontSize: "15px",
     whiteSpace: "pre-line",
+    paddingBottom: "20px",
   };
   const columnStyle = { width: "49%" };
   const addressBlockStyle = { marginBottom: "16px" };
@@ -1626,12 +1653,17 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   };
   const thStyle = {
     border: "1px solid #d1d5db",
-    padding: "8px",
+    padding: "4px",
     textAlign: "left",
     backgroundColor: "#f3f4f6",
   };
   const thRightStyle = { ...thStyle, textAlign: "right" };
-  const tdStyle = { border: "1px solid #d1d5db", padding: "8px" };
+  const tdStyle = {
+    border: "1px solid #d1d5db",
+    padding: "2px",
+    whiteSpace: "pre-line",
+  };
+
   const tdRightStyle = { ...tdStyle, textAlign: "right" };
   const totalAmountStyle = {
     textAlign: "right",
@@ -1740,7 +1772,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
             </div>
             <div>
               <span style={boldTextStyle}>Amount Due </span>
-              {invoice.amountDue || "4,307.21"}
+              {invoice.totalAmount.toFixed(2) || "4,307.21"}
             </div>
           </div>
         </div>
@@ -1762,17 +1794,52 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
             {Object.entries(groupedByPoLine).map(([poLine, items]) => (
               <React.Fragment key={poLine}>
                 <tr>
-                  <td colSpan={8} style={{ fontWeight: 700, fontSize: "15px" }}>
+                  <td
+                    colSpan={8}
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      paddinngBottom: "15px",
+                    }}
+                  >
                     {poLine}
-                  </td>
+                  </td>{" "}
                 </tr>
                 {items.map((item, index) => (
                   <tr key={index}>
                     <td style={tdStyle}>{item.plc || ""}</td>
                     <td style={tdStyle}>
                       {/* {item.vendor || item.employee || ""} */}
-                      {[item.vendor, item.employee].filter(Boolean).join(" \n")}
+                      {[item.vendor, item.employee].filter(Boolean).join("\n")}
                     </td>
+
+                    {/* <td
+                      style={{
+                        border: "1px solid #d1d5db",
+                        padding: "8px",
+                        fontFamily: "monospace",
+                        fontSize: "15px",
+                        fontWeight: 700,
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                        verticalAlign: "top",
+                        borderRight: "none",
+                      }}
+                      colSpan={2} // span across the two previous separate columns
+                    >
+                      <div>{item.plc}</div>
+                      <div
+                        style={{
+                          paddingLeft: "20px",
+                          marginTop: "6px",
+                          fontWeight: "normal",
+                          borderLeft: "none",
+                        }}
+                      >
+                        <div>{item.employee}</div>
+                        <div>{item.vendor}</div>
+                      </div>
+                    </td> */}
                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
                     <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
                     <td style={tdRightStyle}>$0.00</td>

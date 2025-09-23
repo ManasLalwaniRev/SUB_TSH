@@ -3792,7 +3792,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import InvoiceViewer from "./Invoice";
-import { MdDescription } from "react-icons/md";
 
 // Toast notification utility (keep your implementation)
 const showToast = (message, type = "info") => {
@@ -4390,7 +4389,9 @@ export default function ExportTable() {
           (key) =>
             !orderedKeys.includes(key.toLowerCase()) &&
             !key.toLowerCase().includes("resource_desc") &&
-            !key.toLowerCase().includes("lineno")
+            !key.toLowerCase().includes("lineno") &&
+            !key.toLowerCase().includes("comment") &&
+            !key.toLowerCase().includes("ipaddress")
         );
 
         // Compose final columns with correct casing from filteredKeys
