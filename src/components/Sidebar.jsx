@@ -2270,7 +2270,7 @@ export default function Sidebar() {
                     
                     {/* Export: Show for Admin only */}
                     {isAdmin && (
-                        <SidebarItem icon={<Download className="h-5 w-5" />} text=" Invoice Generate" to="/dashboard/export" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        <SidebarItem icon={<Download className="h-5 w-5" />} text=" Generate Invoice " to="/dashboard/export" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
 
                     {/* Invoice Export: Show for Admin and PM only */}
