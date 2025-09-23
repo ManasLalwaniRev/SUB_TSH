@@ -353,10 +353,13 @@ export default function MainTable() {
         const baseStyle = "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
         const s = status;
         if (s === 'Open') return `${baseStyle} bg-blue-100 text-blue-800`;
-        if (s === 'Approved') return `${baseStyle} bg-green-100 text-green-800`;
+        if (s === 'APPROVED') return `${baseStyle} bg-green-100 text-green-800`;
         if (s?.toLowerCase() === 'rejected') return `${baseStyle} bg-red-100 text-red-800`;
         if (s === 'Pending') return `${baseStyle} bg-yellow-100 text-yellow-800`;
         if (s === 'Submitted') return `${baseStyle} bg-purple-100 text-purple-800`;
+        if (s === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
+        if (s === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
+ 
         return `${baseStyle} bg-gray-100 text-gray-800`;
     };
 
