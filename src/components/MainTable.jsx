@@ -652,7 +652,7 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
                 <div className="w-full flex flex-col items-center">
                     <div className="w-full flex justify-between items-center mb-4 px-6">
                         <h1 className="text-lg font-semibold text-gray-700">Welcome, {currentUser?.name}</h1>
-                        <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button>
+                        {/* <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button> */}
                     </div>
 
                     {/* Filters */}
