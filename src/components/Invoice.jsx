@@ -1780,7 +1780,17 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={thStyle}>PLC</th>
+              <th
+                style={{
+                  border: "1px solid #d1d5db",
+                  padding: "4px",
+                  textAlign: "left",
+                  backgroundColor: "#f3f4f6",
+                  borderRight: "none",
+                }}
+              >
+                PLC
+              </th>
               <th style={thStyle}>Vendor Employee</th>
               <th style={thRightStyle}>Current Hrs/Qty</th>
               <th style={thRightStyle}>Rate</th>
@@ -1807,23 +1817,20 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
                 </tr>
                 {items.map((item, index) => (
                   <tr key={index}>
-                    <td style={tdStyle}>{item.plc || ""}</td>
+                    {/* <td style={tdStyle}>{item.plc || ""}</td>
                     <td style={tdStyle}>
-                      {/* {item.vendor || item.employee || ""} */}
                       {[item.vendor, item.employee].filter(Boolean).join("\n")}
-                    </td>
+                    </td> */}
 
-                    {/* <td
+                    <td
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "4px",
                         fontFamily: "monospace",
-                        fontSize: "15px",
-                        fontWeight: 700,
+                        fontSize: "12px",
                         whiteSpace: "normal",
                         wordBreak: "break-word",
                         verticalAlign: "top",
-                        borderRight: "none",
                       }}
                       colSpan={2} // span across the two previous separate columns
                     >
@@ -1831,15 +1838,13 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
                       <div
                         style={{
                           paddingLeft: "20px",
-                          marginTop: "6px",
-                          fontWeight: "normal",
-                          borderLeft: "none",
+                          marginTop: "2px",
                         }}
                       >
                         <div>{item.employee}</div>
                         <div>{item.vendor}</div>
                       </div>
-                    </td> */}
+                    </td>
                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
                     <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
                     <td style={tdRightStyle}>$0.00</td>
