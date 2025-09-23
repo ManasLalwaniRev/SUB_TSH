@@ -15,6 +15,112 @@ const showToast = (message, type = 'info') => {
   setTimeout(() => document.body.removeChild(toast), 3000);
 };
 
+// --- Create User Modal Component ---
+const CreateUserModal = ({ onClose, onUserCreated }) => {
+    const [formData, setFormData] = useState({
+        username: '',
+        fullName: '',
+        email: '',
+        password: '',
+        role: 'user', // Default role
+    });
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (formData.password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+        if (formData.password.length < 5) {
+            setError('Password must be at least 5 characters long.');
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await fetch('https://timesheet-subk.onrender.com/api/User', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || 'Failed to create user.');
+            }
+            
+            showToast('User created successfully!', 'success');
+            onUserCreated(); // Refresh the user list
+            onClose();
+
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Create New User</h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><FaTimes size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Username</label>
+                            <input type="text" name="username" onChange={handleChange} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" name="fullName" onChange={handleChange} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" name="email" onChange={handleChange} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Password</label>
+                            <input type="password" name="password" onChange={handleChange} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <input type="password" name="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                        </div>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700">Role</label>
+                        <select name="role" value={formData.role} onChange={handleChange} className="w-full mt-1 px-3 py-2 border rounded-lg bg-white">
+                            <option value="user">User</option>
+                            <option value="pm">PM</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+                    <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isLoading} className="bg-green-600 text-white font-semibold py-2 px-6 rounded-lg w-full disabled:opacity-50">
+                            {isLoading ? 'Creating...' : 'Create User'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 
 // --- Password Modal Component ---
 const PasswordModal = ({ user, type, onClose }) => {
@@ -31,7 +137,7 @@ const PasswordModal = ({ user, type, onClose }) => {
             return;
         }
         if (newPassword.length < 5) {
-            setError('Password must be at least 6 characters long.');
+            setError('Password must be at least 5 characters long.');
             return;
         }
 
@@ -148,9 +254,37 @@ export default function UserTable() {
     const [currentUser, setCurrentUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // State for modals
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [modalType, setModalType] = useState('');
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const fetchUsers = async () => {
+        if (!currentUser) return;
+
+        const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
+        const apiUrl = isAdmin ? baseApiUrl : `${baseApiUrl}/${currentUser.userId}`;
+
+        if (!isAdmin && !currentUser.userId) {
+            setError("Your user ID could not be found.");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            setUsers(Array.isArray(data) ? data : [data]);
+        } catch (e) {
+            setError(e.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const userInfo = localStorage.getItem('currentUser');
@@ -168,43 +302,18 @@ export default function UserTable() {
     }, []);
 
     useEffect(() => {
-        if (!currentUser) return;
-        
-        const fetchUsers = async () => {
-            const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
-            const apiUrl = isAdmin ? baseApiUrl : `${baseApiUrl}/${currentUser.userId}`;
-
-            if (!isAdmin && !currentUser.userId) {
-                setError("Your user ID could not be found.");
-                setLoading(false);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                setUsers(Array.isArray(data) ? data : [data]);
-            } catch (e) {
-                setError(e.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchUsers();
-    }, [currentUser, isAdmin]);
+    }, [currentUser, isAdmin, refreshTrigger]);
 
     const openPasswordModal = (user, type) => {
         setSelectedUser(user);
         setModalType(type);
-        setIsModalOpen(true);
+        setIsPasswordModalOpen(true);
     };
 
     const getInitials = (name = '') => {
         const names = name.split(' ');
-        if (names.length > 1) {
+        if (names.length > 1 && names[0] && names[names.length - 1]) {
             return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
         }
         return name.substring(0, 2).toUpperCase();
@@ -214,58 +323,65 @@ export default function UserTable() {
     if (isAdmin) {
         return (
             <>
-                {isModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsModalOpen(false)} />}
+                {isPasswordModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsPasswordModalOpen(false)} />}
+                {isCreateModalOpen && <CreateUserModal onClose={() => setIsCreateModalOpen(false)} onUserCreated={() => setRefreshTrigger(t => t + 1)} />}
                 
-                <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-52 pr-4">
-                    <div className="flex-1 flex flex-col items-center justify-start pt-8">
-                        <div className="w-full max-w-7xl mx-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-                                <button className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 flex items-center gap-2">
-                                    <FaUserPlus /> Create User
-                                </button>
-                            </div>
+                <div className="min-h-screen bg-slate-50 flex flex-col pl-52 pr-8 py-8">
+                    <div className="flex-1 flex flex-col">
+                        <div className="flex justify-between items-center mb-6">
+                            <h1 className="text-4xl font-bold text-gray-800">User Management</h1>
+                            <button onClick={() => setIsCreateModalOpen(true)} className="bg-green-500 text-white font-bold py-2 px-5 rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 shadow-lg hover:shadow-green-500/50">
+                                <FaUserPlus /> Create User
+                            </button>
+                        </div>
 
-                            <div className="bg-white shadow-lg rounded-2xl overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {loading ? (
-                                            <tr><td colSpan="6" className="text-center py-4">Loading users...</td></tr>
-                                        ) : error ? (
-                                            <tr><td colSpan="6" className="text-center py-4 text-red-500">Error: {error}</td></tr>
-                                        ) : (
-                                            users.map(user => (
-                                                <tr key={user.userId}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.fullName}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{user.role}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                            {user.isActive ? 'Active' : 'Inactive'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                        <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-900 flex items-center gap-1.5">
-                                                            <FaKey size={12} /> Reset Password
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+                            <table className="min-w-full">
+                                <thead className="bg-gray-100">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {loading ? (
+                                        <tr><td colSpan="5" className="text-center py-10">Loading users...</td></tr>
+                                    ) : error ? (
+                                        <tr><td colSpan="5" className="text-center py-10 text-red-500">Error: {error}</td></tr>
+                                    ) : (
+                                        users.map((user, index) => (
+                                            <tr key={user.userId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 text-sm">
+                                                            {getInitials(user.fullName)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-sm font-semibold text-gray-900">{user.fullName}</div>
+                                                            <div className="text-xs text-gray-500">{user.email}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.username}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{user.role}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`px-3 py-1 text-xs leading-5 font-bold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                        {user.isActive ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                                                    <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-900 flex items-center gap-1.5">
+                                                        <FaKey size={12} /> Reset Password
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -273,7 +389,7 @@ export default function UserTable() {
         );
     }
 
-    // --- Non-Admin (User & PM) View: Profile Card ---
+    // --- Non-Admin (User & PM) View ---
     if (loading) return <ProfileCardSkeleton />;
     if (error) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p className="text-red-500">Error: {error}</p></div>;
     if (users.length === 0) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p>Could not find user profile.</p></div>;
@@ -281,7 +397,7 @@ export default function UserTable() {
     const user = users[0];
     return (
         <>
-            {isModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsModalOpen(false)} />}
+            {isPasswordModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsPasswordModalOpen(false)} />}
             <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
