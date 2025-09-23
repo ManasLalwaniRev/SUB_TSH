@@ -241,8 +241,55 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
     
-    const copyLines = () => { if (selectedLines.size === 0) { showToast('Please select at least one line to copy.', 'warning'); return; } const linesToCopy = lines.filter(line => selectedLines.has(line.id)); const potentialTotals = { ...dailyTotals }; let validationFailed = false; linesToCopy.forEach(lineToCopy => { days.forEach(day => { potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0; if (potentialTotals[day] > 24) { validationFailed = true; } }); }); if (validationFailed) { showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error"); return; } const newLines = linesToCopy.map(line => ({ ...line, hours: { ...line.hours }, id: `temp-${nextId.current++}`, hourIds: {} })); setLines(currentLines => [...currentLines, ...newLines]); setSelectedLines(new Set()); };
+const copyLines = () => {
+    if (selectedLines.size === 0) {
+        showToast('Please select at least one line to copy.', 'warning');
+        return;
+    }
+    
+    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
 
+    // First, run the validation to check if copying hours will exceed daily limits
+    const potentialTotals = { ...dailyTotals };
+    let validationFailed = false;
+    linesToCopy.forEach(lineToCopy => {
+        days.forEach(day => {
+            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+            if (potentialTotals[day] > 24) {
+                validationFailed = true;
+            }
+        });
+    });
+
+    if (validationFailed) {
+        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
+        return;
+    }
+
+    // If validation passes, proceed with copying
+    showToast("Line copied. Please select a new Work Order.", "info");
+
+    const newLines = linesToCopy.map(line => ({
+        ...line,
+        hours: { ...line.hours }, // Keep the hours
+
+        // ✅ FIX: Clear the Work Order and all dependent fields
+        workOrder: '',
+        description: '',
+        project: '',
+        plc: '',
+        poNumber: '',
+        rlseNumber: '',
+        poLineNumber: '',
+        
+        // Assign a new unique ID for React to track the row
+        id: `temp-${nextId.current++}`,
+        hourIds: {} // Reset database IDs
+    }));
+
+    setLines(currentLines => [...currentLines, ...newLines]);
+    setSelectedLines(new Set());
+};
     const handleSave = async () => {
         setIsCurrentlySaving(true);
         const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
