@@ -7998,16 +7998,55 @@ const fetchData = async () => {
   };
 
   const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
-    return selectedRows.map((row) => ({
-      requestId: row.requestId || row.id,
-      levelNo: row.levelNo || 1,
-      approverUserId: currentUser.approvalUserId || row.approverUserId,
-      comment: `${action === "approve" ? "Approved" : "Rejected"} by ${
-        currentUser.name
-      }: ${reason}`,
-      ipAddress: ipAddress,
-    }));
-  };
+  const allRequestsData = [];
+  
+  selectedRows.forEach((row) => {
+    // If this row has combined data from grouping, process all of them
+    if (row.combinedRequestIds && row.combinedRequestIds.length > 0) {
+      // Process each individual request that was grouped
+      row.combinedRequestIds.forEach((requestId, index) => {
+        allRequestsData.push({
+          requestId: requestId,
+          levelNo: row.levelNo || 1,
+          approverUserId: currentUser.approvalUserId || row.approverUserId,
+          comment: `${action === "approve" ? "Approved" : "Rejected"} by ${currentUser.name}: ${reason}`,
+          ipAddress: ipAddress,
+          // Include original line numbers if available
+          lineNo: row.combinedLineNos ? row.combinedLineNos[index] : row.lineNo,
+          // Include original timesheet IDs if available  
+          timesheetId: row.combinedIds ? row.combinedIds[index] : row.id
+        });
+      });
+    } else {
+      // Handle single (non-grouped) entries
+      allRequestsData.push({
+        requestId: row.requestId || row.id,
+        levelNo: row.levelNo || 1,
+        approverUserId: currentUser.approvalUserId || row.approverUserId,
+        comment: `${action === "approve" ? "Approved" : "Rejected"} by ${currentUser.name}: ${reason}`,
+        ipAddress: ipAddress,
+        lineNo: row.lineNo,
+        timesheetId: row.id
+      });
+    }
+  });
+  
+  console.log(`Sending ${action} request for ${allRequestsData.length} individual timesheet entries:`, allRequestsData);
+  return allRequestsData;
+};
+
+
+  // const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
+  //   return selectedRows.map((row) => ({
+  //     requestId: row.requestId || row.id,
+  //     levelNo: row.levelNo || 1,
+  //     approverUserId: currentUser.approvalUserId || row.approverUserId,
+  //     comment: `${action === "approve" ? "Approved" : "Rejected"} by ${
+  //       currentUser.name
+  //     }: ${reason}`,
+  //     ipAddress: ipAddress,
+  //   }));
+  // };
 
   // Updated handleBulkApproveClick to check for approved rows
   const handleBulkApproveClick = () => {
@@ -8074,112 +8113,252 @@ const fetchData = async () => {
   };
 
   const performBulkApprove = async (reason) => {
-    setActionLoading(true);
-    try {
-      const requestBody = buildBulkRequestBody(
-        selectedRows,
-        "approve",
-        reason,
-        userIpAddress
-      );
-      const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
-      );
-      if (response.ok) {
-        showToast(
-          `Successfully approved ${selectedRows.length} timesheets with reason: "${reason}"`,
-          "success"
-        );
-        const approvedIds = selectedRows.map((row) => row.id);
-        setRows((prevRows) =>
-          prevRows.map((row) =>
-            approvedIds.includes(row.id)     
-              ? {
-                  ...row,
-                  isApproved: true,
-                  status: "approved",
-                  selected: false,
-                  Status: "APPROVED",
-                }
-              : row
-          )
-        );
-        setSelectedRows([]);
-        setSelectAll(false);
-      } else {
-        showToast(
-          "Failed to approve some timesheets. Please try again.",
-          "error"
-        );
+  setActionLoading(true);
+  try {
+    const requestBody = buildBulkRequestBody(
+      selectedRows,
+      "approve",
+      reason,
+      userIpAddress
+    );
+    
+    console.log("Bulk Approve Payload:", requestBody);
+    
+    const response = await fetch(
+      "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
       }
-    } catch (error) {
+    );
+    
+    if (response.ok) {
+      const totalProcessed = requestBody.length;
       showToast(
-        "Failed to approve timesheets. Please check your connection.",
-        "error" 
+        `Successfully approved ${totalProcessed} timesheet entries with reason: "${reason}"`,
+        "success"
       );
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const performBulkReject = async (reason) => {
-    setActionLoading(true);
-    try {
-      const requestBody = buildBulkRequestBody(
-        selectedRows,
-        "reject",
-        reason,
-        userIpAddress
+      
+      // Update all grouped entries in the state
+      const approvedIds = selectedRows.flatMap(row => 
+        row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
       );
-      const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
+      
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          approvedIds.includes(row.id) || 
+          (row.combinedIds && row.combinedIds.some(id => approvedIds.includes(id)))
+            ? {
+                ...row,
+                isApproved: true,
+                status: "approved",
+                selected: false,
+                Status: "APPROVED",
+              }
+            : row
+        )
       );
-      if (response.ok) {
-        showToast(
-          `Successfully rejected ${selectedRows.length} timesheets with reason: "${reason}"`,
-          "success"
-        );
-        const rejectedIds = selectedRows.map((row) => row.id);
-        setRows((prevRows) =>
-          prevRows.map((row) =>
-            rejectedIds.includes(row.id)
-              ? {
-                  ...row,
-                  isRejected: true,
-                  status: "rejected",
-                  selected: false,
-                  Status: "REJECTED",
-                }
-              : row
-          )
-        );
-        setSelectedRows([]);
-        setSelectAll(false);
-      } else {
-        showToast(
-          "Failed to reject some timesheets. Please try again.",
-          "error"
-        );
-      }
-    } catch (error) {
+      
+      setSelectedRows([]);
+      setSelectAll(false);
+    } else {
+      const errorData = await response.text();
+      console.error("Approval failed:", errorData);
       showToast(
-        "Failed to reject timesheets. Please check your connection.",
+        "Failed to approve some timesheets. Please try again.",
         "error"
       );
-    } finally {
-      setActionLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Approval error:", error);
+    showToast(
+      "Failed to approve timesheets. Please check your connection.",
+      "error"
+    );
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+const performBulkReject = async (reason) => {
+  setActionLoading(true);
+  try {
+    const requestBody = buildBulkRequestBody(
+      selectedRows,
+      "reject",
+      reason,
+      userIpAddress
+    );
+    
+    console.log("Bulk Reject Payload:", requestBody);
+    
+    const response = await fetch(
+      "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      }
+    );
+    
+    if (response.ok) {
+      const totalProcessed = requestBody.length;
+      showToast(
+        `Successfully rejected ${totalProcessed} timesheet entries with reason: "${reason}"`,
+        "success"
+      );
+      
+      // Update all grouped entries in the state
+      const rejectedIds = selectedRows.flatMap(row => 
+        row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
+      );
+      
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          rejectedIds.includes(row.id) ||
+          (row.combinedIds && row.combinedIds.some(id => rejectedIds.includes(id)))
+            ? {
+                ...row,
+                isRejected: true,
+                status: "rejected",
+                selected: false,
+                Status: "REJECTED",
+              }
+            : row
+        )
+      );
+      
+      setSelectedRows([]);
+      setSelectAll(false);
+    } else {
+      const errorData = await response.text();
+      console.error("Rejection failed:", errorData);
+      showToast(
+        "Failed to reject some timesheets. Please try again.",
+        "error"
+      );
+    }
+  } catch (error) {
+    console.error("Rejection error:", error);
+    showToast(
+      "Failed to reject timesheets. Please check your connection.",
+      "error"
+    );
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+
+
+  // const performBulkApprove = async (reason) => {
+  //   setActionLoading(true);
+  //   try {
+  //     const requestBody = buildBulkRequestBody(
+  //       selectedRows,
+  //       "approve",
+  //       reason,
+  //       userIpAddress
+  //     );
+  //     const response = await fetch(
+  //       "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(requestBody),
+  //       }
+  //     );
+  //     if (response.ok) {
+  //       showToast(
+  //         `Successfully approved ${selectedRows.length} timesheets with reason: "${reason}"`,
+  //         "success"
+  //       );
+  //       const approvedIds = selectedRows.map((row) => row.id);
+  //       setRows((prevRows) =>
+  //         prevRows.map((row) =>
+  //           approvedIds.includes(row.id)     
+  //             ? {
+  //                 ...row,
+  //                 isApproved: true,
+  //                 status: "approved",
+  //                 selected: false,
+  //                 Status: "APPROVED",
+  //               }
+  //             : row
+  //         )
+  //       );
+  //       setSelectedRows([]);
+  //       setSelectAll(false);
+  //     } else {
+  //       showToast(
+  //         "Failed to approve some timesheets. Please try again.",
+  //         "error"
+  //       );
+  //     }
+  //   } catch (error) {
+  //     showToast(
+  //       "Failed to approve timesheets. Please check your connection.",
+  //       "error" 
+  //     );
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // };
+
+  // const performBulkReject = async (reason) => {
+  //   setActionLoading(true);
+  //   try {
+  //     const requestBody = buildBulkRequestBody(
+  //       selectedRows,
+  //       "reject",
+  //       reason,
+  //       userIpAddress
+  //     );
+  //     const response = await fetch(
+  //       "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(requestBody),
+  //       }
+  //     );
+  //     if (response.ok) {
+  //       showToast(
+  //         `Successfully rejected ${selectedRows.length} timesheets with reason: "${reason}"`,
+  //         "success"
+  //       );
+  //       const rejectedIds = selectedRows.map((row) => row.id);
+  //       setRows((prevRows) =>
+  //         prevRows.map((row) =>
+  //           rejectedIds.includes(row.id)
+  //             ? {
+  //                 ...row,
+  //                 isRejected: true,
+  //                 status: "rejected",
+  //                 selected: false,
+  //                 Status: "REJECTED",
+  //               }
+  //             : row
+  //         )
+  //       );
+  //       setSelectedRows([]);
+  //       setSelectAll(false);
+  //     } else {
+  //       showToast(
+  //         "Failed to reject some timesheets. Please try again.",
+  //         "error"
+  //       );
+  //     }
+  //   } catch (error) {
+  //     showToast(
+  //       "Failed to reject timesheets. Please check your connection.",
+  //       "error"
+  //     );
+  //   } finally {
+  //     setActionLoading(false);
+  //   }
+  // };
 
   const hasPendingRows = Array.isArray(filteredRows)
     ? filteredRows.some((row) => isRowActionable(row))

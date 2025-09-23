@@ -3792,6 +3792,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import InvoiceViewer from "./Invoice";
+import { MdDescription } from "react-icons/md";
 
 // Toast notification utility (keep your implementation)
 const showToast = (message, type = "info") => {
@@ -3806,11 +3807,11 @@ const showToast = (message, type = "info") => {
   const toast = document.createElement("div");
   toast.textContent = message;
   toast.style.cssText = `
-    position: fixed; top: 20px; right: 20px; z-index: 9999;
-    background: ${bgColor}; color: white; padding: 12px 16px;
-    border-radius: 6px; font-size: 14px; max-width: 300px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;
-  `;
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        background: ${bgColor}; color: white; padding: 12px 16px;
+        border-radius: 6px; font-size: 14px; max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;
+      `;
   document.body.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = "0";
@@ -3883,16 +3884,36 @@ export default function ExportTable() {
   const statusClass = (s) => {
     const su = String(s || "").toUpperCase();
     if (su === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
-    if (
-      su === "INV_GEN" ||
-      su === "INVOICE GENERATED" ||
-      su === "INVOICE_GENERATED" ||
-      su === "INVOICEGENERATED"
-    )
-      return `${baseStyle} bg-yellow-100 text-yellow-800`;
+    if (su === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
     if (su === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
+    if (su === "SUBMITTED") return `${baseStyle} bg-purple-100 text-purple-800`;
+    if (su === "REJECTED") return `${baseStyle} bg-red-100 text-red-800`;
+    if (su === "PENDING") return `${baseStyle} bg-yellow-100 text-yellow-800`;
     return `${baseStyle} bg-gray-100 text-gray-700`;
   };
+  // const baseStyle =
+  //   "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
+
+  // const statusClass = (s) => {
+  //   const su = String(s || "").toUpperCase();
+
+  //   if (su === "OPEN") return `${baseStyle} bg-yellow-400 text-yellow-900`; // Bright yellow, dark text
+  //   if (su === "SUBMITTED") return `${baseStyle} bg-blue-100 text-blue-700`; // Light blue, medium blue
+  //   if (su === "REJECTED") return `${baseStyle} bg-red-600 text-red-100`; // intense red background, light text
+  //   if (su === "APPROVED") return `${baseStyle} bg-yellow-200 text-yellow-800`; // light beige/yellow, brownish text
+  //   if (
+  //     su === "INVOICED" ||
+  //     su === "INV_GEN" ||
+  //     su === "INVOICE GENERATED" ||
+  //     su === "INVOICE_GENERATED" ||
+  //     su === "INVOICEGENERATED"
+  //   )
+  //     return `${baseStyle} bg-pink-200 text-pink-700`; // light pink, medium pink text
+  //   if (su === "EXPORTED") return `${baseStyle} bg-green-600 text-green-900`; // medium green background, dark green text
+  //   if (su === "PENDING") return `${baseStyle} bg-yellow-300 text-yellow-800`; // yellow background with darker yellow text
+
+  //   return `${baseStyle} bg-gray-100 text-gray-700`; // default gray
+  // };
 
   const formatHours = (hours) => {
     if (!hours && hours !== 0) return "";
@@ -3950,7 +3971,7 @@ export default function ExportTable() {
       batchId: "Batch ID",
       vend_Id: "Vendor ID",
       vend_Name: "Vendor Name",
-      resource_Desc: "Employee Description",
+      description: "Description",
       glc: "GLC",
     };
 
@@ -4345,17 +4366,15 @@ export default function ExportTable() {
           "status",
           "resource_id",
           "resource_name",
-          "resource_desc",
+          "description",
           "plc",
           "paytype",
+          "hours_date",
           "hours",
           "perhrrate",
           "amt",
           "vend_id",
           "vend_name",
-          "hours_date",
-          "hours",
-          // "amt",
         ];
 
         // Lowercase filtered keys for matching
@@ -4368,7 +4387,10 @@ export default function ExportTable() {
 
         // Other keys not in desired order
         const remainingKeys = filteredKeys.filter(
-          (key) => !orderedKeys.includes(key.toLowerCase())
+          (key) =>
+            !orderedKeys.includes(key.toLowerCase()) &&
+            !key.toLowerCase().includes("resource_desc") &&
+            !key.toLowerCase().includes("lineno")
         );
 
         // Compose final columns with correct casing from filteredKeys
@@ -4604,7 +4626,7 @@ export default function ExportTable() {
 
     const statusCodes = [];
     if (statusFilter.approved) statusCodes.push("APPROVED");
-    if (statusFilter.invoiceGenerated) statusCodes.push("INOVICEGENERATED");
+    if (statusFilter.invoiceGenerated) statusCodes.push("INVOICED");
     if (statusFilter.exported) statusCodes.push("EXPORTED");
 
     if (statusCodes.length > 0) {
@@ -4709,21 +4731,52 @@ export default function ExportTable() {
     );
   };
 
-  // Handle select all
+  //Handle select all
+  // const handleSelectAll = () => {
+  //   if (selectAll) {
+  //     setSelectedRows(new Set());
+  //     setSelectAll(false);
+  //   } else {
+  //     const allRowIds = new Set(filteredRows.map((row) => row.id));
+  //     setSelectedRows(allRowIds);
+  //     setSelectAll(true);
+  //   }
+  // };
+
+  // Determine if any approved rows exist
+  const hasApprovedRows = filteredRows.some(
+    (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+  );
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedRows(new Set());
       setSelectAll(false);
     } else {
-      const allRowIds = new Set(filteredRows.map((row) => row.id));
-      setSelectedRows(allRowIds);
+      const approvedRowIds = filteredRows
+        .filter(
+          (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+        )
+        .map((row) => row.id);
+
+      setSelectedRows(new Set(approvedRowIds));
       setSelectAll(true);
     }
   };
 
+  // useEffect(() => {
+  //   if (filteredRows.length > 0) {
+  //     const allSelected = filteredRows.every((row) => selectedRows.has(row.id));
+  //     setSelectAll(allSelected);
+  //   } else {
+  //     setSelectAll(false);
+  //   }
+  // }, [filteredRows, selectedRows]);
   useEffect(() => {
-    if (filteredRows.length > 0) {
-      const allSelected = filteredRows.every((row) => selectedRows.has(row.id));
+    const approvedRows = filteredRows.filter(
+      (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+    );
+    if (approvedRows.length > 0) {
+      const allSelected = approvedRows.every((row) => selectedRows.has(row.id));
       setSelectAll(allSelected);
     } else {
       setSelectAll(false);
@@ -5493,27 +5546,27 @@ export default function ExportTable() {
 
           {/* Batch ID Input - Added after filters, separate row */}
           {/* <div
-            className="flex items-center gap-3 mb-3"
-            style={{
-              marginLeft: 24,
-              marginRight: 24,
-              width: "calc(100vw - 220px)",
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">
-                Batch ID:
-              </label>
-              <input
-                type="text"
-                value={batchId}
-                onChange={(e) => setBatchId(e.target.value)}
-                placeholder="Enter Batch ID"
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
-              />
-               
-            </div>
-          </div> */}
+                className="flex items-center gap-3 mb-3"
+                style={{
+                  marginLeft: 24,
+                  marginRight: 24,
+                  width: "calc(100vw - 220px)",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Batch ID:
+                  </label>
+                  <input
+                    type="text"
+                    value={batchId}
+                    onChange={(e) => setBatchId(e.target.value)}
+                    placeholder="Enter Batch ID"
+                    className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
+                  />
+                  
+                </div>
+              </div> */}
 
           <div
             className="border border-gray-300 rounded bg-white shadow"
@@ -5536,26 +5589,26 @@ export default function ExportTable() {
             >
               <div className="flex gap-2">
                 {/* <button
-                  onClick={handleExportClick}
-                  type="button"
-                  disabled={actionLoading || selectedRows.size === 0}
-                  className="bg-green-700 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-800 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {actionLoading
-                    ? "Processing..."
-                    : `Export Selected (${selectedRows.size})`}
-                </button> */}
+                      onClick={handleExportClick}
+                      type="button"
+                      disabled={actionLoading || selectedRows.size === 0}
+                      className="bg-green-700 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-800 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading
+                        ? "Processing..."
+                        : `Export Selected (${selectedRows.size})`}
+                    </button> */}
                 {/* <button
-                  onClick={handleGenerateInvoice}
-                  type="button"
-                  disabled={actionLoading || selectedRows.size === 0}
-                  className="bg-green-700 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-800 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {actionLoading
-                    ? "Processing..."
-                    : `Generate Invoice (${selectedRows.size})`}
-                </button>
-                {showInvoice && <InvoiceViewer data={showInvoice} />} */}
+                      onClick={handleGenerateInvoice}
+                      type="button"
+                      disabled={actionLoading || selectedRows.size === 0}
+                      className="bg-green-700 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-800 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {actionLoading
+                        ? "Processing..."
+                        : `Generate Invoice (${selectedRows.size})`}
+                    </button>
+                    {showInvoice && <InvoiceViewer data={showInvoice} />} */}
                 <button
                   onClick={handleGenerateInvoice}
                   type="button"
@@ -5674,6 +5727,7 @@ export default function ExportTable() {
                               type="checkbox"
                               checked={selectAll}
                               onChange={handleSelectAll}
+                              disabled={!hasApprovedRows}
                               className="cursor-pointer"
                               title="Select All"
                             />
@@ -5728,6 +5782,10 @@ export default function ExportTable() {
                                 checked={selectedRows.has(row.id)}
                                 onChange={() => handleRowSelect(row.id)}
                                 className="cursor-pointer"
+                                disabled={
+                                  (row.Status || row.status || row[col]) !==
+                                  "Approved"
+                                }
                               />
                             ) : col === "Status" ? (
                               // render status as colored badge
