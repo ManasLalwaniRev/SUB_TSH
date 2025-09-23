@@ -408,15 +408,55 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         setSelectedLines(new Set());
     };
     const copyLines = () => {
-        if (selectedLines.size === 0) return showToast('Please select lines to copy.', 'warning');
-        const copies = lines.filter(line => selectedLines.has(line.id)).map(line => ({
-            ...line,
-            id: `temp-${Date.now()}-${Math.random()}`,
-            hourIds: {}
-        }));
-        setLines(prev => [...prev, ...copies]);
-        setSelectedLines(new Set());
-    };
+    if (selectedLines.size === 0) {
+        showToast('Please select lines to copy.', 'warning');
+        return;
+    }
+
+    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+
+    // Validation: Check if this copy action will exceed daily limits
+    const potentialTotals = { ...dailyTotals };
+    let validationFailed = false;
+
+    linesToCopy.forEach(lineToCopy => {
+        days.forEach(day => {
+            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+            if (potentialTotals[day] > 24) {
+                validationFailed = true;
+            }
+        });
+    });
+
+    if (validationFailed) {
+        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
+        return; // Abort the copy
+    }
+
+    // If validation passes, inform the user and proceed with copying
+    showToast("Line copied. Please select a new Work Order.", "info");
+
+    const newLines = linesToCopy.map(line => ({
+        ...line,
+        hours: { ...line.hours }, // Keep the hours
+
+        // Clear the Work Order and all dependent fields to enforce uniqueness
+        workOrder: '',
+        description: '',
+        project: '',
+        plc: '',
+        poNumber: '',
+        rlseNumber: '',
+        poLineNumber: '',
+
+        // Assign a new unique ID
+        id: `temp-${Date.now()}-${Math.random()}`,
+        hourIds: {} // Reset database IDs
+    }));
+
+    setLines(prev => [...prev, ...newLines]);
+    setSelectedLines(new Set());
+};
 
     const handleSubmit = async () => {
          if (grandTotal === 0) {
