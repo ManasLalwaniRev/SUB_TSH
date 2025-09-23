@@ -1,105 +1,99 @@
-// // components/UserTable.jsx
-// import React from "react";
+import React, { useEffect, useState } from 'react';
+import { FaEdit, FaEnvelope, FaKey, FaShieldAlt, FaTimes, FaUserCircle, FaUserPlus } from 'react-icons/fa';
 
-// const userRows = [
-//   { userId: "U001", userName: "Rahul Kumar", vendorName: "Infosys" },
-//   { userId: "U002", userName: "Sneha Patel", vendorName: "TCS" },
-//   { userId: "U003", userName: "Ryan Jose", vendorName: "Wipro" },
-// ];
+// A simple toast notification function
+const showToast = (message, type = 'info') => {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  const bgColor = type === 'success' ? '#4ade80' : '#ef4444';
+  toast.style.cssText = `
+    position: fixed; top: 20px; right: 20px; z-index: 10000;
+    background: ${bgColor}; color: white; padding: 12px 16px;
+    border-radius: 6px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => document.body.removeChild(toast), 3000);
+};
 
-// export default function UserTable() {
-//   return (
-//     <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
-//       <div className="flex-1 flex flex-col items-center justify-start pt-8">
-//         <div className="w-full flex flex-col items-center">
-//           <div className="border border-gray-300 rounded bg-white shadow"
-//                style={{ marginLeft: 24, marginRight: 24, width: "calc(100vw - 220px)", minWidth: 300, padding: "0.5rem", minHeight: "220px", maxHeight: "70vh", overflow: "hidden", marginBottom: "0px" }}>
-//             <div
-//               style={{
-//                 overflowX: "auto",
-//                 overflowY: "auto",
-//                 maxHeight: "50vh",
-//                 minHeight: "70px",
-//                 width: "100%",
-//               }}
-//             >
-//               <table style={{ borderCollapse: "collapse", fontSize: "12px", minWidth: "650px", width: "max-content" }}>
-//                 <thead style={{ position: "sticky", top: 0, backgroundColor: "white", zIndex: 10 }}>
-//                   <tr>
-//                     <th style={{ border: "1px solid #d1d5db", padding: "8px", fontSize: "13px", minWidth: 160, fontWeight: "bold", color: "#1e40af", textAlign: "left", whiteSpace: "nowrap" }}>User ID</th>
-//                     <th style={{ border: "1px solid #d1d5db", padding: "8px", fontSize: "13px", minWidth: 180, fontWeight: "bold", color: "#1e40af", textAlign: "left", whiteSpace: "nowrap" }}>User Name</th>
-//                     <th style={{ border: "1px solid #d1d5db", padding: "8px", fontSize: "13px", minWidth: 180, fontWeight: "bold", color: "#1e40af", textAlign: "left", whiteSpace: "nowrap" }}>Vendor Name</th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {userRows.map((row, idx) => (
-//                     <tr key={row.userId}
-//                       style={{
-//                         backgroundColor: idx % 2 === 0 ? "#f9fafb" : "white",
-//                       }}>
-//                       <td style={{ border: "1px solid #e5e7eb", padding: "8px", minWidth: 160 }}>{row.userId}</td>
-//                       <td style={{ border: "1px solid #e5e7eb", padding: "8px", minWidth: 180 }}>{row.userName}</td>
-//                       <td style={{ border: "1px solid #e5e7eb", padding: "8px", minWidth: 180 }}>{row.vendorName}</td>
-//                     </tr>
-//                   ))}
-//                 </tbody>
-//               </table>
-//             </div>
-//             {/* <div className="flex gap-8 justify-start items-center mt-3 pt-2 border-t border-gray-200 w-full pl-2">
-//               <span className="text-xs font-medium text-blue-700">Users</span>
-//             </div> */}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
 
-import React, { useState, useEffect } from 'react';
-import { FaUserPlus, FaSearch, FaTimes, FaEdit } from 'react-icons/fa';
-
-// --- Reusable User Modal Component (for Create and Edit) ---
-const UserModal = ({ onSave, onCancel, user = null }) => {
-    const [username, setUsername] = useState(user ? user.userName : '');
-    const [vendor, setVendor] = useState(user ? user.vendorName : '');
+// --- Password Modal Component ---
+const PasswordModal = ({ user, type, onClose }) => {
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const isEditing = !!user;
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!username || !vendor) {
-            setError('Username and Vendor are required.');
+        if (newPassword !== confirmPassword) {
+            setError('New passwords do not match.');
             return;
         }
+        if (newPassword.length < 5) {
+            setError('Password must be at least 6 characters long.');
+            return;
+        }
+
+        setIsLoading(true);
         setError('');
-        onSave({ 
-            userId: user ? user.userId : null, 
-            userName: username, 
-            vendorName: vendor 
-        });
+
+        const isReset = type === 'reset';
+        const url = `https://timesheet-subk.onrender.com/api/User/${user.userId}/${isReset ? 'reset-password' : 'update-password'}`;
+        const body = isReset ? { newPassword } : { currentPassword: oldPassword, newPassword };
+
+        try {
+            const response = await fetch(url, {
+                method: isReset ? 'POST' : 'PUT', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            if (response.ok) {
+                showToast('Password updated successfully!', 'success');
+                onClose();
+                return; 
+            }
+            
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || `Request failed with status ${response.status}`);
+
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-800">{isEditing ? 'Edit User' : 'Create New User'}</h2>
-                    <button onClick={onCancel} className="text-gray-500 hover:text-gray-800"><FaTimes size={20} /></button>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {type === 'reset' ? `Reset Password for ${user.username}` : 'Update Your Password'}
+                    </h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-800"><FaTimes size={20} /></button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {type === 'update' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Current Password</label>
+                            <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
+                        </div>
+                    )}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Username</label>
-                        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg" required />
+                        <label className="block text-sm font-medium text-gray-700">New Password</label>
+                        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Vendor</label>
-                        <input type="text" value={vendor} onChange={(e) => setVendor(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg" required />
+                        <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full mt-1 px-3 py-2 border rounded-lg" required />
                     </div>
                     {error && <p className="text-sm text-red-600">{error}</p>}
-                    <div className="flex justify-end space-x-3 pt-4">
-                        <button type="button" onClick={onCancel} className="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg">Cancel</button>
-                        <button type="submit" className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg">{isEditing ? 'Update' : 'Create'}</button>
+                    <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isLoading} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg w-full disabled:opacity-50">
+                            {isLoading ? 'Updating...' : 'Update Password'}
+                        </button>
                     </div>
                 </form>
             </div>
@@ -107,101 +101,242 @@ const UserModal = ({ onSave, onCancel, user = null }) => {
     );
 };
 
+
+// --- Skeleton Loader for Profile Card ---
+const ProfileCardSkeleton = () => (
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
+        <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+                {/* Skeleton Header */}
+                <div className="p-8">
+                    <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                        <div className="w-24 h-24 bg-gray-200 rounded-full ring-4 ring-gray-200"></div>
+                        <div className="w-full sm:w-auto">
+                            <div className="h-9 bg-gray-200 rounded w-3/4 sm:w-64 mx-auto sm:mx-0"></div>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                {/* Skeleton Details */}
+                <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex items-center space-x-3">
+                            <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div className="w-full space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                {/* Skeleton Actions */}
+                <div className="p-8 bg-gray-50 border-t">
+                    <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+                    <div className="h-10 bg-gray-200 rounded-lg w-48"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+
+// --- Main UserTable Component ---
 export default function UserTable() {
     const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState(null);
-
-    // --- Using static data as requested ---
-    useEffect(() => {
-        const staticUsers = [
-            { userId: "U001", userName: "Rahul Kumar", vendorName: "Infosys" },
-            { userId: "U002", userName: "Sneha Patel", vendorName: "TCS" },
-            { userId: "U003", userName: "Ryan Jose", vendorName: "Wipro" },
-        ].map(user => ({
-            ...user,
-            avatarUrl: `https://api.dicebear.com/8.x/micah/svg?seed=${user.userName.split(' ')[0]}`
-        }));
-        setUsers(staticUsers);
-    }, []);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isAdmin, setIsAdmin] = useState(false);
     
-    const handleSaveUser = (userData) => {
-        console.log("Saving user:", userData);
-        if (userData.userId) {
-            setUsers(users.map(u => u.userId === userData.userId ? { ...u, ...userData } : u));
-        } else {
-            const newUser = { ...userData, userId: `U${users.length + 1}`, avatarUrl: `https://api.dicebear.com/8.x/micah/svg?seed=${userData.userName}` };
-            setUsers([...users, newUser]);
-        }
-        setIsModalOpen(false);
-        setEditingUser(null);
-    };
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [modalType, setModalType] = useState('');
 
-    const openModal = (user = null) => {
-        setEditingUser(user);
+    useEffect(() => {
+        const userInfo = localStorage.getItem('currentUser');
+        if (userInfo) {
+            try {
+                const parsedUser = JSON.parse(userInfo);
+                setCurrentUser(parsedUser);
+                if (parsedUser.role && parsedUser.role.toLowerCase() === 'admin') {
+                    setIsAdmin(true);
+                }
+            } catch (e) { console.error("Failed to parse user info", e); }
+        } else {
+          setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!currentUser) return;
+        
+        const fetchUsers = async () => {
+            const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
+            const apiUrl = isAdmin ? baseApiUrl : `${baseApiUrl}/${currentUser.userId}`;
+
+            if (!isAdmin && !currentUser.userId) {
+                setError("Your user ID could not be found.");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                setUsers(Array.isArray(data) ? data : [data]);
+            } catch (e) {
+                setError(e.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, [currentUser, isAdmin]);
+
+    const openPasswordModal = (user, type) => {
+        setSelectedUser(user);
+        setModalType(type);
         setIsModalOpen(true);
     };
 
-    const filteredUsers = users.filter(user =>
-        user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.vendorName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const getInitials = (name = '') => {
+        const names = name.split(' ');
+        if (names.length > 1) {
+            return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+    
+    // --- Admin View ---
+    if (isAdmin) {
+        return (
+            <>
+                {isModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsModalOpen(false)} />}
+                
+                <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-52 pr-4">
+                    <div className="flex-1 flex flex-col items-center justify-start pt-8">
+                        <div className="w-full max-w-7xl mx-auto">
+                            <div className="flex justify-between items-center mb-6">
+                                <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
+                                <button className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 flex items-center gap-2">
+                                    <FaUserPlus /> Create User
+                                </button>
+                            </div>
 
+                            <div className="bg-white shadow-lg rounded-2xl overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {loading ? (
+                                            <tr><td colSpan="6" className="text-center py-4">Loading users...</td></tr>
+                                        ) : error ? (
+                                            <tr><td colSpan="6" className="text-center py-4 text-red-500">Error: {error}</td></tr>
+                                        ) : (
+                                            users.map(user => (
+                                                <tr key={user.userId}>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.fullName}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{user.role}</td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                            {user.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                        <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-900 flex items-center gap-1.5">
+                                                            <FaKey size={12} /> Reset Password
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    // --- Non-Admin (User & PM) View: Profile Card ---
+    if (loading) return <ProfileCardSkeleton />;
+    if (error) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p className="text-red-500">Error: {error}</p></div>;
+    if (users.length === 0) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p>Could not find user profile.</p></div>;
+
+    const user = users[0];
     return (
         <>
-            {isModalOpen && <UserModal onSave={handleSaveUser} onCancel={() => setIsModalOpen(false)} user={editingUser} />}
-            <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
-                <div className="flex-1 flex flex-col items-center justify-start pt-8">
-                    <div className="w-full max-w-6xl mx-auto">
-                        <div className="flex justify-between items-center mb-6">
-                            <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-                            <button onClick={() => openModal()} className="bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 flex items-center gap-2">
-                                <FaUserPlus /> Create User
-                            </button>
-                        </div>
-                        <div className="relative mb-4">
-                            <FaSearch className="absolute top-3 left-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search by name or vendor..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+            {isModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsModalOpen(false)} />}
+            <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
+                <div className="max-w-4xl mx-auto">
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                        {/* Profile Header */}
+                        <div className="p-8">
+                            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
+                                <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
+                                    <span className="text-4xl font-bold text-blue-600">{getInitials(user.fullName)}</span>
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center sm:text-left">{user.fullName}</h1>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                                        <th className="relative px-6 py-3"><span className="sr-only">Edit</span></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {loading ? (
-                                        <tr><td colSpan="3" className="text-center py-4">Loading...</td></tr>
-                                    ) : (
-                                        filteredUsers.map(user => (
-                                            <tr key={user.userId}>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-4">
-                                                    <img src={user.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full" />
-                                                    {user.userName}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.vendorName}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <button onClick={() => openModal(user)} className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1">
-                                                        <FaEdit /> Edit
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                        <hr />
+
+                        {/* Profile Details */}
+                        <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="flex items-center space-x-3">
+                                <FaUserCircle className="h-6 w-6 text-gray-400" />
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-500">Username</label>
+                                    <p className="text-lg text-gray-800">{user.username}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <FaEnvelope className="h-6 w-6 text-gray-400" />
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-500">Email Address</label>
+                                    <p className="text-lg text-gray-800">{user.email}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <FaShieldAlt className="h-6 w-6 text-gray-400" />
+                                <div>
+                                    <label className="text-sm font-semibold text-gray-500">Role</label>
+                                    <p className="text-lg text-gray-800 capitalize">{user.role}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-sm font-semibold text-gray-500 mb-2 block">Status</label>
+                                <span className={`px-3 py-1 text-sm font-semibold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                    {user.isActive ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Profile Actions */}
+                        <div className="p-8 bg-gray-50 border-t">
+                            <h3 className="text-lg font-semibold text-gray-700 mb-4">Account Actions</h3>
+                            <button onClick={() => openPasswordModal(user, 'update')} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                                <FaKey size={14} />
+                                <span>Update Password</span>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -7170,7 +7170,7 @@ export default function Approval() {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  // const [actionLoading, setActionLoading] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedNotifyRows, setSelectedNotifyRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -7184,13 +7184,19 @@ export default function Approval() {
   const [selectedResourceId, setSelectedResourceId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [approveLoading, setApproveLoading] = useState(false);
+  const [rejectLoading, setRejectLoading] = useState(false);
 
   const timesheetDetailsRef = useRef(null);
   const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
-  const [selectedTimesheetData, setSelectedTimesheetData] = useState(null);
+  // const [selectedTimesheetData, setSelectedTimesheetData] = useState(null);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const [userIpAddress, setUserIpAddress] = useState("");
+  const [selectedTimesheetDate, setSelectedTimesheetDate] = useState(null);
+  const [searchStatus, setSearchStatus] = useState("");
+
+
 
   useEffect(() => {
     const today = new Date();
@@ -7492,24 +7498,61 @@ const isApprovedRowRejectableOnly = (row) => {
     }, 100);
   };
 
-  const handleRowClick = (rowData, event) => {
-    if (event?.target?.type === 'checkbox') {
-      return;
+  // const handleRowClick = (rowData, event) => {
+  //   if (event?.target?.type === 'checkbox') {
+  //     return;
+  //   }
+    
+  //   setSelectedResourceId(rowData["Employee ID"]);
+  //   setCurrentSelectedRowId(rowData.id);
+    
+  //   setTimeout(() => {
+  //     if (timesheetDetailsRef.current) {
+  //       timesheetDetailsRef.current.scrollIntoView({ 
+  //         behavior: 'smooth', 
+  //         block: 'start',
+  //         inline: 'nearest'
+  //       });
+  //     }
+  //   }, 100);
+  // };
+  
+//   const handleRowClick = (rowData) => {
+//   setSelectedResourceId(rowData['Employee ID']);
+//   setSelectedTimesheetDate(rowData.originalDate); // Add this line
+//   setCurrentSelectedRowId(rowData.id);
+// }
+
+// const handleRowClick = (rowData, event) => {
+//   if (event?.target?.type === 'checkbox') return;
+  
+//   setSelectedResourceId(rowData['Employee ID']);
+//   setSelectedTimesheetDate(rowData.originalDate); // Add this line  
+//   setCurrentSelectedRowId(rowData.id);
+  
+//   setTimeout(() => {
+//     if (timesheetDetailsRef.current) {
+//       timesheetDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+//     }
+//   }, 100);
+// };
+
+const handleRowClick = (rowData, event) => {
+  if (event?.target?.type === 'checkbox') return;
+  
+  setSelectedResourceId(rowData["Employee ID"]);
+  setSelectedTimesheetDate(rowData.originalDate); // Pass the specific date
+  setCurrentSelectedRowId(rowData.id);
+  
+  setTimeout(() => {
+    if (timesheetDetailsRef.current) {
+      timesheetDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
     }
-    
-    setSelectedResourceId(rowData["Employee ID"]);
-    setCurrentSelectedRowId(rowData.id);
-    
-    setTimeout(() => {
-      if (timesheetDetailsRef.current) {
-        timesheetDetailsRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
-        });
-      }
-    }, 100);
-  };
+  }, 100);
+};
+
+
+
 
   const handleCloseDetails = () => {
     setSelectedResourceId(null);
@@ -7549,6 +7592,7 @@ const isApprovedRowRejectableOnly = (row) => {
     setSelectAll(false);
     setNotifySelectAll(false);
     setUnifiedSelectAll(false);
+    setSearchStatus(""); // Reset status filter
   }, []);
 
   useEffect(() => {
@@ -7770,45 +7814,125 @@ const fetchData = async () => {
   //   }
   // };
 
-  const getFilteredRows = () => {
-    let filtered = rows;
-    if (!Array.isArray(filtered)) return [];
+//   const getFilteredRows = () => {
+//     let filtered = rows;
+//     if (!Array.isArray(filtered)) return [];
 
-    // if (searchDate) {
-    //   const searchDateFormatted = formatDateFromInput(searchDate);
-    //   filtered = filtered.filter((row) => {
-    //     const rowDate = row["Date"];
-    //     return rowDate === searchDateFormatted;
-    //   });
-    // }
+//     // if (searchDate) {
+//     //   const searchDateFormatted = formatDateFromInput(searchDate);
+//     //   filtered = filtered.filter((row) => {
+//     //     const rowDate = row["Date"];
+//     //     return rowDate === searchDateFormatted;
+//     //   });
+//     // }
 
-    if (searchDate) {
-  const searchDateFormatted = formatDateFromInput(searchDate);
-  filtered = filtered.filter(row => {
-    const rowDate = row["Timesheet Date"];  // Use correct field name
-    return rowDate === searchDateFormatted;
-  });
-}
+//     if (searchDate) {
+//   const searchDateFormatted = formatDateFromInput(searchDate);
+//   filtered = filtered.filter(row => {
+//     const rowDate = row["Timesheet Date"];  // Use correct field name
+//     return rowDate === searchDateFormatted;
+//   });
+// }
 
 
-    if (searchEmployeeId.trim()) {
-      filtered = filtered.filter((row) =>
-        (row["Employee ID"] || "")
-          .toLowerCase()
-          .includes(searchEmployeeId.trim().toLowerCase())
-      );
-    }
+//     if (searchEmployeeId.trim()) {
+//       filtered = filtered.filter((row) =>
+//         (row["Employee ID"] || "")
+//           .toLowerCase()
+//           .includes(searchEmployeeId.trim().toLowerCase())
+//       );
+//     }
 
-    if (searchEmployeeName.trim()) {
-      filtered = filtered.filter((row) =>
-        (row["Name"] || "")
-          .toLowerCase()
-          .includes(searchEmployeeName.trim().toLowerCase())
-      );
-    }
+//     if (searchEmployeeName.trim()) {
+//       filtered = filtered.filter((row) =>
+//         (row["Name"] || "")
+//           .toLowerCase()
+//           .includes(searchEmployeeName.trim().toLowerCase())
+//       );
+//     }
 
-    return getSortedRows(filtered);
-  };
+//     return getSortedRows(filtered);
+//   };
+
+// const getFilteredRows = () => {
+//   let filtered = rows;
+//   if (!Array.isArray(filtered)) return [];
+
+//   if (searchDate) {
+//     const searchDateFormatted = formatDateFromInput(searchDate);
+//     filtered = filtered.filter(row => {
+//       const rowDate = row["Timesheet Date"];
+//       return rowDate === searchDateFormatted;
+//     });
+//   }
+
+//   if (searchEmployeeId.trim()) {
+//     filtered = filtered.filter((row) =>
+//       (row["Employee ID"] || "")
+//         .toLowerCase()
+//         .includes(searchEmployeeId.trim().toLowerCase())
+//     );
+//   }
+
+//   if (searchEmployeeName.trim()) {
+//     filtered = filtered.filter((row) =>
+//       (row["Name"] || "")
+//         .toLowerCase()
+//         .includes(searchEmployeeName.trim().toLowerCase())
+//     );
+//   }
+
+//   // Add status filtering
+//   if (searchStatus.trim()) {
+//     filtered = filtered.filter((row) => {
+//       const rowStatus = (row["Status"] || row.status || "").toLowerCase();
+//       return rowStatus === searchStatus.toLowerCase();
+//     });
+//   }
+
+//   return getSortedRows(filtered);
+// };
+
+const getFilteredRows = () => {
+  let filtered = rows;
+  if (!Array.isArray(filtered)) return [];
+
+  if (searchDate) {
+    const searchDateFormatted = formatDateFromInput(searchDate);
+    filtered = filtered.filter(row => {
+      const rowDate = row["Timesheet Date"];
+      return rowDate === searchDateFormatted;
+    });
+  }
+
+  if (searchEmployeeId.trim()) {
+    filtered = filtered.filter((row) =>
+      (row["Employee ID"] || "")
+        .toLowerCase()
+        .includes(searchEmployeeId.trim().toLowerCase())
+    );
+  }
+
+  if (searchEmployeeName.trim()) {
+    filtered = filtered.filter((row) =>
+      (row["Name"] || "")
+        .toLowerCase()
+        .includes(searchEmployeeName.trim().toLowerCase())
+    );
+  }
+
+  // Add case-insensitive status filtering
+  if (searchStatus.trim()) {
+    filtered = filtered.filter((row) => {
+      const rowStatus = (row["Status"] || row.status || "").toLowerCase();
+      return rowStatus.includes(searchStatus.trim().toLowerCase());
+    });
+  }
+
+  return getSortedRows(filtered);
+};
+
+
 
   const filteredRows = getFilteredRows();
 
@@ -7946,7 +8070,7 @@ const fetchData = async () => {
       return;
     }
     try {
-      setActionLoading(true);
+      // setActionLoading(true);
       const requestBody = selectedNotifyRows.map((row) => ({
         requestType: "TIMESHEET",
         requesterId: 1,
@@ -7993,7 +8117,7 @@ const fetchData = async () => {
     } catch (error) {
       showToast("Failed to send notifications. Please try again.", "error");
     } finally {
-      setActionLoading(false);
+      // setActionLoading(false);
     }
   };
 
@@ -8113,7 +8237,8 @@ const fetchData = async () => {
   };
 
   const performBulkApprove = async (reason) => {
-  setActionLoading(true);
+  // setActionLoading(true);
+  setApproveLoading(true); // Use specific loading state
   try {
     const requestBody = buildBulkRequestBody(
       selectedRows,
@@ -8177,12 +8302,14 @@ const fetchData = async () => {
       "error"
     );
   } finally {
-    setActionLoading(false);
+    // setActionLoading(false);
+    setApproveLoading(false);
   }
 };
 
 const performBulkReject = async (reason) => {
-  setActionLoading(true);
+  // setActionLoading(true);
+  setRejectLoading(true); // Use specific loading state
   try {
     const requestBody = buildBulkRequestBody(
       selectedRows,
@@ -8246,7 +8373,8 @@ const performBulkReject = async (reason) => {
       "error"
     );
   } finally {
-    setActionLoading(false);
+    // setActionLoading(false);
+    setRejectLoading(false);
   }
 };
 
@@ -8493,6 +8621,42 @@ const performBulkReject = async (reason) => {
                   className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
+
+              {/* <div className="flex items-center">
+  <label htmlFor="filterStatus" className="mr-2 text-xs font-semibold text-gray-600">
+    Status
+  </label>
+  <select
+    id="filterStatus"
+    value={searchStatus}
+    onChange={(e) => setSearchStatus(e.target.value)}
+    className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+  >
+    <option value="">All Statuses</option>
+    <option value="pending">Pending</option>
+    <option value="open">Open</option>
+    <option value="approved">Approved</option>
+    <option value="rejected">Rejected</option>
+    <option value="notified">Notified</option>
+    <option value="un-notified">Un-Notified</option>
+  </select>
+</div> */}
+
+<div className="flex items-center">
+  <label htmlFor="filterStatus" className="mr-2 text-xs font-semibold text-gray-600">
+    Status
+  </label>
+  <input
+    type="text"
+    id="filterStatus"
+    value={searchStatus}
+    onChange={(e) => setSearchStatus(e.target.value)}
+    placeholder="Type status..."
+    className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 w-32"
+  />
+</div>
+
+
             </div>
           </fieldset>
 
@@ -8517,65 +8681,45 @@ const performBulkReject = async (reason) => {
   <div className="flex gap-2">
     {isAdmin && (
       <>
-        {(() => {
-          // const approveEligibleCount = selectedRows.filter(row => 
-          //   (row["Status"] || "").toLowerCase() !== "approved"
-          // ).length;
-          
-          // const hasApprovedSelected = selectedRows.some(row => 
-          //   (row["Status"] || "").toLowerCase() === "approved"
-          // );
+       
+{(() => {
+  const approveEligibleCount = selectedRows.filter(row => 
+    row["Status"]?.toLowerCase() !== "approved" && 
+    row["Status"]?.toLowerCase() !== "rejected"
+  ).length;
 
-//           const approveEligibleCount = selectedRows.filter(row => row["Status"]?.toLowerCase() !== "approved" && row["Status"]?.toLowerCase() !== "rejected").length;
-// const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
+  const rejectEligibleCount = selectedRows.filter(row => 
+    row["Status"]?.toLowerCase() !== "rejected"
+  ).length;
 
-const approveEligibleCount = selectedRows.filter(row => 
-  row["Status"]?.toLowerCase() !== "approved" && 
-  row["Status"]?.toLowerCase() !== "rejected"
-).length;
+  const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
 
-const rejectEligibleCount = selectedRows.filter(row => 
-  row["Status"]?.toLowerCase() !== "rejected"
-).length;
-
-const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
-const hasOnlyApprovedSelected = selectedRows.every(row => row["Status"]?.toLowerCase() === "approved");
-
-
-
-          return (
-            <>
-              {/* Always show Approve button but disable when approved rows are selected */}
-              <button
-                onClick={handleBulkApproveClick}
-                disabled={
-                  actionLoading || 
-                  approveEligibleCount === 0 || 
-                  hasApprovedSelected
-                }
-                className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {actionLoading ? "Processing..." : `Approve (${approveEligibleCount})`}
-              </button>
-              
-              {/* Always show Reject button when rows are selected */}
-              {/* <button
-                onClick={handleBulkRejectClick}
-                disabled={actionLoading || selectedRows.length === 0}
-                className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {actionLoading ? "Processing..." : `Reject (${selectedRows.length})`}
-              </button> */}
-              <button
-  onClick={handleBulkRejectClick}
-  disabled={actionLoading || rejectEligibleCount === 0}
-  className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
->
-  {actionLoading ? "Processing..." : `Reject (${rejectEligibleCount})`}
-</button>
-            </>
-          );
-        })()}
+  return (
+    <>
+      {/* Approve button */}
+      <button
+        onClick={handleBulkApproveClick}
+        disabled={
+          approveLoading || 
+          approveEligibleCount === 0 || 
+          hasApprovedSelected
+        }
+        className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {approveLoading ? "Processing..." : `Approve (${approveEligibleCount})`}
+      </button>
+      
+      {/* Reject button */}
+      <button
+        onClick={handleBulkRejectClick}
+        disabled={rejectLoading || rejectEligibleCount === 0}
+        className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {rejectLoading ? "Processing..." : `Reject (${rejectEligibleCount})`}
+      </button>
+    </>
+  );
+})()}
       </>
     )}
   </div>
@@ -8789,9 +8933,13 @@ const hasOnlyApprovedSelected = selectedRows.every(row => row["Status"]?.toLower
             >
               <TimesheetApprovalModal
                 resourceId={selectedResourceId}
+                // timesheetDate={searchDate}
+                 timesheetDate={selectedTimesheetDate}
                 onClose={() => {
                   setSelectedResourceId(null);
                   setCurrentSelectedRowId(null);
+                   setSelectedTimesheetDate(null);
+                  // handleCloseDetails
                 }}
               />
             </div>

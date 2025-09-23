@@ -292,6 +292,7 @@ const copyLines = () => {
 };
     const handleSave = async () => {
         setIsCurrentlySaving(true);
+        const now = new Date().toISOString();
         const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
         lines.forEach(line => { days.forEach(day => { finalTotals[day] += parseFloat(line.hours[day]) || 0; }); });
         const invalidDay = days.find(day => finalTotals[day] > 24);
@@ -322,7 +323,26 @@ const copyLines = () => {
             if (!initialLine) {
                 const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
                 if (totalHours > 0) {
-                    const payload = { Description: currentLine.description || 'New Timesheet Line', ProjId: currentLine.project || '', Plc: currentLine.plc || '', PayType: currentLine.payType || 'SR', PoNumber: currentLine.poNumber || '', RlseNumber: currentLine.rlseNumber || "0", Resource_Id: String(timesheetData["Employee ID"]), PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0, Timesheet_Date: new Date(timesheetData.Date).toISOString(), CreatedBy: String(timesheetData["Employee ID"]), TimesheetHours: days.map(day => ({ Ts_Date: weekDates[day], Hours: currentLine.hours[day] || 0 })) };
+                    const payload = {
+    Description: currentLine.description || 'New Timesheet Line',
+    ProjId: currentLine.project || '',
+    Plc: currentLine.plc || '',
+    WorkOrder: currentLine.wa_Code || '', // ✅ Added this line
+    pm_User_Id: currentLine.pmUserID || null, // ✅ Added this line
+    PayType: currentLine.payType || 'SR',
+    PoNumber: currentLine.poNumber || '',
+    RlseNumber: currentLine.rlseNumber || "0",
+    Resource_Id: String(timesheetData["Employee ID"]),
+    PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+    Timesheet_Date: new Date(timesheetData.Date).toISOString(),
+    CreatedBy: String(timesheetData["Employee ID"]),
+    UpdatedAt: now, // ✅ Added this line
+    UpdatedBy: String(timesheetData["Employee ID"]),
+    TimesheetHours: days.map(day => ({
+        Ts_Date: weekDates[day],
+        Hours: currentLine.hours[day] || 0
+    }))
+};
                     promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
                 }
                 return;
