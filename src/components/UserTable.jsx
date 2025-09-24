@@ -22,7 +22,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
         fullName: '',
         email: '',
         password: '',
-        role: 'user', // Default role
+        role: 'user',
     });
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +59,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
             }
             
             showToast('User created successfully!', 'success');
-            onUserCreated(); // Refresh the user list
+            onUserCreated();
             onClose();
 
         } catch (err) {
@@ -213,7 +213,6 @@ const ProfileCardSkeleton = () => (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
         <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-                {/* Skeleton Header */}
                 <div className="p-8">
                     <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
                         <div className="w-24 h-24 bg-gray-200 rounded-full ring-4 ring-gray-200"></div>
@@ -223,7 +222,6 @@ const ProfileCardSkeleton = () => (
                     </div>
                 </div>
                 <hr />
-                {/* Skeleton Details */}
                 <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="flex items-center space-x-3">
@@ -235,7 +233,6 @@ const ProfileCardSkeleton = () => (
                         </div>
                     ))}
                 </div>
-                {/* Skeleton Actions */}
                 <div className="p-8 bg-gray-50 border-t">
                     <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
                     <div className="h-10 bg-gray-200 rounded-lg w-48"></div>
@@ -254,37 +251,11 @@ export default function UserTable() {
     const [currentUser, setCurrentUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     
-    // State for modals
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [modalType, setModalType] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-    const fetchUsers = async () => {
-        if (!currentUser) return;
-
-        const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
-        const apiUrl = isAdmin ? baseApiUrl : `${baseApiUrl}/${currentUser.userId}`;
-
-        if (!isAdmin && !currentUser.userId) {
-            setError("Your user ID could not be found.");
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const data = await response.json();
-            setUsers(Array.isArray(data) ? data : [data]);
-        } catch (e) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
         const userInfo = localStorage.getItem('currentUser');
@@ -302,6 +273,40 @@ export default function UserTable() {
     }, []);
 
     useEffect(() => {
+        const fetchUsers = async () => {
+            if (!currentUser) return;
+
+            const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
+            let apiUrl;
+
+            if (isAdmin) {
+                apiUrl = baseApiUrl;
+            } else {
+                // **FIX**: Check for userId and fall back to approvalUserId to be more robust.
+                const userIdToFetch = currentUser.userId || currentUser.approvalUserId;
+
+                if (userIdToFetch) {
+                    apiUrl = `${baseApiUrl}/${userIdToFetch}`;
+                } else {
+                    setError("Your user ID could not be found.");
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            try {
+                setLoading(true);
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                setUsers(Array.isArray(data) ? data : [data]);
+            } catch (e) {
+                setError(e.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchUsers();
     }, [currentUser, isAdmin, refreshTrigger]);
 
@@ -409,7 +414,6 @@ export default function UserTable() {
             <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                        {/* Profile Header */}
                         <div className="p-8">
                             <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
                                 <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center ring-4 ring-blue-200">
@@ -423,7 +427,6 @@ export default function UserTable() {
 
                         <hr />
 
-                        {/* Profile Details */}
                         <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="flex items-center space-x-3">
                                 <FaUserCircle className="h-6 w-6 text-gray-400" />
@@ -454,7 +457,6 @@ export default function UserTable() {
                             </div>
                         </div>
 
-                        {/* Profile Actions */}
                         <div className="p-8 bg-gray-50 border-t">
                             <h3 className="text-lg font-semibold text-gray-700 mb-4">Account Actions</h3>
                             <button onClick={() => openPasswordModal(user, 'update')} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">

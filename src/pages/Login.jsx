@@ -88,7 +88,7 @@ export default function Login() {
         showToast(`Welcome ${userInfo.name || 'User'}! Redirecting...`, "success");
         
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate("/dashboard/timesheet");
         }, 1000);
 
       } else {

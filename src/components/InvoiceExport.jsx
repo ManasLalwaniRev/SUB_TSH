@@ -1,2297 +1,735 @@
-// import React, { useState, useEffect } from "react";
-// import { Receipt, Search, Filter, Download, Calendar } from "lucide-react";
+// import React, { useRef } from "react";
+// import logoImg from "../assets/image.png";
+// import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
 
-// export default function InvoiceExport() {
-//     const [invoices, setInvoices] = useState([]);
-//     const [filteredInvoices, setFilteredInvoices] = useState([]);
-//     const [loading, setLoading] = useState(true);
-//     const [error, setError] = useState(null);
-//     const [searchTerm, setSearchTerm] = useState("");
-//     const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
+//   const invoiceRef = useRef();
 
-//     // Fetch invoices from API
-//     useEffect(() => {
-//         const fetchInvoices = async () => {
-//             try {
-//                 setLoading(true);
-//                 const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
-                
-//                 if (!response.ok) {
-//                     throw new Error(`HTTP error! status: ${response.status}`);
-//                 }
-                
-//                 const data = await response.json();
-//                 setInvoices(data);
-//                 setFilteredInvoices(data);
-//             } catch (err) {
-//                 console.error('Error fetching invoices:', err);
-//                 setError(err.message || 'Failed to fetch invoices');
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
+//   if (!data || !Array.isArray(data) || data.length === 0) {
+//     return <div>No invoice data available</div>;
+//   }
 
-//         fetchInvoices();
-//     }, []);
+//   const invoice = data[0];
 
-//     // Filter invoices based on search term and invoice number filter
-//     useEffect(() => {
-//         let filtered = invoices;
+//   // Group line items by PO Line for rendering with headers
+//   const groupedByPoLine = invoice.lineItems.reduce((groups, item) => {
+//     const key = item.poLine || "Other";
+//     if (!groups[key]) groups[key] = [];
+//     groups[key].push(item);
+//     return groups;
+//   }, {});
 
-//         // Filter by invoice number
-//         if (filterInvoiceNumber) {
-//             filtered = filtered.filter(invoice => 
-//                 invoice.invoiceNumber && 
-//                 invoice.invoiceNumber.toLowerCase().includes(filterInvoiceNumber.toLowerCase())
-//             );
-//         }
+//   // const handleDownloadPdf = async () => {
+//   //   if (!invoiceRef.current) return;
+//   //   const input = invoiceRef.current;
+//   //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+//   //   const imgData = canvas.toDataURL("image/png");
+//   //   const pdf = new jsPDF({
+//   //     orientation: "portrait",
+//   //     unit: "mm",
+//   //     format: "a4",
+//   //   });
+//   //   const pdfWidth = pdf.internal.pageSize.getWidth();
+//   //   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+//   //   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+//   //   pdf.save("invoice.pdf");
+//   // };
 
-//         // General search across all visible fields
-//         if (searchTerm) {
-//             filtered = filtered.filter(invoice => 
-//                 Object.values(invoice).some(value => 
-//                     value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-//                 )
-//             );
-//         }
-
-//         setFilteredInvoices(filtered);
-//     }, [invoices, searchTerm, filterInvoiceNumber]);
-
-//     // Format date helper
-//     const formatDate = (dateString) => {
-//         if (!dateString) return 'N/A';
-//         try {
-//             return new Date(dateString).toLocaleDateString('en-US', {
-//                 year: 'numeric',
-//                 month: 'short',
-//                 day: '2-digit'
-//             });
-//         } catch {
-//             return dateString;
-//         }
-//     };
-
-//     // Format currency helper
-//     const formatCurrency = (amount, currency = 'USD') => {
-//         if (!amount && amount !== 0) return 'N/A';
-//         try {
-//             return new Intl.NumberFormat('en-US', {
-//                 style: 'currency',
-//                 currency: currency || 'USD'
-//             }).format(amount);
-//         } catch {
-//             return `${currency || '$'} ${amount}`;
-//         }
-//     };
-
-//     // Export to CSV function
-//     const exportToCSV = () => {
-//         if (filteredInvoices.length === 0) {
-//             alert('No data to export');
-//             return;
-//         }
-
-//         const headers = ['Invoice Number', 'Invoice Date', 'Invoice Amount', 'Currency', 'Created At', 'Created By'];
-//         const csvContent = [
-//             headers.join(','),
-//             ...filteredInvoices.map(invoice => [
-//                 `"${invoice.invoiceNumber || ''}"`,
-//                 `"${formatDate(invoice.invoiceDate)}"`,
-//                 `"${invoice.invoiceAmount || 0}"`,
-//                 `"${invoice.currency || 'USD'}"`,
-//                 `"${formatDate(invoice.createdAt)}"`,
-//                 `"${invoice.createdBy || ''}"`
-//             ].join(','))
-//         ].join('\n');
-
-//         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-//         const link = document.createElement('a');
-//         const url = URL.createObjectURL(blob);
-//         link.setAttribute('href', url);
-//         link.setAttribute('download', `invoices_export_${new Date().toISOString().split('T')[0]}.csv`);
-//         link.style.visibility = 'hidden';
-//         document.body.appendChild(link);
-//         link.click();
-//         document.body.removeChild(link);
-//     };
-
-//     if (loading) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center">
-//                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-//                     <p className="text-gray-600">Loading invoices...</p>
-//                 </div>
-//             </div>
-//         );
+//   const handleDownloadPdf = async () => {
+//     if (!invoiceRef.current || !invoice) {
+//       console.warn("Invoice content or data is missing.");
+//       return;
 //     }
-
-//     if (error) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
-//                     <div className="text-red-600 mb-4">
-//                         <Receipt className="h-12 w-12 mx-auto mb-2" />
-//                         <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
-//                     </div>
-//                     <p className="text-red-700">{error}</p>
-//                     <button 
-//                         onClick={() => window.location.reload()} 
-//                         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-//                     >
-//                         Try Again
-//                     </button>
-//                 </div>
-//             </div>
-//         );
-//     }
-
-//     return (
-//         <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen">
-//             {/* Header */}
-//             <div className="bg-white shadow-sm border-b border-gray-200 p-6">
-//                 <div className="flex items-center justify-between">
-//                     <div className="flex items-center">
-//                         <Receipt className="h-8 w-8 text-green-600 mr-3" />
-//                         <div>
-//                             <h1 className="text-2xl font-bold text-gray-900">Invoice Export</h1>
-//                             <p className="text-gray-600">Manage and export invoice data</p>
-//                         </div>
-//                     </div>
-//                     <div className="flex items-center space-x-4">
-//                         {/* <span className="text-sm text-gray-600">
-//                             Total: {filteredInvoices.length} invoices
-//                         </span> */}
-//                         <button
-//                             onClick={exportToCSV}
-//                             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm"
-//                         >
-//                             <Download className="h-4 w-4 mr-2" />
-//                             Export
-//                         </button>
-//                     </div>
-//                 </div>
-//             </div>
-
-//             {/* Filters */}
-//             <div className="bg-white border-b border-gray-200 p-4">
-//                 <div className="flex items-center space-x-4">
-//                     {/* General Search */}
-//                     <div className="flex-1 relative">
-//                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                         <input
-//                             type="text"
-//                             placeholder="Search invoices..."
-//                             value={searchTerm}
-//                             onChange={(e) => setSearchTerm(e.target.value)}
-//                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-//                         />
-//                     </div>
-
-//                     {/* Invoice Number Filter */}
-//                     <div className="w-64 relative">
-//                         <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                         <input
-//                             type="text"
-//                             placeholder="Filter by Invoice Number"
-//                             value={filterInvoiceNumber}
-//                             onChange={(e) => setFilterInvoiceNumber(e.target.value)}
-//                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-//                         />
-//                     </div>
-
-//                     {/* Clear Filters */}
-//                     {(searchTerm || filterInvoiceNumber) && (
-//                         <button
-//                             onClick={() => {
-//                                 setSearchTerm("");
-//                                 setFilterInvoiceNumber("");
-//                             }}
-//                             className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-//                         >
-//                             Clear
-//                         </button>
-//                     )}
-//                 </div>
-//             </div>
-
-//             {/* Table */}
-//             <div className="flex-1 overflow-hidden">
-//                 <div className="h-full overflow-auto">
-//                     {filteredInvoices.length === 0 ? (
-//                         <div className="flex items-center justify-center h-64">
-//                             <div className="text-center text-gray-500">
-//                                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                                 <p className="text-lg font-medium">No invoices found</p>
-//                                 <p className="text-sm">Try adjusting your search or filter criteria</p>
-//                             </div>
-//                         </div>
-//                     ) : (
-//                         <table className="min-w-full bg-white">
-//                             <thead className="bg-gray-50 sticky top-0 z-10">
-//                                 <tr>
-//                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Invoice Number
-//                                     </th>
-//                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Invoice Date
-//                                     </th>
-//                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Amount
-//                                     </th>
-//                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Currency
-//                                     </th>
-//                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Created At
-//                                     </th>
-//                                     {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-//                                         Created By
-//                                     </th> */}
-//                                 </tr>
-//                             </thead>
-//                             <tbody className="divide-y divide-gray-200">
-//                                 {filteredInvoices.map((invoice, index) => (
-//                                     <tr key={invoice.invoiceId || index} className="hover:bg-gray-50 transition-colors">
-//                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-//                                             {invoice.invoiceNumber || 'N/A'}
-//                                         </td>
-//                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                             {formatDate(invoice.invoiceDate)}
-//                                         </td>
-//                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-//                                             {formatCurrency(invoice.invoiceAmount, invoice.currency)}
-//                                         </td>
-//                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-//                                                 {invoice.currency || 'USD'}
-//                                             </span>
-//                                         </td>
-//                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                             {formatDate(invoice.createdAt)}
-//                                         </td>
-//                                         {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                             {invoice.createdBy || 'N/A'}
-//                                         </td> */}
-//                                     </tr>
-//                                 ))}
-//                             </tbody>
-//                         </table>
-//                     )}
-//                 </div>
-//             </div>
-//         </div>
+//     const input = invoiceRef.current;
+//     const totalAmount = invoice.lineItems.reduce(
+//       (acc, line) => acc + line.amount,
+//       0
 //     );
-// }
-
-// import React, { useState, useEffect } from "react";
-// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
-// import InvoiceViewer from "./InvoiceViewer";
-
-// export default function InvoiceExport() {
-//     const [invoices, setInvoices] = useState([]);
-//     const [filteredInvoices, setFilteredInvoices] = useState([]);
-//     const [loading, setLoading] = useState(true);
-//     const [error, setError] = useState(null);
-//     const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
-//     const [selectedInvoices, setSelectedInvoices] = useState(new Set());
-//     const [selectAll, setSelectAll] = useState(false);
-//     const [previewModalVisible, setPreviewModalVisible] = useState(false);
-//     const [previewData, setPreviewData] = useState(null);
-
-//     // Fetch invoices from API
-//     useEffect(() => {
-//         const fetchInvoices = async () => {
-//             try {
-//                 setLoading(true);
-//                 const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
-                
-//                 if (!response.ok) {
-//                     throw new Error(`HTTP error! status: ${response.status}`);
-//                 }
-                
-//                 const data = await response.json();
-//                 setInvoices(data);
-//                 setFilteredInvoices(data);
-//             } catch (err) {
-//                 console.error('Error fetching invoices:', err);
-//                 setError(err.message || 'Failed to fetch invoices');
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-
-//         fetchInvoices();
-//     }, []);
-
-//     // Filter invoices based on invoice number filter
-//     useEffect(() => {
-//         let filtered = invoices;
-
-//         // Filter by invoice number
-//         if (filterInvoiceNumber) {
-//             filtered = filtered.filter(invoice => 
-//                 invoice.invoiceNumber && 
-//                 invoice.invoiceNumber.toLowerCase().includes(filterInvoiceNumber.toLowerCase())
-//             );
-//         }
-
-//         setFilteredInvoices(filtered);
-//         // Reset selections when filter changes
-//         setSelectedInvoices(new Set());
-//         setSelectAll(false);
-//     }, [invoices, filterInvoiceNumber]);
-
-// //     const getResponsiveTableStyle = () => {
-// //     return {
-// //         height: 'calc(100vh - 280px)', // Adjust 280px based on your header + filters + margins
-// //         minHeight: '250px',
-// //         maxHeight: '70vh'
-// //     };
-// // };
-
-//     // Format date helper - MM-DD-YYYY format
-   
-//     // Enhanced responsive table function
-// const getResponsiveTableStyle = () => {
-//     const headerHeight = 120; // Header section height
-//     const filterHeight = 80;  // Filter section height
-//     const marginPadding = 100; // Extra margins and padding
-    
-//     return {
-//         height: `calc(100vh - ${headerHeight + filterHeight + marginPadding}px)`,
-//         minHeight: '400px',
-//         maxHeight: '70vh'
+//     const invoicePayload = {
+//       invoiceNumber: invoice.invoiceId,
+//       invoiceDate: new Date(invoice.period).toISOString(),
+//       invoiceAmount: totalAmount,
+//       createdBy: "Test",
+//       updatedBy: "Test",
+//       invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+//         // timesheetLineNo: line.poLine,
+//         timesheetLineNo: line.line_No,
+//         mappedHours: line.hours,
+//         mappedAmount: line.amount,
+//         createdBy: "Test",
+//         updatedBy: "Test",
+//       })),
 //     };
-// };
-   
-//     const formatDate = (dateString) => {
-//         if (!dateString) return 'N/A';
-//         try {
-//             const date = new Date(dateString);
-//             const month = String(date.getMonth() + 1).padStart(2, '0');
-//             const day = String(date.getDate()).padStart(2, '0');
-//             const year = date.getFullYear();
-//             return `${month}-${day}-${year}`;
-//         } catch {
-//             return dateString;
-//         }
-//     };
-
-//     // Format currency helper
-//     const formatCurrency = (amount, currency = 'USD') => {
-//         if (!amount && amount !== 0) return 'N/A';
-//         try {
-//             return new Intl.NumberFormat('en-US', {
-//                 style: 'currency',
-//                 currency: currency || 'USD'
-//             }).format(amount);
-//         } catch {
-//             return `${currency || '$'} ${amount}`;
-//         }
-//     };
-
-//     // Handle select all checkbox
-//     const handleSelectAll = (checked) => {
-//         setSelectAll(checked);
-//         if (checked) {
-//             const allIds = new Set(filteredInvoices.map((invoice, index) => invoice.invoiceId || index));
-//             setSelectedInvoices(allIds);
-//         } else {
-//             setSelectedInvoices(new Set());
-//         }
-//     };
-
-//     // Handle individual checkbox
-//     const handleSelectInvoice = (invoiceId, checked) => {
-//         const newSelected = new Set(selectedInvoices);
-//         if (checked) {
-//             newSelected.add(invoiceId);
-//         } else {
-//             newSelected.delete(invoiceId);
-//         }
-//         setSelectedInvoices(newSelected);
-//         setSelectAll(newSelected.size === filteredInvoices.length);
-//     };
-
-//     // Handle preview click
-//     // const handlePreview = (invoice) => {
-//     //     // Transform invoice data to match InvoiceViewer expected format
-//     //     const transformedData = [{
-//     //         invoiceId: invoice.invoiceNumber,
-//     //         invoiceDate: formatDate(invoice.invoiceDate),
-//     //         period: formatDate(invoice.invoiceDate),
-//     //         currency: invoice.currency || 'USD',
-//     //         totalAmount: invoice.invoiceAmount || 0,
-//     //         lineItems: [
-//     //             {
-//     //                 poLine: "Default PO Line",
-//     //                 plc: "PLC001",
-//     //                 vendor: "Vendor",
-//     //                 employee: invoice.createdBy || "Employee",
-//     //                 hours: 40.00,
-//     //                 rate: (invoice.invoiceAmount || 0) / 40,
-//     //                 amount: invoice.invoiceAmount || 0,
-//     //                 line_No: 1
-//     //             }
-//     //         ],
-//     //         // Default values for other fields
-//     //         billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-//     //         buyer: "Clore, Heather J",
-//     //         purchaseOrderId: "2181218010",
-//     //         releaseNumber: "3",
-//     //         changeOrderNumber: "0",
-//     //         poStartEndDate: "12/10/18 to 12/08/24",
-//     //         remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-//     //         terms: "PAYNPD",
-//     //         amountDue: invoice.invoiceAmount || 0
-//     //     }];
-        
-//     //     setPreviewData(transformedData);
-//     //     setPreviewModalVisible(true);
-//     // };
-
-//     // Handle preview click
-// const handlePreview = async (invoice) => {
-//     try {
-//         // Set loading state if you want to show a loading indicator
-//         setPreviewModalVisible(true);
-//         setPreviewData(null); // Clear previous data
-        
-//         // Fetch data from the preview API
-//         const response = await fetch(
-//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(invoice.invoiceNumber)}`
-//         );
-        
-//         if (!response.ok) {
-//             throw new Error(`Failed to fetch invoice preview: ${response.status}`);
-//         }
-        
-//         const apiData = await response.json();
-        
-//         // Transform the API data to match InvoiceViewer expected format
-//         const transformedData = [{
-//             invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
-//             invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
-//             period: formatDate(apiData.period || apiData.invoiceDate || invoice.invoiceDate),
-//             currency: apiData.currency || invoice.currency || 'USD',
-//             totalAmount: apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0,
-            
-//             // Transform line items from API response
-//             lineItems: (apiData.lineItems || apiData.invoiceTimesheetLines || []).map((item, index) => ({
-//                 poLine: item.poLine || item.timesheetLineNo || "Default PO Line",
-//                 plc: item.plc || "PLC001",
-//                 vendor: item.vendor || "Vendor",
-//                 employee: item.employee || item.createdBy || "Employee",
-//                 hours: item.hours || item.mappedHours || 40.00,
-//                 rate: item.rate || (item.mappedAmount || 0) / (item.mappedHours || 40) || 0,
-//                 amount: item.amount || item.mappedAmount || 0,
-//                 line_No: item.line_No || item.timesheetLineNo || index + 1
-//             })),
-            
-//             // Use API data if available, otherwise use defaults
-//             billTo: apiData.billTo || "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-//             buyer: apiData.buyer || "Clore, Heather J",
-//             purchaseOrderId: apiData.purchaseOrderId || "2181218010",
-//             releaseNumber: apiData.releaseNumber || "3",
-//             changeOrderNumber: apiData.changeOrderNumber || "0",
-//             poStartEndDate: apiData.poStartEndDate || "12/10/18 to 12/08/24",
-//             remitTo: apiData.remitTo || "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-//             terms: apiData.terms || "PAYNPD",
-//             amountDue: apiData.amountDue || apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0
-//         }];
-        
-//         setPreviewData(transformedData);
-        
-//     } catch (error) {
-//         console.error('Error fetching invoice preview:', error);
-        
-//         // Show error message or fallback to original data
-//         alert(`Failed to load invoice preview: ${error.message}`);
-        
-//         // Optional: Use original transformation as fallback
-//         const fallbackData = [{
-//             invoiceId: invoice.invoiceNumber,
-//             invoiceDate: formatDate(invoice.invoiceDate),
-//             period: formatDate(invoice.invoiceDate),
-//             currency: invoice.currency || 'USD',
-//             totalAmount: invoice.invoiceAmount || 0,
-//             lineItems: [
-//                 {
-//                     poLine: "Default PO Line",
-//                     plc: "PLC001",
-//                     vendor: "Vendor",
-//                     employee: invoice.createdBy || "Employee",
-//                     hours: 40.00,
-//                     rate: (invoice.invoiceAmount || 0) / 40,
-//                     amount: invoice.invoiceAmount || 0,
-//                     line_No: 1
-//                 }
-//             ],
-//             billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-//             buyer: "Clore, Heather J",
-//             purchaseOrderId: "2181218010",
-//             releaseNumber: "3",
-//             changeOrderNumber: "0",
-//             poStartEndDate: "12/10/18 to 12/08/24",
-//             remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-//             terms: "PAYNPD",
-//             amountDue: invoice.invoiceAmount || 0
-//         }];
-        
-//         setPreviewData(fallbackData);
-//     }
-// };
-
-
-//     // Export to CSV function - only selected invoices
-//     // const exportToCSV = () => {
-//     //     const invoicesToExport = filteredInvoices.filter((invoice, index) => 
-//     //         selectedInvoices.has(invoice.invoiceId || index)
-//     //     );
-        
-//     //     if (invoicesToExport.length === 0) {
-//     //         alert('Please select invoices to export');
-//     //         return;
-//     //     }
-
-//     //     const headers = ['Invoice Number', 'Invoice Date', 'Invoice Amount', 'Currency', 'Created At'];
-//     //     const csvContent = [
-//     //         headers.join(','),
-//     //         ...invoicesToExport.map(invoice => [
-//     //             `"${invoice.invoiceNumber || ''}"`,
-//     //             `"${formatDate(invoice.invoiceDate)}"`,
-//     //             `"${invoice.invoiceAmount || 0}"`,
-//     //             `"${invoice.currency || 'USD'}"`,
-//     //             `"${formatDate(invoice.createdAt)}"`
-//     //         ].join(','))
-//     //     ].join('\n');
-
-//     //     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-//     //     const link = document.createElement('a');
-//     //     const url = URL.createObjectURL(blob);
-//     //     link.setAttribute('href', url);
-//     //     link.setAttribute('download', `selected_invoices_export_${new Date().toISOString().split('T')[0]}.csv`);
-//     //     link.style.visibility = 'hidden';
-//     //     document.body.appendChild(link);
-//     //     link.click();
-//     //     document.body.removeChild(link);
-//     // };
-
-//     // Export function using API - selected invoices
-// // Export function using POST API with column headers in payload
-// // Export function using POST API with InvoiceId as URL parameter and column values in payload
-// const exportToCSV = async () => {
-//     const invoicesToExport = filteredInvoices.filter((invoice, index) => 
-//         selectedInvoices.has(invoice.invoiceId || index)
-//     );
-    
-//     if (invoicesToExport.length === 0) {
-//         alert('Please select invoices to export');
-//         return;
-//     }
 
 //     try {
-//         // Show loading state
-//         const exportButton = document.querySelector('[data-export-button]');
-//         if (exportButton) {
-//             exportButton.disabled = true;
-//             exportButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//       const response = await fetch(
+//         "https://timesheet-subk.onrender.com/api/Invoices",
+//         {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify(invoicePayload),
 //         }
+//       );
+//       if (!response.ok)
+//         throw new Error(`Failed to create invoice: ${response.status}`);
 
-//         // Process exports for each selected invoice
-//         for (let i = 0; i < invoicesToExport.length; i++) {
-//             const invoice = invoicesToExport[i];
-//             const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-            
-//             if (!invoiceId) {
-//                 console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
-//                 continue;
-//             }
-
-//             try {
-//                 // Prepare column header VALUES (actual data) in payload
-//                 const columnHeaderValues = [
-//                     invoice.invoiceNumber || '',
-//                     formatDate(invoice.invoiceDate) || '',
-//                     invoice.invoiceAmount || 0,
-//                     invoice.currency || 'USD',
-//                     formatDate(invoice.createdAt) || '',
-//                     // Add more actual values as needed for PLC, Vendor Employee, etc.
-//                     'PLC001', // Default or actual PLC value
-//                     invoice.createdBy || 'Employee', // Vendor Employee
-//                     '40.00', // Current Hrs/Qty - replace with actual value
-//                     ((invoice.invoiceAmount || 0) / 40).toFixed(2), // Rate
-//                     '0.00', // Additional Amount
-//                     (invoice.invoiceAmount || 0).toFixed(2), // Current Amount
-//                     '40.00', // Cumulative Hrs/Qty
-//                     (invoice.invoiceAmount || 0).toFixed(2) // Cumulative Amount
-//                 ];
-
-//                 // Prepare the payload with column header VALUES
-//                 const payload = {
-//                     ColumnHeaderValues: columnHeaderValues,
-//                     // Add any additional configuration if needed
-//                     IncludeHeaders: true,
-//                     ExportFormat: 'CSV'
-//                 };
-
-//                 console.log('Sending InvoiceId as parameter:', invoiceId);
-//                 console.log('Sending payload with column values:', payload);
-
-//                 // Make POST API call with InvoiceId as URL parameter and column values in payload
-//                 const response = await fetch(
-//                     `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(invoiceId)}`,
-//                     {
-//                         method: 'POST',
-//                         headers: {
-//                             'Accept': 'text/csv, application/csv, application/octet-stream, */*',
-//                             'Content-Type': 'application/json',
-//                             // Add authorization header if your API requires it
-//                             // 'Authorization': `Bearer ${yourTokenHere}`,
-//                         },
-//                         body: JSON.stringify(payload)
-//                     }
-//                 );
-
-//                 console.log('Response status:', response.status);
-//                 console.log('Response headers:', [...response.headers.entries()]);
-
-//                 if (!response.ok) {
-//                     // Get error details from response
-//                     let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-//                     try {
-//                         const errorData = await response.text();
-//                         if (errorData) {
-//                             errorMessage += ` - ${errorData}`;
-//                         }
-//                     } catch (e) {
-//                         // Ignore if can't parse error
-//                     }
-//                     throw new Error(errorMessage);
-//                 }
-
-//                 // Get the file as blob
-//                 const blob = await response.blob();
-                
-//                 // Check if the response is actually a file or an error
-//                 if (blob.type && blob.type.includes('application/json')) {
-//                     // If it's JSON, it might be an error response
-//                     const text = await blob.text();
-//                     console.error('Received JSON instead of file:', text);
-//                     throw new Error('Server returned an error instead of a file');
-//                 }
-                
-//                 // Extract filename from Content-Disposition header or use default
-//                 let filename = `invoice_${invoiceId}_export.csv`;
-//                 const contentDisposition = response.headers.get('Content-Disposition');
-//                 if (contentDisposition) {
-//                     const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-//                     if (filenameMatch && filenameMatch[1]) {
-//                         filename = filenameMatch[1].replace(/['"]/g, '');
-//                     }
-//                 }
-
-//                 // Create download link and trigger download
-//                 const url = window.URL.createObjectURL(blob);
-//                 const link = document.createElement('a');
-//                 link.href = url;
-//                 link.download = filename;
-//                 link.style.display = 'none';
-//                 document.body.appendChild(link);
-//                 link.click();
-                
-//                 // Clean up
-//                 window.URL.revokeObjectURL(url);
-//                 document.body.removeChild(link);
-                
-//                 // Add small delay between downloads
-//                 if (i < invoicesToExport.length - 1) {
-//                     await new Promise(resolve => setTimeout(resolve, 500));
-//                 }
-
-//             } catch (invoiceError) {
-//                 console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
-//                 alert(`Failed to export invoice ${invoiceId}: ${invoiceError.message}`);
-//             }
-//         }
-
-//         // Show success message
-//         const successMessage = invoicesToExport.length === 1 
-//             ? 'Invoice exported successfully!' 
-//             : `${invoicesToExport.length} invoices exported successfully!`;
-        
-//         alert(successMessage);
-
+//       const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+//       const imgData = canvas.toDataURL("image/png");
+//       const pdf = new jsPDF({
+//         orientation: "portrait",
+//         unit: "mm",
+//         format: "a4",
+//       });
+//       const pdfWidth = pdf.internal.pageSize.getWidth();
+//       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+//       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+//       pdf.save("invoice.pdf");
 //     } catch (error) {
-//         console.error('Error during export process:', error);
-//         alert(`Export failed: ${error.message}`);
-//     } finally {
-//         // Reset button state
-//         const exportButton = document.querySelector('[data-export-button]');
-//         if (exportButton) {
-//             exportButton.disabled = false;
-//             exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
-//         }
+//       console.error("Error creating invoice or generating PDF:", error);
 //     }
-// };
+//   };
 
+//   const containerStyle = {
+//     maxWidth: "768px",
+//     margin: "auto",
+//     padding: "20px",
+//     border: "2px solid #d1d5db",
+//     fontFamily: "monospace",
+//     fontSize: "15px",
+//     color: "#1a202c",
+//     backgroundColor: "#fff",
+//   };
+//   const titleStyle = {
+//     textAlign: "center",
+//     marginBottom: "20px",
+//     fontSize: "18px",
+//     fontWeight: "600",
+//   };
+//   const infoStyle = {
+//     marginBottom: "20px",
+//     fontFamily: "monospace",
+//     fontSize: "15px",
+//     whiteSpace: "pre-line",
+//   };
+//   const boldTextStyle = { fontWeight: 700 };
+//   const flexBetweenStyle = {
+//     display: "flex",
+//     justifyContent: "space-between",
+//     alignItems: "flex-start",
+//     fontFamily: "monospace",
+//     fontSize: "15px",
+//     whiteSpace: "pre-line",
+//   };
+//   const columnStyle = { width: "49%" };
+//   const addressBlockStyle = { marginBottom: "16px" };
+//   const tableStyle = {
+//     width: "100%",
+//     borderCollapse: "collapse",
+//     marginBottom: "20px",
+//     fontSize: "12px",
+//   };
+//   const thStyle = {
+//     border: "1px solid #d1d5db",
+//     padding: "8px",
+//     textAlign: "left",
+//     backgroundColor: "#f3f4f6",
+//   };
+//   const thRightStyle = { ...thStyle, textAlign: "right" };
+//   const tdStyle = { border: "1px solid #d1d5db", padding: "8px" };
+//   const tdRightStyle = { ...tdStyle, textAlign: "right" };
+//   const totalAmountStyle = {
+//     textAlign: "right",
+//     fontWeight: "600",
+//     fontSize: "16px",
+//     marginBottom: "24px",
+//   };
+//   const buttonStyle = {
+//     display: "block",
+//     margin: "20px auto 0",
+//     padding: "10px 20px",
+//     backgroundColor: "#2563eb",
+//     color: "#fff",
+//     fontWeight: "500",
+//     borderRadius: "4px",
+//     cursor: "pointer",
+//     border: "none",
+//   };
 
+//   const buttonContainerStyle = {
+//     display: "flex",
+//     justifyContent: "center",
+//     gap: "10px", // space between buttons
+//     marginTop: "20px",
+//   };
 
-//     if (loading) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center">
-//                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-//                     <p className="text-gray-600">Loading invoices...</p>
-//                 </div>
-//             </div>
-//         );
-//     }
+//   const confirm = {
+//     padding: "10px 20px",
+//     backgroundColor: "#2563eb",
+//     color: "#fff",
+//     fontWeight: "500",
+//     borderRadius: "4px",
+//     cursor: "pointer",
+//     border: "none",
+//   };
 
-//     if (error) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
-//                     <div className="text-red-600 mb-4">
-//                         <Receipt className="h-12 w-12 mx-auto mb-2" />
-//                         <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
-//                     </div>
-//                     <p className="text-red-700">{error}</p>
-//                     <button 
-//                         onClick={() => window.location.reload()} 
-//                         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-//                     >
-//                         Try Again
-//                     </button>
-//                 </div>
-//             </div>
-//         );
-//     }
+//   const cancel = {
+//     padding: "10px 20px",
+//     backgroundColor: "#eb370fff",
+//     color: "#fff",
+//     fontWeight: "500",
+//     borderRadius: "4px",
+//     cursor: "pointer",
+//     border: "none",
+//   };
 
-//     return (
-//         <>
-//             <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
-//                 {/* Header */}
-//                 <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
-//                     <div className="flex items-center justify-between">
-//                         <div className="flex items-center">
-//                             <Receipt className="h-8 w-8 text-green-600 mr-3" />
-//                             <div>
-//                                 <h1 className="text-2xl font-bold text-gray-900">Invoice Export</h1>
-//                                 <p className="text-gray-600">Manage and export invoice data</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex items-center space-x-4">
-//                             {/* <span className="text-sm text-gray-600">
-//                                 Selected: {selectedInvoices.size} / {filteredInvoices.length} invoices
-//                             </span> */}
-//                             {/* <button
-//                                 onClick={exportToCSV}
-//                                 disabled={selectedInvoices.size === 0}
-//                                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
-//                                     selectedInvoices.size === 0
-//                                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-//                                         : 'bg-green-600 text-white hover:bg-green-700'
-//                                 }`}
-//                             >
-//                                 <Download className="h-4 w-4 mr-2" />
-//                                 Export ({selectedInvoices.size})
-//                             </button> */}
-//                             <button
-//     onClick={exportToCSV}
-//     disabled={selectedInvoices.size === 0}
-//     data-export-button
-//     className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
-//         selectedInvoices.size === 0
-//             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-//             : 'bg-green-600 text-white hover:bg-green-700'
-//     }`}
-// >
-//     <Download className="h-4 w-4 mr-2" />
-//     Export ({selectedInvoices.size})
-// </button>
-
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* Filters */}
-//                 <div className="bg-white border-b border-gray-200 p-4 -mx-6">
-//                     <div className="flex items-center justify-start">
-//                         {/* Invoice Number Filter */}
-//                         <div className="w-80 relative">
-//                             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                             <input
-//                                 type="text"
-//                                 placeholder="Filter by Invoice Number"
-//                                 value={filterInvoiceNumber}
-//                                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
-//                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-//                             />
-//                         </div>
-
-//                         {/* Clear Filter */}
-//                         {filterInvoiceNumber && (
-//                             <button
-//                                 onClick={() => setFilterInvoiceNumber("")}
-//                                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-//                             >
-//                                 Clear
-//                             </button>
-//                         )}
-//                     </div>
-//                 </div>
-
-//                 {/* Table */}
-//                 <div className="flex-1 overflow-hidden mt-6">
-//                     <div className="h-full overflow-auto">
-//                         {filteredInvoices.length === 0 ? (
-//                             <div className="flex items-center justify-center h-64">
-//                                 <div className="text-center text-gray-500">
-//                                     <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                                     <p className="text-lg font-medium">No invoices found</p>
-//                                     <p className="text-sm">Try adjusting your filter criteria</p>
-//                                 </div>
-//                             </div>
-//                         ) : (
-//                             <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex flex-col" style={getResponsiveTableStyle()}>
-//                                 <table className="min-w-full">
-//                                     <thead className="bg-gray-50 sticky">
-//                                         <tr>
-//                                             {/* <th className="px-6 py-3 text-left border-b border-gray-200">
-//                                                 <input
-//                                                     type="checkbox"
-//                                                     text="All"
-//                                                     checked={selectAll}
-//                                                     onChange={(e) => handleSelectAll(e.target.checked)}
-//                                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-//                                                 />
-//                                             </th> */}
-//                                             <th className="px-6 py-3 text-left border-b border-gray-200">
-//     <div className="flex items-center space-x-2">
-//         <input
-//             type="checkbox"
-//             checked={selectAll}
-//             onChange={(e) => handleSelectAll(e.target.checked)}
-//             className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+//   return (
+//     <>
+//       <div ref={invoiceRef} style={containerStyle}>
+//         <img
+//           src={logoImg}
+//           alt="Company Logo"
+//           style={{ height: "60px", objectFit: "contain" }}
 //         />
-//         <span className="text-xs font-medium text-gray-500 tracking-wider">
-//             All
-//         </span>
-//     </div>
-// </th>
+//         <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1>
 
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
-//                                                 Invoice Number
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
-//                                                 Invoice Date
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
-//                                                 Amount
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200">
-//                                                 Currency
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500  tracking-wider border-b border-gray-200">
-//                                                 Created At
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200">
-//                                                 Action
-//                                             </th>
-//                                         </tr>
-//                                     </thead>
-//                                     <tbody className="divide-y divide-gray-200">
-//                                         {filteredInvoices.map((invoice, index) => {
-//                                             const invoiceId = invoice.invoiceId || index;
-//                                             return (
-//                                                 <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
-//                                                     <td className="px-6 py-4 whitespace-nowrap">
-//                                                         <input
-//                                                             type="checkbox"
-//                                                             checked={selectedInvoices.has(invoiceId)}
-//                                                             onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked)}
-//                                                             className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-//                                                         />
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
-//                                                         {invoice.invoiceNumber || 'N/A'}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         {formatDate(invoice.invoiceDate)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
-//                                                         {formatCurrency(invoice.invoiceAmount, invoice.currency)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
-//                                                             {invoice.currency || 'USD'}
-//                                                         </span>
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         {formatDate(invoice.createdAt)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         <button
-//                                                             onClick={() => handlePreview(invoice)}
-//                                                             className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-//                                                         >
-//                                                             <Eye className="h-4 w-4 mr-1" />
-//                                                             Preview
-//                                                         </button>
-//                                                     </td>
-//                                                 </tr>
-//                                             );
-//                                         })}
-//                                     </tbody>
-//                                 </table>
-//                             </div>
-//                         )}
-//                     </div>
-//                 </div>
+//         {/* Two-column information block */}
+//         <div style={flexBetweenStyle}>
+//           {/* Left Column */}
+//           <div style={columnStyle}>
+//             <div>
+//               <span style={boldTextStyle}>Subcontractor Invoice Number: </span>
+//               {invoice.invoiceId || "130617"}
 //             </div>
-
-//             {/* Preview Modal */}
-//             {previewModalVisible && (
-//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//                     <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-//                         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-//                             <h2 className="text-xl font-semibold text-gray-900">Invoice Preview</h2>
-//                             <button
-//                                 onClick={() => setPreviewModalVisible(false)}
-//                                 className="text-gray-400 hover:text-gray-600 transition-colors"
-//                             >
-//                                 <X className="h-6 w-6" />
-//                             </button>
-//                         </div>
-//                         <div className="p-6">
-//                             <InvoiceViewer 
-//                                 data={previewData} 
-//                                 setInvoiceModalVisible={setPreviewModalVisible} 
-//                             />
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-//         </>
-//     );
-// }
-
-// import React, { useState, useEffect } from "react";
-// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
-// import InvoiceViewer from "./InvoiceViewer";
-
-// export default function InvoiceExport() {
-//     const [invoices, setInvoices] = useState([]);
-//     const [filteredInvoices, setFilteredInvoices] = useState([]);
-//     const [loading, setLoading] = useState(true);
-//     const [error, setError] = useState(null);
-//     const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
-//     const [selectedInvoices, setSelectedInvoices] = useState(new Set());
-//     const [selectAll, setSelectAll] = useState(false);
-//     const [previewModalVisible, setPreviewModalVisible] = useState(false);
-//     const [previewData, setPreviewData] = useState(null);
-
-//     // Fetch invoices from API
-//     useEffect(() => {
-//         const fetchInvoices = async () => {
-//             try {
-//                 setLoading(true);
-//                 const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
-                
-//                 if (!response.ok) {
-//                     throw new Error(`HTTP error! status: ${response.status}`);
-//                 }
-                
-//                 const data = await response.json();
-//                 setInvoices(data);
-//                 setFilteredInvoices(data);
-//             } catch (err) {
-//                 console.error('Error fetching invoices:', err);
-//                 setError(err.message || 'Failed to fetch invoices');
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-
-//         fetchInvoices();
-//     }, []);
-
-//     // Filter invoices based on invoice number filter
-//     useEffect(() => {
-//         let filtered = invoices;
-
-//         // Filter by invoice number
-//         if (filterInvoiceNumber) {
-//             filtered = filtered.filter(invoice => 
-//                 invoice.invoiceNumber && 
-//                 invoice.invoiceNumber.toLowerCase().includes(filterInvoiceNumber.toLowerCase())
-//             );
-//         }
-
-//         setFilteredInvoices(filtered);
-//         // Reset selections when filter changes
-//         setSelectedInvoices(new Set());
-//         setSelectAll(false);
-//     }, [invoices, filterInvoiceNumber]);
-
-//     // Enhanced responsive table function
-//     const getResponsiveTableStyle = () => {
-//         const headerHeight = 120; // Header section height
-//         const filterHeight = 80;  // Filter section height
-//         const marginPadding = 100; // Extra margins and padding
-        
-//         return {
-//             height: `calc(100vh - ${headerHeight + filterHeight + marginPadding}px)`,
-//             minHeight: '400px',
-//             maxHeight: '70vh'
-//         };
-//     };
-   
-
-   
-//     const formatDate = (dateString) => {
-//         if (!dateString) return 'N/A';
-//         try {
-//             const date = new Date(dateString);
-//             const month = String(date.getMonth() + 1).padStart(2, '0');
-//             const day = String(date.getDate()).padStart(2, '0');
-//             const year = date.getFullYear();
-//             return `${month}-${day}-${year}`;
-//         } catch {
-//             return dateString;
-//         }
-//     };
-
-//     // Format currency helper
-//     const formatCurrency = (amount, currency = 'USD') => {
-//         if (!amount && amount !== 0) return 'N/A';
-//         try {
-//             return new Intl.NumberFormat('en-US', {
-//                 style: 'currency',
-//                 currency: currency || 'USD'
-//             }).format(amount);
-//         } catch {
-//             return `${currency || '$'} ${amount}`;
-//         }
-//     };
-
-//     // Handle select all checkbox
-//     const handleSelectAll = (checked) => {
-//         setSelectAll(checked);
-//         if (checked) {
-//             const allIds = new Set(filteredInvoices.map((invoice, index) => invoice.invoiceId || index));
-//             setSelectedInvoices(allIds);
-//         } else {
-//             setSelectedInvoices(new Set());
-//         }
-//     };
-
-//     // Handle individual checkbox
-//     const handleSelectInvoice = (invoiceId, checked) => {
-//         const newSelected = new Set(selectedInvoices);
-//         if (checked) {
-//             newSelected.add(invoiceId);
-//         } else {
-//             newSelected.delete(invoiceId);
-//         }
-//         setSelectedInvoices(newSelected);
-//         setSelectAll(newSelected.size === filteredInvoices.length);
-//     };
-
-//     // Handle preview click
-//     const handlePreview = async (invoice) => {
-//         try {
-//             // Set loading state if you want to show a loading indicator
-//             setPreviewModalVisible(true);
-//             setPreviewData(null); // Clear previous data
-            
-//             // Fetch data from the preview API
-//             const response = await fetch(
-//                 `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(invoice.invoiceNumber)}`
-//             );
-            
-//             if (!response.ok) {
-//                 throw new Error(`Failed to fetch invoice preview: ${response.status}`);
-//             }
-            
-//             const apiData = await response.json();
-            
-//             // Transform the API data to match InvoiceViewer expected format
-//             const transformedData = [{
-//                 invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
-//                 invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
-//                 period: formatDate(apiData.period || apiData.invoiceDate || invoice.invoiceDate),
-//                 currency: apiData.currency || invoice.currency || 'USD',
-//                 totalAmount: apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0,
-                
-//                 // Transform line items from API response
-//                 lineItems: (apiData.lineItems || apiData.invoiceTimesheetLines || []).map((item, index) => ({
-//                     poLine: item.poLine || item.timesheetLineNo || "Default PO Line",
-//                     plc: item.plc || "PLC001",
-//                     vendor: item.vendor || "Vendor",
-//                     employee: item.employee || item.createdBy || "Employee",
-//                     hours: item.hours || item.mappedHours || 40.00,
-//                     rate: item.rate || (item.mappedAmount || 0) / (item.mappedHours || 40) || 0,
-//                     amount: item.amount || item.mappedAmount || 0,
-//                     line_No: item.line_No || item.timesheetLineNo || index + 1
-//                 })),
-                
-//                 // Use API data if available, otherwise use defaults
-//                 billTo: apiData.billTo || "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-//                 buyer: apiData.buyer || "Clore, Heather J",
-//                 purchaseOrderId: apiData.purchaseOrderId || "2181218010",
-//                 releaseNumber: apiData.releaseNumber || "3",
-//                 changeOrderNumber: apiData.changeOrderNumber || "0",
-//                 poStartEndDate: apiData.poStartEndDate || "12/10/18 to 12/08/24",
-//                 remitTo: apiData.remitTo || "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-//                 terms: apiData.terms || "PAYNPD",
-//                 amountDue: apiData.amountDue || apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0
-//             }];
-            
-//             setPreviewData(transformedData);
-            
-//         } catch (error) {
-//             console.error('Error fetching invoice preview:', error);
-            
-//             // Show error message or fallback to original data
-//             alert(`Failed to load invoice preview: ${error.message}`);
-            
-//             // Optional: Use original transformation as fallback
-//             const fallbackData = [{
-//                 invoiceId: invoice.invoiceNumber,
-//                 invoiceDate: formatDate(invoice.invoiceDate),
-//                 period: formatDate(invoice.invoiceDate),
-//                 currency: invoice.currency || 'USD',
-//                 totalAmount: invoice.invoiceAmount || 0,
-//                 lineItems: [
-//                     {
-//                         poLine: "Default PO Line",
-//                         plc: "PLC001",
-//                         vendor: "Vendor",
-//                         employee: invoice.createdBy || "Employee",
-//                         hours: 40.00,
-//                         rate: (invoice.invoiceAmount || 0) / 40,
-//                         amount: invoice.invoiceAmount || 0,
-//                         line_No: 1
-//                     }
-//                 ],
-//                 billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-//                 buyer: "Clore, Heather J",
-//                 purchaseOrderId: "2181218010",
-//                 releaseNumber: "3",
-//                 changeOrderNumber: "0",
-//                 poStartEndDate: "12/10/18 to 12/08/24",
-//                 remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-//                 terms: "PAYNPD",
-//                 amountDue: invoice.invoiceAmount || 0
-//             }];
-            
-//             setPreviewData(fallbackData);
-//         }
-//     };
-
-//     // Export function using POST API with InvoiceId as URL parameter and column values in payload
-//     const exportToCSV = async () => {
-//         const invoicesToExport = filteredInvoices.filter((invoice, index) => 
-//             selectedInvoices.has(invoice.invoiceId || index)
-//         );
-        
-//         if (invoicesToExport.length === 0) {
-//             alert('Please select invoices to export');
-//             return;
-//         }
-
-//         try {
-//             // Show loading state
-//             const exportButton = document.querySelector('[data-export-button]');
-//             if (exportButton) {
-//                 exportButton.disabled = true;
-//                 exportButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
-//             }
-
-//             // Process exports for each selected invoice
-//             for (let i = 0; i < invoicesToExport.length; i++) {
-//                 const invoice = invoicesToExport[i];
-//                 const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-                
-//                 if (!invoiceId) {
-//                     console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
-//                     continue;
-//                 }
-
-//                 try {
-//                     // Prepare column header VALUES (actual data) in payload
-//                     const columnHeaderValues = [
-//                         invoice.invoiceNumber || '',
-//                         formatDate(invoice.invoiceDate) || '',
-//                         invoice.invoiceAmount || 0,
-//                         invoice.currency || 'USD',
-//                         formatDate(invoice.createdAt) || '',
-//                         // Add more actual values as needed for PLC, Vendor Employee, etc.
-//                         'PLC001', // Default or actual PLC value
-//                         invoice.createdBy || 'Employee', // Vendor Employee
-//                         '40.00', // Current Hrs/Qty - replace with actual value
-//                         ((invoice.invoiceAmount || 0) / 40).toFixed(2), // Rate
-//                         '0.00', // Additional Amount
-//                         (invoice.invoiceAmount || 0).toFixed(2), // Current Amount
-//                         '40.00', // Cumulative Hrs/Qty
-//                         (invoice.invoiceAmount || 0).toFixed(2) // Cumulative Amount
-//                     ];
-
-//                     // Prepare the payload with column header VALUES
-//                     const payload = {
-//                         ColumnHeaderValues: columnHeaderValues,
-//                         // Add any additional configuration if needed
-//                         IncludeHeaders: true,
-//                         ExportFormat: 'CSV'
-//                     };
-
-//                     console.log('Sending InvoiceId as parameter:', invoiceId);
-//                     console.log('Sending payload with column values:', payload);
-
-//                     // Make POST API call with InvoiceId as URL parameter and column values in payload
-//                     const response = await fetch(
-//                         `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(invoiceId)}`,
-//                         {
-//                             method: 'POST',
-//                             headers: {
-//                                 'Accept': 'text/csv, application/csv, application/octet-stream, */*',
-//                                 'Content-Type': 'application/json',
-//                                 // Add authorization header if your API requires it
-//                                 // 'Authorization': `Bearer ${yourTokenHere}`,
-//                             },
-//                             body: JSON.stringify(payload)
-//                         }
-//                     );
-
-//                     console.log('Response status:', response.status);
-//                     console.log('Response headers:', [...response.headers.entries()]);
-
-//                     if (!response.ok) {
-//                         // Get error details from response
-//                         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-//                         try {
-//                             const errorData = await response.text();
-//                             if (errorData) {
-//                                 errorMessage += ` - ${errorData}`;
-//                             }
-//                         } catch (e) {
-//                             // Ignore if can't parse error
-//                         }
-//                         throw new Error(errorMessage);
-//                     }
-
-//                     // Get the file as blob
-//                     const blob = await response.blob();
-                    
-//                     // Check if the response is actually a file or an error
-//                     if (blob.type && blob.type.includes('application/json')) {
-//                         // If it's JSON, it might be an error response
-//                         const text = await blob.text();
-//                         console.error('Received JSON instead of file:', text);
-//                         throw new Error('Server returned an error instead of a file');
-//                     }
-                    
-//                     // Extract filename from Content-Disposition header or use default
-//                     let filename = `invoice_${invoiceId}_export.csv`;
-//                     const contentDisposition = response.headers.get('Content-Disposition');
-//                     if (contentDisposition) {
-//                         const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-//                         if (filenameMatch && filenameMatch[1]) {
-//                             filename = filenameMatch[1].replace(/['"]/g, '');
-//                         }
-//                     }
-
-//                     // Create download link and trigger download
-//                     const url = window.URL.createObjectURL(blob);
-//                     const link = document.createElement('a');
-//                     link.href = url;
-//                     link.download = filename;
-//                     link.style.display = 'none';
-//                     document.body.appendChild(link);
-//                     link.click();
-                    
-//                     // Clean up
-//                     window.URL.revokeObjectURL(url);
-//                     document.body.removeChild(link);
-                    
-//                     // Add small delay between downloads
-//                     if (i < invoicesToExport.length - 1) {
-//                         await new Promise(resolve => setTimeout(resolve, 500));
-//                     }
-
-//                 } catch (invoiceError) {
-//                     console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
-//                     alert(`Failed to export invoice ${invoiceId}: ${invoiceError.message}`);
-//                 }
-//             }
-
-//             // Show success message
-//             const successMessage = invoicesToExport.length === 1 
-//                 ? 'Invoice exported successfully!' 
-//                 : `${invoicesToExport.length} invoices exported successfully!`;
-            
-//             alert(successMessage);
-
-//         } catch (error) {
-//             console.error('Error during export process:', error);
-//             alert(`Export failed: ${error.message}`);
-//         } finally {
-//             // Reset button state
-//             const exportButton = document.querySelector('[data-export-button]');
-//             if (exportButton) {
-//                 exportButton.disabled = false;
-//                 exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
-//             }
-//         }
-//     };
-
-//     if (loading) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center">
-//                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-//                     <p className="text-gray-600">Loading invoices...</p>
-//                 </div>
+//             <div style={addressBlockStyle}>
+//               <span style={boldTextStyle}>Bill To: {"\n"}</span>
+//               {invoice.billTo ||
+//                 `SSAI
+// 10210 GREENBELT RD
+// SUITE 600
+// LANHAM
+// MD
+// 20706`}
 //             </div>
-//         );
-//     }
-
-//     if (error) {
-//         return (
-//             <div className="ml-48 flex-1 flex items-center justify-center">
-//                 <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
-//                     <div className="text-red-600 mb-4">
-//                         <Receipt className="h-12 w-12 mx-auto mb-2" />
-//                         <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
-//                     </div>
-//                     <p className="text-red-700">{error}</p>
-//                     <button 
-//                         onClick={() => window.location.reload()} 
-//                         className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-//                     >
-//                         Try Again
-//                     </button>
-//                 </div>
+//             <div>
+//               <span style={boldTextStyle}>Buyer: </span>
+//               {invoice.buyer || "Clore, Heather J"}
 //             </div>
-//         );
-//     }
-
-//     return (
-//         <>
-//             <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
-//                 {/* Header */}
-//                 <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
-//                     <div className="flex items-center justify-between">
-//                         <div className="flex items-center">
-//                             <Receipt className="h-8 w-8 text-green-600 mr-3" />
-//                             <div>
-//                                 <h1 className="text-2xl font-bold text-gray-900">Invoice Export</h1>
-//                                 <p className="text-gray-600">Manage and export invoice data</p>
-//                             </div>
-//                         </div>
-//                         <div className="flex items-center space-x-4">
-//                             <button
-//                                 onClick={exportToCSV}
-//                                 disabled={selectedInvoices.size === 0}
-//                                 data-export-button
-//                                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
-//                                     selectedInvoices.size === 0
-//                                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-//                                         : 'bg-green-600 text-white hover:bg-green-700'
-//                                 }`}
-//                             >
-//                                 <Download className="h-4 w-4 mr-2" />
-//                                 Export ({selectedInvoices.size})
-//                             </button>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* Filters */}
-//                 <div className="bg-white border-b border-gray-200 p-4 -mx-6">
-//                     <div className="flex items-center justify-start">
-//                         {/* Invoice Number Filter */}
-//                         <div className="w-80 relative">
-//                             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-//                             <input
-//                                 type="text"
-//                                 placeholder="Filter by Invoice Number"
-//                                 value={filterInvoiceNumber}
-//                                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
-//                                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-//                             />
-//                         </div>
-
-//                         {/* Clear Filter */}
-//                         {filterInvoiceNumber && (
-//                             <button
-//                                 onClick={() => setFilterInvoiceNumber("")}
-//                                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-//                             >
-//                                 Clear
-//                             </button>
-//                         )}
-//                     </div>
-//                 </div>
-
-//                 {/* Table */}
-//                 <div className="flex-1 overflow-hidden mt-6">
-//                     <div className="h-full overflow-auto">
-//                         {filteredInvoices.length === 0 ? (
-//                             <div className="flex items-center justify-center h-64">
-//                                 <div className="text-center text-gray-500">
-//                                     <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//                                     <p className="text-lg font-medium">No invoices found</p>
-//                                     <p className="text-sm">Try adjusting your filter criteria</p>
-//                                 </div>
-//                             </div>
-//                         ) : (
-//                             <div className="bg-white rounded-lg shadow-sm border border-gray-200" style={getResponsiveTableStyle()}>
-//                                 <table className="min-w-full">
-//                                     <thead className="bg-gray-50">
-//                                         <tr>
-//                                             <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 <div className="flex items-center space-x-2">
-//                                                     <input
-//                                                         type="checkbox"
-//                                                         checked={selectAll}
-//                                                         onChange={(e) => handleSelectAll(e.target.checked)}
-//                                                         className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-//                                                     />
-//                                                     <span className="text-xs font-medium text-gray-500 tracking-wider">
-//                                                         All
-//                                                     </span>
-//                                                 </div>
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Invoice Number
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Invoice Date
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Amount
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Currency
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Created At
-//                                             </th>
-//                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-//                                                 Action
-//                                             </th>
-//                                         </tr>
-//                                     </thead>
-//                                     <tbody className="divide-y divide-gray-200">
-//                                         {filteredInvoices.map((invoice, index) => {
-//                                             const invoiceId = invoice.invoiceId || index;
-//                                             return (
-//                                                 <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
-//                                                     <td className="px-6 py-4 whitespace-nowrap">
-//                                                         <input
-//                                                             type="checkbox"
-//                                                             checked={selectedInvoices.has(invoiceId)}
-//                                                             onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked)}
-//                                                             className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-//                                                         />
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
-//                                                         {invoice.invoiceNumber || 'N/A'}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         {formatDate(invoice.invoiceDate)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
-//                                                         {formatCurrency(invoice.invoiceAmount, invoice.currency)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
-//                                                             {invoice.currency || 'USD'}
-//                                                         </span>
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         {formatDate(invoice.createdAt)}
-//                                                     </td>
-//                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-//                                                         <button
-//                                                             onClick={() => handlePreview(invoice)}
-//                                                             className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-//                                                         >
-//                                                             <Eye className="h-4 w-4 mr-1" />
-//                                                             Preview
-//                                                         </button>
-//                                                     </td>
-//                                                 </tr>
-//                                             );
-//                                         })}
-//                                     </tbody>
-//                                 </table>
-//                             </div>
-//                         )}
-//                     </div>
-//                 </div>
+//             <div style={{ marginTop: "16px" }}>
+//               <span style={boldTextStyle}>Purchase Order ID: </span>
+//               {invoice.purchaseOrderId || "2181218010"} Release Number{" "}
+//               {invoice.releaseNumber || "3"} Change Order Number{" "}
+//               {invoice.changeOrderNumber || "0"}
 //             </div>
+//             <div>
+//               <span style={boldTextStyle}>PO Start and End Date: </span>
+//               {invoice.poStartEndDate || "12/10/18 to 12/08/24"}
+//             </div>
+//           </div>
 
-//             {/* Preview Modal */}
-//             {previewModalVisible && (
-//                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-//                     <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-//                         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-//                             <h2 className="text-xl font-semibold text-gray-900">Invoice Preview</h2>
-//                             <button
-//                                 onClick={() => setPreviewModalVisible(false)}
-//                                 className="text-gray-400 hover:text-gray-600 transition-colors"
-//                             >
-//                                 <X className="h-6 w-6" />
-//                             </button>
-//                         </div>
-//                         <div className="p-6">
-//                             <InvoiceViewer 
-//                                 data={previewData} 
-//                                 setInvoiceModalVisible={setPreviewModalVisible} 
-//                             />
-//                         </div>
-//                     </div>
-//                 </div>
-//             )}
-//         </>
-//     );
-// }
+//           {/* Right Column */}
+//           <div style={columnStyle}>
+//             <div>
+//               <span style={boldTextStyle}>Invoice Date: </span>
+//               {invoice.invoiceDate || "09/30/24"}
+//             </div>
+//             <div>
+//               <span style={boldTextStyle}>For the Period: </span>
+//               {invoice.period || "09/30/24 - 09/30/24"}
+//             </div>
+//             <div>
+//               <span style={boldTextStyle}>Billing Currency: </span>
+//               {invoice.currency || "USD"}
+//             </div>
+//             <div style={addressBlockStyle}>
+//               <span style={boldTextStyle}>Remit To: {"\n"}</span>
+//               {invoice.remitTo ||
+//                 `Vertex Aerospace, LLC
+// PO Box 192
+// Grasonville
+// MD
+// 21638`}
+//             </div>
+//             <div>
+//               <span style={boldTextStyle}>Terms: </span>
+//               {invoice.terms || "PAYNPD"}
+//             </div>
+//             <div>
+//               <span style={boldTextStyle}>Amount Due </span>
+//               {invoice.amountDue || "4,307.21"}
+//             </div>
+//           </div>
+//         </div>
 
-import React, { useState, useEffect } from "react";
-import { Receipt, Filter, Download, X, Eye } from "lucide-react";
-import InvoiceViewer from "./InvoiceViewer";
-
-export default function InvoiceExport() {
-    const [invoices, setInvoices] = useState([]);
-    const [filteredInvoices, setFilteredInvoices] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
-    const [selectedInvoices, setSelectedInvoices] = useState(new Set());
-    const [selectAll, setSelectAll] = useState(false);
-    const [previewModalVisible, setPreviewModalVisible] = useState(false);
-    const [previewData, setPreviewData] = useState(null);
-
-    // Fetch invoices from API
-    useEffect(() => {
-        const fetchInvoices = async () => {
-            try {
-                setLoading(true);
-                const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                setInvoices(data);
-                setFilteredInvoices(data);
-            } catch (err) {
-                console.error('Error fetching invoices:', err);
-                setError(err.message || 'Failed to fetch invoices');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchInvoices();
-    }, []);
-
-    // Filter invoices based on invoice number filter
-    useEffect(() => {
-        let filtered = invoices;
-
-        // Filter by invoice number
-        if (filterInvoiceNumber) {
-            filtered = filtered.filter(invoice => 
-                invoice.invoiceNumber && 
-                invoice.invoiceNumber.toLowerCase().includes(filterInvoiceNumber.toLowerCase())
-            );
-        }
-
-        setFilteredInvoices(filtered);
-        // Reset selections when filter changes
-        setSelectedInvoices(new Set());
-        setSelectAll(false);
-    }, [invoices, filterInvoiceNumber]);
-
-    // Dynamic table container style based on content
-    const getTableContainerStyle = () => {
-        const headerHeight = 120; // Header section height
-        const filterHeight = 80;  // Filter section height
-        const padding = 48; // Top and bottom padding (24px each)
-        const margin = 24; // Margin
-        const footerSpace = 20; // Space for any footer content
-        
-        // Calculate minimum height needed for the content
-        const rowHeight = 61; // Approximate height per row (including border)
-        const headerRowHeight = 48; // Header row height
-        const minContentHeight = headerRowHeight + (filteredInvoices.length * rowHeight);
-        
-        // Calculate available space
-        const availableHeight = window.innerHeight - headerHeight - filterHeight - padding - margin - footerSpace;
-        
-        // Use the smaller of content height or available height, with reasonable limits
-        const dynamicHeight = Math.min(
-            Math.max(minContentHeight, 200), // Minimum 200px
-            Math.max(availableHeight, 400)   // Maximum available space, but at least 400px
-        );
-        
-        return {
-            height: `${dynamicHeight}px`,
-            minHeight: '200px',
-            maxHeight: `calc(100vh - ${headerHeight + filterHeight + padding + margin + footerSpace}px)`
-        };
-    };
-
-    // Alternative: Get table wrapper style that adjusts to content
-    const getTableWrapperStyle = () => {
-        // If there are few items, don't use fixed height
-        if (filteredInvoices.length <= 5) {
-            return {
-                minHeight: '200px',
-                maxHeight: 'calc(100vh - 300px)' // Just prevent it from being too tall
-            };
-        }
-        
-        // For more items, use scrollable container
-        return {
-            height: 'calc(100vh - 300px)',
-            minHeight: '400px'
-        };
-    };
-   
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        try {
-            const date = new Date(dateString);
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${month}-${day}-${year}`;
-        } catch {
-            return dateString;
-        }
-    };
-
-    // Format currency helper
-    const formatCurrency = (amount, currency = 'USD') => {
-        if (!amount && amount !== 0) return 'N/A';
-        try {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: currency || 'USD'
-            }).format(amount);
-        } catch {
-            return `${currency || '$'} ${amount}`;
-        }
-    };
-
-    // Handle select all checkbox
-    // const handleSelectAll = (checked) => {
-    //     setSelectAll(checked);
-    //     if (checked) {
-    //         const allIds = new Set(filteredInvoices.map((invoice, index) => invoice.invoiceId || index));
-    //         setSelectedInvoices(allIds);
-    //     } else {
-    //         setSelectedInvoices(new Set());
-    //     }
-    // };
-//     const handleSelectAll = (checked) => {
-//     setSelectAll(checked);
-//     if (checked) {
-//         // Only select invoices that are not exported (isExported: false)
-//         const selectableInvoices = filteredInvoices.filter(invoice => !invoice.isExported);
-//         const allSelectableIds = new Set(selectableInvoices.map((invoice, index) => invoice.invoiceId || index));
-//         setSelectedInvoices(allSelectableIds);
-//     } else {
-//         setSelectedInvoices(new Set());
-//     }
+//         <table style={tableStyle}>
+//           <thead>
+//             <tr>
+//               <th style={thStyle}>PLC</th>
+//               <th style={thStyle}>Vendor Employee</th>
+//               <th style={thRightStyle}>Current Hrs/Qty</th>
+//               <th style={thRightStyle}>Rate</th>
+//               <th style={thRightStyle}>Additional Amount</th>
+//               <th style={thRightStyle}>Current Amount</th>
+//               <th style={thRightStyle}>Cumulative Hrs/Qty</th>
+//               <th style={thRightStyle}>Cumulative Amount</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {Object.entries(groupedByPoLine).map(([poLine, items]) => (
+//               <React.Fragment key={poLine}>
+//                 <tr>
+//                   <td colSpan={8} style={{ fontWeight: 700, fontSize: "15px" }}>
+//                     {poLine}
+//                   </td>
+//                 </tr>
+//                 {items.map((item, index) => (
+//                   <tr key={index}>
+//                     <td style={tdStyle}>{item.plc || ""}</td>
+//                     <td style={tdStyle}>
+//                       {/* {item.vendor || item.employee || ""} */}
+//                       {[item.vendor, item.employee].filter(Boolean).join(" \n")}
+//                     </td>
+//                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+//                     <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
+//                     <td style={tdRightStyle}>$0.00</td>
+//                     <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
+//                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+//                     <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
+//                   </tr>
+//                 ))}
+//               </React.Fragment>
+//             ))}
+//           </tbody>
+//         </table>
+//         <div style={totalAmountStyle}>
+//           Total Amount Due: ${invoice.totalAmount.toFixed(2)}
+//         </div>
+//       </div>
+//       <div style={buttonContainerStyle}>
+//         {/* <button onClick={handleDownloadPdf} style={confirm}>
+//           Confirm
+//         </button> */}
+//         <button onClick={() => setInvoiceModalVisible(false)} style={cancel}>
+//           Close
+//         </button>
+//       </div>
+//     </>
+//   );
 // };
 
+// export default InvoiceViewer;
 
-    // Handle individual checkbox
-    // const handleSelectInvoice = (invoiceId, invoice,checked) => {
-    //     if (invoice.isExported) return;
-    //     const newSelected = new Set(selectedInvoices);
-    //     if (checked) {
-    //         newSelected.add(invoiceId);
-    //     } else {
-    //         newSelected.delete(invoiceId);
-    //     }
-    //     setSelectedInvoices(newSelected);
-    //     setSelectAll(newSelected.size === filteredInvoices.length);
-    // };
+import React, { useRef, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import logoImg from "../assets/image.png";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
-    // Calculate selectable invoices (only those that are not exported)
-const selectableInvoices = filteredInvoices.filter(invoice => !invoice.isExported);
-const disabledInvoices = filteredInvoices.filter(invoice => invoice.isExported);
+const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const invoiceRef = useRef();
 
-// Handle select all checkbox
-const handleSelectAll = (checked) => {
-    setSelectAll(checked);
-    if (checked) {
-        // Only select invoices that are not exported (isExported: false)
-        const allSelectableIds = new Set(selectableInvoices.map((invoice, index) => 
-            invoice.invoiceId || filteredInvoices.indexOf(invoice)
-        ));
-        setSelectedInvoices(allSelectableIds);
-    } else {
-        setSelectedInvoices(new Set());
+  if (!data || !Array.isArray(data) || data.length === 0) {
+    return <div>No invoice data available</div>;
+  }
+
+  const invoice = data[0];
+
+  // Group line items by PO Line for rendering with headers
+  const groupedByPoLine = invoice.lineItems.reduce((groups, item) => {
+    const key = item.poLine || "Other";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+    return groups;
+  }, {});
+
+  // const handleDownloadPdf = async () => {
+  //   if (!invoiceRef.current) return;
+  //   const input = invoiceRef.current;
+  //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //   const imgData = canvas.toDataURL("image/png");
+  //   const pdf = new jsPDF({
+  //     orientation: "portrait",
+  //     unit: "mm",
+  //     format: "a4",
+  //   });
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  //   pdf.save("invoice.pdf");
+  // };
+
+  const handleDownloadPdf = async () => {
+    setIsLoading(true);
+    if (!invoiceRef.current || !invoice) {
+      console.warn("Invoice content or data is missing.");
+      return;
     }
-};
-
-// Handle individual checkbox
-const handleSelectInvoice = (invoiceId, checked, invoice) => {
-    // Prevent selection if invoice is exported
-    if (invoice && invoice.isExported) return;
-    
-    setSelectedInvoices(prev => {
-        const newSelected = new Set(prev);
-        if (checked) {
-            newSelected.add(invoiceId);
-        } else {
-            newSelected.delete(invoiceId);
-        }
-        
-        // Update select all state - check if all selectable invoices are selected
-        const allSelectableSelected = selectableInvoices.length > 0 && 
-            selectableInvoices.every(inv => {
-                const id = inv.invoiceId || filteredInvoices.indexOf(inv);
-                return newSelected.has(id);
-            });
-        setSelectAll(allSelectableSelected);
-        
-        return newSelected;
-    });
-};
-
-// // Handle unexport (reopen) invoice - only for admin
-// const handletoUnexport = async (invoice) => {
-//     if (userRole !== 'admin') {
-//         alert('Access denied. Admin privileges required.');
-//         return;
-//     }
-    
-//     try {
-//         // API call to unexport the invoice
-//         const response = await fetch(`https://timesheet-subk.onrender.com/api/invoices/${invoice.invoiceId}/unexport`, {
-//             method: 'PATCH', // or PUT depending on your API
-//             headers: {
-//                 'Content-Type': 'application/json',
-//                 // Add authorization header if needed
-//                 // 'Authorization': `Bearer ${token}`
-//             },
-//             body: JSON.stringify({
-//                 isExported: false
-//             })
-//         });
-
-//         if (!response.ok) {
-//             throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         const updatedInvoice = await response.json();
-        
-//         // Update the local state
-//         setInvoices(prev => prev.map(inv => 
-//             inv.invoiceId === invoice.invoiceId 
-//                 ? { ...inv, isExported: false }
-//                 : inv
-//         ));
-        
-//         setFilteredInvoices(prev => prev.map(inv => 
-//             inv.invoiceId === invoice.invoiceId 
-//                 ? { ...inv, isExported: false }
-//                 : inv
-//         ));
-
-//         alert('Invoice reopened successfully!');
-        
-//     } catch (error) {
-//         console.error('Error reopening invoice:', error);
-//         alert('Failed to reopen invoice: ' + error.message);
-//     }
-// };
-
-
-    // Handle preview click
-    const handlePreview = async (invoice) => {
-        try {
-            setPreviewModalVisible(true);
-            setPreviewData(null);
-            
-            const response = await fetch(
-                `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(invoice.invoiceNumber)}`
-            );
-            
-            if (!response.ok) {
-                throw new Error(`Failed to fetch invoice preview: ${response.status}`);
-            }
-            
-            const apiData = await response.json();
-            
-            const transformedData = [{
-                invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
-                invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
-                period: formatDate(apiData.period || apiData.invoiceDate || invoice.invoiceDate),
-                currency: apiData.currency || invoice.currency || 'USD',
-                totalAmount: apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0,
-                
-                lineItems: (apiData.lineItems || apiData.invoiceTimesheetLines || []).map((item, index) => ({
-                    poLine: item.poLine || item.timesheetLineNo || "Default PO Line",
-                    plc: item.plc || "PLC001",
-                    vendor: item.vendor || "Vendor",
-                    employee: item.employee || item.createdBy || "Employee",
-                    hours: item.hours || item.mappedHours || 40.00,
-                    rate: item.rate || (item.mappedAmount || 0) / (item.mappedHours || 40) || 0,
-                    amount: item.amount || item.mappedAmount || 0,
-                    line_No: item.line_No || item.timesheetLineNo || index + 1
-                })),
-                
-                billTo: apiData.billTo || "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-                buyer: apiData.buyer || "Clore, Heather J",
-                purchaseOrderId: apiData.purchaseOrderId || "2181218010",
-                releaseNumber: apiData.releaseNumber || "3",
-                changeOrderNumber: apiData.changeOrderNumber || "0",
-                poStartEndDate: apiData.poStartEndDate || "12/10/18 to 12/08/24",
-                remitTo: apiData.remitTo || "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-                terms: apiData.terms || "PAYNPD",
-                amountDue: apiData.amountDue || apiData.totalAmount || apiData.invoiceAmount || invoice.invoiceAmount || 0
-            }];
-            
-            setPreviewData(transformedData);
-            
-        } catch (error) {
-            console.error('Error fetching invoice preview:', error);
-            alert(`Failed to load invoice preview: ${error.message}`);
-            
-            const fallbackData = [{
-                invoiceId: invoice.invoiceNumber,
-                invoiceDate: formatDate(invoice.invoiceDate),
-                period: formatDate(invoice.invoiceDate),
-                currency: invoice.currency || 'USD',
-                totalAmount: invoice.invoiceAmount || 0,
-                lineItems: [
-                    {
-                        poLine: "Default PO Line",
-                        plc: "PLC001",
-                        vendor: "Vendor",
-                        employee: invoice.createdBy || "Employee",
-                        hours: 40.00,
-                        rate: (invoice.invoiceAmount || 0) / 40,
-                        amount: invoice.invoiceAmount || 0,
-                        line_No: 1
-                    }
-                ],
-                billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
-                buyer: "Clore, Heather J",
-                purchaseOrderId: "2181218010",
-                releaseNumber: "3",
-                changeOrderNumber: "0",
-                poStartEndDate: "12/10/18 to 12/08/24",
-                remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
-                terms: "PAYNPD",
-                amountDue: invoice.invoiceAmount || 0
-            }];
-            
-            setPreviewData(fallbackData);
-        }
-    };
-
-    // Export function (keeping your existing export logic)
-    const exportToCSV = async () => {
-        const invoicesToExport = filteredInvoices.filter((invoice, index) => 
-            selectedInvoices.has(invoice.invoiceId || index)
-        );
-        
-        if (invoicesToExport.length === 0) {
-            alert('Please select invoices to export');
-            return;
-        }
-
-        try {
-            const exportButton = document.querySelector('[data-export-button]');
-            if (exportButton) {
-                exportButton.disabled = true;
-                exportButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
-            }
-
-            for (let i = 0; i < invoicesToExport.length; i++) {
-                const invoice = invoicesToExport[i];
-                const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-                
-                if (!invoiceId) {
-                    console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
-                    continue;
-                }
-
-                try {
-                    const columnHeaderValues = [
-                        invoice.invoiceNumber || '',
-                        formatDate(invoice.invoiceDate) || '',
-                        invoice.invoiceAmount || 0,
-                        invoice.currency || 'USD',
-                        formatDate(invoice.createdAt) || '',
-                        'PLC001',
-                        invoice.createdBy || 'Employee',
-                        '40.00',
-                        ((invoice.invoiceAmount || 0) / 40).toFixed(2),
-                        '0.00',
-                        (invoice.invoiceAmount || 0).toFixed(2),
-                        '40.00',
-                        (invoice.invoiceAmount || 0).toFixed(2)
-                    ];
-
-                    const payload = {
-                        ColumnHeaderValues: columnHeaderValues,
-                        IncludeHeaders: true,
-                        ExportFormat: 'CSV'
-                    };
-
-                    const response = await fetch(
-                        `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(invoiceId)}`,
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Accept': 'text/csv, application/csv, application/octet-stream, */*',
-                                'Content-Type': 'application/json',
-                            },
-                            // body: JSON.stringify(payload)
-                        }
-                    );
-
-                    if (!response.ok) {
-                        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-                        try {
-                            const errorData = await response.text();
-                            if (errorData) {
-                                errorMessage += ` - ${errorData}`;
-                            }
-                        } catch (e) {
-                            // Ignore if can't parse error
-                        }
-                        throw new Error(errorMessage);
-                    }
-
-                    const blob = await response.blob();
-                    
-                    if (blob.type && blob.type.includes('application/json')) {
-                        const text = await blob.text();
-                        console.error('Received JSON instead of file:', text);
-                        throw new Error('Server returned an error instead of a file');
-                    }
-                    
-                    let filename = `invoice_${invoiceId}_export.csv`;
-                    const contentDisposition = response.headers.get('Content-Disposition');
-                    if (contentDisposition) {
-                        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                        if (filenameMatch && filenameMatch[1]) {
-                            filename = filenameMatch[1].replace(/['"]/g, '');
-                        }
-                    }
-
-                    const url = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(link);
-                    
-                    if (i < invoicesToExport.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-
-                } catch (invoiceError) {
-                    console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
-                    alert(`Failed to export invoice ${invoiceId}: ${invoiceError.message}`);
-                }
-            }
-
-            const successMessage = invoicesToExport.length === 1 
-                ? 'Invoice exported successfully!' 
-                : `${invoicesToExport.length} invoices exported successfully!`;
-            
-            alert(successMessage);
-
-        } catch (error) {
-            console.error('Error during export process:', error);
-            alert(`Export failed: ${error.message}`);
-        } finally {
-            const exportButton = document.querySelector('[data-export-button]');
-            if (exportButton) {
-                exportButton.disabled = false;
-                exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
-            }
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="ml-48 flex-1 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading invoices...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="ml-48 flex-1 flex items-center justify-center">
-                <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
-                    <div className="text-red-600 mb-4">
-                        <Receipt className="h-12 w-12 mx-auto mb-2" />
-                        <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
-                    </div>
-                    <p className="text-red-700">{error}</p>
-                    <button 
-                        onClick={() => window.location.reload()} 
-                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <>
-            <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
-                {/* Header */}
-                <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <Receipt className="h-8 w-8 text-green-600 mr-3" />
-                            <div>
-                                <h1 className="text-2xl font-bold text-gray-900">Invoice Export</h1>
-                                <p className="text-gray-600">Manage and export invoice data</p>
-                            </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            <button
-                                onClick={exportToCSV}
-                                disabled={selectedInvoices.size === 0}
-                                data-export-button
-                                className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
-                                    selectedInvoices.size === 0
-                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        : 'bg-green-600 text-white hover:bg-green-700'
-                                }`}
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Export ({selectedInvoices.size})
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="bg-white border-b border-gray-200 p-4 -mx-6">
-                    <div className="flex items-center justify-start">
-                        <div className="w-80 relative">
-                            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Filter by Invoice Number"
-                                value={filterInvoiceNumber}
-                                onChange={(e) => setFilterInvoiceNumber(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        {filterInvoiceNumber && (
-                            <button
-                                onClick={() => setFilterInvoiceNumber("")}
-                                className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-                            >
-                                Clear
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* Table Container with Dynamic Height */}
-                <div className="flex-1 mt-6 pb-6">
-                    {filteredInvoices.length === 0 ? (
-                        <div className="flex items-center justify-center h-64">
-                            <div className="text-center text-gray-500">
-                                <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                                <p className="text-lg font-medium">No invoices found</p>
-                                <p className="text-sm">Try adjusting your filter criteria</p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div 
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto" 
-                            style={getTableWrapperStyle()}
-                        >
-                            <table className="min-w-full">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        {/* <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectAll}
-                                                    onChange={(e) => handleSelectAll(e.target.checked)}
-                                                    
-                                                    className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                                                />
-                                                 
-                                                <span className="text-xs font-medium text-gray-500 tracking-wider">
-                                                    All
-                                                </span>
-                                            </div>
-                                        </th> */}
-                                        <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-    <div className="flex items-center space-x-2">
-        <input
-            type="checkbox"
-            checked={selectAll}
-            onChange={(e) => handleSelectAll(e.target.checked)}
-            // Disable if no selectable invoices exist
-            disabled={selectableInvoices.length === 0}
-            // Add visual styling for mixed state (some disabled invoices exist)
-            className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
-                selectableInvoices.length === 0 
-                    ? 'opacity-50 cursor-not-allowed' 
-                    : disabledInvoices.length > 0 
-                        ? 'opacity-75' // Visual indicator that some are disabled
-                        : 'cursor-pointer'
-            }`}
-        />
-        <span className="text-xs font-medium text-gray-500 tracking-wider">
-            All 
-        </span>
-    </div>
-</th>
-
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Invoice Number
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Invoice Date
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Amount
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Currency
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Created At
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
-                                            Action
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {filteredInvoices.map((invoice, index) => {
-                                        const invoiceId = invoice.invoiceId || index;
-                                        return (
-                                            <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {/* <input
-                                                        type="checkbox"
-                                                        checked={selectedInvoices.has(invoiceId)}
-                                                        onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked)}
-                                                        className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                                                    /> */}
-                                                    <input
-    type="checkbox"
-    checked={selectedInvoices.has(invoiceId)}
-    onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked, invoice)}
-    disabled={invoice.isExported}
-    className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
-        invoice.isExported 
-            ? 'opacity-50 cursor-not-allowed bg-gray-100' 
-            : 'cursor-pointer hover:bg-green-50'
-    }`}
-/>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
-                                                    {invoice.invoiceNumber || 'N/A'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    {formatDate(invoice.invoiceDate)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
-                                                    {formatCurrency(invoice.invoiceAmount, invoice.currency)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
-                                                        {invoice.currency || 'USD'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    {formatDate(invoice.createdAt)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                    <button
-                                                        onClick={() => handlePreview(invoice)}
-                                                        className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                                                    >
-                                                        <Eye className="h-4 w-4 mr-1" />
-                                                        Preview
-                                                    </button>
-                                                    {/* OPEN button - only for admin and exported invoices */}
-        {/* {userRole === 'admin' && invoice.isExported && (
-            <button
-                onClick={() => handletoUnexport(invoice)}
-                className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
-            >
-                <Eye className="h-4 w-4 mr-1" />
-                OPEN
-            </button>
-        )} */}
-
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Preview Modal */}
-            {previewModalVisible && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                            <h2 className="text-xl font-semibold text-gray-900">Invoice Preview</h2>
-                            <button
-                                onClick={() => setPreviewModalVisible(false)}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                                <X className="h-6 w-6" />
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <InvoiceViewer 
-                                data={previewData} 
-                                setInvoiceModalVisible={setPreviewModalVisible} 
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
+    const input = invoiceRef.current;
+    const totalAmount = invoice.lineItems.reduce(
+      (acc, line) => acc + line.amount,
+      0
     );
-}
+    // const invoicePayload = {
+    //   invoiceNumber: invoice.invoiceId,
+    //   invoiceDate: new Date(invoice.period).toISOString(),
+    //   invoiceAmount: totalAmount,
+    //   createdBy: "Test",
+    //   updatedBy: "Test",
+    //   invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+    //     // timesheetLineNo: line.poLine,
+    //     timesheetLineNo: line.line_No,
+    //     mappedHours: line.hours,
+    //     mappedAmount: line.amount,
+    //     createdBy: "Test",
+    //     updatedBy: "Test",
+    //   })),
+    // };
+
+    // try {
+    //   const response = await fetch(
+    //     "https://timesheet-subk.onrender.com/api/Invoices",
+    //     {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       body: JSON.stringify(invoicePayload),
+    //     }
+    //   );
+    //   if (!response.ok)
+    //     throw new Error(`Failed to create invoice: ${response.status}`);
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const padding = 10;
+    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    const usableWidth = pdfWidth - 2 * padding;
+    const usableHeight = pdfHeight - 2 * padding;
+
+    const imgProps = pdf.getImageProperties(imgData);
+    // const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+    let heightLeft = pdfImgHeight;
+    // let position = 0;
+    let position = padding;
+
+    // pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+    // heightLeft -= pdfHeight;
+    pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+    heightLeft -= usableHeight;
+
+    // while (heightLeft > 0) {
+    //   position = heightLeft - pdfImgHeight;
+    //   pdf.addPage();
+    //   pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+    //   heightLeft -= pdfHeight;
+    // }
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = padding - heightLeft;
+      pdf.addImage(
+        imgData,
+        "PNG",
+        padding,
+        position,
+        usableWidth,
+        pdfImgHeight
+      );
+      heightLeft -= usableHeight;
+    }
+
+    pdf.save("invoice.pdf");
+    setIsLoading(false);
+    setInvoiceModalVisible(false);
+  };
+
+  // catch (error) {
+  //   console.error("Error creating invoice or generating PDF:", error);
+  // }
+
+  const containerStyle = {
+    maxWidth: "768px",
+    margin: "auto",
+    padding: "20px",
+    border: "2px solid #d1d5db",
+    fontFamily: "monospace",
+    fontSize: "15px",
+    color: "#1a202c",
+    backgroundColor: "#fff",
+  };
+  const titleStyle = {
+    textAlign: "center",
+    marginBottom: "20px",
+    fontSize: "18px",
+    fontWeight: "600",
+  };
+  const infoStyle = {
+    marginBottom: "20px",
+    fontFamily: "monospace",
+    fontSize: "15px",
+    whiteSpace: "pre-line",
+  };
+  const boldTextStyle = { fontWeight: 700 };
+  const flexBetweenStyle = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    fontFamily: "monospace",
+    fontSize: "15px",
+    whiteSpace: "pre-line",
+    paddingBottom: "20px",
+  };
+  const columnStyle = { width: "49%" };
+  const addressBlockStyle = { marginBottom: "16px" };
+  const tableStyle = {
+    width: "100%",
+    borderCollapse: "collapse",
+    marginBottom: "20px",
+    fontSize: "12px",
+  };
+  const thStyle = {
+    border: "1px solid #d1d5db",
+    padding: "4px",
+    textAlign: "left",
+    backgroundColor: "#f3f4f6",
+  };
+  const thRightStyle = { ...thStyle, textAlign: "right" };
+  const tdStyle = {
+    border: "1px solid #d1d5db",
+    padding: "2px",
+    whiteSpace: "pre-line",
+  };
+
+  const tdRightStyle = { ...tdStyle, textAlign: "right" };
+  const totalAmountStyle = {
+    textAlign: "right",
+    fontWeight: "600",
+    fontSize: "16px",
+    marginBottom: "24px",
+  };
+  const buttonStyle = {
+    display: "block",
+    margin: "20px auto 0",
+    padding: "10px 20px",
+    backgroundColor: "#2563eb",
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+  };
+
+  const buttonContainerStyle = {
+    display: "flex",
+    justifyContent: "center",
+    gap: "10px", // space between buttons
+    marginTop: "20px",
+  };
+
+  const confirm = {
+    padding: "10px 20px",
+    backgroundColor: "#2563eb",
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+  };
+
+  const cancel = {
+    padding: "10px 20px",
+    backgroundColor: "#eb370fff",
+    color: "#fff",
+    fontWeight: "500",
+    borderRadius: "4px",
+    cursor: "pointer",
+    border: "none",
+  };
+
+  return (
+    <>
+      <div ref={invoiceRef} style={containerStyle}>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        <img
+          src={logoImg}
+          alt="Company Logo"
+          style={{ height: "60px", objectFit: "contain" }}
+        />
+        <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1>
+
+        {/* Two-column information block */}
+        <div style={flexBetweenStyle}>
+          {/* Left Column */}
+          <div style={columnStyle}>
+            <div>
+              <span style={boldTextStyle}>Subcontractor Invoice Number: </span>
+              {invoice.invoiceId || "130617"}
+            </div>
+            <div style={addressBlockStyle}>
+              <span style={boldTextStyle}>Bill To: {"\n"}</span>
+              {invoice.billTo || `Ashburn, VA 20147`}
+            </div>
+            <div>
+              <span style={boldTextStyle}>Buyer: </span>
+              {invoice.buyer || "Clore, Heather J"}
+            </div>
+            <div style={{ marginTop: "16px" }}>
+              <span style={boldTextStyle}>Purchase Order ID: </span>
+              {invoice.purchaseOrderId || "2181218010"} Release Number{" "}
+              {invoice.releaseNumber || "3"} Change Order Number{" "}
+              {invoice.changeOrderNumber || "0"}
+            </div>
+            <div>
+              <span style={boldTextStyle}>PO Start and End Date: </span>
+              {invoice.poStartEndDate || "12/10/18 to 12/08/24"}
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div style={columnStyle}>
+            <div>
+              <span style={boldTextStyle}>Invoice Date: </span>
+              {invoice.invoiceDate || "09/30/24"}
+            </div>
+            <div>
+              <span style={boldTextStyle}>For the Period: </span>
+              {invoice.period || "09/30/24 - 09/30/24"}
+            </div>
+            <div>
+              <span style={boldTextStyle}>Billing Currency: </span>
+              {invoice.currency || "USD"}
+            </div>
+            <div style={addressBlockStyle}>
+              <span style={boldTextStyle}>Remit To: {"\n"}</span>
+              {invoice.remitTo || `Ashburn, VA 20147`}
+            </div>
+            <div>
+              <span style={boldTextStyle}>Terms: </span>
+              {invoice.terms || "PAYNPD"}
+            </div>
+            <div>
+              <span style={boldTextStyle}>Amount Due </span>
+              {invoice.totalAmount.toFixed(2) || "4,307.21"}
+            </div>
+          </div>
+        </div>
+
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th
+                style={{
+                  border: "1px solid #d1d5db",
+                  padding: "4px",
+                  textAlign: "left",
+                  backgroundColor: "#f3f4f6",
+                  borderRight: "none",
+                }}
+              >
+                PLC
+              </th>
+              <th style={thStyle}>Vendor Employee</th>
+              <th style={thRightStyle}>Current Hrs/Qty</th>
+              <th style={thRightStyle}>Rate</th>
+              <th style={thRightStyle}>Additional Amount</th>
+              <th style={thRightStyle}>Current Amount</th>
+              <th style={thRightStyle}>Cumulative Hrs/Qty</th>
+              <th style={thRightStyle}>Cumulative Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(groupedByPoLine).map(([poLine, items]) => (
+              <React.Fragment key={poLine}>
+                <tr>
+                  <td
+                    colSpan={8}
+                    style={{
+                      fontWeight: 700,
+                      fontSize: "15px",
+                      paddinngBottom: "20px",
+                    }}
+                  >
+                    PO LINE {poLine}
+                  </td>{" "}
+                </tr>
+                {items.map((item, index) => (
+                  <tr key={index}>
+                    {/* <td style={tdStyle}>{item.plc || ""}</td>
+                      <td style={tdStyle}>
+                        {[item.vendor, item.employee].filter(Boolean).join("\n")}
+                      </td> */}
+
+                    <td
+                      style={{
+                        border: "1px solid #d1d5db",
+                        padding: "4px",
+                        fontFamily: "monospace",
+                        fontSize: "12px",
+                        whiteSpace: "normal",
+                        wordBreak: "break-word",
+                        verticalAlign: "top",
+                      }}
+                      colSpan={2} // span across the two previous separate columns
+                    >
+                      <div>{item.plc}</div>
+                      <div
+                        style={{
+                          paddingLeft: "20px",
+                          marginTop: "2px",
+                        }}
+                      >
+                        <div>{item.employee}</div>
+                        <div>{item.vendor}</div>
+                      </div>
+                    </td>
+                    <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+                    <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
+                    <td style={tdRightStyle}>$0.00</td>
+                    <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
+                    <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+                    <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+        <div style={totalAmountStyle}>
+          Total Amount Due: ${invoice.totalAmount.toFixed(2)}
+        </div>
+      </div>
+      <div style={buttonContainerStyle}>
+        {/* {isLoading && <div>Loading, please wait...</div>} */}
+
+        <button
+          onClick={handleDownloadPdf}
+          style={confirm}
+          disabled={isLoading}
+        >
+          {isLoading ? "Downloading..." : "Download Invoice"}
+        </button>
+
+        <button onClick={() => setInvoiceModalVisible(false)} style={cancel}>
+          Close
+        </button>
+      </div>
+    </>
+  );
+};
+
+export default InvoiceViewer;
