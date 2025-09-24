@@ -1485,12 +1485,15 @@
 
 // export default InvoiceViewer;
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const invoiceRef = useRef();
 
   if (!data || !Array.isArray(data) || data.length === 0) {
@@ -1524,6 +1527,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   // };
 
   const handleDownloadPdf = async () => {
+    setIsLoading(true);
     if (!invoiceRef.current || !invoice) {
       console.warn("Invoice content or data is missing.");
       return;
@@ -1541,10 +1545,10 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
       updatedBy: "Test",
       billTo: invoice.billTo,
       remitTo: invoice.remitTo,
-      po_Number: invoice.poNumber,
+      po_Number: invoice.po_Number,
       currency: invoice.currency,
       invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
-        // timesheetLineNo: line.poLine,
+        poLineNumber: line.poLine,
         timesheetLineNo: line.line_No,
         mappedHours: line.hours,
         mappedAmount: line.amount,
@@ -1552,6 +1556,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         employee: line.employee,
         vendor: line.vendor,
         plc: line.plc,
+        hours_Date: line.hours_Date,
         createdBy: "Test",
         updatedBy: "Test",
       })),
@@ -1566,6 +1571,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
           body: JSON.stringify(invoicePayload),
         }
       );
+
       if (!response.ok)
         throw new Error(`Failed to create invoice: ${response.status}`);
 
@@ -1602,12 +1608,21 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
         heightLeft -= pdfHeight;
       }
-
+      toast.success("Invoice generated");
       pdf.save("invoice.pdf");
+      // setInvoiceModalVisible(false);
+      setTimeout(() => setInvoiceModalVisible(false), 1000);
+      // setInvoiceModalVisible(false);
 
       // window.location.reload();
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     } catch (error) {
       console.error("Error creating invoice or generating PDF:", error);
+      toast.error("Error generating invoice");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -1713,6 +1728,17 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   return (
     <>
       <div ref={invoiceRef} style={containerStyle}>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <img
           src={logoImg}
           alt="Company Logo"
@@ -1809,18 +1835,18 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
                     style={{
                       fontWeight: 700,
                       fontSize: "15px",
-                      paddinngBottom: "15px",
+                      paddinngBottom: "20px",
                     }}
                   >
-                    {poLine}
+                    PO LINE {poLine}
                   </td>{" "}
                 </tr>
                 {items.map((item, index) => (
                   <tr key={index}>
                     {/* <td style={tdStyle}>{item.plc || ""}</td>
-                    <td style={tdStyle}>
-                      {[item.vendor, item.employee].filter(Boolean).join("\n")}
-                    </td> */}
+                      <td style={tdStyle}>
+                        {[item.vendor, item.employee].filter(Boolean).join("\n")}
+                      </td> */}
 
                     <td
                       style={{
@@ -1862,9 +1888,16 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         </div>
       </div>
       <div style={buttonContainerStyle}>
-        <button onClick={handleDownloadPdf} style={confirm}>
-          Confirm
+        {/* {isLoading && <div>Loading, please wait...</div>} */}
+
+        <button
+          onClick={handleDownloadPdf}
+          style={confirm}
+          disabled={isLoading}
+        >
+          {isLoading ? "Generating..." : "Confirm"}
         </button>
+
         <button onClick={() => setInvoiceModalVisible(false)} style={cancel}>
           Cancel
         </button>
