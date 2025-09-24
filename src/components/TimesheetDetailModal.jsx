@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 // --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
@@ -29,8 +29,22 @@ const showToast = (message, type = 'info') => {
 // --- Initial empty line structure ---
 const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', workOrder: '', wa_Code: '', pmUserID: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
 
-// --- CascadingSelect Component ---
-const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
+// --- CascadingSelect Component (Modified) ---
+const CascadingSelect = ({ label, options, value, onChange, disabled = false, disabledOptions = new Set() }) => (
+    <select
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+    >
+        <option value="">Select {label}</option>
+        {options.map(opt => (
+            <option key={opt.value} value={opt.value} disabled={disabledOptions.has(opt.value)}>
+                {opt.label}
+            </option>
+        ))}
+    </select>
+);
 
 // --- Helper Functions ---
 const formatDate = (dateInput) => {
@@ -113,7 +127,8 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                 }
     
                 let fullWorkOrderString = '';
-                const poEntry = poDataArray.find(po => po.project?.includes(item.projId));
+                const poEntry = poDataArray.find(po => po.wa_Code === item.workOrder && po.project?.includes(item.projId));
+                
                 if (poEntry) {
                     const projectIndex = poEntry.project.indexOf(item.projId);
                     if (projectIndex > -1) {
@@ -143,38 +158,70 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
     
     const handleSelectChange = (id, fieldName, value) => {
-    // ✅ VALIDATION: Check for duplicate Work Order before updating state
-    if (fieldName === 'workOrder' && value) { // Check only when a work order is selected
-        const isDuplicate = lines.some(line => line.id !== id && line.workOrder === value);
-        if (isDuplicate) {
-            showToast("This Work Order has already been selected on another line.", "warning");
-            return; // Abort the change
-        }
-    }
+        const lineToChange = lines.find(l => l.id === id);
+        if (!lineToChange) return;
 
-    // If validation passes, proceed with the state update
-    setLines(currentLines => currentLines.map(line => {
-        if (line.id === id) {
-            let updatedLine = { ...line, [fieldName]: value };
-            if (fieldName === 'workOrder') {
-                if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                if (selectedWorkOrderData) {
-                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-                    if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; }
-                    else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
-                } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
+        const prospectiveWorkOrder = fieldName === 'workOrder' ? value : lineToChange.workOrder;
+        const prospectivePayType = fieldName === 'payType' ? value : lineToChange.payType;
+
+        if (prospectiveWorkOrder) {
+            const isDuplicate = lines.some(otherLine =>
+                otherLine.id !== id &&
+                otherLine.workOrder === prospectiveWorkOrder &&
+                otherLine.payType === prospectivePayType
+            );
+
+            if (isDuplicate) {
+                showToast("This combination of Work Order and Pay Type already exists on another line.", "warning");
+                setLines(prevLines => [...prevLines]);
+                return; 
             }
-            return updatedLine;
         }
-        return line;
-    }));
-};
+
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                let updatedLine = { ...line, [fieldName]: value };
+                if (fieldName === 'workOrder') {
+                    if (!value) { 
+                        const emptyLine = createEmptyLine(id); 
+                        return { ...emptyLine, id: line.id }; 
+                    }
+                    const [waCode, desc] = value.split(' - ');
+                    
+                    const selectedWorkOrderData = purchaseOrderData.find(item => 
+                        item.wa_Code === waCode && item.resourceDesc.includes(desc)
+                    );
+
+                    if (selectedWorkOrderData) {
+                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code || '';
+                        updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
+                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                        if (descIndex > -1) {
+                            updatedLine.description = desc || '';
+                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                        } else {
+                            Object.assign(updatedLine, { description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '' });
+                        }
+                    } else {
+                        const emptyLine = createEmptyLine(id);
+                        return { ...emptyLine, id: line.id };
+                    }
+                }
+                return updatedLine;
+            }
+            return line;
+        }));
+    };
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);
     
         if (value === '') {
-            // Allow the state update to handle setting the value to 0
+            // Allow empty input, will be treated as 0
         } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
             showToast('Hours for a single entry must be between 0 and 24.', 'warning');
             return;
@@ -195,12 +242,11 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                 return currentLines;
             }
     
-            const indexToUpdate = currentLines.findIndex(line => line.id === id);
-            if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
-            const newLines = [...currentLines];
-            const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
-            newLines[indexToUpdate] = updatedLine;
-            return newLines;
+            return currentLines.map(line => 
+                line.id === id 
+                ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } } 
+                : line
+            );
         });
     };
 
@@ -241,57 +287,64 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
     
-const copyLines = () => {
-    if (selectedLines.size === 0) {
-        showToast('Please select at least one line to copy.', 'warning');
-        return;
-    }
-    
-    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
-
-    // First, run the validation to check if copying hours will exceed daily limits
-    const potentialTotals = { ...dailyTotals };
-    let validationFailed = false;
-    linesToCopy.forEach(lineToCopy => {
-        days.forEach(day => {
-            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
-            if (potentialTotals[day] > 24) {
-                validationFailed = true;
-            }
-        });
-    });
-
-    if (validationFailed) {
-        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
-        return;
-    }
-
-    // If validation passes, proceed with copying
-    showToast("Line copied. Please select a new Work Order.", "info");
-
-    const newLines = linesToCopy.map(line => ({
-        ...line,
-        hours: { ...line.hours }, // Keep the hours
-
-        // ✅ FIX: Clear the Work Order and all dependent fields
-        workOrder: '',
-        description: '',
-        project: '',
-        plc: '',
-        poNumber: '',
-        rlseNumber: '',
-        poLineNumber: '',
+    const copyLines = () => {
+        if (selectedLines.size === 0) {
+            showToast('Please select at least one line to copy.', 'warning');
+            return;
+        }
         
-        // Assign a new unique ID for React to track the row
-        id: `temp-${nextId.current++}`,
-        hourIds: {} // Reset database IDs
-    }));
+        const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+        const potentialTotals = { ...dailyTotals };
+        let validationFailed = false;
 
-    setLines(currentLines => [...currentLines, ...newLines]);
-    setSelectedLines(new Set());
-};
+        linesToCopy.forEach(lineToCopy => {
+            days.forEach(day => {
+                potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+                if (potentialTotals[day] > 24) {
+                    validationFailed = true;
+                }
+            });
+        });
+
+        if (validationFailed) {
+            showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
+            return;
+        }
+
+        showToast("Line copied. Please select a new Work Order.", "info");
+
+        const newLines = linesToCopy.map(line => ({
+            ...line,
+            hours: { ...line.hours },
+            workOrder: '',
+            description: '',
+            project: '',
+            plc: '',
+            poNumber: '',
+            rlseNumber: '',
+            poLineNumber: '',
+            id: `temp-${nextId.current++}`,
+            hourIds: {}
+        }));
+
+        setLines(currentLines => [...currentLines, ...newLines]);
+        setSelectedLines(new Set());
+    };
     const handleSave = async () => {
         setIsCurrentlySaving(true);
+
+        // --- Start of Fix ---
+        // Validate that any line with hours has a work order selected.
+        for (const line of lines) {
+            const totalHoursForLine = Object.values(line.hours).reduce((sum, h) => sum + (parseFloat(h) || 0), 0);
+            if (totalHoursForLine > 0 && !line.workOrder) {
+                showToast(`Please select a Work Order for all lines with hours entered.`, 'warning');
+                setIsCurrentlySaving(false); // Unlock the button
+                return; // Stop the submission
+            }
+        }
+        // --- End of Fix ---
+
         const now = new Date().toISOString();
         const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
         lines.forEach(line => { days.forEach(day => { finalTotals[day] += parseFloat(line.hours[day]) || 0; }); });
@@ -315,7 +368,7 @@ const copyLines = () => {
 
         linesToDelete.forEach(id => {
             if (typeof id === 'number' || !id.startsWith('temp-')) {
-                 promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: 'DELETE' }));
+                promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: 'DELETE' }));
             }
         });
         lines.forEach(currentLine => {
@@ -327,8 +380,8 @@ const copyLines = () => {
     Description: currentLine.description || 'New Timesheet Line',
     ProjId: currentLine.project || '',
     Plc: currentLine.plc || '',
-    WorkOrder: currentLine.wa_Code || '', // ✅ Added this line
-    pm_User_Id: currentLine.pmUserID || null, // ✅ Added this line
+    WorkOrder: currentLine.wa_Code || '', 
+    pm_User_Id: currentLine.pmUserID || null, 
     PayType: currentLine.payType || 'SR',
     PoNumber: currentLine.poNumber || '',
     RlseNumber: currentLine.rlseNumber || "0",
@@ -336,13 +389,13 @@ const copyLines = () => {
     PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
     Timesheet_Date: new Date(timesheetData.Date).toISOString(),
     CreatedBy: String(timesheetData["Employee ID"]),
-    UpdatedAt: now, // ✅ Added this line
+    UpdatedAt: now,
     UpdatedBy: String(timesheetData["Employee ID"]),
     TimesheetHours: days.map(day => ({
         Ts_Date: weekDates[day],
         Hours: currentLine.hours[day] || 0
     }))
-};
+    };
                     promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
                 }
                 return;
@@ -377,11 +430,42 @@ const copyLines = () => {
         }
     };
     
-    if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
+    const workOrderOptions = useMemo(() => 
+        Array.from(new Map(purchaseOrderData.flatMap(item => (item.resourceDesc || []).map(desc => { 
+            const label = `${item.wa_Code} - ${desc}`; 
+            return [label, { value: label, label: label }]; 
+        }))).values()), 
+    [purchaseOrderData]);
+    
+    const fullyUsedWorkOrders = useMemo(() => {
+        const counts = new Map();
+        lines.forEach(line => {
+            if (line.workOrder) {
+                counts.set(line.workOrder, (counts.get(line.workOrder) || 0) + 1);
+            }
+        });
 
-    const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap(item => (item.resourceDesc || []).map(desc => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
-    const dailyTotals = days.reduce((acc, day) => { acc[day] = lines.reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0); return acc; }, {});
-    const grandTotal = Object.values(dailyTotals).reduce((sum, dayTotal) => sum + dayTotal, 0);
+        const used = new Set();
+        for (const [workOrder, count] of counts.entries()) {
+            if (count >= 2) {
+                used.add(workOrder);
+            }
+        }
+        return used;
+    }, [lines]);
+    
+    const dailyTotals = useMemo(() => 
+        days.reduce((acc, day) => { 
+            acc[day] = lines.reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0); 
+            return acc; 
+        }, {}),
+    [lines, days]);
+
+    const grandTotal = useMemo(() => 
+        Object.values(dailyTotals).reduce((sum, dayTotal) => sum + dayTotal, 0),
+    [dailyTotals]);
+
+    if (isLoading) { return <div className="text-center p-8">Loading...</div>; }
 
     return (
         <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
@@ -408,7 +492,16 @@ const copyLines = () => {
                                 <tr key={line.id} className="hover:bg-slate-50/50">
                                     <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} /></td>
                                     <td className="p-3 text-center text-gray-500">{index + 1}</td>
-                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} disabled={!isEditable} /></td>
+                                    <td className="p-2 min-w-[150px]">
+                                        <CascadingSelect 
+                                            label="Work Order" 
+                                            options={workOrderOptions} 
+                                            value={line.workOrder} 
+                                            onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} 
+                                            disabled={!isEditable} 
+                                            disabledOptions={new Set([...fullyUsedWorkOrders].filter(wo => wo !== line.workOrder))}
+                                        />
+                                    </td>
                                     <td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly/></td>
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
@@ -421,18 +514,21 @@ const copyLines = () => {
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                    {days.map(day => 
-                                        <td key={day} className="p-2">
-                                            <input 
-                                                type="number" 
-                                                step="0.5" 
-                                                value={line.hours[day]} 
-                                                onChange={e => handleHourChange(line.id, day, e.target.value)} 
-                                                className="w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                                disabled={!isEditable || day === 'sat' || day === 'sun'} 
-                                            />
-                                        </td>
-                                    )}
+                                    {days.map(day => {
+                                        const isWeekend = day === 'sat' || day === 'sun';
+                                        return (
+                                            <td key={day} className="p-2">
+                                                <input 
+                                                    type="number" 
+                                                    step="0.5" 
+                                                    value={line.hours[day]} 
+                                                    onChange={e => handleHourChange(line.id, day, e.target.value)} 
+                                                    className={`w-20 text-right p-1.5 border border-gray-200 rounded-md shadow-sm disabled:text-gray-500 disabled:cursor-not-allowed ${isEditable ? (isWeekend ? 'bg-gray-100' : 'bg-white') : 'bg-gray-200'}`}
+                                                    disabled={!isEditable} 
+                                                />
+                                            </td>
+                                        );
+                                    })}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>
                                 );
@@ -443,7 +539,7 @@ const copyLines = () => {
                                 <td colSpan="10" className="p-3 text-right">Total Hours</td>
                                 {days.map(day => (
                                     <td key={day} className="p-2">
-                                        <div className={`w-20 text-right p-1.5 font-semibold ${day === 'sat' || day === 'sun' ? 'text-gray-400' : 'text-gray-800'}`}>
+                                        <div className={`w-20 text-right p-1.5 font-semibold text-gray-800`}>
                                             {dailyTotals[day].toFixed(2)}
                                         </div>
                                     </td>
@@ -471,3 +567,4 @@ const copyLines = () => {
         </div>
     );
 };
+

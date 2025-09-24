@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 
 // --- SVG Icons ---
@@ -31,7 +30,17 @@ const showToast = (message, type = 'info') => {
 const createEmptyLine = (id) => ({ id, description: '', project: '', plc: '', wa_Code: '', pmUserID: '', payType: 'SR', poNumber: '', rlseNumber: '', poLineNumber: '', hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }, hourIds: {} });
 
 // --- CascadingSelect Component ---
-const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => ( <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}><option value="">Select {label}</option>{options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select> );
+const CascadingSelect = ({ label, options, value, onChange, disabled = false, disabledOptions = new Set() }) => (
+    <select 
+        value={value} 
+        onChange={onChange} 
+        disabled={disabled} 
+        className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+    >
+        <option value="">Select {label}</option>
+        {options.map(opt => <option key={opt.value} value={opt.value} disabled={disabledOptions.has(opt.value)}>{opt.label}</option>)}
+    </select>
+);
 
 // --- Data for the period dropdown ---
 const timePeriods = [
@@ -53,7 +62,6 @@ const getWeekEndDateFromPeriod = (period) => {
     const lastDayString = period.dates[period.dates.length - 1];
     const datePart = lastDayString.split(' ')[1];
     const [month, day] = datePart.split('/');
-    // Assuming the year is 2025 for this static data
     const date = new Date(Date.UTC(2025, parseInt(month, 10) - 1, parseInt(day, 10)));
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
@@ -65,14 +73,14 @@ const formatDateForComparison = (dateInput) => {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
 
-export default function TimesheetLine({ onClose, resourceId, existingTimesheetDates = [], timesheetToEdit = null, currentUser }) {
+export default function TimesheetLine({ onClose, resourceId, existingTimesheetDates = [], timesheetToEdit = null }) {
     const [purchaseOrderData, setPurchaseOrderData] = useState([]);
     const [lines, setLines] = useState([]);
     const [selectedLines, setSelectedLines] = useState(new Set());
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedPeriod, setSelectedPeriod] = useState(timePeriods[0]);
     const [isPeriodInvalid, setIsPeriodInvalid] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false); // New state for submission lock
 
     const isEditMode = Boolean(timesheetToEdit);
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -178,171 +186,149 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     }, [selectedPeriod, existingTimesheetDates, isEditMode]);
 
     const handleSelectChange = (id, fieldName, value) => {
-    // ✅ VALIDATION: Check for duplicate Work Order before updating state
-    if (fieldName === 'workOrder' && value) {
-        const isDuplicate = lines.some(line => line.id !== id && line.workOrder === value);
-        if (isDuplicate) {
-            showToast("This Work Order has already been selected on another line.", "warning");
-            return; // Abort the change
-        }
-    }
+        const lineToChange = lines.find(l => l.id === id);
+        if (!lineToChange) return;
 
-    // If validation passes, proceed with the state update
-    setLines(currentLines => currentLines.map(line => {
-        if (line.id === id) {
-            const updatedLine = { ...line, [fieldName]: value };
+        const prospectiveWorkOrder = fieldName === 'workOrder' ? value : lineToChange.workOrder;
+        const prospectivePayType = fieldName === 'payType' ? value : lineToChange.payType;
 
-            if (fieldName === 'workOrder') {
-                if (!value) {
-                    updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserId = '';
-                    return updatedLine;
-                }
+        if (prospectiveWorkOrder) {
+            const isDuplicate = lines.some(otherLine =>
+                otherLine.id !== id &&
+                otherLine.workOrder === prospectiveWorkOrder &&
+                otherLine.payType === prospectivePayType
+            );
 
-                const [waCode, desc] = value.split(' - ');
-                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-
-                if (selectedWorkOrderData) {
-                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
-                    updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
-
-                    const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-
-                    if (descIndex > -1) {
-                        updatedLine.description = desc || '';
-                        updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
-                        updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
-                        updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
-                        updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
-                        updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
-                    } else {
-                        updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = '';
-                    }
-                } else {
-                     updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = '';
-                }
+            if (isDuplicate) {
+                showToast("This combination of Work Order and Pay Type already exists.", "warning");
+                setLines(prevLines => [...prevLines]); // Force a re-render to revert the dropdown
+                return;
             }
-            return updatedLine;
         }
-        return line;
-    }));
-};
+
+        setLines(currentLines => currentLines.map(line => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
+
+                if (fieldName === 'workOrder') {
+                    if (!value) {
+                        return { ...createEmptyLine(id), id: line.id }; // Reset line but keep ID
+                    }
+
+                    const [waCode, desc] = value.split(' - ');
+                    const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode && item.resourceDesc.includes(desc));
+
+                    if (selectedWorkOrderData) {
+                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code;
+                        updatedLine.pmUserID = selectedWorkOrderData.pmUserId || '';
+
+                        const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                        if (descIndex > -1) {
+                            updatedLine.description = desc || '';
+                            updatedLine.project = selectedWorkOrderData.project[descIndex] || '';
+                            updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || '';
+                            updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || '';
+                            updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || '';
+                            updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || '';
+                        }
+                    }
+                }
+                return updatedLine;
+            }
+            return line;
+        }));
+    };
 
     const handleHourChange = (id, day, value) => {
-    const numValue = parseFloat(value);
+        const numValue = parseFloat(value);
+        if (value !== '' && (isNaN(numValue) || numValue < 0 || numValue > 24 || (numValue % 0.5 !== 0))) {
+            showToast('Hours must be a number between 0 and 24, in 0.5 increments.', 'warning');
+            return;
+        }
 
-    if (value === '') {
-        // Allow the state update to handle setting the value to 0
-    } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
-        showToast('Hours for a single entry must be between 0 and 24.', 'warning');
-        return;
-    } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
-        // This is the new validation for .0 and .5 increments
-        showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
-        return;
-    }
+        const currentVal = value === '' ? 0 : numValue;
+        const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+        if (otherLinesTotal + currentVal > 24) {
+            showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+            return;
+        }
 
-    const otherLinesTotal = lines
-        .filter(line => line.id !== id)
-        .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
-
-    const newColumnTotal = otherLinesTotal + (numValue || 0);
-
-    if (newColumnTotal > 24) {
-        showToast(`Total hours for this day cannot exceed 24.`, 'warning');
-        return;
-    }
-
-    setLines(currentLines =>
-        currentLines.map(line =>
-            line.id === id
-            ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } }
-            : line
-        )
-    );
-};
+        setLines(currentLines =>
+            currentLines.map(line =>
+                line.id === id
+                ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : currentVal } }
+                : line
+            )
+        );
+    };
 
     const addLine = () => setLines(prev => [...prev, createEmptyLine(`temp-${Date.now()}`)]);
+    
     const handleSelectLine = (id) => {
         const newSelection = new Set(selectedLines);
         newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
         setSelectedLines(newSelection);
     };
+
     const deleteLines = () => {
         if (selectedLines.size === 0) return showToast('Please select lines to delete.', 'warning');
         setLines(lines.filter(line => !selectedLines.has(line.id)));
         setSelectedLines(new Set());
     };
+
     const copyLines = () => {
-    if (selectedLines.size === 0) {
-        showToast('Please select lines to copy.', 'warning');
-        return;
-    }
+        if (selectedLines.size === 0) return showToast('Please select lines to copy.', 'warning');
 
-    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+        const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+        const potentialTotals = { ...dailyTotals };
+        let validationFailed = false;
 
-    // Validation: Check if this copy action will exceed daily limits
-    const potentialTotals = { ...dailyTotals };
-    let validationFailed = false;
-
-    linesToCopy.forEach(lineToCopy => {
-        days.forEach(day => {
-            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
-            if (potentialTotals[day] > 24) {
-                validationFailed = true;
-            }
+        linesToCopy.forEach(lineToCopy => {
+            days.forEach(day => {
+                potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+                if (potentialTotals[day] > 24) validationFailed = true;
+            });
         });
-    });
 
-    if (validationFailed) {
-        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
-        return; // Abort the copy
-    }
-
-    // If validation passes, inform the user and proceed with copying
-    showToast("Line copied. Please select a new Work Order.", "info");
-
-    const newLines = linesToCopy.map(line => ({
-        ...line,
-        hours: { ...line.hours }, // Keep the hours
-
-        // Clear the Work Order and all dependent fields to enforce uniqueness
-        workOrder: '',
-        description: '',
-        project: '',
-        plc: '',
-        poNumber: '',
-        rlseNumber: '',
-        poLineNumber: '',
-
-        // Assign a new unique ID
-        id: `temp-${Date.now()}-${Math.random()}`,
-        hourIds: {} // Reset database IDs
-    }));
-
-    setLines(prev => [...prev, ...newLines]);
-    setSelectedLines(new Set());
-};
+        if (validationFailed) return showToast("Copying would exceed 24 hours on a day.", "error");
+        
+        showToast("Line copied. Please select a new Work Order.", "info");
+        const newLines = linesToCopy.map(line => ({
+            ...line,
+            hours: { ...line.hours },
+            workOrder: '', description: '', project: '', plc: '', poNumber: '', rlseNumber: '', poLineNumber: '',
+            id: `temp-${Date.now()}-${Math.random()}`,
+            hourIds: {}
+        }));
+        setLines(prev => [...prev, ...newLines]);
+        setSelectedLines(new Set());
+    };
 
     const handleSubmit = async () => {
-         if (grandTotal === 0) {
-        showToast("Cannot submit a timesheet with zero hours.", "warning");
-        return; // Stop the submission
-    }
-        
-        setIsSubmitting(true); // Lock the button
+        setIsSubmitting(true);
+
+        // --- Start of Fix ---
+        for (const line of lines) {
+            const totalHoursForLine = Object.values(line.hours).reduce((sum, h) => sum + (parseFloat(h) || 0), 0);
+            if (totalHoursForLine > 0 && !line.workOrder) {
+                showToast(`Please select a Work Order for all lines with hours entered.`, 'warning');
+                setIsSubmitting(false);
+                return;
+            }
+        }
+        // --- End of Fix ---
+
+        if (grandTotal === 0) {
+            showToast("Cannot submit a timesheet with zero hours.", "warning");
+            setIsSubmitting(false);
+            return;
+        }
 
         const API_URL = "https://timesheet-subk.onrender.com/api/SubkTimesheet";
 
-        for (const line of lines) {
-            if (!line.project || !line.poLineNumber) {
-                showToast(`Please complete the Work Order for "${line.description || 'the new line'}".`, 'warning');
-                setIsSubmitting(false); // Unlock on validation error
-                return;
-            }
-
+        for (const line of lines.filter(l => Object.values(l.hours).some(h => (parseFloat(h) || 0) > 0))) {
             const method = isEditMode ? 'PUT' : 'POST';
             const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
-
             const now = new Date().toISOString();
             const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
             const weekEndDateAsISO = new Date(weekEndDateString).toISOString();
@@ -394,40 +380,40 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                 }
             } catch (error) {
                 showToast(error.message, 'error');
-                setIsSubmitting(false); // Unlock on API error
+                setIsSubmitting(false);
                 return;
             }
         }
 
         showToast(`Timesheet ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
-        
-        // Refresh the page after a short delay to allow the toast to be seen
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+        onClose(true); // Pass true to indicate success for refresh
     };
 
     const workOrderOptions = useMemo(() => {
-        if (!purchaseOrderData) return [];
-        const uniqueOptions = new Map();
-        purchaseOrderData.forEach(item => {
-            item.resourceDesc.forEach(desc => {
-                const value = `${item.wa_Code} - ${desc}`;
-                uniqueOptions.set(value, { value, label: value });
-            });
-        });
-        return Array.from(uniqueOptions.values());
+        return Array.from(new Map(purchaseOrderData.flatMap(item => 
+            (item.resourceDesc || []).map(desc => {
+                const label = `${item.wa_Code} - ${desc}`;
+                return [label, { value: label, label }];
+            })
+        )).values());
     }, [purchaseOrderData]);
-    
+
+    const fullyUsedWorkOrders = useMemo(() => {
+        const lineCounts = lines.reduce((acc, line) => {
+            if (line.workOrder) acc.set(line.workOrder, (acc.get(line.workOrder) || 0) + 1);
+            return acc;
+        }, new Map());
+        return new Set([...lineCounts.keys()].filter(wo => lineCounts.get(wo) >= 2));
+    }, [lines]);
+
     const dailyTotals = useMemo(() => {
-        const totals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
-        lines.forEach(line => {
+        return lines.reduce((totals, line) => {
             days.forEach(day => {
                 totals[day] += parseFloat(line.hours[day]) || 0;
             });
-        });
-        return totals;
-    }, [lines, days]);
+            return totals;
+        }, { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 });
+    }, [lines]);
 
     const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
 
@@ -476,7 +462,15 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                                     <tr key={line.id} className="hover:bg-slate-50/50">
                                         <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} /></td>
                                         <td className="p-3 text-center text-gray-500">{index + 1}</td>
-                                        <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} /></td>
+                                        <td className="p-2 min-w-[150px]">
+                                            <CascadingSelect 
+                                                label="Work Order" 
+                                                options={workOrderOptions} 
+                                                value={line.workOrder} 
+                                                onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)}
+                                                disabledOptions={new Set([...fullyUsedWorkOrders].filter(wo => wo !== line.workOrder))}
+                                            />
+                                        </td>
                                         <td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
@@ -489,7 +483,20 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                                         <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                         <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                        {days.map(day => <td key={day} className="p-2"><input type="number" step="0.5" value={line.hours[day]} onChange={e => handleHourChange(line.id, day, e.target.value)} className={`w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed`} disabled={day === 'sat' || day === 'sun'} /></td>)}
+                                        {days.map(day => {
+                                            const isWeekend = day === 'sat' || day === 'sun';
+                                            return(
+                                                <td key={day} className="p-2">
+                                                    <input 
+                                                        type="number" 
+                                                        step="0.5" 
+                                                        value={line.hours[day]} 
+                                                        onChange={e => handleHourChange(line.id, day, e.target.value)} 
+                                                        className={`w-20 text-right p-1.5 border border-gray-200 rounded-md shadow-sm ${isWeekend ? 'bg-gray-100' : 'bg-white'}`} 
+                                                    />
+                                                </td>
+                                            );
+                                        })}
                                         <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                     </tr>
                                 );
@@ -500,7 +507,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                                 <td colSpan="10" className="p-3 text-right text-gray-800">Total Hours</td>
                                 {days.map(day => (
                                     <td key={day} className="p-2 text-center">
-                                        <div className={`w-20 p-1.5 ${day === 'sat' || day === 'sun' ? 'text-gray-400' : ''}`}>
+                                        <div className={`w-20 p-1.5`}>
                                             {dailyTotals[day].toFixed(2)}
                                         </div>
                                     </td>
@@ -513,7 +520,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                     </table>
                 </div>
                 <div className="mt-6 flex justify-end gap-3">
-                    <ActionButton onClick={onClose} variant="secondary">Cancel</ActionButton>
+                    <ActionButton onClick={() => onClose(false)} variant="secondary">Cancel</ActionButton>
                     <ActionButton onClick={handleSubmit} variant="primary" disabled={isPeriodInvalid || isSubmitting}>
                         {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Save')}
                     </ActionButton>
@@ -522,3 +529,4 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
         </div>
     );
 }
+
