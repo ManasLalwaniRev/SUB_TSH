@@ -4003,6 +4003,7 @@ export default function ExportTable() {
       description: "Description",
       glc: "GLC",
       invoiceGenerated: "Invoice Generated",
+      hours_Date_str: "Hours Date",
     };
 
     if (fieldMappings[fieldName]) {
@@ -4400,7 +4401,7 @@ export default function ExportTable() {
           "description",
           "plc",
           "paytype",
-          "hours_date",
+          "hours_date_str",
           "hours",
           "perhrrate",
           "amt",
@@ -4423,7 +4424,8 @@ export default function ExportTable() {
             !key.toLowerCase().includes("resource_desc") &&
             !key.toLowerCase().includes("lineno") &&
             !key.toLowerCase().includes("comment") &&
-            !key.toLowerCase().includes("ipaddress")
+            !key.toLowerCase().includes("ipaddress")  &&
+            !key.toLowerCase().includes("hours_date") 
         );
 
         // Compose final columns with correct casing from filteredKeys

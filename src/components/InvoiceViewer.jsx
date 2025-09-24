@@ -746,7 +746,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   const invoiceRef = useRef();
 
   if (!data || !Array.isArray(data) || data.length === 0) {
-    return <div>No invoice data available</div>;
+    return <div>Loading...</div>;
   }
 
   const invoice = data[0];
