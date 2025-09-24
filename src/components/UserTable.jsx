@@ -47,10 +47,10 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
         setError('');
 
         try {
-            const response = await fetch('https://timesheet-subk.onrender.com/api/User', {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: 'PUT', // Corrected: Use PUT for both reset and update actions
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(body),
             });
 
             if (!response.ok) {
