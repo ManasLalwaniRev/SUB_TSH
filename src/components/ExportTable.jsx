@@ -3793,6 +3793,36 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import InvoiceViewer from "./Invoice";
 
+// Add these icon components after your imports
+const CrossIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="red"
+    strokeWidth={2}
+    width="16"
+    height="16"
+  >
+    <line x1="6" y1="6" x2="18" y2="18" />
+    <line x1="6" y1="18" x2="18" y2="6" />
+  </svg>
+);
+
+const CheckedIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="green"
+    strokeWidth={2}
+    width="16"
+    height="16"
+  >
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
 // Toast notification utility (keep your implementation)
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -3972,6 +4002,7 @@ export default function ExportTable() {
       vend_Name: "Vendor Name",
       description: "Description",
       glc: "GLC",
+      invoiceGenerated: "Invoice Generated",
     };
 
     if (fieldMappings[fieldName]) {
@@ -4363,6 +4394,7 @@ export default function ExportTable() {
         // Define desired column order keys (lowercase)
         const desiredOrder = [
           "status",
+          "invoicegenerated",
           "resource_id",
           "resource_name",
           "description",
@@ -5157,7 +5189,7 @@ export default function ExportTable() {
       setShowInvoice(invoiceData);
 
       showToast(
-        `Invoice generated successfully for ${selectedData.length} timesheets`,
+        `Invoice preview for ${selectedData.length} timesheets`,
         "success"
       );
       setInvoiceModalVisible(true);
@@ -5362,6 +5394,14 @@ export default function ExportTable() {
       </div>
     );
   }
+
+  // Add this before your return statement
+  const anyInvoiceGenerated = rows.some(
+    (row) =>
+      row["Invoice Generated"] === true ||
+      row["Invoice Generated"] === "true" ||
+      (row["Invoice Generated"] || "").toString().toLowerCase() === "true"
+  );
 
   return (
     <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
@@ -5784,8 +5824,18 @@ export default function ExportTable() {
                                 onChange={() => handleRowSelect(row.id)}
                                 className="cursor-pointer"
                                 disabled={
-                                  (row.Status || row.status || row[col]) !==
-                                  "Approved"
+                                  (
+                                    row.Status ||
+                                    row.status ||
+                                    ""
+                                  ).toUpperCase() !== "APPROVED" ||
+                                  (
+                                    row.Status ||
+                                    row.status ||
+                                    ""
+                                  ).toUpperCase() === "REJECTED" ||
+                                  row["Invoice Generated"] === true ||
+                                  row["Invoice Generated"] === "true"
                                 }
                               />
                             ) : col === "Status" ? (
@@ -5797,6 +5847,18 @@ export default function ExportTable() {
                               >
                                 {row[col] || row.Status || row.status || ""}
                               </span>
+                            ) : col === "Invoice Generated" ? (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                              >
+                                {row[col] === true || row[col] === "true"
+                                  ? "Y"
+                                  : "N"}
+                              </div>
                             ) : (
                               row[col] || ""
                             )}

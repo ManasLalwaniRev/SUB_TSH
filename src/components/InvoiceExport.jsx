@@ -1694,27 +1694,132 @@ export default function InvoiceExport() {
     };
 
     // Handle select all checkbox
-    const handleSelectAll = (checked) => {
-        setSelectAll(checked);
-        if (checked) {
-            const allIds = new Set(filteredInvoices.map((invoice, index) => invoice.invoiceId || index));
-            setSelectedInvoices(allIds);
-        } else {
-            setSelectedInvoices(new Set());
-        }
-    };
+    // const handleSelectAll = (checked) => {
+    //     setSelectAll(checked);
+    //     if (checked) {
+    //         const allIds = new Set(filteredInvoices.map((invoice, index) => invoice.invoiceId || index));
+    //         setSelectedInvoices(allIds);
+    //     } else {
+    //         setSelectedInvoices(new Set());
+    //     }
+    // };
+//     const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//         // Only select invoices that are not exported (isExported: false)
+//         const selectableInvoices = filteredInvoices.filter(invoice => !invoice.isExported);
+//         const allSelectableIds = new Set(selectableInvoices.map((invoice, index) => invoice.invoiceId || index));
+//         setSelectedInvoices(allSelectableIds);
+//     } else {
+//         setSelectedInvoices(new Set());
+//     }
+// };
+
 
     // Handle individual checkbox
-    const handleSelectInvoice = (invoiceId, checked) => {
-        const newSelected = new Set(selectedInvoices);
+    // const handleSelectInvoice = (invoiceId, invoice,checked) => {
+    //     if (invoice.isExported) return;
+    //     const newSelected = new Set(selectedInvoices);
+    //     if (checked) {
+    //         newSelected.add(invoiceId);
+    //     } else {
+    //         newSelected.delete(invoiceId);
+    //     }
+    //     setSelectedInvoices(newSelected);
+    //     setSelectAll(newSelected.size === filteredInvoices.length);
+    // };
+
+    // Calculate selectable invoices (only those that are not exported)
+const selectableInvoices = filteredInvoices.filter(invoice => !invoice.isExported);
+const disabledInvoices = filteredInvoices.filter(invoice => invoice.isExported);
+
+// Handle select all checkbox
+const handleSelectAll = (checked) => {
+    setSelectAll(checked);
+    if (checked) {
+        // Only select invoices that are not exported (isExported: false)
+        const allSelectableIds = new Set(selectableInvoices.map((invoice, index) => 
+            invoice.invoiceId || filteredInvoices.indexOf(invoice)
+        ));
+        setSelectedInvoices(allSelectableIds);
+    } else {
+        setSelectedInvoices(new Set());
+    }
+};
+
+// Handle individual checkbox
+const handleSelectInvoice = (invoiceId, checked, invoice) => {
+    // Prevent selection if invoice is exported
+    if (invoice && invoice.isExported) return;
+    
+    setSelectedInvoices(prev => {
+        const newSelected = new Set(prev);
         if (checked) {
             newSelected.add(invoiceId);
         } else {
             newSelected.delete(invoiceId);
         }
-        setSelectedInvoices(newSelected);
-        setSelectAll(newSelected.size === filteredInvoices.length);
-    };
+        
+        // Update select all state - check if all selectable invoices are selected
+        const allSelectableSelected = selectableInvoices.length > 0 && 
+            selectableInvoices.every(inv => {
+                const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+                return newSelected.has(id);
+            });
+        setSelectAll(allSelectableSelected);
+        
+        return newSelected;
+    });
+};
+
+// // Handle unexport (reopen) invoice - only for admin
+// const handletoUnexport = async (invoice) => {
+//     if (userRole !== 'admin') {
+//         alert('Access denied. Admin privileges required.');
+//         return;
+//     }
+    
+//     try {
+//         // API call to unexport the invoice
+//         const response = await fetch(`https://timesheet-subk.onrender.com/api/invoices/${invoice.invoiceId}/unexport`, {
+//             method: 'PATCH', // or PUT depending on your API
+//             headers: {
+//                 'Content-Type': 'application/json',
+//                 // Add authorization header if needed
+//                 // 'Authorization': `Bearer ${token}`
+//             },
+//             body: JSON.stringify({
+//                 isExported: false
+//             })
+//         });
+
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const updatedInvoice = await response.json();
+        
+//         // Update the local state
+//         setInvoices(prev => prev.map(inv => 
+//             inv.invoiceId === invoice.invoiceId 
+//                 ? { ...inv, isExported: false }
+//                 : inv
+//         ));
+        
+//         setFilteredInvoices(prev => prev.map(inv => 
+//             inv.invoiceId === invoice.invoiceId 
+//                 ? { ...inv, isExported: false }
+//                 : inv
+//         ));
+
+//         alert('Invoice reopened successfully!');
+        
+//     } catch (error) {
+//         console.error('Error reopening invoice:', error);
+//         alert('Failed to reopen invoice: ' + error.message);
+//     }
+// };
+
 
     // Handle preview click
     const handlePreview = async (invoice) => {
@@ -1858,7 +1963,7 @@ export default function InvoiceExport() {
                                 'Accept': 'text/csv, application/csv, application/octet-stream, */*',
                                 'Content-Type': 'application/json',
                             },
-                            body: JSON.stringify(payload)
+                            // body: JSON.stringify(payload)
                         }
                     );
 
@@ -2036,19 +2141,44 @@ export default function InvoiceExport() {
                             <table className="min-w-full">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+                                        {/* <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
                                             <div className="flex items-center space-x-2">
                                                 <input
                                                     type="checkbox"
                                                     checked={selectAll}
                                                     onChange={(e) => handleSelectAll(e.target.checked)}
+                                                    
                                                     className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
                                                 />
+                                                 
                                                 <span className="text-xs font-medium text-gray-500 tracking-wider">
                                                     All
                                                 </span>
                                             </div>
-                                        </th>
+                                        </th> */}
+                                        <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+    <div className="flex items-center space-x-2">
+        <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            // Disable if no selectable invoices exist
+            disabled={selectableInvoices.length === 0}
+            // Add visual styling for mixed state (some disabled invoices exist)
+            className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+                selectableInvoices.length === 0 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : disabledInvoices.length > 0 
+                        ? 'opacity-75' // Visual indicator that some are disabled
+                        : 'cursor-pointer'
+            }`}
+        />
+        <span className="text-xs font-medium text-gray-500 tracking-wider">
+            All 
+        </span>
+    </div>
+</th>
+
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
                                             Invoice Number
                                         </th>
@@ -2075,12 +2205,23 @@ export default function InvoiceExport() {
                                         return (
                                             <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <input
+                                                    {/* <input
                                                         type="checkbox"
                                                         checked={selectedInvoices.has(invoiceId)}
                                                         onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked)}
                                                         className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                                                    />
+                                                    /> */}
+                                                    <input
+    type="checkbox"
+    checked={selectedInvoices.has(invoiceId)}
+    onChange={(e) => handleSelectInvoice(invoiceId, e.target.checked, invoice)}
+    disabled={invoice.isExported}
+    className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+        invoice.isExported 
+            ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+            : 'cursor-pointer hover:bg-green-50'
+    }`}
+/>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
                                                     {invoice.invoiceNumber || 'N/A'}
@@ -2107,6 +2248,17 @@ export default function InvoiceExport() {
                                                         <Eye className="h-4 w-4 mr-1" />
                                                         Preview
                                                     </button>
+                                                    {/* OPEN button - only for admin and exported invoices */}
+        {/* {userRole === 'admin' && invoice.isExported && (
+            <button
+                onClick={() => handletoUnexport(invoice)}
+                className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+            >
+                <Eye className="h-4 w-4 mr-1" />
+                OPEN
+            </button>
+        )} */}
+
                                                 </td>
                                             </tr>
                                         );
