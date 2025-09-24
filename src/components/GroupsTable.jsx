@@ -493,7 +493,7 @@ export default function GroupsTable() {
                             >
                                 Add Record
                             </button>
-                            <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button>
+                            {/* <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button> */}
                         </div>
                     </div>
 
