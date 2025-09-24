@@ -4475,7 +4475,14 @@ export default function ExportTable() {
               key.toLowerCase().includes("date")
             ) {
               value = formatDate(value);
-            } else if (key === "hours" || key.toLowerCase().includes("hour")) {
+            }
+            // else if (
+            //   key === "hours_Date" ||
+            //   key.toLowerCase().includes("date")
+            // ) {
+            //   value = formatDate(value);
+            // }
+            else if (key === "hours" || key.toLowerCase().includes("hour")) {
               value = formatHours(value);
             } else if (value === null || value === undefined) {
               value = "";
@@ -4659,13 +4666,25 @@ export default function ExportTable() {
 
     const statusCodes = [];
     if (statusFilter.approved) statusCodes.push("APPROVED");
-    if (statusFilter.invoiceGenerated) statusCodes.push("INVOICED");
-    if (statusFilter.exported) statusCodes.push("EXPORTED");
+    // if (statusFilter.invoiceGenerated) statusCodes.push("INVOICED");
+    // if (statusFilter.exported) statusCodes.push("EXPORTED");
 
     if (statusCodes.length > 0) {
       filtered = filtered.filter((row) =>
         statusCodes.includes((row.Status || row.status || "").toUpperCase())
       );
+    }
+
+    // Invoice Generated Filter - Separate from status filter
+    if (statusFilter.invoiceGenerated) {
+      filtered = filtered.filter((row) => {
+        // Check if the row has invoiceGenerated field set to true
+        return (
+          row.originalItem?.invoiceGenerated === true ||
+          row["Invoice Generated"] === true ||
+          row.invoiceGenerated === true
+        );
+      });
     }
 
     // Filter by date range (Start date and End date)
@@ -4777,9 +4796,48 @@ export default function ExportTable() {
   // };
 
   // Determine if any approved rows exist
+  // const hasApprovedRows = filteredRows.some(
+  //   (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+  // );
+  // const handleSelectAll = () => {
+  //   if (selectAll) {
+  //     setSelectedRows(new Set());
+  //     setSelectAll(false);
+  //   } else {
+  //     const approvedRowIds = filteredRows
+  //       .filter(
+  //         (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+  //       )
+  //       .map((row) => row.id);
+
+  //     setSelectedRows(new Set(approvedRowIds));
+  //     setSelectAll(true);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   const approvedRows = filteredRows.filter(
+  //     (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+  //   );
+  //   if (approvedRows.length > 0) {
+  //     const allSelected = approvedRows.every((row) => selectedRows.has(row.id));
+  //     setSelectAll(allSelected);
+  //   } else {
+  //     setSelectAll(false);
+  //   }
+  // }, [filteredRows, selectedRows]);
+  // Check for rows that are approved AND have invoiceGenerated as false (N)
   const hasApprovedRows = filteredRows.some(
-    (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+    (row) =>
+      (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+      !(
+        row.originalItem?.invoiceGenerated === true ||
+        row["Invoice Generated"] === "Y" ||
+        row["Invoice Generated"] === true ||
+        row.invoiceGenerated === true
+      )
   );
+
   const handleSelectAll = () => {
     if (selectAll) {
       setSelectedRows(new Set());
@@ -4787,7 +4845,14 @@ export default function ExportTable() {
     } else {
       const approvedRowIds = filteredRows
         .filter(
-          (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+          (row) =>
+            (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+            !(
+              row.originalItem?.invoiceGenerated === true ||
+              row["Invoice Generated"] === "Y" ||
+              row["Invoice Generated"] === true ||
+              row.invoiceGenerated === true
+            )
         )
         .map((row) => row.id);
 
@@ -4796,18 +4861,18 @@ export default function ExportTable() {
     }
   };
 
-  // useEffect(() => {
-  //   if (filteredRows.length > 0) {
-  //     const allSelected = filteredRows.every((row) => selectedRows.has(row.id));
-  //     setSelectAll(allSelected);
-  //   } else {
-  //     setSelectAll(false);
-  //   }
-  // }, [filteredRows, selectedRows]);
   useEffect(() => {
     const approvedRows = filteredRows.filter(
-      (row) => (row.Status || row.status || "").toUpperCase() === "APPROVED"
+      (row) =>
+        (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+        !(
+          row.originalItem?.invoiceGenerated === true ||
+          row["Invoice Generated"] === "Y" ||
+          row["Invoice Generated"] === true ||
+          row.invoiceGenerated === true
+        )
     );
+
     if (approvedRows.length > 0) {
       const allSelected = approvedRows.every((row) => selectedRows.has(row.id));
       setSelectAll(allSelected);
@@ -4917,6 +4982,44 @@ export default function ExportTable() {
   //     setActionLoading(false);
   //   }
   // };
+
+  // Add this function to ExportTable.jsx
+  const handleInvoiceSuccess = async (invoiceData) => {
+    try {
+      // Update local state immediately for better UX
+      const updatedRows = rows.map((row) => {
+        // Check if this row was part of the invoice
+        const wasInvoiced = invoiceData.lineItems?.some(
+          (lineItem) =>
+            lineItem.timesheetId === row.originalItem?.timesheetId ||
+            lineItem.employee === row["Employee ID"] ||
+            lineItem.line_No === row["Seq No"]
+        );
+
+        if (wasInvoiced) {
+          return {
+            ...row,
+            "Invoice Generated": "Y",
+            originalItem: {
+              ...row.originalItem,
+              invoiceGenerated: true,
+            },
+          };
+        }
+        return row;
+      });
+
+      setRows(updatedRows);
+
+      // Refresh from server to ensure consistency
+      setTimeout(() => {
+        fetchExportData();
+      }, 1000);
+    } catch (error) {
+      console.error("Error updating data after invoice:", error);
+      showToast("Invoice created but failed to refresh data", "warning");
+    }
+  };
 
   // Export selected rows with POST request containing selected data
   const handleExportClick = async (e) => {
@@ -5547,9 +5650,9 @@ export default function ExportTable() {
                       }))
                     }
                   />
-                  Invoice Generated
+                  Invoiced
                 </label>
-                <label className="flex items-center gap-1 text-xs">
+                {/* <label className="flex items-center gap-1 text-xs">
                   <input
                     type="checkbox"
                     checked={statusFilter.exported}
@@ -5558,7 +5661,7 @@ export default function ExportTable() {
                     }
                   />
                   Exported
-                </label>
+                </label> */}
               </div>
               {/* Clear Filters Button */}
               <button
@@ -5708,6 +5811,7 @@ export default function ExportTable() {
                       <InvoiceViewer
                         data={showInvoice}
                         setInvoiceModalVisible={setInvoiceModalVisible}
+                        onInvoiceSuccess={handleInvoiceSuccess}
                       />
                     </div>
                   </div>

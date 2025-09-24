@@ -101,7 +101,7 @@ export default function Sidebar() {
 
                     {/* Manage Groups: Show for Admin only */}
                     {isAdmin && (
-                        <SidebarItem icon={<Users className="h-5 w-5" />} text="Manage Groups" to="/dashboard/groups/manage-groups" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        <SidebarItem icon={<Users className="h-5 w-5" />} text="PO Info" to="/dashboard/groups/manage-groups" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
                     )}
 
                     {/* Users / User Profile: Show for all roles with different text */}

@@ -1177,6 +1177,7 @@
 //             <span style={boldTextStyle}>For the Period: </span>
 //             {invoice.period || "09/30/24 - 09/30/24"}
 //           </div>
+
 //           <div>
 //             <span style={boldTextStyle}>Billing Currency: </span>
 //             {invoice.currency || "USD"}
@@ -1492,7 +1493,7 @@ import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
+const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const invoiceRef = useRef();
 
@@ -1526,17 +1527,119 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   //   pdf.save("invoice.pdf");
   // };
 
+  // const handleDownloadPdf = async () => {
+  //   setIsLoading(true);
+  //   if (!invoiceRef.current || !invoice) {
+  //     console.warn("Invoice content or data is missing.");
+  //     return;
+  //   }
+  //   const input = invoiceRef.current;
+  //   const totalAmount = invoice.lineItems.reduce(
+  //     (acc, line) => acc + line.amount,
+  //     0
+  //   );
+  //   const invoicePayload = {
+  //     invoiceNumber: invoice.invoiceId,
+  //     invoiceDate: new Date(invoice.period).toISOString(),
+  //     invoiceAmount: totalAmount,
+  //     createdBy: "Test",
+  //     updatedBy: "Test",
+  //     billTo: invoice.billTo,
+  //     remitTo: invoice.remitTo,
+  //     po_Number: invoice.po_Number,
+  //     currency: invoice.currency,
+  //     invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+  //       poLineNumber: line.poLine,
+  //       timesheetLineNo: line.line_No,
+  //       mappedHours: line.hours,
+  //       mappedAmount: line.amount,
+  //       rate: line.rate,
+  //       employee: line.employee,
+  //       vendor: line.vendor,
+  //       plc: line.plc,
+  //       hours_Date: line.hours_Date,
+  //       createdBy: "Test",
+  //       updatedBy: "Test",
+  //     })),
+  //   };
+
+  //   try {
+  //     const response = await fetch(
+  //       "https://timesheet-subk.onrender.com/api/Invoices",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(invoicePayload),
+  //       }
+  //     );
+
+  //     if (!response.ok)
+  //       throw new Error(`Failed to create invoice: ${response.status}`);
+
+  //     // const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //     // const imgData = canvas.toDataURL("image/png");
+  //     // const pdf = new jsPDF({
+  //     //   orientation: "portrait",
+  //     //   unit: "mm",
+  //     //   format: "a4",
+  //     // });
+  //     // const pdfWidth = pdf.internal.pageSize.getWidth();
+  //     // const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //     // pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  //     // pdf.save("invoice.pdf");
+  //     const pdf = new jsPDF("p", "mm", "a4");
+  //     const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //     const imgData = canvas.toDataURL("image/png");
+
+  //     const pdfWidth = pdf.internal.pageSize.getWidth();
+  //     const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  //     const imgProps = pdf.getImageProperties(imgData);
+  //     const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+  //     let heightLeft = pdfImgHeight;
+  //     let position = 0;
+
+  //     pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //     heightLeft -= pdfHeight;
+
+  //     while (heightLeft > 0) {
+  //       position = heightLeft - pdfImgHeight;
+  //       pdf.addPage();
+  //       pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //       heightLeft -= pdfHeight;
+  //     }
+  //     toast.success("Invoice generated");
+  //     pdf.save("invoice.pdf");
+  //     // setInvoiceModalVisible(false);
+  //     setTimeout(() => setInvoiceModalVisible(false), 1000);
+  //     // setInvoiceModalVisible(false);
+
+  //
+  //
+  //     // await fetchExportData();
+  //   } catch (error) {
+  //     console.error("Error creating invoice or generating PDF:", error);
+  //     toast.error("Error generating invoice");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleDownloadPdf = async () => {
     setIsLoading(true);
     if (!invoiceRef.current || !invoice) {
       console.warn("Invoice content or data is missing.");
+      setIsLoading(false);
       return;
     }
+
     const input = invoiceRef.current;
     const totalAmount = invoice.lineItems.reduce(
       (acc, line) => acc + line.amount,
       0
     );
+
     const invoicePayload = {
       invoiceNumber: invoice.invoiceId,
       invoiceDate: new Date(invoice.period).toISOString(),
@@ -1575,17 +1678,6 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
       if (!response.ok)
         throw new Error(`Failed to create invoice: ${response.status}`);
 
-      // const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-      // const imgData = canvas.toDataURL("image/png");
-      // const pdf = new jsPDF({
-      //   orientation: "portrait",
-      //   unit: "mm",
-      //   format: "a4",
-      // });
-      // const pdfWidth = pdf.internal.pageSize.getWidth();
-      // const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      // pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      // pdf.save("invoice.pdf");
       const pdf = new jsPDF("p", "mm", "a4");
       const canvas = await html2canvas(input, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL("image/png");
@@ -1608,16 +1700,19 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
         heightLeft -= pdfHeight;
       }
+
       toast.success("Invoice generated");
       pdf.save("invoice.pdf");
-      // setInvoiceModalVisible(false);
-      setTimeout(() => setInvoiceModalVisible(false), 1000);
-      // setInvoiceModalVisible(false);
 
-      // window.location.reload();
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      // Close modal after a short delay
+      setTimeout(() => setInvoiceModalVisible(false), 1000);
+
+      // Call the callback to update parent component's data
+      if (onInvoiceSuccess) {
+        setTimeout(() => {
+          onInvoiceSuccess(invoice);
+        }, 1500);
+      }
     } catch (error) {
       console.error("Error creating invoice or generating PDF:", error);
       toast.error("Error generating invoice");
@@ -1835,7 +1930,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
                     style={{
                       fontWeight: 700,
                       fontSize: "15px",
-                      paddinngBottom: "20px",
+                      paddingBottom: "20px",
                     }}
                   >
                     PO LINE {poLine}
