@@ -337,13 +337,13 @@ export default function UserTable() {
 
                         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
                             <table className="min-w-full">
-                                <thead className="bg-gray-100">
+                                <thead className="bg-slate-100 border-b-2 border-slate-200">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">User</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Username</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Role</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">User</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Username</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Role</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-left text-sm font-bold text-slate-700 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
@@ -352,11 +352,11 @@ export default function UserTable() {
                                     ) : error ? (
                                         <tr><td colSpan="5" className="text-center py-10 text-red-500">Error: {error}</td></tr>
                                     ) : (
-                                        users.map((user, index) => (
-                                            <tr key={user.userId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
+                                        users.map((user) => (
+                                            <tr key={user.userId} className="hover:bg-sky-50 transition-colors">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center space-x-4">
-                                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center font-bold text-blue-600 text-sm">
+                                                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 text-sm">
                                                             {getInitials(user.fullName)}
                                                         </div>
                                                         <div>
@@ -365,15 +365,23 @@ export default function UserTable() {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.username}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">{user.role}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{user.username}</td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                     <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${
+                                                        user.role.toLowerCase() === 'admin' ? 'bg-indigo-100 text-indigo-800' :
+                                                        user.role.toLowerCase() === 'pm' ? 'bg-sky-100 text-sky-800' :
+                                                        'bg-slate-100 text-slate-800'
+                                                    }`}>
+                                                        {user.role}
+                                                    </span>
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-3 py-1 text-xs leading-5 font-bold rounded-full ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                                                         {user.isActive ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                                                    <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-900 flex items-center gap-1.5">
+                                                    <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-800 flex items-center gap-1.5 transition-colors">
                                                         <FaKey size={12} /> Reset Password
                                                     </button>
                                                 </td>
