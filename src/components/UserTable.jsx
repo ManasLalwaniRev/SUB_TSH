@@ -47,9 +47,8 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
         setError('');
 
         try {
-            // **FIXED**: Correct API endpoint and method for user creation.
             const response = await fetch('https://timesheet-subk.onrender.com/api/User', {
-                method: 'POST', // Use POST for creating new resources.
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
@@ -122,11 +121,9 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
     );
 };
 
-// --- NEW: Edit User Modal Component ---
-// --- NEW: Edit User Modal Component ---
+// --- Edit User Modal Component ---
 const EditUserModal = ({ user, onClose, onUserUpdated }) => {
     const [formData, setFormData] = useState({
-        // **FIX**: Add the userId to the state
         userId: user.userId, 
         fullName: user.fullName || '',
         email: user.email || '',
@@ -151,7 +148,6 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
             const response = await fetch(`https://timesheet-subk.onrender.com/api/User/${user.userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                // The formData now correctly includes the userId
                 body: JSON.stringify(formData),
             });
 
@@ -215,6 +211,7 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
         </div>
     );
 };
+
 
 // --- Password Modal Component ---
 const PasswordModal = ({ user, type, onClose }) => {
@@ -347,7 +344,7 @@ export default function UserTable() {
     
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State for Edit Modal
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [modalType, setModalType] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -441,7 +438,6 @@ export default function UserTable() {
                         </div>
 
                         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
-                            {/* **ADDED**: Scrollable container for the table */}
                             <div className="overflow-y-auto max-h-[calc(100vh-220px)]">
                                 <table className="min-w-full">
                                     <thead className="bg-slate-100 border-b-2 border-slate-200 sticky top-0">
@@ -488,13 +484,12 @@ export default function UserTable() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold">
-                                                        {/* **ADDED**: Container for action buttons */}
                                                         <div className='flex items-center gap-4'>
                                                             <button onClick={() => openEditModal(user)} className="text-blue-600 hover:text-blue-800 flex items-center gap-1.5 transition-colors">
                                                                 <FaEdit size={12} /> Edit
                                                             </button>
                                                             <button onClick={() => openPasswordModal(user, 'reset')} className="text-red-600 hover:text-red-800 flex items-center gap-1.5 transition-colors">
-                                                                <FaKey size={12} /> Reset
+                                                                <FaKey size={12} /> Reset Password
                                                             </button>
                                                         </div>
                                                     </td>
