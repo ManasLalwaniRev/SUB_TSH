@@ -241,7 +241,7 @@ const PasswordModal = ({ user, type, onClose }) => {
 
         try {
             const response = await fetch(url, {
-                method: isReset ? 'POST' : 'PUT', 
+                method: isReset ?  'PUT':'POST' , 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });

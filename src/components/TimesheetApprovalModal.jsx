@@ -527,7 +527,346 @@
 //     );
 // }
 
+// import React, { useState, useEffect } from 'react';
+// // --- Helper Functions ---
+// const formatDate = (dateInput) => {
+//     if (!dateInput) return '';
+//     let date;
+//     if (dateInput instanceof Date) {
+//         date = dateInput;
+//     } else {
+//         const dateOnlyString = String(dateInput).split('T')[0];
+//         const parts = dateOnlyString.split('-');
+//         if (parts.length !== 3) return dateInput;
+//         const year = parseInt(parts[0], 10);
+//         const month = parseInt(parts[1], 10) - 1;
+//         const day = parseInt(parts[2], 10);
+//         date = new Date(Date.UTC(year, month, day));
+//     }
+//     if (isNaN(date.getTime())) return '';
+//     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
+// };
+// // --- Toast Notification ---
+// const showToast = (message, type = 'info') => {
+//     const toast = document.createElement('div');
+//     const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500 text-black', info: 'bg-blue-500' };
+//     toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses['info']}`;
+//     toast.textContent = message;
+//     document.body.appendChild(toast);
+//     setTimeout(() => { document.body.removeChild(toast); }, 3000);
+// };
+// export default function TimesheetApprovalView({ resourceId, timesheetDate, onClose }) {
+//     const [lines, setLines] = useState([]);
+//     const [isLoading, setIsLoading] = useState(true);
+//     const [headerDates, setHeaderDates] = useState([]);
+    
+//     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+//     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+   
+//     useEffect(() => {
+//         console.log("Resource ID received in approval view:", resourceId);
+//         if (resourceId) {
+//             fetchTimesheetData();
+//         }
+//     }, [resourceId, timesheetDate]);
+//     // const fetchTimesheetData = async () => {
+//     //     setIsLoading(true);
+//     //     try {
+//     //         const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${resourceId}`);
+//     //         if (!response.ok) throw new Error('Failed to fetch timesheet data');
+//     //         const data = await response.json();
+           
+//     //         console.log("Timesheet data received from API:", data);
+            
+//     //         const dataArray = Array.isArray(data) ? data : [];
+
+//     //          // Filter by the selected timesheet date
+//     // const filteredData = dataArray.filter(item => {
+//     //   if (!timesheetDate) return true; // Show all if no date specified
+//     //   const itemDate = new Date(item.timesheetDate);
+//     //   const selectedDate = new Date(timesheetDate);
+//     //   return itemDate.toDateString() === selectedDate.toDateString();
+//     // });
+            
+//     //         if (dataArray.length > 0) {
+//     //             const firstDate = dataArray[0].timesheet_Date;
+//     //             const startDate = new Date(firstDate);
+//     //             const startDay = startDate.getUTCDay();
+//     //             const monday = new Date(startDate);
+//     //             monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
+                
+//     //             const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+//     //             const newHeaderDates = daysOfWeek.map((day, index) => {
+//     //                 const currentDate = new Date(monday);
+//     //                 currentDate.setUTCDate(monday.getUTCDate() + index);
+//     //                 const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
+//     //                 const dt = String(currentDate.getUTCDate()).padStart(2, '0');
+//     //                 return `${day} ${month}/${dt}`;
+//     //             });
+//     //             setHeaderDates(newHeaderDates);
+//     //         }
+//     //         const mappedLines = dataArray.map(item => {
+//     //             const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+//     //             const hourIdsData = {};
+                
+//     //             if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
+//     //                 item.timesheetHours.forEach(hourEntry => {
+//     //                     const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+//     //                     if (!isNaN(date.getTime())) {
+//     //                         const dayKey = dayKeyMapping[date.getUTCDay()];
+//     //                         if (dayKey) {
+//     //                             hoursData[dayKey] = hourEntry.hours;
+//     //                             hourIdsData[dayKey] = hourEntry.id;
+//     //                         }
+//     //                     }
+//     //                 });
+//     //             }
+//     //             return {
+//     //                 id: item.lineNo,
+//     //                 // Removed workOrder field
+//     //                 description: item.description || '',
+//     //                 project: item.projId || '',
+//     //                 plc: item.plc || '',
+//     //                 payType: item.payType || 'SR',
+//     //                 poNumber: item.poNumber || '',
+//     //                 rlseNumber: item.rlseNumber || '',
+//     //                 poLineNumber: item.poLineNumber || '',
+//     //                 hours: hoursData,
+//     //                 hourIds: hourIdsData,
+//     //                 totalHours: item.hours || 0,
+//     //                 resourceId: item.resource_Id
+//     //             };
+//     //         });
+            
+//     //         setLines(mappedLines);
+//     //     } catch (error) {
+//     //         showToast(error.message, 'error');
+//     //         console.error("Error fetching timesheet data:", error);
+//     //     } finally {
+//     //         setIsLoading(false);
+//     //     }
+//     // };
+//     const fetchTimesheetData = async () => {
+//     setIsLoading(true);
+//     try {
+//         const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${resourceId}`);
+//         if (!response.ok) throw new Error('Failed to fetch timesheet data');
+//         const data = await response.json();
+       
+//         console.log("Timesheet data received from API:", data);
+        
+//         const dataArray = Array.isArray(data) ? data : [];
+
+//         // Filter by the selected timesheet date
+//         const filteredData = dataArray.filter(item => {
+//             if (!timesheetDate) return true; // Show all if no date specified
+            
+//             // Fix: Use correct field name from API response
+//             const itemDate = new Date(item.timesheet_Date); // Changed from timesheetDate to timesheet_Date
+//             const selectedDate = new Date(timesheetDate);
+//             return itemDate.toDateString() === selectedDate.toDateString();
+//         });
+        
+//         // Fix: Use filteredData instead of dataArray for header dates
+//         if (filteredData.length > 0) {
+//             const firstDate = filteredData[0].timesheet_Date; // Changed from dataArray to filteredData
+//             const startDate = new Date(firstDate);
+//             const startDay = startDate.getUTCDay();
+//             const monday = new Date(startDate);
+//             monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
+            
+//             const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+//             const newHeaderDates = daysOfWeek.map((day, index) => {
+//                 const currentDate = new Date(monday);
+//                 currentDate.setUTCDate(monday.getUTCDate() + index);
+//                 const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
+//                 const dt = String(currentDate.getUTCDate()).padStart(2, '0');
+//                 return `${day} ${month}/${dt}`;
+//             });
+//             setHeaderDates(newHeaderDates);
+//         }
+        
+//         // Fix: Map filteredData instead of dataArray
+//         const mappedLines = filteredData.map(item => {
+//             const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+//             const hourIdsData = {};
+            
+//             if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
+//                 item.timesheetHours.forEach(hourEntry => {
+//                     const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+//                     if (!isNaN(date.getTime())) {
+//                         const dayKey = dayKeyMapping[date.getUTCDay()];
+//                         if (dayKey) {
+//                             hoursData[dayKey] = hourEntry.hours;
+//                             hourIdsData[dayKey] = hourEntry.id;
+//                         }
+//                     }
+//                 });
+//             }
+//             return {
+//                 id: item.lineNo,
+//                 description: item.description || '',
+//                 project: item.projId || '',
+//                 plc: item.plc || '',
+//                 payType: item.payType || 'SR',
+//                 poNumber: item.poNumber || '',
+//                 rlseNumber: item.rlseNumber || '',
+//                 poLineNumber: item.poLineNumber || '',
+//                 hours: hoursData,
+//                 hourIds: hourIdsData,
+//                 totalHours: item.hours || 0,
+//                 resourceId: item.resource_Id
+//             };
+//         });
+        
+//         setLines(mappedLines);
+//     } catch (error) {
+//         showToast(error.message, 'error');
+//         console.error("Error fetching timesheet data:", error);
+//          setLines([]); // Add this line
+//     } finally {
+//         setIsLoading(false);
+//     }
+// };
+
+   
+//     if (isLoading) { 
+//         return (
+//             <div className="w-full mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+//                 <div className="text-center text-blue-700">Loading timesheet data...</div>
+//             </div>
+//         ); 
+//     }
+//     // Updated table headers - removed Work Order
+//     const tableHeaders = ['Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...headerDates, 'Total Hours'];
+    
+//     return (
+//         <div className="w-full mt-4 bg-white border border-gray-300 rounded-lg shadow-lg">
+//             {/* Header Section */}
+//             <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gradient-to-r from-blue-50 to-indigo-50">
+//                 <div>
+//                     <h3 className="text-lg font-semibold text-gray-900">
+//                         Timesheet Details
+//                     </h3>
+//                     <p className="text-sm text-gray-600 mt-1">
+//                         {lines.length} record{lines.length !== 1 ? 's' : ''} found
+//                     </p>
+//                 </div>
+//                 <button 
+//                     onClick={onClose}
+//                     className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+//                 >
+//                     ✕ Close
+//                 </button>
+//             </div>
+            
+//             {/* Content Section */}
+//             <div className="p-4">
+//                 {lines.length === 0 ? (
+//                     <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+//                         <div className="text-lg font-medium mb-2">No Data Found</div>
+//                         <div className="text-sm">No timesheet data found</div>
+//                     </div>
+//                 ) : (
+//                     <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+//                         <table className="w-full text-sm min-w-[1400px]">
+//                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+//                                 <tr>
+//                                     {tableHeaders.map((header, index) => (
+//                                         <th key={`header-${index}-${header}`} className="p-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-200 last:border-r-0">
+//                                             {header}
+//                                         </th>
+//                                     ))}
+//                                 </tr>
+//                             </thead>
+//                             <tbody className="divide-y divide-gray-200">
+//                                 {lines.map((line, index) => {
+//                                     const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
+                                    
+//                                     return (
+//                                         <tr key={line.id} className={`hover:bg-blue-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+//                                             {/* Description column */}
+//                                             <td className="p-2 min-w-[250px] border-r border-gray-200">
+//                                                 <div className="text-sm font-medium text-gray-900 truncate" title={line.description}>
+//                                                     {line.description || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* Project column */}
+//                                             <td className="p-2 min-w-[180px] border-r border-gray-200">
+//                                                 <div className="text-sm text-gray-700 font-mono">
+//                                                     {line.project || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* PLC column */}
+//                                             <td className="p-2 min-w-[100px] border-r border-gray-200">
+//                                                 <div className="text-sm text-gray-700">
+//                                                     {line.plc || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* Pay Type column */}
+//                                             <td className="p-2 min-w-[100px] border-r border-gray-200">
+//                                                 <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+//                                                     {line.payType}
+//                                                 </span>
+//                                             </td>
+//                                             {/* PO Number column */}
+//                                             <td className="p-2 min-w-[130px] border-r border-gray-200">
+//                                                 <div className="text-sm text-gray-700">
+//                                                     {line.poNumber || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* RLSE Number column */}
+//                                             <td className="p-2 min-w-[100px] border-r border-gray-200">
+//                                                 <div className="text-sm text-gray-700">
+//                                                     {line.rlseNumber || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* PO Line Number column */}
+//                                             <td className="p-2 min-w-[120px] border-r border-gray-200">
+//                                                 <div className="text-sm text-gray-700">
+//                                                     {line.poLineNumber || '-'}
+//                                                 </div>
+//                                             </td>
+//                                             {/* Daily hours columns */}
+//                                             {days.map(day => (
+//                                                 <td key={`${line.id}-${day}`} className="p-2 border-r border-gray-200">
+//                                                     <div className={`w-16 text-center p-1.5 rounded text-sm font-medium ${
+//                                                         line.hours[day] > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
+//                                                     } ${day === 'sat' || day === 'sun' ? 'bg-blue-50' : ''}`}>
+//                                                         {line.hours[day] ? parseFloat(line.hours[day]).toFixed(1) : '0.0'}
+//                                                     </div>
+//                                                 </td>
+//                                             ))}
+//                                             {/* Total Hours column */}
+//                                             <td className="p-3 text-center font-bold text-gray-800 bg-blue-50">
+//                                                 {line.totalHours ? parseFloat(line.totalHours).toFixed(1) : rowTotal}
+//                                             </td>
+//                                         </tr>
+//                                     );
+//                                 })}
+//                             </tbody>
+//                         </table>
+//                     </div>
+//                 )}
+//             </div>
+            
+//             {/* Footer Section */}
+//             {lines.length > 0 && (
+//                 <div className="flex justify-end items-center p-4 border-t border-gray-300 bg-gray-50">
+//                     <button 
+//                         onClick={onClose}
+//                         className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm font-medium"
+//                     >
+//                         Close Details
+//                     </button>
+//                 </div>
+//             )}
+//         </div>
+//     );
+// }
+
 import React, { useState, useEffect } from 'react';
+
 // --- Helper Functions ---
 const formatDate = (dateInput) => {
     if (!dateInput) return '';
@@ -546,15 +885,22 @@ const formatDate = (dateInput) => {
     if (isNaN(date.getTime())) return '';
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date);
 };
+
 // --- Toast Notification ---
 const showToast = (message, type = 'info') => {
     const toast = document.createElement('div');
-    const typeClasses = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500 text-black', info: 'bg-blue-500' };
+    const typeClasses = { 
+        success: 'bg-green-500', 
+        error: 'bg-red-500', 
+        warning: 'bg-yellow-500 text-black', 
+        info: 'bg-blue-500' 
+    };
     toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses['info']}`;
     toast.textContent = message;
     document.body.appendChild(toast);
     setTimeout(() => { document.body.removeChild(toast); }, 3000);
 };
+
 export default function TimesheetApprovalView({ resourceId, timesheetDate, onClose }) {
     const [lines, setLines] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -569,167 +915,90 @@ export default function TimesheetApprovalView({ resourceId, timesheetDate, onClo
             fetchTimesheetData();
         }
     }, [resourceId, timesheetDate]);
-    // const fetchTimesheetData = async () => {
-    //     setIsLoading(true);
-    //     try {
-    //         const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${resourceId}`);
-    //         if (!response.ok) throw new Error('Failed to fetch timesheet data');
-    //         const data = await response.json();
-           
-    //         console.log("Timesheet data received from API:", data);
-            
-    //         const dataArray = Array.isArray(data) ? data : [];
 
-    //          // Filter by the selected timesheet date
-    // const filteredData = dataArray.filter(item => {
-    //   if (!timesheetDate) return true; // Show all if no date specified
-    //   const itemDate = new Date(item.timesheetDate);
-    //   const selectedDate = new Date(timesheetDate);
-    //   return itemDate.toDateString() === selectedDate.toDateString();
-    // });
-            
-    //         if (dataArray.length > 0) {
-    //             const firstDate = dataArray[0].timesheet_Date;
-    //             const startDate = new Date(firstDate);
-    //             const startDay = startDate.getUTCDay();
-    //             const monday = new Date(startDate);
-    //             monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
-                
-    //             const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    //             const newHeaderDates = daysOfWeek.map((day, index) => {
-    //                 const currentDate = new Date(monday);
-    //                 currentDate.setUTCDate(monday.getUTCDate() + index);
-    //                 const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
-    //                 const dt = String(currentDate.getUTCDate()).padStart(2, '0');
-    //                 return `${day} ${month}/${dt}`;
-    //             });
-    //             setHeaderDates(newHeaderDates);
-    //         }
-    //         const mappedLines = dataArray.map(item => {
-    //             const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
-    //             const hourIdsData = {};
-                
-    //             if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
-    //                 item.timesheetHours.forEach(hourEntry => {
-    //                     const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
-    //                     if (!isNaN(date.getTime())) {
-    //                         const dayKey = dayKeyMapping[date.getUTCDay()];
-    //                         if (dayKey) {
-    //                             hoursData[dayKey] = hourEntry.hours;
-    //                             hourIdsData[dayKey] = hourEntry.id;
-    //                         }
-    //                     }
-    //                 });
-    //             }
-    //             return {
-    //                 id: item.lineNo,
-    //                 // Removed workOrder field
-    //                 description: item.description || '',
-    //                 project: item.projId || '',
-    //                 plc: item.plc || '',
-    //                 payType: item.payType || 'SR',
-    //                 poNumber: item.poNumber || '',
-    //                 rlseNumber: item.rlseNumber || '',
-    //                 poLineNumber: item.poLineNumber || '',
-    //                 hours: hoursData,
-    //                 hourIds: hourIdsData,
-    //                 totalHours: item.hours || 0,
-    //                 resourceId: item.resource_Id
-    //             };
-    //         });
-            
-    //         setLines(mappedLines);
-    //     } catch (error) {
-    //         showToast(error.message, 'error');
-    //         console.error("Error fetching timesheet data:", error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // };
     const fetchTimesheetData = async () => {
-    setIsLoading(true);
-    try {
-        const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${resourceId}`);
-        if (!response.ok) throw new Error('Failed to fetch timesheet data');
-        const data = await response.json();
-       
-        console.log("Timesheet data received from API:", data);
-        
-        const dataArray = Array.isArray(data) ? data : [];
+        setIsLoading(true);
+        try {
+            const response = await fetch(`https://timesheet-subk.onrender.com/api/SubkTimesheet/ByResource/${resourceId}`);
+            if (!response.ok) throw new Error('Failed to fetch timesheet data');
+            const data = await response.json();
+           
+            console.log("Timesheet data received from API:", data);
+            
+            const dataArray = Array.isArray(data) ? data : [];
 
-        // Filter by the selected timesheet date
-        const filteredData = dataArray.filter(item => {
-            if (!timesheetDate) return true; // Show all if no date specified
-            
-            // Fix: Use correct field name from API response
-            const itemDate = new Date(item.timesheet_Date); // Changed from timesheetDate to timesheet_Date
-            const selectedDate = new Date(timesheetDate);
-            return itemDate.toDateString() === selectedDate.toDateString();
-        });
-        
-        // Fix: Use filteredData instead of dataArray for header dates
-        if (filteredData.length > 0) {
-            const firstDate = filteredData[0].timesheet_Date; // Changed from dataArray to filteredData
-            const startDate = new Date(firstDate);
-            const startDay = startDate.getUTCDay();
-            const monday = new Date(startDate);
-            monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
-            
-            const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-            const newHeaderDates = daysOfWeek.map((day, index) => {
-                const currentDate = new Date(monday);
-                currentDate.setUTCDate(monday.getUTCDate() + index);
-                const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
-                const dt = String(currentDate.getUTCDate()).padStart(2, '0');
-                return `${day} ${month}/${dt}`;
+            // Filter by the selected timesheet date
+            const filteredData = dataArray.filter(item => {
+                if (!timesheetDate) return true; // Show all if no date specified
+                
+                const itemDate = new Date(item.timesheet_Date);
+                const selectedDate = new Date(timesheetDate);
+                return itemDate.toDateString() === selectedDate.toDateString();
             });
-            setHeaderDates(newHeaderDates);
-        }
-        
-        // Fix: Map filteredData instead of dataArray
-        const mappedLines = filteredData.map(item => {
-            const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
-            const hourIdsData = {};
             
-            if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
-                item.timesheetHours.forEach(hourEntry => {
-                    const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
-                    if (!isNaN(date.getTime())) {
-                        const dayKey = dayKeyMapping[date.getUTCDay()];
-                        if (dayKey) {
-                            hoursData[dayKey] = hourEntry.hours;
-                            hourIdsData[dayKey] = hourEntry.id;
-                        }
-                    }
+            if (filteredData.length > 0) {
+                const firstDate = filteredData[0].timesheet_Date;
+                const startDate = new Date(firstDate);
+                const startDay = startDate.getUTCDay();
+                const monday = new Date(startDate);
+                monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1));
+                
+                const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                const newHeaderDates = daysOfWeek.map((day, index) => {
+                    const currentDate = new Date(monday);
+                    currentDate.setUTCDate(monday.getUTCDate() + index);
+                    const month = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
+                    const dt = String(currentDate.getUTCDate()).padStart(2, '0');
+                    return `${day} ${month}/${dt}`;
                 });
+                setHeaderDates(newHeaderDates);
             }
-            return {
-                id: item.lineNo,
-                description: item.description || '',
-                project: item.projId || '',
-                plc: item.plc || '',
-                payType: item.payType || 'SR',
-                poNumber: item.poNumber || '',
-                rlseNumber: item.rlseNumber || '',
-                poLineNumber: item.poLineNumber || '',
-                hours: hoursData,
-                hourIds: hourIdsData,
-                totalHours: item.hours || 0,
-                resourceId: item.resource_Id
-            };
-        });
-        
-        setLines(mappedLines);
-    } catch (error) {
-        showToast(error.message, 'error');
-        console.error("Error fetching timesheet data:", error);
-         setLines([]); // Add this line
-    } finally {
-        setIsLoading(false);
-    }
-};
+            
+            // Map filteredData with sequential line numbers and work order
+            const mappedLines = filteredData.map((item, index) => {
+                const hoursData = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+                const hourIdsData = {};
+                
+                if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
+                    item.timesheetHours.forEach(hourEntry => {
+                        const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+                        if (!isNaN(date.getTime())) {
+                            const dayKey = dayKeyMapping[date.getUTCDay()];
+                            if (dayKey) {
+                                hoursData[dayKey] = hourEntry.hours;
+                                hourIdsData[dayKey] = hourEntry.id;
+                            }
+                        }
+                    });
+                }
+                return {
+                    id: item.lineNo || (index + 1), // Use existing lineNo or sequential
+                    lineNumber: index + 1, // Sequential line number starting from 1
+                    workOrder: item.workOrder || item.work_order || item.workOrderNumber || '', // Map work order from API
+                    description: item.description || '',
+                    project: item.projId || '',
+                    plc: item.plc || '',
+                    payType: item.payType || 'SR',
+                    poNumber: item.poNumber || '',
+                    rlseNumber: item.rlseNumber || '',
+                    poLineNumber: item.poLineNumber || '',
+                    hours: hoursData,
+                    hourIds: hourIdsData,
+                    totalHours: item.hours || 0,
+                    resourceId: item.resource_Id
+                };
+            });
+            
+            setLines(mappedLines);
+        } catch (error) {
+            showToast(error.message, 'error');
+            console.error("Error fetching timesheet data:", error);
+            setLines([]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-   
     if (isLoading) { 
         return (
             <div className="w-full mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
@@ -737,8 +1006,21 @@ export default function TimesheetApprovalView({ resourceId, timesheetDate, onClo
             </div>
         ); 
     }
-    // Updated table headers - removed Work Order
-    const tableHeaders = ['Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...headerDates, 'Total Hours'];
+
+    // Updated table headers - added Line No and Work Order
+    const tableHeaders = [
+        'Line No', 
+        'Work Order', 
+        'Description', 
+        'Project', 
+        'PLC', 
+        'Pay Type', 
+        'PO Number', 
+        'RLSE Number', 
+        'PO Line Number', 
+        ...headerDates, 
+        'Total Hours'
+    ];
     
     return (
         <div className="w-full mt-4 bg-white border border-gray-300 rounded-lg shadow-lg">
@@ -748,9 +1030,9 @@ export default function TimesheetApprovalView({ resourceId, timesheetDate, onClo
                     <h3 className="text-lg font-semibold text-gray-900">
                         Timesheet Details
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1">
+                    {/* <p className="text-sm text-gray-600 mt-1">
                         {lines.length} record{lines.length !== 1 ? 's' : ''} found
-                    </p>
+                    </p> */}
                 </div>
                 <button 
                     onClick={onClose}
@@ -769,7 +1051,7 @@ export default function TimesheetApprovalView({ resourceId, timesheetDate, onClo
                     </div>
                 ) : (
                     <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                        <table className="w-full text-sm min-w-[1400px]">
+                        <table className="w-full text-sm min-w-[1600px]">
                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                 <tr>
                                     {tableHeaders.map((header, index) => (
@@ -785,6 +1067,18 @@ export default function TimesheetApprovalView({ resourceId, timesheetDate, onClo
                                     
                                     return (
                                         <tr key={line.id} className={`hover:bg-blue-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                                            {/* Line No column */}
+                                            <td className="p-2 min-w-[80px] border-r border-gray-200 text-center">
+                                                <div className="text-sm font-semibold text-gray-800 bg-blue-50 rounded px-2 py-1">
+                                                    {line.lineNumber}
+                                                </div>
+                                            </td>
+                                            {/* Work Order column */}
+                                            <td className="p-2 min-w-[140px] border-r border-gray-200">
+                                                <div className="text-sm font-mono text-gray-700">
+                                                    {line.workOrder || '-'}
+                                                </div>
+                                            </td>
                                             {/* Description column */}
                                             <td className="p-2 min-w-[250px] border-r border-gray-200">
                                                 <div className="text-sm font-medium text-gray-900 truncate" title={line.description}>

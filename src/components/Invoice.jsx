@@ -2738,11 +2738,12 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       alignItems: "flex-start",
       fontFamily: "monospace",
       fontSize: "15px",
-      whiteSpace: "pre-line",
+
+      whiteSpace: "nowrap",
       paddingBottom: "20px",
     };
 
-    const columnStyle = { width: "49%" };
+    const columnStyle = { width: "49%", whiteSpace: "pre-line" };
     const addressBlockStyle = { marginBottom: "16px" };
 
     const tableStyle = {
@@ -2772,6 +2773,16 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       fontWeight: "600",
       fontSize: "16px",
       marginBottom: "24px",
+    };
+
+    const enhancedTitleStyle = {
+      color: "#1e40af",
+      fontFamily: '"Inter", "Segoe UI", "Roboto", sans-serif',
+      fontSize: "1.5rem",
+      fontWeight: "700",
+      letterSpacing: "0.05em",
+      textAlign: "center",
+      textShadow: "0 2px 4px rgba(30, 64, 175, 0.1)",
     };
 
     return (
@@ -2805,7 +2816,10 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
             </div>
           </div>
 
-          <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1>
+          {/* <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1> */}
+          <h1 style={enhancedTitleStyle} className="font-bold">
+            REVOLVE, LLC
+          </h1>
 
           {/* Two-column information block */}
           <div style={flexBetweenStyle}>
@@ -2824,38 +2838,26 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
                 <span style={boldTextStyle}>Buyer: </span>
                 {invoice.buyer || " "}
               </div>
-              <div style={{ marginTop: "16px" }}>
+              <div style={{ marginTop: "16px", whiteSpace: "nowrap" }}>
                 <span style={boldTextStyle}>Purchase Order ID: </span>
-                {invoice.po_Number || ""}
-                Release Number {invoice.po_rlse_Number || ""}
+                {invoice.po_Number || ""} Release Number{" "}
+                {invoice.po_rlse_Number || ""}
               </div>
-              <div>
-                <span style={boldTextStyle}>PO Start and End Date: </span>
+              <div style={{ marginTop: "16px", whiteSpace: "nowrap" }}>
+                <span style={boldTextStyle}> PO Start and End Date: </span>
                 {invoice.po_Start_End_Date || " "}
               </div>
             </div>
 
-            <div style={columnStyle}>
-              {/* <div>
-                <span style={boldTextStyle}>Invoice Date: </span>
-                {new Date().toLocaleDateString()}
-              </div> */}
+            <div style={{ ...columnStyle, textAlign: "right" }}>
               <div>
                 <span style={boldTextStyle}>Invoice Date: </span>
                 {invoice.period || " "}
               </div>
-              {/* <div>
-                <span style={boldTextStyle}>For the Period: </span>
-                {invoice.period || " "}
-              </div> */}
               <div>
                 <span style={boldTextStyle}>Billing Currency: </span>
                 {invoice.currency || "USD"}
               </div>
-              {/* <div style={addressBlockStyle}>
-                <span style={boldTextStyle}>Remit To: {"\n"}</span>
-                {invoice.remitTo || `Ashburn, VA 20147`}
-              </div> */}
               <div>
                 <span style={boldTextStyle}>Terms: </span>
                 {invoice.terms || "PAYNPD"}
