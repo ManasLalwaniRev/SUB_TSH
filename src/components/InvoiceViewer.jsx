@@ -988,58 +988,60 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1>
 
         {/* Two-column information block */}
+
         <div style={flexBetweenStyle}>
-          {/* Left Column */}
           <div style={columnStyle}>
             <div>
               <span style={boldTextStyle}>Subcontractor Invoice Number: </span>
-              {invoice.invoiceId || "130617"}
+              {invoice.invoiceId || ""}
             </div>
             <div style={addressBlockStyle}>
               <span style={boldTextStyle}>Bill To: {"\n"}</span>
-              {invoice.billTo || `Ashburn, VA 20147`}
+              {invoice.billTo || ``}
             </div>
             <div>
               <span style={boldTextStyle}>Buyer: </span>
-              {invoice.buyer || "Clore, Heather J"}
+              {invoice.buyer || " "}
             </div>
             <div style={{ marginTop: "16px" }}>
               <span style={boldTextStyle}>Purchase Order ID: </span>
-              {invoice.purchaseOrderId || "2181218010"} Release Number{" "}
-              {invoice.releaseNumber || "3"} Change Order Number{" "}
-              {invoice.changeOrderNumber || "0"}
+              {invoice.po_Number || ""} Release Number{" "}
+              {invoice.po_rlse_Number || ""}
             </div>
             <div>
               <span style={boldTextStyle}>PO Start and End Date: </span>
-              {invoice.poStartEndDate || "12/10/18 to 12/08/24"}
+              {invoice.po_Start_End_Date || " "}
             </div>
           </div>
 
-          {/* Right Column */}
           <div style={columnStyle}>
+            {/* <div>
+                <span style={boldTextStyle}>Invoice Date: </span>
+                {new Date().toLocaleDateString()}
+              </div> */}
             <div>
               <span style={boldTextStyle}>Invoice Date: </span>
-              {invoice.invoiceDate || "09/30/24"}
+              {invoice.period || " "}
             </div>
-            <div>
-              <span style={boldTextStyle}>For the Period: </span>
-              {invoice.period || "09/30/24 - 09/30/24"}
-            </div>
+            {/* <div>
+                <span style={boldTextStyle}>For the Period: </span>
+                {invoice.period || " "}
+              </div> */}
             <div>
               <span style={boldTextStyle}>Billing Currency: </span>
               {invoice.currency || "USD"}
             </div>
-            <div style={addressBlockStyle}>
-              <span style={boldTextStyle}>Remit To: {"\n"}</span>
-              {invoice.remitTo || `Ashburn, VA 20147`}
-            </div>
+            {/* <div style={addressBlockStyle}>
+                <span style={boldTextStyle}>Remit To: {"\n"}</span>
+                {invoice.remitTo || `Ashburn, VA 20147`}
+              </div> */}
             <div>
               <span style={boldTextStyle}>Terms: </span>
               {invoice.terms || "PAYNPD"}
             </div>
             <div>
-              <span style={boldTextStyle}>Amount Due </span>
-              {invoice.totalAmount.toFixed(2) || "4,307.21"}
+              <span style={boldTextStyle}>Amount Due </span>$
+              {invoice.totalAmount?.toFixed(2) || "0.00"}
             </div>
           </div>
         </div>
