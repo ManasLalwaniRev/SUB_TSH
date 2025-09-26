@@ -2700,89 +2700,180 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       maxWidth: "768px",
       margin: "auto",
       padding: "20px",
-      border: `2px solid ${isCreated ? "#10b981" : "#d1d5db"}`,
+      border: "2px solid #d1d5db",
       fontFamily: "monospace",
       fontSize: "15px",
       color: "#1a202c",
       backgroundColor: "#fff",
-      marginBottom: "30px",
-      borderRadius: "8px",
-      position: "relative",
     };
-
-    const statusBadgeStyle = {
-      position: "absolute",
-      top: "10px",
-      right: "10px",
-      padding: "4px 8px",
-      borderRadius: "4px",
-      fontSize: "12px",
-      fontWeight: "bold",
-      backgroundColor: isCreated ? "#10b981" : "#6b7280",
-      color: "white",
-    };
-
-    // ... (other styles remain the same as before)
     const titleStyle = {
       textAlign: "center",
       marginBottom: "20px",
       fontSize: "18px",
       fontWeight: "600",
     };
-
-    const boldTextStyle = { fontWeight: 700 };
-
+    const infoStyle = {
+      marginBottom: "20px",
+      fontFamily: "monospace",
+      fontSize: "15px",
+      whiteSpace: "pre-line",
+    };
+    const boldTextStyle = {
+      fontWeight: 700,
+      fontSize: "12px",
+      // Ensure consistent font size for bold text
+    };
     const flexBetweenStyle = {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "flex-start",
       fontFamily: "monospace",
-      fontSize: "15px",
-
+      fontSize: "12px", // Reduced from 15px
       whiteSpace: "nowrap",
       paddingBottom: "20px",
     };
 
-    const columnStyle = { width: "49%", whiteSpace: "pre-line" };
-    const addressBlockStyle = { marginBottom: "16px" };
+    const columnStyle = {
+      width: "49%",
+      whiteSpace: "pre-line",
+      fontSize: "12px", // Added explicit font size
+      lineHeight: "1.3", // Tighter line spacing
+    };
 
+    const addressBlockStyle = { marginBottom: "16px" };
     const tableStyle = {
       width: "100%",
       borderCollapse: "collapse",
       marginBottom: "20px",
-      fontSize: "12px",
+      fontSize: "10px", // Reduced from 12px to match the reference
+      fontFamily: "monospace",
     };
-
     const thStyle = {
       border: "1px solid #d1d5db",
       padding: "4px",
       textAlign: "left",
       backgroundColor: "#f3f4f6",
     };
-
     const thRightStyle = { ...thStyle, textAlign: "right" };
     const tdStyle = {
       border: "1px solid #d1d5db",
       padding: "2px",
       whiteSpace: "pre-line",
     };
-    const tdRightStyle = { ...tdStyle, textAlign: "right" };
 
+    const tdRightStyle = { ...tdStyle, textAlign: "right" };
     const totalAmountStyle = {
       textAlign: "right",
       fontWeight: "600",
       fontSize: "16px",
       marginBottom: "24px",
     };
+    const buttonStyle = {
+      display: "block",
+      margin: "20px auto 0",
+      padding: "10px 20px",
+      backgroundColor: "#2563eb",
+      color: "#fff",
+      fontWeight: "500",
+      borderRadius: "4px",
+      cursor: "pointer",
+      border: "none",
+    };
 
-    const enhancedTitleStyle = {
-      color: "#1e40af",
-      fontFamily: '"Inter", "Segoe UI", "Roboto", sans-serif',
-      fontSize: "1.5rem",
+    const buttonContainerStyle = {
+      display: "flex",
+      justifyContent: "center",
+      gap: "10px", // space between buttons
+      marginTop: "20px",
+    };
+
+    const confirm = {
+      padding: "10px 20px",
+      backgroundColor: "#2563eb",
+      color: "#fff",
+      fontWeight: "500",
+      borderRadius: "4px",
+      cursor: "pointer",
+      border: "none",
+    };
+
+    const cancel = {
+      padding: "10px 20px",
+      backgroundColor: "#eb370fff",
+      color: "#fff",
+      fontWeight: "500",
+      borderRadius: "4px",
+      cursor: "pointer",
+      border: "none",
+    };
+
+    // const enhancedTitleStyle = {
+    //   color: "#1e40af",
+    //   fontFamily: '"Inter", "Segoe UI", "Roboto", sans-serif',
+    //   fontSize: "1.5rem",
+    //   fontWeight: "700",
+    //   letterSpacing: "0.05em",
+    //   textAlign: "center",
+    //   textShadow: "0 2px 4px rgba(30, 64, 175, 0.1)",
+    // };
+
+    const headerContainerStyle = {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between", // Changed from flex-start
+      marginBottom: "20px",
+      position: "relative",
+    };
+
+    const logoStyle = {
+      height: "60px",
+      objectFit: "contain",
+      flex: "0 0 auto", // Don't grow or shrink
+    };
+
+    const invoiceInfoStyle = {
+      textAlign: "right",
+      fontSize: "12px",
+      color: "#000", // Changed from #666 to match the image
+      fontFamily: "monospace",
+      position: "absolute", // Position it absolutely
+      top: "0",
+      right: "0",
+    };
+
+    const companyTitleStyle = {
+      color: "#0f20e0ff",
+      fontFamily: '"Times New Roman", Times, serif', // Changed to Times New Roman with fallbacks
+      fontSize: "14px",
       fontWeight: "700",
-      letterSpacing: "0.05em",
+      letterSpacing: "0.02em",
+      margin: "0",
       textAlign: "center",
-      textShadow: "0 2px 4px rgba(30, 64, 175, 0.1)",
+      position: "absolute",
+      left: "50%",
+      transform: "translateX(-50%)",
+      width: "100%",
+    };
+
+    // Add an invisible spacer to balance the logo
+    const spacerStyle = {
+      width: "60px", // Same width as logo
+      height: "60px",
+    };
+
+    const formatAddress = (addressString) => {
+      if (!addressString) return "";
+
+      // Split on comma or 2+ consecutive spaces using regex
+      const parts = addressString.split(/[,]|\s{2,}/);
+
+      // Clean up each part (remove extra whitespace) and filter out empty parts
+      const formattedLines = parts
+        .map((part) => part.trim())
+        .filter((part) => part.length > 0);
+
+      // Join with newlines
+      return formattedLines.join("\n");
     };
 
     return (
@@ -2791,22 +2882,9 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
 
         <div ref={(el) => (invoiceRefs.current[index] = el)}>
           {/* Invoice Header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: "20px",
-            }}
-          >
-            <img
-              src={logoImg}
-              alt="Company Logo"
-              style={{ height: "60px", objectFit: "contain" }}
-            />
-            <div
-              style={{ textAlign: "right", fontSize: "14px", color: "#666" }}
-            >
+          <div style={headerContainerStyle}>
+            <img src={logoImg} alt="Company Logo" style={logoStyle} />
+            <div style={invoiceInfoStyle}>
               <div>
                 <strong>
                   Invoice #{index + 1} of {data.length}
@@ -2814,49 +2892,54 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
               </div>
               <div>ID: {invoice.invoiceId || "N/A"}</div>
             </div>
+            <h1 style={companyTitleStyle}>REVOLVE SOLUTIONS</h1>
+            <div style={spacerStyle}></div>
           </div>
 
           {/* <h1 style={titleStyle}>SUMARIA SYSTEMS, LLC</h1> */}
-          <h1 style={enhancedTitleStyle} className="font-bold">
-            REVOLVE, LLC
-          </h1>
 
           {/* Two-column information block */}
           <div style={flexBetweenStyle}>
             <div style={columnStyle}>
               <div>
-                <span style={boldTextStyle}>
-                  Subcontractor Invoice Number:{" "}
-                </span>
+                <span style={boldTextStyle}>Invoice Number: </span>
                 {invoice.invoiceId || ""}
               </div>
-              <div style={addressBlockStyle}>
+              <div style={{ ...addressBlockStyle, marginTop: "16px" }}>
                 <span style={boldTextStyle}>Bill To: {"\n"}</span>
-                {invoice.billTo || ``}
+                {invoice.billT ||
+                  `Revolve Solutions
+                
+                Ashburn, VA 20147 `}
               </div>
               <div>
                 <span style={boldTextStyle}>Buyer: </span>
                 {invoice.buyer || " "}
               </div>
-              <div style={{ marginTop: "16px", whiteSpace: "nowrap" }}>
+              <div style={{ marginTop: "16px" }}>
                 <span style={boldTextStyle}>Purchase Order ID: </span>
                 {invoice.po_Number || ""} Release Number{" "}
                 {invoice.po_rlse_Number || ""}
               </div>
-              <div style={{ marginTop: "16px", whiteSpace: "nowrap" }}>
+              <div style={{ marginTop: "16px" }}>
                 <span style={boldTextStyle}> PO Start and End Date: </span>
                 {invoice.po_Start_End_Date || " "}
               </div>
             </div>
 
-            <div style={{ ...columnStyle, textAlign: "right" }}>
+            <div style={columnStyle}>
               <div>
                 <span style={boldTextStyle}>Invoice Date: </span>
                 {invoice.period || " "}
               </div>
               <div>
                 <span style={boldTextStyle}>Billing Currency: </span>
+
                 {invoice.currency || "USD"}
+              </div>
+              <div style={{ ...addressBlockStyle, marginTop: "16px" }}>
+                <span style={boldTextStyle}>Remit To: {"\n"}</span>
+                {formatAddress(invoice.billTo) || ``}
               </div>
               <div>
                 <span style={boldTextStyle}>Terms: </span>
@@ -2895,21 +2978,26 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
             </thead>
             <tbody>
               {Object.entries(groupedByPoLine).map(([poLine, items]) => (
-                <React.Fragment key={`${index}-${poLine}`}>
+                <React.Fragment key={poLine}>
                   <tr>
                     <td
                       colSpan={8}
                       style={{
                         fontWeight: 700,
-                        fontSize: "15px",
-                        paddingBottom: "20px",
+                        fontSize: "12px",
+                        paddingBottom: "10px",
                       }}
                     >
                       PO LINE {poLine}
-                    </td>
+                    </td>{" "}
                   </tr>
-                  {items.map((item, itemIndex) => (
-                    <tr key={`${index}-${poLine}-${itemIndex}`}>
+                  {items.map((item, index) => (
+                    <tr key={index}>
+                      {/* <td style={tdStyle}>{item.plc || ""}</td>
+                                <td style={tdStyle}>
+                                  {[item.vendor, item.employee].filter(Boolean).join("\n")}
+                                </td> */}
+
                       <td
                         style={{
                           border: "1px solid #d1d5db",
@@ -2920,30 +3008,25 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
                           wordBreak: "break-word",
                           verticalAlign: "top",
                         }}
-                        colSpan={2}
+                        colSpan={2} // span across the two previous separate columns
                       >
                         <div>{item.plc}</div>
-                        <div style={{ paddingLeft: "20px", marginTop: "2px" }}>
+                        <div
+                          style={{
+                            paddingLeft: "20px",
+                            marginTop: "2px",
+                          }}
+                        >
                           <div>{item.employee}</div>
                           <div>{item.vendor}</div>
                         </div>
                       </td>
-                      <td style={tdRightStyle}>
-                        {item.hours?.toFixed(2) || "0.00"}
-                      </td>
-                      <td style={tdRightStyle}>
-                        ${item.rate?.toFixed(2) || "0.00"}
-                      </td>
+                      <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+                      <td style={tdRightStyle}>${item.rate.toFixed(2)}</td>
                       <td style={tdRightStyle}>$0.00</td>
-                      <td style={tdRightStyle}>
-                        ${item.amount?.toFixed(2) || "0.00"}
-                      </td>
-                      <td style={tdRightStyle}>
-                        {item.hours?.toFixed(2) || "0.00"}
-                      </td>
-                      <td style={tdRightStyle}>
-                        ${item.amount?.toFixed(2) || "0.00"}
-                      </td>
+                      <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
+                      <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>
+                      <td style={tdRightStyle}>${item.amount.toFixed(2)}</td>
                     </tr>
                   ))}
                 </React.Fragment>
