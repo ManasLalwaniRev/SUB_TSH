@@ -682,7 +682,7 @@ const DashboardGraphs = () => {
                         <select value={dateRangeOption} onChange={e => setDateRangeOption(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 transition shadow-sm">
                             <option value="all_time">All Time</option>
                             <option value="last_7_days">Last 7 Days</option>
-                            <option value="last_30_days">Last 30 Days</option>
+                            <option value="last_30_days">Last Month</option>
                             <option value="month_to_date">Month to Date</option>
                             <option value="custom">Custom Range</option>
                         </select>
