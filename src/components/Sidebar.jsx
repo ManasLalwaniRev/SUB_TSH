@@ -147,6 +147,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+// The CheckSquare icon is already imported and can be used.
 import { Menu, Clock, Users, Download, CheckSquare, ChevronLeft, ChevronRight, Briefcase, Receipt, ClipboardCheck, LogOut, LayoutDashboard } from "lucide-react";
 
 // Individual Sidebar Item Component for cleaner code
@@ -253,7 +254,15 @@ export default function Sidebar() {
 
                     {/* Manage Groups: Show for Admin only */}
                     {isAdmin && (
-                        <SidebarItem icon={<Users className="h-5 w-5" />} text="PO Info" to="/dashboard/groups/manage-groups" selectedPage={pathname} handleLinkClick={handleLinkClick} isCollapsed={isCollapsed} />
+                        // MODIFIED: Changed Users icon to CheckSquare for PO Info
+                        <SidebarItem 
+                            icon={<CheckSquare className="h-5 w-5" />} 
+                            text="PO Info" 
+                            to="/dashboard/groups/manage-groups" 
+                            selectedPage={pathname} 
+                            handleLinkClick={handleLinkClick} 
+                            isCollapsed={isCollapsed} 
+                        />
                     )}
 
                     {/* Users / User Profile: Show for all roles with different text */}
