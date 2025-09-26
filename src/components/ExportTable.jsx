@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
@@ -1422,81 +1421,275 @@ export default function ExportTable() {
   //     }
   //   };
 
-  const handleGenerateInvoice = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (actionLoading) return;
+const groupInvoiceData = (invoiceData) => {
+  if (!invoiceData || !Array.isArray(invoiceData)) {
+    return invoiceData;
+  }
 
-    if (selectedRows.size === 0) {
-      showToast("Please select at least one timesheet to export", "warning");
+  // Group items by plc, vendor, and employee
+  const grouped = invoiceData.reduce((acc, item) => {
+    const key = `${item.plc || 'N/A'}-${item.vendor || 'N/A'}-${item.employee || 'N/A'}`;
+    
+    if (!acc[key]) {
+      // First occurrence - create new group
+      acc[key] = {
+        ...item,
+        hours: parseFloat(item.hours) || 0,
+        amount: parseFloat(item.amount) || 0,
+        groupedItems: [item] // Keep track of original items for reference
+      };
+    } else {
+      // Duplicate found - sum the values
+      acc[key].hours += parseFloat(item.hours) || 0;
+      acc[key].amount += parseFloat(item.amount) || 0;
+      acc[key].groupedItems.push(item);
+    }
+    
+    return acc;
+  }, {});
+
+  // Convert back to array format
+  return Object.values(grouped).map(group => ({
+    ...group,
+    hours: parseFloat(group.hours.toFixed(2)), // Round to 2 decimal places
+    amount: parseFloat(group.amount.toFixed(2)) // Round to 2 decimal places
+  }));
+};
+
+const handleGenerateInvoice = async (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (actionLoading) return;
+
+  if (selectedRows.size === 0) {
+    showToast("Please select at least one timesheet to export", "warning");
+    return;
+  }
+
+  try {
+    setActionLoading(true);
+
+    const selectedData = filteredRows.filter((row) =>
+      selectedRows.has(row.id)
+    );
+
+    if (selectedData.length === 0) {
+      showToast("No selected data to export", "warning");
+      setActionLoading(false);
       return;
     }
 
-    try {
-      setActionLoading(true);
+    const payload = selectedData.map((row) => {
+      const originalItem = row.originalItem;
+      return {
+        ...originalItem,
+        CreatedBy:
+          originalItem.CreatedBy ||
+          currentUser?.username ||
+          currentUser?.id ||
+          "admin",
+        UpdatedBy:
+          originalItem.UpdatedBy ||
+          currentUser?.username ||
+          currentUser?.id ||
+          "admin",
+        CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
+        UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
+      };
+    });
 
-      const selectedData = filteredRows.filter((row) =>
-        selectedRows.has(row.id)
-      );
-
-      if (selectedData.length === 0) {
-        showToast("No selected data to export", "warning");
-        setActionLoading(false);
-        return;
+    const response = await fetch(
+      "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
+    );
 
-      const payload = selectedData.map((row) => {
-        const originalItem = row.originalItem;
-        return {
-          ...originalItem,
-          CreatedBy:
-            originalItem.CreatedBy ||
-            currentUser?.username ||
-            currentUser?.id ||
-            "admin",
-          UpdatedBy:
-            originalItem.UpdatedBy ||
-            currentUser?.username ||
-            currentUser?.id ||
-            "admin",
-          CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
-          UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
-        };
-      });
-
-      const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const invoiceData = await response.json();
-
-      // Debug log the invoice data received from API
-      console.log("Invoice data received:", invoiceData);
-
-      // Set to state for InvoiceViewer
-      setShowInvoice(invoiceData);
-
-      showToast(
-        `Invoice preview for ${selectedData.length} timesheets`,
-        "success"
-      );
-      setInvoiceModalVisible(true);
-    } catch (error) {
-      console.error("Generate Invoice error:", error);
-      showToast(error.message || "Invoice generation failed", "error");
-    } finally {
-      setActionLoading(false);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const invoiceData = await response.json();
+
+    // Debug log the original invoice data received from API
+    console.log("Original invoice data received:", invoiceData);
+
+    // Process and group invoice data by combining same PLC+Vendor+Employee
+    const processInvoiceData = (data) => {
+      if (!data) return data;
+
+      // If data is an array of invoices
+      if (Array.isArray(data)) {
+        return data.map(invoice => processInvoiceData(invoice));
+      }
+
+      // If data is a single invoice object with lineItems
+      if (data && Array.isArray(data.lineItems)) {
+        // Group line items by PLC + Vendor + Employee combination
+        const groupedItems = {};
+        
+        data.lineItems.forEach(item => {
+          // Create a unique key for grouping - using exact field names from API
+          const plcKey = item.plc || item.PLC || '';
+          const vendorKey = item.vendor || item.vendorName || item.vendName || '';
+          const employeeKey = item.employee || item.employeeName || item.resourceName || '';
+          
+          const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
+          
+          if (groupedItems[groupKey]) {
+            // Combine with existing group - sum hours and amounts
+            const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+            const newHours = parseFloat(item.hours) || 0;
+            groupedItems[groupKey].hours = existingHours + newHours;
+            
+            const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
+            const newAmount = parseFloat(item.amount) || 0;
+            groupedItems[groupKey].amount = existingAmount + newAmount;
+            
+            // Keep track of combined count for reference
+            groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
+            
+          } else {
+            // First occurrence of this combination
+            groupedItems[groupKey] = {
+              ...item,
+              hours: parseFloat(item.hours) || 0,
+              amount: parseFloat(item.amount) || 0,
+              combinedCount: 1
+            };
+          }
+        });
+
+        // Convert grouped items back to array with formatted values
+        const combinedLineItems = Object.values(groupedItems).map(item => ({
+          ...item,
+          hours: Number(item.hours.toFixed(2)),
+          amount: Number(item.amount.toFixed(2))
+        }));
+
+        // Recalculate total amounts
+        const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+          return sum + (parseFloat(item.amount) || 0);
+        }, 0);
+
+        return {
+          ...data,
+          lineItems: combinedLineItems,
+          totalAmount: Number(newTotalAmount.toFixed(2)),
+          amountDue: Number(newTotalAmount.toFixed(2))
+        };
+      }
+
+      // Return data as-is if it doesn't have lineItems structure
+      return data;
+    };
+
+    // Process the invoice data to combine similar items
+    const processedInvoiceData = processInvoiceData(invoiceData);
+
+    // Debug log the processed invoice data
+    console.log("Processed invoice data with combined items:", processedInvoiceData);
+
+    // Set the processed data to state for InvoiceViewer
+    setShowInvoice(processedInvoiceData);
+
+    showToast(
+      `Invoice preview for ${selectedData.length} timesheets`,
+      "success"
+    );
+    setInvoiceModalVisible(true);
+  } catch (error) {
+    console.error("Generate Invoice error:", error);
+    showToast(error.message || "Invoice generation failed", "error");
+  } finally {
+    setActionLoading(false);
+  }
+};
+
+
+
+
+//   const handleGenerateInvoice = async (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     if (actionLoading) return;
+
+//     if (selectedRows.size === 0) {
+//       showToast("Please select at least one timesheet to export", "warning");
+//       return;
+//     }
+
+//     try {
+//       setActionLoading(true);
+
+//       const selectedData = filteredRows.filter((row) =>
+//         selectedRows.has(row.id)
+//       );
+
+//       if (selectedData.length === 0) {
+//         showToast("No selected data to export", "warning");
+//         setActionLoading(false);
+//         return;
+//       }
+
+//       const payload = selectedData.map((row) => {
+//         const originalItem = row.originalItem;
+//         return {
+//           ...originalItem,
+//           CreatedBy:
+//             originalItem.CreatedBy ||
+//             currentUser?.username ||
+//             currentUser?.id ||
+//             "admin",
+//           UpdatedBy:
+//             originalItem.UpdatedBy ||
+//             currentUser?.username ||
+//             currentUser?.id ||
+//             "admin",
+//           CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
+//           UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
+//         };
+//       });
+
+//       const response = await fetch(
+//         "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+//         {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify(payload),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`HTTP error! status: ${response.status}`);
+//       }
+
+//       const invoiceData = await response.json();
+
+//       // Group duplicate items with same plc, vendor, employee
+// const groupedInvoiceData = groupInvoiceData(invoiceData);
+// console.log("Grouped invoice data:", groupedInvoiceData);
+
+//       // Debug log the invoice data received from API
+//       console.log("Invoice data received:", invoiceData);
+
+//       // Set to state for InvoiceViewer
+//       setShowInvoice(invoiceData);
+
+//       showToast(
+//         `Invoice preview for ${selectedData.length} timesheets`,
+//         "success"
+//       );
+//       setInvoiceModalVisible(true);
+//     } catch (error) {
+//       console.error("Generate Invoice error:", error);
+//       showToast(error.message || "Invoice generation failed", "error");
+//     } finally {
+//       setActionLoading(false);
+//     }
+//   };
 
   // const handleGenrateInvoice = async (e) => {
   //   e.preventDefault();

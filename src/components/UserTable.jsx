@@ -593,7 +593,7 @@ const showToast = (message, type = 'info') => {
     setTimeout(() => document.body.removeChild(toast), 3000);
 };
 
-// --- Create User Modal Component (with Client-Side Validation) ---
+// --- Create User Modal Component (with Enhanced Error Handling) ---
 const CreateUserModal = ({ onClose, onUserCreated }) => {
     const [formData, setFormData] = useState({
         username: '',
@@ -644,7 +644,6 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
 
         setErrors(tempErrors);
 
-        // This returns true if the form is valid, false otherwise
         return Object.values(tempErrors).every(x => x === "");
     };
 
@@ -682,7 +681,11 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
                 onClose();
 
             } catch (err) {
-                setServerError(err.message);
+                if (err.message.includes('Failed to fetch')) {
+                    setServerError('Username or email may already be in use. Please try different ones.');
+                } else {
+                    setServerError(err.message);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -699,29 +702,29 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
                 <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Username</label>
+                            <label className="block text-sm font-medium text-gray-700">Username <span className="text-red-500">*</span></label>
                             <input type="text" name="username" value={formData.username} onChange={handleChange} className={`w-full mt-1 px-3 py-2 border rounded-lg ${errors.username ? 'border-red-500' : 'border-gray-300'}`} required />
                             {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                            <label className="block text-sm font-medium text-gray-700">Full Name <span className="text-red-500">*</span></label>
                             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} className={`w-full mt-1 px-3 py-2 border rounded-lg ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`} required />
                             {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <label className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
                         <input type="email" name="email" value={formData.email} onChange={handleChange} className={`w-full mt-1 px-3 py-2 border rounded-lg ${errors.email ? 'border-red-500' : 'border-gray-300'}`} required />
                         {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Password</label>
+                            <label className="block text-sm font-medium text-gray-700">Password <span className="text-red-500">*</span></label>
                             <input type="password" name="password" value={formData.password} onChange={handleChange} className={`w-full mt-1 px-3 py-2 border rounded-lg ${errors.password ? 'border-red-500' : 'border-gray-300'}`} required />
                             {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                            <label className="block text-sm font-medium text-gray-700">Confirm Password <span className="text-red-500">*</span></label>
                             <input type="password" name="confirmPassword" value={confirmPassword} onChange={handleConfirmPasswordChange} className={`w-full mt-1 px-3 py-2 border rounded-lg ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`} required />
                             {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
                         </div>
@@ -1051,7 +1054,6 @@ export default function UserTable() {
         // More robust filtering logic
         const filteredUsers = users.filter(user => {
             const query = searchQuery.toLowerCase();
-            // Add checks to ensure properties exist before calling .toLowerCase()
             return (
                 (user.fullName && user.fullName.toLowerCase().includes(query)) ||
                 (user.username && user.username.toLowerCase().includes(query)) ||

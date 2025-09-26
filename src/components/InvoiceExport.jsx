@@ -1,3 +1,16090 @@
+// // import React, { useState, useEffect } from "react";
+// // import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// // import InvoiceViewer from "./InvoiceViewer";
+
+// // export default function InvoiceExport() {
+// //   const [invoices, setInvoices] = useState([]);
+// //   const [filteredInvoices, setFilteredInvoices] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// //   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+// //   const [selectAll, setSelectAll] = useState(false);
+// //   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+// //   const [previewData, setPreviewData] = useState(null);
+// //   const [userRole, setUserRole] = useState(null);
+
+// //   // Get user role from localStorage (set during login)
+// //   useEffect(() => {
+// //     const getUserRole = () => {
+// //       try {
+// //         // Try to get from loginResponse first
+// //         const loginResponse = localStorage.getItem("loginResponse");
+// //         if (loginResponse) {
+// //           const parsedResponse = JSON.parse(loginResponse);
+// //           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try userData
+// //         const userData = localStorage.getItem("userData");
+// //         if (userData) {
+// //           const parsedUserData = JSON.parse(userData);
+// //           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try individual userRole
+// //         const storedRole = localStorage.getItem("userRole");
+// //         if (storedRole) {
+// //           setUserRole(storedRole.toLowerCase());
+// //           return;
+// //         }
+
+// //         // Default fallback - temporarily set to admin for testing
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       } catch (error) {
+// //         console.error("Error parsing user data:", error);
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       }
+// //     };
+
+// //     getUserRole();
+// //   }, []);
+
+// //   // Fetch invoices from API
+// //   useEffect(() => {
+// //     const fetchInvoices = async () => {
+// //       try {
+// //         setLoading(true);
+// //         const response = await fetch(
+// //           "https://timesheet-subk.onrender.com/api/Invoices"
+// //         );
+
+// //         if (!response.ok) {
+// //           throw new Error(`HTTP error! status: ${response.status}`);
+// //         }
+
+// //         const data = await response.json();
+// //         setInvoices(data);
+// //         setFilteredInvoices(data);
+// //       } catch (err) {
+// //         console.error("Error fetching invoices:", err);
+// //         setError(err.message || "Failed to fetch invoices");
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     };
+
+// //     fetchInvoices();
+// //   }, []);
+
+// //   // Filter invoices based on invoice number filter
+// //   useEffect(() => {
+// //     let filtered = invoices;
+
+// //     // Filter by invoice number
+// //     if (filterInvoiceNumber) {
+// //       filtered = filtered.filter(
+// //         (invoice) =>
+// //           invoice.invoiceNumber &&
+// //           invoice.invoiceNumber
+// //             .toLowerCase()
+// //             .includes(filterInvoiceNumber.toLowerCase())
+// //       );
+// //     }
+
+// //     setFilteredInvoices(filtered);
+// //     // Reset selections when filter changes
+// //     setSelectedInvoices(new Set());
+// //     setSelectAll(false);
+// //   }, [invoices, filterInvoiceNumber]);
+
+// //   // Dynamic table container style based on content
+// //   const getTableContainerStyle = () => {
+// //     const headerHeight = 120; // Header section height
+// //     const filterHeight = 80; // Filter section height
+// //     const padding = 48; // Top and bottom padding (24px each)
+// //     const margin = 24; // Margin
+// //     const footerSpace = 20; // Space for any footer content
+
+// //     // Calculate minimum height needed for the content
+// //     const rowHeight = 61; // Approximate height per row (including border)
+// //     const headerRowHeight = 48; // Header row height
+// //     const minContentHeight =
+// //       headerRowHeight + filteredInvoices.length * rowHeight;
+
+// //     // Calculate available space
+// //     const availableHeight =
+// //       window.innerHeight -
+// //       headerHeight -
+// //       filterHeight -
+// //       padding -
+// //       margin -
+// //       footerSpace;
+
+// //     // Use the smaller of content height or available height, with reasonable limits
+// //     const dynamicHeight = Math.min(
+// //       Math.max(minContentHeight, 200), // Minimum 200px
+// //       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+// //     );
+
+// //     return {
+// //       height: `${dynamicHeight}px`,
+// //       minHeight: "200px",
+// //       maxHeight: `calc(100vh - ${
+// //         headerHeight + filterHeight + padding + margin + footerSpace
+// //       }px)`,
+// //     };
+// //   };
+
+// //   // Alternative: Get table wrapper style that adjusts to content
+// //   const getTableWrapperStyle = () => {
+// //     // If there are few items, don't use fixed height
+// //     if (filteredInvoices.length <= 5) {
+// //       return {
+// //         minHeight: "200px",
+// //         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+// //       };
+// //     }
+
+// //     // For more items, use scrollable container
+// //     return {
+// //       height: "calc(100vh - 300px)",
+// //       minHeight: "400px",
+// //     };
+// //   };
+
+// //   const formatDate = (dateString) => {
+// //     if (!dateString) return "N/A";
+// //     try {
+// //       const date = new Date(dateString);
+// //       const month = String(date.getMonth() + 1).padStart(2, "0");
+// //       const day = String(date.getDate()).padStart(2, "0");
+// //       const year = date.getFullYear();
+// //       return `${month}-${day}-${year}`;
+// //     } catch {
+// //       return dateString;
+// //     }
+// //   };
+
+// //   // Format currency helper
+// //   const formatCurrency = (amount, currency = "USD") => {
+// //     if (!amount && amount !== 0) return "N/A";
+// //     try {
+// //       return new Intl.NumberFormat("en-US", {
+// //         style: "currency",
+// //         currency: currency || "USD",
+// //       }).format(amount);
+// //     } catch {
+// //       return `${currency || "$"} ${amount}`;
+// //     }
+// //   };
+
+// //   // Calculate selectable invoices (only those that are not exported)
+// //   const selectableInvoices = filteredInvoices.filter(
+// //     (invoice) => !invoice.isExported
+// //   );
+// //   const disabledInvoices = filteredInvoices.filter(
+// //     (invoice) => invoice.isExported
+// //   );
+
+// //   // Handle select all checkbox
+// //   const handleSelectAll = (checked) => {
+// //     setSelectAll(checked);
+// //     if (checked) {
+// //       // Only select invoices that are not exported (isExported: false)
+// //       const allSelectableIds = new Set(
+// //         selectableInvoices.map(
+// //           (invoice, index) =>
+// //             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+// //         )
+// //       );
+// //       setSelectedInvoices(allSelectableIds);
+// //     } else {
+// //       setSelectedInvoices(new Set());
+// //     }
+// //   };
+
+// //   // Handle individual checkbox
+// //   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+// //     // Prevent selection if invoice is exported
+// //     if (invoice && invoice.isExported) return;
+
+// //     setSelectedInvoices((prev) => {
+// //       const newSelected = new Set(prev);
+// //       if (checked) {
+// //         newSelected.add(invoiceId);
+// //       } else {
+// //         newSelected.delete(invoiceId);
+// //       }
+
+// //       // Update select all state - check if all selectable invoices are selected
+// //       const allSelectableSelected =
+// //         selectableInvoices.length > 0 &&
+// //         selectableInvoices.every((inv) => {
+// //           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+// //           return newSelected.has(id);
+// //         });
+// //       setSelectAll(allSelectableSelected);
+
+// //       return newSelected;
+// //     });
+// //   };
+
+// //   // Handle unexport (reopen) invoice - only for admin
+// //   const handleUnexport = async (invoice) => {
+// //     if (userRole !== "admin") {
+// //       alert("Access denied. Admin privileges required.");
+// //       return;
+// //     }
+
+// //     const confirmed = window.confirm(
+// //       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+// //     );
+// //     if (!confirmed) return;
+
+// //     try {
+// //       // Show loading state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = true;
+// //         openButton.textContent = "Opening...";
+// //       }
+
+// //       // Prepare the request body with the current invoice data
+// //       const requestBody = {
+// //         invoiceId: invoice.invoiceId || invoice.id || 0,
+// //         invoiceNumber: invoice.invoiceNumber || "string",
+// //         po_Number: invoice.po_Number || invoice.poNumber || "string",
+// //         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+// //         invoiceAmount: invoice.invoiceAmount || 0,
+// //         currency: invoice.currency || "USD",
+// //         createdAt: invoice.createdAt || new Date().toISOString(),
+// //         createdBy: invoice.createdBy || "string",
+// //         updatedAt: new Date().toISOString(),
+// //         updatedBy: "admin", // or get from current user context
+// //         billTo: invoice.billTo || "string",
+// //         remitTo: invoice.remitTo || "string",
+// //         isExported: false, // This is the key change - setting to false to reopen
+// //         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+// //       };
+
+// //       // API call to update the invoice using the correct endpoint
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/Invoices/${
+// //           invoice.invoiceId || invoice.id
+// //         }`,
+// //         {
+// //           method: "PUT", // Using PUT as per the API structure
+// //           headers: {
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify(requestBody),
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         const errorText = await response.text();
+// //         throw new Error(
+// //           `HTTP ${response.status}: ${errorText || response.statusText}`
+// //         );
+// //       }
+
+// //       // Check if response has content
+// //       let result = null;
+// //       const contentType = response.headers.get("Content-Type");
+// //       if (contentType && contentType.includes("application/json")) {
+// //         result = await response.json();
+// //       }
+
+// //       console.log("Invoice reopened successfully:", result);
+
+// //       // Update the local state
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+// //     } catch (error) {
+// //       console.error("Error reopening invoice:", error);
+
+// //       // More specific error messages
+// //       let errorMessage = "Failed to reopen invoice: ";
+// //       if (error.message.includes("404")) {
+// //         errorMessage += "Invoice not found or endpoint not available.";
+// //       } else if (error.message.includes("403")) {
+// //         errorMessage += "Access denied. Please check your permissions.";
+// //       } else if (error.message.includes("401")) {
+// //         errorMessage += "Authentication failed. Please log in again.";
+// //       } else {
+// //         errorMessage += error.message;
+// //       }
+
+// //       alert(errorMessage);
+// //     } finally {
+// //       // Reset button state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = false;
+// //         openButton.textContent = "OPEN";
+// //       }
+// //     }
+// //   };
+
+// //   // Handle preview click
+// //   const handlePreview = async (invoice) => {
+// //     try {
+// //       setPreviewModalVisible(true);
+// //       setPreviewData(null);
+
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //           invoice.invoiceNumber
+// //         )}`
+// //       );
+
+// //       if (!response.ok) {
+// //         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //       }
+
+// //       const apiData = await response.json();
+
+// //       const transformedData = [
+// //         {
+// //           invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+// //           invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+// //           period: formatDate(
+// //             apiData.period || apiData.invoiceDate || invoice.invoiceDate
+// //           ),
+// //           currency: apiData.currency || invoice.currency || "USD",
+// //           totalAmount:
+// //             apiData.totalAmount ||
+// //             apiData.invoiceAmount ||
+// //             invoice.invoiceAmount ||
+// //             0,
+
+// //           lineItems: (
+// //             apiData.lineItems ||
+// //             apiData.invoiceTimesheetLines ||
+// //             []
+// //           ).map((item, index) => ({
+// //             poLine: item.poLine || item.timesheetLineNo || "",
+// //             plc: item.plc || "",
+// //             vendor: item.vendor || "",
+// //             employee: item.employee || item.createdBy || "",
+// //             hours: item.hours || item.mappedHours,
+// //             rate:
+// //               item.rate,
+// //             amount: item.amount || item.mappedAmount,
+// //             line_No: item.line_No || item.timesheetLineNo || index + 1,
+// //           })),
+
+// //           billTo:
+// //             apiData.billTo ||
+// //             "",
+// //           buyer: apiData.buyer || "",
+// //           purchaseOrderId: apiData.purchaseOrderId || "",
+// //           releaseNumber: apiData.releaseNumber || "",
+// //           changeOrderNumber: apiData.changeOrderNumber || "0",
+// //           poStartEndDate: apiData.poStartEndDate || "",
+// //           remitTo:
+// //             apiData.remitTo ||
+// //             "",
+// //           terms: apiData.terms || "",
+// //           amountDue:
+// //             apiData.amountDue ||
+// //             apiData.totalAmount ||
+// //             apiData.invoiceAmount ||
+// //             invoice.invoiceAmount ||
+// //             0,
+// //         },
+// //       ];
+
+// //       setPreviewData(transformedData);
+// //     } catch (error) {
+// //       console.error("Error fetching invoice preview:", error);
+// //       alert(`Failed to load invoice preview: ${error.message}`);
+
+// //       const fallbackData = [
+// //         {
+// //           invoiceId: invoice.invoiceNumber,
+// //           invoiceDate: formatDate(invoice.invoiceDate),
+// //           period: formatDate(invoice.invoiceDate),
+// //           currency: invoice.currency || "USD",
+// //           totalAmount: invoice.invoiceAmount || 0,
+// //           lineItems: [],
+// //           billTo:"",
+// //           buyer: "",
+// //           purchaseOrderId: "",
+// //           releaseNumber: "",
+// //           changeOrderNumber: "",
+// //           poStartEndDate: "",
+// //           remitTo: "",
+// //           terms: "",
+// //           amountDue: invoice.invoiceAmount || 0,
+// //         },
+// //       ];
+
+// //       setPreviewData(fallbackData);
+// //     }
+// //   };
+
+// //   // Export function (keeping your existing export logic)
+// //   // const exportToCSV = async () => {
+// //   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //   //     selectedInvoices.has(invoice.invoiceId || index)
+// //   //   );
+
+// //   //   if (invoicesToExport.length === 0) {
+// //   //     alert("Please select invoices to export");
+// //   //     return;
+// //   //   }
+
+// //   //   try {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = true;
+// //   //       exportButton.innerHTML =
+// //   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //   //     }
+
+// //   //     for (let i = 0; i < invoicesToExport.length; i++) {
+// //   //       const invoice = invoicesToExport[i];
+// //   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //   //       if (!invoiceId) {
+// //   //         console.warn(
+// //   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //   //         );
+// //   //         continue;
+// //   //       }
+
+// //   //       try {
+// //   //         const columnHeaderValues = [
+// //   //           invoice.invoiceNumber || "",
+// //   //           formatDate(invoice.invoiceDate) || "",
+// //   //           invoice.invoiceAmount || 0,
+// //   //           invoice.currency || "USD",
+// //   //           formatDate(invoice.createdAt) || "",
+// //   //           "PLC001",
+// //   //           invoice.createdBy || "Employee",
+// //   //           "40.00",
+// //   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //   //           "0.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //           "40.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //         ];
+
+// //   //         const payload = {
+// //   //           ColumnHeaderValues: columnHeaderValues,
+// //   //           IncludeHeaders: true,
+// //   //           ExportFormat: "CSV",
+// //   //         };
+
+// //   //         const response = await fetch(
+// //   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //   //             invoiceId
+// //   //           )}`,
+// //   //           {
+// //   //             method: "POST",
+// //   //             headers: {
+// //   //               Accept:
+// //   //                 "text/csv, application/csv, application/octet-stream, */*",
+// //   //               "Content-Type": "application/json",
+// //   //             },
+// //   //             // body: JSON.stringify(payload)
+// //   //           }
+// //   //         );
+
+// //   //         if (!response.ok) {
+// //   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //   //           try {
+// //   //             const errorData = await response.text();
+// //   //             if (errorData) {
+// //   //               errorMessage += ` - ${errorData}`;
+// //   //             }
+// //   //           } catch (e) {
+// //   //             // Ignore if can't parse error
+// //   //           }
+// //   //           throw new Error(errorMessage);
+// //   //         }
+
+// //   //         const blob = await response.blob();
+
+// //   //         if (blob.type && blob.type.includes("application/json")) {
+// //   //           const text = await blob.text();
+// //   //           console.error("Received JSON instead of file:", text);
+// //   //           throw new Error("Server returned an error instead of a file");
+// //   //         }
+
+// //   //         let filename = `invoice_${invoiceId}_export.csv`;
+// //   //         const contentDisposition = response.headers.get(
+// //   //           "Content-Disposition"
+// //   //         );
+// //   //         if (contentDisposition) {
+// //   //           const filenameMatch = contentDisposition.match(
+// //   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //   //           );
+// //   //           if (filenameMatch && filenameMatch[1]) {
+// //   //             filename = filenameMatch[1].replace(/['"]/g, "");
+// //   //           }
+// //   //         }
+
+// //   //         const url = window.URL.createObjectURL(blob);
+// //   //         const link = document.createElement("a");
+// //   //         link.href = url;
+// //   //         link.download = filename;
+// //   //         link.style.display = "none";
+// //   //         document.body.appendChild(link);
+// //   //         link.click();
+
+// //   //         window.URL.revokeObjectURL(url);
+// //   //         document.body.removeChild(link);
+
+// //   //         if (i < invoicesToExport.length - 1) {
+// //   //           await new Promise((resolve) => setTimeout(resolve, 500));
+// //   //         }
+// //   //       } catch (invoiceError) {
+// //   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //   //         alert(
+// //   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //   //         );
+// //   //       }
+// //   //     }
+
+// //   //     const successMessage =
+// //   //       invoicesToExport.length === 1
+// //   //         ? "Invoice exported successfully!"
+// //   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //   //     alert(successMessage);
+// //   //   } catch (error) {
+// //   //     console.error("Error during export process:", error);
+// //   //     alert(`Export failed: ${error.message}`);
+// //   //   } finally {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = false;
+// //   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //   //     }
+// //   //   }
+// //   // };
+// //   const exportToCSV = async () => {
+// //     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //       selectedInvoices.has(invoice.invoiceId || index)
+// //     );
+
+// //     if (invoicesToExport.length === 0) {
+// //       alert("Please select invoices to export");
+// //       return;
+// //     }
+
+// //     try {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = true;
+// //         exportButton.innerHTML =
+// //           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //       }
+
+// //       // Track successfully exported invoices for state update
+// //       const successfullyExportedIds = [];
+
+// //       for (let i = 0; i < invoicesToExport.length; i++) {
+// //         const invoice = invoicesToExport[i];
+// //         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //         if (!invoiceId) {
+// //           console.warn(
+// //             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //           );
+// //           continue;
+// //         }
+
+// //         try {
+// //           const columnHeaderValues = [
+// //             invoice.invoiceNumber || "",
+// //             formatDate(invoice.invoiceDate) || "",
+// //             invoice.invoiceAmount || 0,
+// //             invoice.currency || "USD",
+// //             formatDate(invoice.createdAt) || "",
+// //             "",
+// //             invoice.createdBy || "Employee",
+// //             "40.00",
+// //             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //             "0.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //             "40.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //           ];
+
+// //           const payload = {
+// //             ColumnHeaderValues: columnHeaderValues,
+// //             IncludeHeaders: true,
+// //             ExportFormat: "CSV",
+// //           };
+
+// //           const response = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //               invoiceId
+// //             )}`,
+// //             {
+// //               method: "POST",
+// //               headers: {
+// //                 Accept:
+// //                   "text/csv, application/csv, application/octet-stream, */*",
+// //                 "Content-Type": "application/json",
+// //               },
+// //               // body: JSON.stringify(payload)
+// //             }
+// //           );
+
+// //           if (!response.ok) {
+// //             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //             try {
+// //               const errorData = await response.text();
+// //               if (errorData) {
+// //                 errorMessage += ` - ${errorData}`;
+// //               }
+// //             } catch (e) {
+// //               // Ignore if can't parse error
+// //             }
+// //             throw new Error(errorMessage);
+// //           }
+
+// //           const blob = await response.blob();
+
+// //           if (blob.type && blob.type.includes("application/json")) {
+// //             const text = await blob.text();
+// //             console.error("Received JSON instead of file:", text);
+// //             throw new Error("Server returned an error instead of a file");
+// //           }
+
+// //           let filename = `invoice_${invoiceId}_export.csv`;
+// //           const contentDisposition = response.headers.get(
+// //             "Content-Disposition"
+// //           );
+// //           if (contentDisposition) {
+// //             const filenameMatch = contentDisposition.match(
+// //               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //             );
+// //             if (filenameMatch && filenameMatch[1]) {
+// //               filename = filenameMatch[1].replace(/['"]/g, "");
+// //             }
+// //           }
+
+// //           const url = window.URL.createObjectURL(blob);
+// //           const link = document.createElement("a");
+// //           link.href = url;
+// //           link.download = filename;
+// //           link.style.display = "none";
+// //           document.body.appendChild(link);
+// //           link.click();
+
+// //           window.URL.revokeObjectURL(url);
+// //           document.body.removeChild(link);
+
+// //           // Mark this invoice as successfully exported
+// //           successfullyExportedIds.push(invoice.invoiceId);
+
+// //           // **NEW: Update invoice export status in database**
+// //           try {
+// //             const updateResponse = await fetch(
+// //               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //               {
+// //                 method: "PUT",
+// //                 headers: {
+// //                   "Content-Type": "application/json",
+// //                 },
+// //                 body: JSON.stringify({
+// //                   ...invoice,
+// //                   isExported: true, // Mark as exported
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin", // or get from current user context
+// //                 }),
+// //               }
+// //             );
+
+// //             if (!updateResponse.ok) {
+// //               console.warn(
+// //                 `Failed to update export status for invoice ${invoiceId}`
+// //               );
+// //             }
+// //           } catch (updateError) {
+// //             console.warn(
+// //               `Error updating export status for invoice ${invoiceId}:`,
+// //               updateError
+// //             );
+// //           }
+
+// //           if (i < invoicesToExport.length - 1) {
+// //             await new Promise((resolve) => setTimeout(resolve, 500));
+// //           }
+// //         } catch (invoiceError) {
+// //           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //           alert(
+// //             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //           );
+// //         }
+// //       }
+
+// //       // **NEW: Update local state for successfully exported invoices**
+// //       if (successfullyExportedIds.length > 0) {
+// //         setInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         setFilteredInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         // Clear selections for exported invoices since they can't be selected anymore
+// //         setSelectedInvoices((prev) => {
+// //           const newSelected = new Set(prev);
+// //           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //           return newSelected;
+// //         });
+
+// //         // Update select all checkbox state
+// //         const remainingSelectableInvoices = filteredInvoices.filter(
+// //           (inv) =>
+// //             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+// //         );
+// //         setSelectAll(false); // Reset select all since exported invoices are deselected
+// //       }
+
+// //       const successMessage =
+// //         invoicesToExport.length === 1
+// //           ? "Invoice exported successfully!"
+// //           : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //       alert(successMessage);
+// //     } catch (error) {
+// //       console.error("Error during export process:", error);
+// //       alert(`Export failed: ${error.message}`);
+// //     } finally {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = false;
+// //         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //       }
+// //     }
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center">
+// //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+// //           <p className="text-gray-600">Loading invoices...</p>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+// //           <div className="text-red-600 mb-4">
+// //             <Receipt className="h-12 w-12 mx-auto mb-2" />
+// //             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+// //           </div>
+// //           <p className="text-red-700">{error}</p>
+// //           <button
+// //             onClick={() => window.location.reload()}
+// //             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+// //           >
+// //             Try Again
+// //           </button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <>
+// //       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+// //         {/* Header */}
+// //         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+// //           <div className="flex items-center justify-between">
+// //             <div className="flex items-center">
+// //               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+// //               <div>
+// //                 <h1 className="text-2xl font-bold text-gray-900">
+// //                   Invoice Export
+// //                 </h1>
+// //                 <p className="text-gray-600">
+// //                   Manage and export invoice data
+// //                   {/* {userRole === 'admin' && (
+// //                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+// //                                             Admin Mode
+// //                                         </span>
+// //                                     )} */}
+// //                 </p>
+// //               </div>
+// //             </div>
+// //             <div className="flex items-center space-x-4">
+// //               <button
+// //                 onClick={exportToCSV}
+// //                 disabled={selectedInvoices.size === 0}
+// //                 data-export-button
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-green-600 text-white hover:bg-green-700"
+// //                 }`}
+// //               >
+// //                 <Download className="h-4 w-4 mr-2" />
+// //                 Export ({selectedInvoices.size})
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Filters */}
+// //         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+// //           <div className="flex items-center justify-start">
+// //             <div className="w-80 relative">
+// //               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+// //               <input
+// //                 type="text"
+// //                 placeholder="Filter by Invoice Number"
+// //                 value={filterInvoiceNumber}
+// //                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+// //                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+// //               />
+// //             </div>
+
+// //             {filterInvoiceNumber && (
+// //               <button
+// //                 onClick={() => setFilterInvoiceNumber("")}
+// //                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+// //               >
+// //                 Clear
+// //               </button>
+// //             )}
+// //           </div>
+// //         </div>
+
+// //         {/* Table Container with Dynamic Height */}
+// //         <div className="flex-1 mt-6 pb-6">
+// //           {filteredInvoices.length === 0 ? (
+// //             <div className="flex items-center justify-center h-64">
+// //               <div className="text-center text-gray-500">
+// //                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+// //                 <p className="text-lg font-medium">No invoices found</p>
+// //                 <p className="text-sm">Try adjusting your filter criteria</p>
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <div
+// //               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+// //               style={getTableWrapperStyle()}
+// //             >
+// //               <table className="min-w-full">
+// //                 <thead className="bg-gray-50">
+// //                   <tr>
+// //                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       <div className="flex items-center space-x-2">
+// //                         <input
+// //                           type="checkbox"
+// //                           checked={selectAll}
+// //                           onChange={(e) => handleSelectAll(e.target.checked)}
+// //                           disabled={selectableInvoices.length === 0}
+// //                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                             selectableInvoices.length === 0
+// //                               ? "opacity-50 cursor-not-allowed"
+// //                               : disabledInvoices.length > 0
+// //                               ? "opacity-75"
+// //                               : "cursor-pointer"
+// //                           }`}
+// //                         />
+// //                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+// //                           All
+// //                         </span>
+// //                       </div>
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Number
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Vendor
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Date
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Amount
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Currency
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Created At
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Action
+// //                     </th>
+// //                   </tr>
+// //                 </thead>
+// //                 <tbody className="divide-y divide-gray-200">
+// //                   {filteredInvoices.map((invoice, index) => {
+// //                     const invoiceId = invoice.invoiceId || invoice.id || index;
+// //                     return (
+// //                       <tr
+// //                         key={invoiceId}
+// //                         className="hover:bg-gray-50 transition-colors"
+// //                       >
+// //                         <td className="px-6 py-4 whitespace-nowrap">
+// //                           <input
+// //                             type="checkbox"
+// //                             checked={selectedInvoices.has(invoiceId)}
+// //                             onChange={(e) =>
+// //                               handleSelectInvoice(
+// //                                 invoiceId,
+// //                                 e.target.checked,
+// //                                 invoice
+// //                               )
+// //                             }
+// //                             disabled={invoice.isExported}
+// //                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                               invoice.isExported
+// //                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+// //                                 : "cursor-pointer hover:bg-green-50"
+// //                             }`}
+// //                           />
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceNumber || "N/A"}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+// //                         </td>
+
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.invoiceDate)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+// //                           {formatCurrency(
+// //                             invoice.invoiceAmount,
+// //                             invoice.currency
+// //                           )}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+// //                             {invoice.currency || "USD"}
+// //                           </span>
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.createdAt)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <div className="flex items-center space-x-2">
+// //                             <button
+// //                               onClick={() => handlePreview(invoice)}
+// //                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+// //                             >
+// //                               <Eye className="h-4 w-4 mr-1" />
+// //                               Preview
+// //                             </button>
+
+// //                             {/* OPEN button - only for admin and exported invoices */}
+// //                             {userRole === "admin" && invoice.isExported && (
+// //                               <button
+// //                                 onClick={() => handleUnexport(invoice)}
+// //                                 data-open-invoice={
+// //                                   invoice.invoiceId || invoice.id
+// //                                 }
+// //                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+// //                               >
+// //                                 OPEN
+// //                               </button>
+// //                             )}
+// //                           </div>
+// //                         </td>
+// //                       </tr>
+// //                     );
+// //                   })}
+// //                 </tbody>
+// //               </table>
+// //             </div>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Preview Modal */}
+// //       {previewModalVisible && (
+// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+// //           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+// //             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+// //               <h2 className="text-xl font-semibold text-gray-900">
+// //                 Invoice Preview
+// //               </h2>
+// //               <button
+// //                 onClick={() => setPreviewModalVisible(false)}
+// //                 className="text-gray-400 hover:text-gray-600 transition-colors"
+// //               >
+// //                 <X className="h-6 w-6" />
+// //               </button>
+// //             </div>
+// //             <div className="p-6">
+// //               <InvoiceViewer
+// //                 data={previewData}
+// //                 setInvoiceModalVisible={setPreviewModalVisible}
+// //               />
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </>
+// //   );
+// // }
+
+// // import React, { useState, useEffect } from "react";
+// // import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// // import InvoiceViewer from "./InvoiceViewer";
+
+// // export default function InvoiceExport() {
+// //   const [invoices, setInvoices] = useState([]);
+// //   const [filteredInvoices, setFilteredInvoices] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// //   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+// //   const [selectAll, setSelectAll] = useState(false);
+// //   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+// //   const [previewData, setPreviewData] = useState(null);
+// //   const [userRole, setUserRole] = useState(null);
+
+// //   // Get user role from localStorage (set during login)
+// //   useEffect(() => {
+// //     const getUserRole = () => {
+// //       try {
+// //         // Try to get from loginResponse first
+// //         const loginResponse = localStorage.getItem("loginResponse");
+// //         if (loginResponse) {
+// //           const parsedResponse = JSON.parse(loginResponse);
+// //           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try userData
+// //         const userData = localStorage.getItem("userData");
+// //         if (userData) {
+// //           const parsedUserData = JSON.parse(userData);
+// //           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try individual userRole
+// //         const storedRole = localStorage.getItem("userRole");
+// //         if (storedRole) {
+// //           setUserRole(storedRole.toLowerCase());
+// //           return;
+// //         }
+
+// //         // Default fallback - temporarily set to admin for testing
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       } catch (error) {
+// //         console.error("Error parsing user data:", error);
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       }
+// //     };
+
+// //     getUserRole();
+// //   }, []);
+
+// //   // Fetch invoices from API
+// //   useEffect(() => {
+// //     const fetchInvoices = async () => {
+// //       try {
+// //         setLoading(true);
+// //         const response = await fetch(
+// //           "https://timesheet-subk.onrender.com/api/Invoices"
+// //         );
+
+// //         if (!response.ok) {
+// //           throw new Error(`HTTP error! status: ${response.status}`);
+// //         }
+
+// //         const data = await response.json();
+// //         setInvoices(data);
+// //         setFilteredInvoices(data);
+// //       } catch (err) {
+// //         console.error("Error fetching invoices:", err);
+// //         setError(err.message || "Failed to fetch invoices");
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     };
+
+// //     fetchInvoices();
+// //   }, []);
+
+// //   // Filter invoices based on invoice number filter
+// //   useEffect(() => {
+// //     let filtered = invoices;
+
+// //     // Filter by invoice number
+// //     if (filterInvoiceNumber) {
+// //       filtered = filtered.filter(
+// //         (invoice) =>
+// //           invoice.invoiceNumber &&
+// //           invoice.invoiceNumber
+// //             .toLowerCase()
+// //             .includes(filterInvoiceNumber.toLowerCase())
+// //       );
+// //     }
+
+// //     setFilteredInvoices(filtered);
+// //     // Reset selections when filter changes
+// //     setSelectedInvoices(new Set());
+// //     setSelectAll(false);
+// //   }, [invoices, filterInvoiceNumber]);
+
+// //   // Dynamic table container style based on content
+// //   const getTableContainerStyle = () => {
+// //     const headerHeight = 120; // Header section height
+// //     const filterHeight = 80; // Filter section height
+// //     const padding = 48; // Top and bottom padding (24px each)
+// //     const margin = 24; // Margin
+// //     const footerSpace = 20; // Space for any footer content
+
+// //     // Calculate minimum height needed for the content
+// //     const rowHeight = 61; // Approximate height per row (including border)
+// //     const headerRowHeight = 48; // Header row height
+// //     const minContentHeight =
+// //       headerRowHeight + filteredInvoices.length * rowHeight;
+
+// //     // Calculate available space
+// //     const availableHeight =
+// //       window.innerHeight -
+// //       headerHeight -
+// //       filterHeight -
+// //       padding -
+// //       margin -
+// //       footerSpace;
+
+// //     // Use the smaller of content height or available height, with reasonable limits
+// //     const dynamicHeight = Math.min(
+// //       Math.max(minContentHeight, 200), // Minimum 200px
+// //       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+// //     );
+
+// //     return {
+// //       height: `${dynamicHeight}px`,
+// //       minHeight: "200px",
+// //       maxHeight: `calc(100vh - ${
+// //         headerHeight + filterHeight + padding + margin + footerSpace
+// //       }px)`,
+// //     };
+// //   };
+
+// //   // Alternative: Get table wrapper style that adjusts to content
+// //   const getTableWrapperStyle = () => {
+// //     // If there are few items, don't use fixed height
+// //     if (filteredInvoices.length <= 5) {
+// //       return {
+// //         minHeight: "200px",
+// //         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+// //       };
+// //     }
+
+// //     // For more items, use scrollable container
+// //     return {
+// //       height: "calc(100vh - 300px)",
+// //       minHeight: "400px",
+// //     };
+// //   };
+
+// //   const formatDate = (dateString) => {
+// //     if (!dateString) return "N/A";
+// //     try {
+// //       const date = new Date(dateString);
+// //       const month = String(date.getMonth() + 1).padStart(2, "0");
+// //       const day = String(date.getDate()).padStart(2, "0");
+// //       const year = date.getFullYear();
+// //       return `${month}-${day}-${year}`;
+// //     } catch {
+// //       return dateString;
+// //     }
+// //   };
+
+// //   // Format currency helper
+// //   const formatCurrency = (amount, currency = "USD") => {
+// //     if (!amount && amount !== 0) return "N/A";
+// //     try {
+// //       return new Intl.NumberFormat("en-US", {
+// //         style: "currency",
+// //         currency: currency || "USD",
+// //       }).format(amount);
+// //     } catch {
+// //       return `${currency || "$"} ${amount}`;
+// //     }
+// //   };
+
+// //   // Calculate selectable invoices (only those that are not exported)
+// //   const selectableInvoices = filteredInvoices.filter(
+// //     (invoice) => !invoice.isExported
+// //   );
+// //   const disabledInvoices = filteredInvoices.filter(
+// //     (invoice) => invoice.isExported
+// //   );
+
+// //   // Handle select all checkbox
+// //   const handleSelectAll = (checked) => {
+// //     setSelectAll(checked);
+// //     if (checked) {
+// //       // Only select invoices that are not exported (isExported: false)
+// //       const allSelectableIds = new Set(
+// //         selectableInvoices.map(
+// //           (invoice, index) =>
+// //             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+// //         )
+// //       );
+// //       setSelectedInvoices(allSelectableIds);
+// //     } else {
+// //       setSelectedInvoices(new Set());
+// //     }
+// //   };
+
+// //   // Handle individual checkbox
+// //   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+// //     // Prevent selection if invoice is exported
+// //     if (invoice && invoice.isExported) return;
+
+// //     setSelectedInvoices((prev) => {
+// //       const newSelected = new Set(prev);
+// //       if (checked) {
+// //         newSelected.add(invoiceId);
+// //       } else {
+// //         newSelected.delete(invoiceId);
+// //       }
+
+// //       // Update select all state - check if all selectable invoices are selected
+// //       const allSelectableSelected =
+// //         selectableInvoices.length > 0 &&
+// //         selectableInvoices.every((inv) => {
+// //           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+// //           return newSelected.has(id);
+// //         });
+// //       setSelectAll(allSelectableSelected);
+
+// //       return newSelected;
+// //     });
+// //   };
+
+// //   // Handle unexport (reopen) invoice - only for admin
+// //   const handleUnexport = async (invoice) => {
+// //     if (userRole !== "admin") {
+// //       alert("Access denied. Admin privileges required.");
+// //       return;
+// //     }
+
+// //     const confirmed = window.confirm(
+// //       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+// //     );
+// //     if (!confirmed) return;
+
+// //     try {
+// //       // Show loading state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = true;
+// //         openButton.textContent = "Opening...";
+// //       }
+
+// //       // Prepare the request body with the current invoice data
+// //       const requestBody = {
+// //         invoiceId: invoice.invoiceId || invoice.id || 0,
+// //         invoiceNumber: invoice.invoiceNumber || "string",
+// //         po_Number: invoice.po_Number || invoice.poNumber || "string",
+// //         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+// //         invoiceAmount: invoice.invoiceAmount || 0,
+// //         currency: invoice.currency || "USD",
+// //         createdAt: invoice.createdAt || new Date().toISOString(),
+// //         createdBy: invoice.createdBy || "string",
+// //         updatedAt: new Date().toISOString(),
+// //         updatedBy: "admin", // or get from current user context
+// //         billTo: invoice.billTo || "string",
+// //         remitTo: invoice.remitTo || "string",
+// //         isExported: false, // This is the key change - setting to false to reopen
+// //         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+// //       };
+
+// //       // API call to update the invoice using the correct endpoint
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/Invoices/${
+// //           invoice.invoiceId || invoice.id
+// //         }`,
+// //         {
+// //           method: "PUT", // Using PUT as per the API structure
+// //           headers: {
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify(requestBody),
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         const errorText = await response.text();
+// //         throw new Error(
+// //           `HTTP ${response.status}: ${errorText || response.statusText}`
+// //         );
+// //       }
+
+// //       // Check if response has content
+// //       let result = null;
+// //       const contentType = response.headers.get("Content-Type");
+// //       if (contentType && contentType.includes("application/json")) {
+// //         result = await response.json();
+// //       }
+
+// //       console.log("Invoice reopened successfully:", result);
+
+// //       // Update the local state
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+// //     } catch (error) {
+// //       console.error("Error reopening invoice:", error);
+
+// //       // More specific error messages
+// //       let errorMessage = "Failed to reopen invoice: ";
+// //       if (error.message.includes("404")) {
+// //         errorMessage += "Invoice not found or endpoint not available.";
+// //       } else if (error.message.includes("403")) {
+// //         errorMessage += "Access denied. Please check your permissions.";
+// //       } else if (error.message.includes("401")) {
+// //         errorMessage += "Authentication failed. Please log in again.";
+// //       } else {
+// //         errorMessage += error.message;
+// //       }
+
+// //       alert(errorMessage);
+// //     } finally {
+// //       // Reset button state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = false;
+// //         openButton.textContent = "OPEN";
+// //       }
+// //     }
+// //   };
+
+// //   // Handle preview click
+// //   // const handlePreview = async (invoice) => {
+// //   //   try {
+// //   //     setPreviewModalVisible(true);
+// //   //     setPreviewData(null);
+
+// //   //     const response = await fetch(
+// //   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //   //         invoice.invoiceNumber
+// //   //       )}`
+// //   //     );
+
+// //   //     if (!response.ok) {
+// //   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //   //     }
+
+// //   //     const apiData = await response.json();
+
+// //   //     const transformedData = [
+// //   //       {
+// //   //         invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+// //   //         invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+// //   //         period: formatDate(
+// //   //           apiData.period || apiData.invoiceDate || invoice.invoiceDate
+// //   //         ),
+// //   //         currency: apiData.currency || invoice.currency || "USD",
+// //   //         totalAmount:
+// //   //           apiData.totalAmount ||
+// //   //           apiData.invoiceAmount ||
+// //   //           invoice.invoiceAmount ||
+// //   //           0,
+
+// //   //         lineItems: (
+// //   //           apiData.lineItems ||
+// //   //           apiData.invoiceTimesheetLines ||
+// //   //           []
+// //   //         ).map((item, index) => ({
+// //   //           poLine: item.poLine || item.timesheetLineNo || "",
+// //   //           plc: item.plc || "",
+// //   //           vendor: item.vendor || " ",
+// //   //           employee: item.employee || item.createdBy || " ",
+// //   //           hours: item.hours || item.mappedHours,
+// //   //           rate: item.rate || (item.mappedAmount || 0) / item.mappedHours || 0,
+// //   //           amount: item.amount || item.mappedAmount,
+// //   //           line_No: item.line_No || item.timesheetLineNo,
+// //   //         })),
+
+// //   //         billTo: apiData.billTo || " ",
+// //   //         buyer: apiData.buyer || " ",
+// //   //         purchaseOrderId: apiData.purchaseOrderId || " ",
+// //   //         releaseNumber: apiData.releaseNumber || "",
+// //   //         // changeOrderNumber: apiData.changeOrderNumber || "",
+// //   //         poStartEndDate: apiData.poStartEndDate || " ",
+// //   //         // remitTo:
+// //   //         //   apiData.remitTo ||
+// //   //         //   " ",
+// //   //         terms: apiData.terms || " ",
+// //   //         amountDue:
+// //   //           apiData.amountDue ||
+// //   //           apiData.totalAmount ||
+// //   //           apiData.invoiceAmount ||
+// //   //           invoice.invoiceAmount ||
+// //   //           0,
+// //   //       },
+// //   //     ];
+
+// //   //     setPreviewData(transformedData);
+// //   //   } catch (error) {
+// //   //     console.error("Error fetching invoice preview:", error);
+// //   //     alert(`Failed to load invoice preview: ${error.message}`);
+
+// //   //     // const fallbackData = [
+// //   //     //   {
+// //   //     //     invoiceId: invoice.invoiceNumber,
+// //   //     //     invoiceDate: formatDate(invoice.invoiceDate),
+// //   //     //     period: formatDate(invoice.invoiceDate),
+// //   //     //     currency: invoice.currency || "USD",
+// //   //     //     totalAmount: invoice.invoiceAmount || 0,
+// //   //     //     lineItems: [
+// //   //     //       {
+// //   //     //         poLine: "Default PO Line",
+// //   //     //         plc: "PLC001",
+// //   //     //         vendor: "Vendor",
+// //   //     //         employee: invoice.createdBy || "Employee",
+// //   //     //         hours: 40.0,
+// //   //     //         rate: (invoice.invoiceAmount || 0) / 40,
+// //   //     //         amount: invoice.invoiceAmount || 0,
+// //   //     //         line_No: 1,
+// //   //     //       },
+// //   //     //     ],
+// //   //     //     billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+// //   //     //     buyer: "Clore, Heather J",
+// //   //     //     purchaseOrderId: "2181218010",
+// //   //     //     releaseNumber: "3",
+// //   //     //     changeOrderNumber: "0",
+// //   //     //     poStartEndDate: "12/10/18 to 12/08/24",
+// //   //     //     remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+// //   //     //     terms: "PAYNPD",
+// //   //     //     amountDue: invoice.invoiceAmount || 0,
+// //   //     //   },
+// //   //     // ];
+
+// //   //     // setPreviewData(fallbackData);
+// //   //   }
+// //   // };
+
+// //   const handlePreview = async (invoice) => {
+// //     try {
+// //       setPreviewModalVisible(true);
+// //       setPreviewData(null);
+
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //           invoice.invoiceNumber
+// //         )}`
+// //       );
+
+// //       if (!response.ok) {
+// //         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //       }
+
+// //       const apiData = await response.json();
+
+// //       const transformedData = [
+// //         {
+// //           invoiceId: apiData.invoiceId || " ",
+// //           invoiceDate: apiData.period || " ",
+// //           // period: apiData.period || " ",
+// //           currency: apiData.currency || " ",
+// //           totalAmount: apiData.totalAmount || 0,
+
+// //           lineItems: (apiData.lineItems || []).map((item, index) => ({
+// //             poLine: item.poLine || " ",
+// //             plc: item.plc || " ",
+// //             vendor: item.vendor || " ",
+// //             employee: item.employee || " ",
+// //             hours: item.hours || 0,
+// //             rate: item.rate || 0,
+// //             amount: item.amount || 0,
+// //             line_No: item.line_No || " ",
+// //           })),
+
+// //           billTo: apiData.billTo || " ",
+// //           buyer: apiData.buyer || " ",
+// //           purchaseOrderId: apiData.po_Number || " ",
+// //           releaseNumber: apiData.po_rlse_Number || " ",
+// //           poStartEndDate: apiData.po_Start_End_Date || " ",
+// //           terms: apiData.terms || " ",
+// //           amountDue: apiData.totalAmount || 0,
+// //         },
+// //       ];
+
+// //       setPreviewData(transformedData);
+// //     } catch (error) {
+// //       console.error("Error fetching invoice preview:", error);
+// //       alert(`Failed to load invoice preview: ${error.message}`);
+// //     }
+// //   };
+
+// //   // Export function (keeping your existing export logic)
+// //   // const exportToCSV = async () => {
+// //   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //   //     selectedInvoices.has(invoice.invoiceId || index)
+// //   //   );
+
+// //   //   if (invoicesToExport.length === 0) {
+// //   //     alert("Please select invoices to export");
+// //   //     return;
+// //   //   }
+
+// //   //   try {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = true;
+// //   //       exportButton.innerHTML =
+// //   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //   //     }
+
+// //   //     for (let i = 0; i < invoicesToExport.length; i++) {
+// //   //       const invoice = invoicesToExport[i];
+// //   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //   //       if (!invoiceId) {
+// //   //         console.warn(
+// //   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //   //         );
+// //   //         continue;
+// //   //       }
+
+// //   //       try {
+// //   //         const columnHeaderValues = [
+// //   //           invoice.invoiceNumber || "",
+// //   //           formatDate(invoice.invoiceDate) || "",
+// //   //           invoice.invoiceAmount || 0,
+// //   //           invoice.currency || "USD",
+// //   //           formatDate(invoice.createdAt) || "",
+// //   //           "PLC001",
+// //   //           invoice.createdBy || "Employee",
+// //   //           "40.00",
+// //   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //   //           "0.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //           "40.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //         ];
+
+// //   //         const payload = {
+// //   //           ColumnHeaderValues: columnHeaderValues,
+// //   //           IncludeHeaders: true,
+// //   //           ExportFormat: "CSV",
+// //   //         };
+
+// //   //         const response = await fetch(
+// //   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //   //             invoiceId
+// //   //           )}`,
+// //   //           {
+// //   //             method: "POST",
+// //   //             headers: {
+// //   //               Accept:
+// //   //                 "text/csv, application/csv, application/octet-stream, */*",
+// //   //               "Content-Type": "application/json",
+// //   //             },
+// //   //             // body: JSON.stringify(payload)
+// //   //           }
+// //   //         );
+
+// //   //         if (!response.ok) {
+// //   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //   //           try {
+// //   //             const errorData = await response.text();
+// //   //             if (errorData) {
+// //   //               errorMessage += ` - ${errorData}`;
+// //   //             }
+// //   //           } catch (e) {
+// //   //             // Ignore if can't parse error
+// //   //           }
+// //   //           throw new Error(errorMessage);
+// //   //         }
+
+// //   //         const blob = await response.blob();
+
+// //   //         if (blob.type && blob.type.includes("application/json")) {
+// //   //           const text = await blob.text();
+// //   //           console.error("Received JSON instead of file:", text);
+// //   //           throw new Error("Server returned an error instead of a file");
+// //   //         }
+
+// //   //         let filename = `invoice_${invoiceId}_export.csv`;
+// //   //         const contentDisposition = response.headers.get(
+// //   //           "Content-Disposition"
+// //   //         );
+// //   //         if (contentDisposition) {
+// //   //           const filenameMatch = contentDisposition.match(
+// //   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //   //           );
+// //   //           if (filenameMatch && filenameMatch[1]) {
+// //   //             filename = filenameMatch[1].replace(/['"]/g, "");
+// //   //           }
+// //   //         }
+
+// //   //         const url = window.URL.createObjectURL(blob);
+// //   //         const link = document.createElement("a");
+// //   //         link.href = url;
+// //   //         link.download = filename;
+// //   //         link.style.display = "none";
+// //   //         document.body.appendChild(link);
+// //   //         link.click();
+
+// //   //         window.URL.revokeObjectURL(url);
+// //   //         document.body.removeChild(link);
+
+// //   //         if (i < invoicesToExport.length - 1) {
+// //   //           await new Promise((resolve) => setTimeout(resolve, 500));
+// //   //         }
+// //   //       } catch (invoiceError) {
+// //   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //   //         alert(
+// //   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //   //         );
+// //   //       }
+// //   //     }
+
+// //   //     const successMessage =
+// //   //       invoicesToExport.length === 1
+// //   //         ? "Invoice exported successfully!"
+// //   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //   //     alert(successMessage);
+// //   //   } catch (error) {
+// //   //     console.error("Error during export process:", error);
+// //   //     alert(`Export failed: ${error.message}`);
+// //   //   } finally {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = false;
+// //   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //   //     }
+// //   //   }
+// //   // };
+
+// //   const exportToCSV = async () => {
+// //     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //       selectedInvoices.has(invoice.invoiceId || index)
+// //     );
+
+// //     if (invoicesToExport.length === 0) {
+// //       alert("Please select invoices to export");
+// //       return;
+// //     }
+
+// //     try {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = true;
+// //         exportButton.innerHTML =
+// //           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //       }
+
+// //       // Track successfully exported invoices for state update
+// //       const successfullyExportedIds = [];
+
+// //       for (let i = 0; i < invoicesToExport.length; i++) {
+// //         const invoice = invoicesToExport[i];
+// //         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //         if (!invoiceId) {
+// //           console.warn(
+// //             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //           );
+// //           continue;
+// //         }
+
+// //         try {
+// //           const columnHeaderValues = [
+// //             invoice.invoiceNumber || "",
+// //             formatDate(invoice.invoiceDate) || "",
+// //             invoice.invoiceAmount || 0,
+// //             invoice.currency || "USD",
+// //             formatDate(invoice.createdAt) || "",
+// //             "PLC001",
+// //             invoice.createdBy || "Employee",
+// //             "40.00",
+// //             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //             "0.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //             "40.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //           ];
+
+// //           const payload = {
+// //             ColumnHeaderValues: columnHeaderValues,
+// //             IncludeHeaders: true,
+// //             ExportFormat: "CSV",
+// //           };
+
+// //           const response = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //               invoiceId
+// //             )}`,
+// //             {
+// //               method: "POST",
+// //               headers: {
+// //                 Accept:
+// //                   "text/csv, application/csv, application/octet-stream, */*",
+// //                 "Content-Type": "application/json",
+// //               },
+// //               // body: JSON.stringify(payload)
+// //             }
+// //           );
+
+// //           if (!response.ok) {
+// //             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //             try {
+// //               const errorData = await response.text();
+// //               if (errorData) {
+// //                 errorMessage += ` - ${errorData}`;
+// //               }
+// //             } catch (e) {
+// //               // Ignore if can't parse error
+// //             }
+// //             throw new Error(errorMessage);
+// //           }
+
+// //           const blob = await response.blob();
+
+// //           if (blob.type && blob.type.includes("application/json")) {
+// //             const text = await blob.text();
+// //             console.error("Received JSON instead of file:", text);
+// //             throw new Error("Server returned an error instead of a file");
+// //           }
+
+// //           let filename = `invoice_${invoiceId}_export.csv`;
+// //           const contentDisposition = response.headers.get(
+// //             "Content-Disposition"
+// //           );
+// //           if (contentDisposition) {
+// //             const filenameMatch = contentDisposition.match(
+// //               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //             );
+// //             if (filenameMatch && filenameMatch[1]) {
+// //               filename = filenameMatch[1].replace(/['"]/g, "");
+// //             }
+// //           }
+
+// //           const url = window.URL.createObjectURL(blob);
+// //           const link = document.createElement("a");
+// //           link.href = url;
+// //           link.download = filename;
+// //           link.style.display = "none";
+// //           document.body.appendChild(link);
+// //           link.click();
+
+// //           window.URL.revokeObjectURL(url);
+// //           document.body.removeChild(link);
+
+// //           // Mark this invoice as successfully exported
+// //           successfullyExportedIds.push(invoice.invoiceId);
+
+// //           // **NEW: Update invoice export status in database**
+// //           try {
+// //             const updateResponse = await fetch(
+// //               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //               {
+// //                 method: "PUT",
+// //                 headers: {
+// //                   "Content-Type": "application/json",
+// //                 },
+// //                 body: JSON.stringify({
+// //                   ...invoice,
+// //                   isExported: true, // Mark as exported
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin", // or get from current user context
+// //                 }),
+// //               }
+// //             );
+
+// //             if (!updateResponse.ok) {
+// //               console.warn(
+// //                 `Failed to update export status for invoice ${invoiceId}`
+// //               );
+// //             }
+// //           } catch (updateError) {
+// //             console.warn(
+// //               `Error updating export status for invoice ${invoiceId}:`,
+// //               updateError
+// //             );
+// //           }
+
+// //           if (i < invoicesToExport.length - 1) {
+// //             await new Promise((resolve) => setTimeout(resolve, 500));
+// //           }
+// //         } catch (invoiceError) {
+// //           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //           alert(
+// //             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //           );
+// //         }
+// //       }
+
+// //       // **NEW: Update local state for successfully exported invoices**
+// //       if (successfullyExportedIds.length > 0) {
+// //         setInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         setFilteredInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         // Clear selections for exported invoices since they can't be selected anymore
+// //         setSelectedInvoices((prev) => {
+// //           const newSelected = new Set(prev);
+// //           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //           return newSelected;
+// //         });
+
+// //         // Update select all checkbox state
+// //         const remainingSelectableInvoices = filteredInvoices.filter(
+// //           (inv) =>
+// //             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+// //         );
+// //         setSelectAll(false); // Reset select all since exported invoices are deselected
+// //       }
+
+// //       const successMessage =
+// //         invoicesToExport.length === 1
+// //           ? "Invoice exported successfully!"
+// //           : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //       alert(successMessage);
+// //     } catch (error) {
+// //       console.error("Error during export process:", error);
+// //       alert(`Export failed: ${error.message}`);
+// //     } finally {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = false;
+// //         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //       }
+// //     }
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center">
+// //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+// //           <p className="text-gray-600">Loading invoices...</p>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+// //           <div className="text-red-600 mb-4">
+// //             <Receipt className="h-12 w-12 mx-auto mb-2" />
+// //             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+// //           </div>
+// //           <p className="text-red-700">{error}</p>
+// //           <button
+// //             onClick={() => window.location.reload()}
+// //             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+// //           >
+// //             Try Again
+// //           </button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <>
+// //       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+// //         {/* Header */}
+// //         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+// //           <div className="flex items-center justify-between">
+// //             <div className="flex items-center">
+// //               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+// //               <div>
+// //                 <h1 className="text-2xl font-bold text-gray-900">
+// //                   Invoice Export
+// //                 </h1>
+// //                 <p className="text-gray-600">
+// //                   Manage and export invoice data
+// //                   {/* {userRole === 'admin' && (
+// //                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+// //                                             Admin Mode
+// //                                         </span>
+// //                                     )} */}
+// //                 </p>
+// //               </div>
+// //             </div>
+// //             <div className="flex items-center space-x-4">
+// //               <button
+// //                 onClick={exportToCSV}
+// //                 disabled={selectedInvoices.size === 0}
+// //                 data-export-button
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-green-600 text-white hover:bg-green-700"
+// //                 }`}
+// //               >
+// //                 <Download className="h-4 w-4 mr-2" />
+// //                 Export ({selectedInvoices.size})
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Filters */}
+// //         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+// //           <div className="flex items-center justify-start">
+// //             <div className="w-80 relative">
+// //               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+// //               <input
+// //                 type="text"
+// //                 placeholder="Filter by Invoice Number"
+// //                 value={filterInvoiceNumber}
+// //                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+// //                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+// //               />
+// //             </div>
+
+// //             {filterInvoiceNumber && (
+// //               <button
+// //                 onClick={() => setFilterInvoiceNumber("")}
+// //                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+// //               >
+// //                 Clear
+// //               </button>
+// //             )}
+// //           </div>
+// //         </div>
+
+// //         {/* Table Container with Dynamic Height */}
+// //         <div className="flex-1 mt-6 pb-6">
+// //           {filteredInvoices.length === 0 ? (
+// //             <div className="flex items-center justify-center h-64">
+// //               <div className="text-center text-gray-500">
+// //                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+// //                 <p className="text-lg font-medium">No invoices found</p>
+// //                 <p className="text-sm">Try adjusting your filter criteria</p>
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <div
+// //               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+// //               style={getTableWrapperStyle()}
+// //             >
+// //               <table className="min-w-full">
+// //                 <thead className="bg-gray-50">
+// //                   <tr>
+// //                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       <div className="flex items-center space-x-2">
+// //                         <input
+// //                           type="checkbox"
+// //                           checked={selectAll}
+// //                           onChange={(e) => handleSelectAll(e.target.checked)}
+// //                           disabled={selectableInvoices.length === 0}
+// //                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                             selectableInvoices.length === 0
+// //                               ? "opacity-50 cursor-not-allowed"
+// //                               : disabledInvoices.length > 0
+// //                               ? "opacity-75"
+// //                               : "cursor-pointer"
+// //                           }`}
+// //                         />
+// //                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+// //                           All
+// //                         </span>
+// //                       </div>
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Number
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Vendor
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Date
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Amount
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Currency
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Created At
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Action
+// //                     </th>
+// //                   </tr>
+// //                 </thead>
+// //                 <tbody className="divide-y divide-gray-200">
+// //                   {filteredInvoices.map((invoice, index) => {
+// //                     const invoiceId = invoice.invoiceId || invoice.id || index;
+// //                     return (
+// //                       <tr
+// //                         key={invoiceId}
+// //                         className="hover:bg-gray-50 transition-colors"
+// //                       >
+// //                         <td className="px-6 py-4 whitespace-nowrap">
+// //                           <input
+// //                             type="checkbox"
+// //                             checked={selectedInvoices.has(invoiceId)}
+// //                             onChange={(e) =>
+// //                               handleSelectInvoice(
+// //                                 invoiceId,
+// //                                 e.target.checked,
+// //                                 invoice
+// //                               )
+// //                             }
+// //                             disabled={invoice.isExported}
+// //                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                               invoice.isExported
+// //                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+// //                                 : "cursor-pointer hover:bg-green-50"
+// //                             }`}
+// //                           />
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceNumber || "N/A"}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+// //                         </td>
+
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.invoiceDate)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+// //                           {formatCurrency(
+// //                             invoice.invoiceAmount,
+// //                             invoice.currency
+// //                           )}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+// //                             {invoice.currency || "USD"}
+// //                           </span>
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.createdAt)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <div className="flex items-center space-x-2">
+// //                             <button
+// //                               onClick={() => handlePreview(invoice)}
+// //                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+// //                             >
+// //                               <Eye className="h-4 w-4 mr-1" />
+// //                               Preview
+// //                             </button>
+
+// //                             {/* OPEN button - only for admin and exported invoices */}
+// //                             {userRole === "admin" && invoice.isExported && (
+// //                               <button
+// //                                 onClick={() => handleUnexport(invoice)}
+// //                                 data-open-invoice={
+// //                                   invoice.invoiceId || invoice.id
+// //                                 }
+// //                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+// //                               >
+// //                                 OPEN
+// //                               </button>
+// //                             )}
+// //                           </div>
+// //                         </td>
+// //                       </tr>
+// //                     );
+// //                   })}
+// //                 </tbody>
+// //               </table>
+// //             </div>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Preview Modal */}
+// //       {previewModalVisible && (
+// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+// //           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+// //             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+// //               <h2 className="text-xl font-semibold text-gray-900">
+// //                 Invoice Preview
+// //               </h2>
+// //               <button
+// //                 onClick={() => setPreviewModalVisible(false)}
+// //                 className="text-gray-400 hover:text-gray-600 transition-colors"
+// //               >
+// //                 <X className="h-6 w-6" />
+// //               </button>
+// //             </div>
+// //             <div className="p-6">
+// //               <InvoiceViewer
+// //                 data={previewData}
+// //                 setInvoiceModalVisible={setPreviewModalVisible}
+// //               />
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </>
+// //   );
+// // }
+
+// // import React, { useState, useEffect } from "react";
+// // import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
+// // import InvoiceViewer from "./InvoiceViewer";
+// // import html2canvas from "html2canvas";
+// // import jsPDF from "jspdf";
+// // import logoImg from "../assets/image.png";
+
+// // export default function InvoiceExport() {
+// //   const [invoices, setInvoices] = useState([]);
+// //   const [filteredInvoices, setFilteredInvoices] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// //   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+// //   const [selectAll, setSelectAll] = useState(false);
+// //   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+// //   const [previewData, setPreviewData] = useState(null);
+// //   const [userRole, setUserRole] = useState(null);
+// //   const [isDownloading, setIsDownloading] = useState(false);
+
+// //   // Get user role from localStorage (set during login)
+// //   useEffect(() => {
+// //     const getUserRole = () => {
+// //       try {
+// //         // Try to get from loginResponse first
+// //         const loginResponse = localStorage.getItem("loginResponse");
+// //         if (loginResponse) {
+// //           const parsedResponse = JSON.parse(loginResponse);
+// //           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try userData
+// //         const userData = localStorage.getItem("userData");
+// //         if (userData) {
+// //           const parsedUserData = JSON.parse(userData);
+// //           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try individual userRole
+// //         const storedRole = localStorage.getItem("userRole");
+// //         if (storedRole) {
+// //           setUserRole(storedRole.toLowerCase());
+// //           return;
+// //         }
+
+// //         // Default fallback - temporarily set to admin for testing
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       } catch (error) {
+// //         console.error("Error parsing user data:", error);
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       }
+// //     };
+
+// //     getUserRole();
+// //   }, []);
+
+// //   // Fetch invoices from API
+// //   useEffect(() => {
+// //     const fetchInvoices = async () => {
+// //       try {
+// //         setLoading(true);
+// //         const response = await fetch(
+// //           "https://timesheet-subk.onrender.com/api/Invoices"
+// //         );
+
+// //         if (!response.ok) {
+// //           throw new Error(`HTTP error! status: ${response.status}`);
+// //         }
+
+// //         const data = await response.json();
+// //         setInvoices(data);
+// //         setFilteredInvoices(data);
+// //       } catch (err) {
+// //         console.error("Error fetching invoices:", err);
+// //         setError(err.message || "Failed to fetch invoices");
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     };
+
+// //     fetchInvoices();
+// //   }, []);
+
+// //   // Filter invoices based on invoice number filter
+// //   useEffect(() => {
+// //     let filtered = invoices;
+
+// //     // Filter by invoice number
+// //     if (filterInvoiceNumber) {
+// //       filtered = filtered.filter(
+// //         (invoice) =>
+// //           invoice.invoiceNumber &&
+// //           invoice.invoiceNumber
+// //             .toLowerCase()
+// //             .includes(filterInvoiceNumber.toLowerCase())
+// //       );
+// //     }
+
+// //     setFilteredInvoices(filtered);
+// //     // Reset selections when filter changes
+// //     setSelectedInvoices(new Set());
+// //     setSelectAll(false);
+// //   }, [invoices, filterInvoiceNumber]);
+
+// //   // Enhanced table wrapper style that adjusts to content
+// //   const getTableWrapperStyle = () => {
+// //     // If there are few items, don't use fixed height
+// //     if (filteredInvoices.length <= 5) {
+// //       return {
+// //         minHeight: "300px",
+// //         maxHeight: "calc(100vh - 280px)",
+// //       };
+// //     }
+// //     // For more items, use scrollable container
+// //     return {
+// //       height: "calc(100vh - 280px)",
+// //       minHeight: "400px",
+// //       maxHeight: "calc(100vh - 280px)",
+// //     };
+// //   };
+
+// //   const formatDate = (dateString) => {
+// //     if (!dateString) return "N/A";
+// //     try {
+// //       const date = new Date(dateString);
+// //       const month = String(date.getMonth() + 1).padStart(2, "0");
+// //       const day = String(date.getDate()).padStart(2, "0");
+// //       const year = date.getFullYear();
+// //       return `${month}-${day}-${year}`;
+// //     } catch {
+// //       return dateString;
+// //     }
+// //   };
+
+// //   // Format currency helper
+// //   const formatCurrency = (amount, currency = "USD") => {
+// //     if (!amount && amount !== 0) return "N/A";
+// //     try {
+// //       return new Intl.NumberFormat("en-US", {
+// //         style: "currency",
+// //         currency: currency || "USD",
+// //       }).format(amount);
+// //     } catch {
+// //       return `${currency || "$"} ${amount}`;
+// //     }
+// //   };
+
+// //   // Calculate selectable invoices (only those that are not exported)
+// //   const selectableInvoices = filteredInvoices.filter(
+// //     (invoice) => !invoice.isExported
+// //   );
+
+// //   // Handle select all checkbox
+// //   const handleSelectAll = (checked) => {
+// //     setSelectAll(checked);
+// //     if (checked) {
+// //       // Only select invoices that are not exported (isExported: false)
+// //       const allSelectableIds = new Set(
+// //         selectableInvoices.map(
+// //           (invoice, index) =>
+// //             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+// //         )
+// //       );
+// //       setSelectedInvoices(allSelectableIds);
+// //     } else {
+// //       setSelectedInvoices(new Set());
+// //     }
+// //   };
+
+// //   // Handle individual checkbox
+// //   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+// //     // Prevent selection if invoice is exported
+// //     if (invoice && invoice.isExported) return;
+
+// //     setSelectedInvoices((prev) => {
+// //       const newSelected = new Set(prev);
+// //       if (checked) {
+// //         newSelected.add(invoiceId);
+// //       } else {
+// //         newSelected.delete(invoiceId);
+// //       }
+
+// //       // Update select all state - check if all selectable invoices are selected
+// //       const allSelectableSelected =
+// //         selectableInvoices.length > 0 &&
+// //         selectableInvoices.every((inv) => {
+// //           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+// //           return newSelected.has(id);
+// //         });
+// //       setSelectAll(allSelectableSelected);
+
+// //       return newSelected;
+// //     });
+// //   };
+
+// //   // Create invoice HTML content exactly like InvoiceViewer with proper styling
+// //   const createInvoiceHTML = (apiData, invoice) => {
+// //     // Group line items by PO Line for rendering with headers
+// //     const groupedByPoLine = (apiData.lineItems || []).reduce((groups, item) => {
+// //       const key = item.poLine || "Other";
+// //       if (!groups[key]) groups[key] = [];
+// //       groups[key].push(item);
+// //       return groups;
+// //     }, {});
+
+// //     return `
+// //       <div style="max-width: 768px; margin: auto; padding: 20px; border: 2px solid #d1d5db; font-family: monospace; font-size: 15px; color: #1a202c; background-color: #fff;">
+// //         <img src="${logoImg}" alt="Company Logo" style="height: 60px; object-fit: contain;" />
+// //         <h1 style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600;">SUMARIA SYSTEMS, LLC</h1>
+        
+// //         <div style="margin-bottom: 20px;">
+// //           <div style="display: inline-block; width: 48%; vertical-align: top;">
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Subcontractor Invoice Number:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               ${apiData.invoiceId || invoice.invoiceNumber || ""}
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Bill To:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px; white-space: pre-line;">
+// //               ${apiData.billTo || ""}
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               <span style="font-weight: 700;">Buyer:</span>
+// //               <span style="margin-left: 4px;">${apiData.buyer || " "}</span>
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Purchase Order ID:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               ${apiData.po_Number || ""} Release Number ${apiData.po_rlse_Number || ""}
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">PO Start and End Date:</span>
+// //             </div>
+// //             <div>${apiData.po_Start_End_Date || " "}</div>
+// //           </div>
+          
+// //           <div style="display: inline-block; width: 48%; vertical-align: top; margin-left: 4%;">
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Invoice Date:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               ${apiData.period || " "}
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Billing Currency:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               ${apiData.currency || "USD"}
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Terms:</span>
+// //             </div>
+// //             <div style="margin-bottom: 16px;">
+// //               ${apiData.terms || "NET 45"}
+// //             </div>
+// //             <div style="margin-bottom: 4px;">
+// //               <span style="font-weight: 700;">Amount Due</span>
+// //             </div>
+// //             <div>
+// //               $${(apiData.totalAmount || 0).toFixed(2)}
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+// //           <thead>
+// //             <tr>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 120px;">PLC</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 150px;">Vendor Employee</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Hrs/Qty</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 60px;">Rate</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Additional Amount</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Amount</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Hrs/Qty</th>
+// //               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Amount</th>
+// //             </tr>
+// //           </thead>
+// //           <tbody>
+// //             ${Object.entries(groupedByPoLine).map(([poLine, items]) => `
+// //               <tr>
+// //                 <td colspan="8" style="font-weight: 700; font-size: 13px; padding: 8px 4px; border: 1px solid #d1d5db;">PO LINE ${poLine}</td>
+// //               </tr>
+// //               ${items.map(item => `
+// //                 <tr>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+// //                     <div style="font-weight: 600; margin-bottom: 2px;">${item.plc || ""}</div>
+// //                   </td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+// //                     <div style="margin-left: 10px;">
+// //                       <div style="margin-bottom: 1px;">${item.employee || ""}</div>
+// //                       <div>${item.vendor || ""}</div>
+// //                     </div>
+// //                   </td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(item.hours || 0).toFixed(2)}</td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.rate || 0).toFixed(2)}</td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$0.00</td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.amount || 0).toFixed(2)}</td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(item.hours || 0).toFixed(2)}</td>
+// //                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.amount || 0).toFixed(2)}</td>
+// //                 </tr>
+// //               `).join('')}
+// //             `).join('')}
+// //           </tbody>
+// //         </table>
+        
+// //         <div style="text-align: right; font-weight: 600; font-size: 16px; margin-bottom: 24px;">
+// //           Total Amount Due: $${(apiData.totalAmount || 0).toFixed(2)}
+// //         </div>
+// //       </div>
+// //     `;
+// //   };
+
+// //   // Updated download function using exact InvoiceViewer format with invoice number filename
+// //   // const downloadInvoices = async () => {
+// //   //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+// //   //     selectedInvoices.has(invoice.invoiceId || index)
+// //   //   );
+
+// //   //   if (invoicesToDownload.length === 0) {
+// //   //     alert("Please select invoices to download");
+// //   //     return;
+// //   //   }
+
+// //   //   try {
+// //   //     setIsDownloading(true);
+
+// //   //     for (let i = 0; i < invoicesToDownload.length; i++) {
+// //   //       const invoice = invoicesToDownload[i];
+// //   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //   //       if (!invoiceId) {
+// //   //         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+// //   //         continue;
+// //   //       }
+
+// //   //       try {
+// //   //         // First fetch invoice preview data (same as preview functionality)
+// //   //         const previewResponse = await fetch(
+// //   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //   //             invoice.invoiceNumber
+// //   //           )}`
+// //   //         );
+
+// //   //         if (!previewResponse.ok) {
+// //   //           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+// //   //         }
+
+// //   //         const apiData = await previewResponse.json();
+          
+// //   //         // Create temporary invoice element using exact InvoiceViewer format
+// //   //         const tempInvoiceElement = document.createElement('div');
+// //   //         tempInvoiceElement.style.position = 'absolute';
+// //   //         tempInvoiceElement.style.left = '-9999px';
+// //   //         tempInvoiceElement.style.width = '800px';
+// //   //         tempInvoiceElement.style.backgroundColor = 'white';
+
+// //   //         // Use the exact same HTML structure as InvoiceViewer with proper styling
+// //   //         tempInvoiceElement.innerHTML = createInvoiceHTML(apiData, invoice);
+// //   //         document.body.appendChild(tempInvoiceElement);
+
+// //   //         // Generate PDF using the same method as InvoiceViewer
+// //   //         const pdf = new jsPDF("p", "mm", "a4");
+// //   //         const padding = 10;
+          
+// //   //         const canvas = await html2canvas(tempInvoiceElement, { 
+// //   //           scale: 2, 
+// //   //           useCORS: true,
+// //   //           backgroundColor: '#ffffff'
+// //   //         });
+          
+// //   //         const imgData = canvas.toDataURL("image/png");
+
+// //   //         const pdfWidth = pdf.internal.pageSize.getWidth();
+// //   //         const pdfHeight = pdf.internal.pageSize.getHeight();
+// //   //         const usableWidth = pdfWidth - 2 * padding;
+// //   //         const usableHeight = pdfHeight - 2 * padding;
+
+// //   //         const imgProps = pdf.getImageProperties(imgData);
+// //   //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+// //   //         let heightLeft = pdfImgHeight;
+// //   //         let position = padding;
+
+// //   //         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+// //   //         heightLeft -= usableHeight;
+
+// //   //         while (heightLeft > 0) {
+// //   //           pdf.addPage();
+// //   //           position = padding - heightLeft;
+// //   //           pdf.addImage(
+// //   //             imgData,
+// //   //             "PNG",
+// //   //             padding,
+// //   //             position,
+// //   //             usableWidth,
+// //   //             pdfImgHeight
+// //   //           );
+// //   //           heightLeft -= usableHeight;
+// //   //         }
+
+// //   //         // Clean up temporary element
+// //   //         document.body.removeChild(tempInvoiceElement);
+
+// //   //         // Save PDF with invoice number as filename
+// //   //         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+// //   //         pdf.save(filename);
+
+// //   //         // Add delay between downloads
+// //   //         if (i < invoicesToDownload.length - 1) {
+// //   //           await new Promise((resolve) => setTimeout(resolve, 1000));
+// //   //         }
+
+// //   //       } catch (invoiceError) {
+// //   //         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+// //   //         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+// //   //       }
+// //   //     }
+
+// //   //     const successMessage =
+// //   //       invoicesToDownload.length === 1
+// //   //         ? "Invoice downloaded successfully!"
+// //   //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+// //   //     alert(successMessage);
+
+// //   //   } catch (error) {
+// //   //     console.error("Error during download process:", error);
+// //   //     alert(`Download failed: ${error.message}`);
+// //   //   } finally {
+// //   //     setIsDownloading(false);
+// //   //   }
+// //   // };
+
+// //   const downloadInvoices = async () => {
+// //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+// //     selectedInvoices.has(invoice.invoiceId || index)
+// //   );
+
+// //   if (invoicesToDownload.length === 0) {
+// //     alert("Please select invoices to download");
+// //     return;
+// //   }
+
+// //   try {
+// //     setIsDownloading(true);
+
+// //     for (let i = 0; i < invoicesToDownload.length; i++) {
+// //       const invoice = invoicesToDownload[i];
+// //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //       if (!invoiceId) {
+// //         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+// //         continue;
+// //       }
+
+// //       try {
+// //         // First fetch invoice preview data (same as preview functionality)
+// //         const previewResponse = await fetch(
+// //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //             invoice.invoiceNumber
+// //           )}`
+// //         );
+
+// //         if (!previewResponse.ok) {
+// //           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+// //         }
+
+// //         const apiData = await previewResponse.json();
+
+// //         // Transform data exactly like in handlePreview
+// //         const transformedData = [
+// //           {
+// //             invoiceId: apiData.invoiceId || " ",
+// //             invoiceDate: apiData.period || " ",
+// //             currency: apiData.currency || " ",
+// //             totalAmount: apiData.totalAmount || 0,
+
+// //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+// //               poLine: item.poLine || " ",
+// //               plc: item.plc || " ",
+// //               vendor: item.vendor || " ",
+// //               employee: item.employee || " ",
+// //               hours: item.hours || 0,
+// //               rate: item.rate || 0,
+// //               amount: item.amount || 0,
+// //               line_No: item.line_No || " ",
+// //             })),
+
+// //             billTo: apiData.billTo || " ",
+// //             buyer: apiData.buyer || " ",
+// //             purchaseOrderId: apiData.po_Number || " ",
+// //             releaseNumber: apiData.po_rlse_Number || " ",
+// //             poStartEndDate: apiData.po_Start_End_Date || " ",
+// //             terms: apiData.terms || " ",
+// //             amountDue: apiData.totalAmount || 0,
+// //             period: apiData.period || " ",
+// //             po_Number: apiData.po_Number || " ",
+// //             po_rlse_Number: apiData.po_rlse_Number || " ",
+// //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+// //           },
+// //         ];
+
+// //         // Create temporary container to render InvoiceViewer component
+// //         const tempContainer = document.createElement('div');
+// //         tempContainer.style.position = 'absolute';
+// //         tempContainer.style.left = '-9999px';
+// //         tempContainer.style.width = '800px';
+// //         tempContainer.style.backgroundColor = 'white';
+// //         document.body.appendChild(tempContainer);
+
+// //         // Create temporary React root and render InvoiceViewer
+// //         const ReactDOM = (await import('react-dom/client')).default;
+// //         const React = (await import('react')).default;
+        
+// //         // Import InvoiceViewer component
+// //         const { default: InvoiceViewer } = await import('./InvoiceViewer');
+        
+// //         const root = ReactDOM.createRoot(tempContainer);
+        
+// //         // Render InvoiceViewer component
+// //         await new Promise((resolve) => {
+// //           root.render(
+// //             React.createElement(InvoiceViewer, {
+// //               data: transformedData,
+// //               setInvoiceModalVisible: () => {},
+// //             })
+// //           );
+          
+// //           // Wait for component to render
+// //           setTimeout(resolve, 500);
+// //         });
+
+// //         // Find the invoice content div (the one with ref)
+// //         const input = tempContainer.querySelector('div[style*="max-width: 768px"]');
+        
+// //         if (!input) {
+// //           throw new Error('Invoice content not found');
+// //         }
+
+// //         // Use exact same PDF generation logic as handleDownloadPdf
+// //         const pdf = new jsPDF("p", "mm", "a4");
+// //         const padding = 10;
+// //         const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+// //         const imgData = canvas.toDataURL("image/png");
+
+// //         const pdfWidth = pdf.internal.pageSize.getWidth();
+// //         const pdfHeight = pdf.internal.pageSize.getHeight();
+
+// //         const usableWidth = pdfWidth - 2 * padding;
+// //         const usableHeight = pdfHeight - 2 * padding;
+
+// //         const imgProps = pdf.getImageProperties(imgData);
+// //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+// //         let heightLeft = pdfImgHeight;
+// //         let position = padding;
+
+// //         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+// //         heightLeft -= usableHeight;
+
+// //         while (heightLeft > 0) {
+// //           pdf.addPage();
+// //           position = padding - heightLeft;
+// //           pdf.addImage(
+// //             imgData,
+// //             "PNG",
+// //             padding,
+// //             position,
+// //             usableWidth,
+// //             pdfImgHeight
+// //           );
+// //           heightLeft -= usableHeight;
+// //         }
+
+// //         // Clean up
+// //         root.unmount();
+// //         document.body.removeChild(tempContainer);
+
+// //         // Save PDF with invoice number as filename
+// //         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+// //         pdf.save(filename);
+
+// //         // Add delay between downloads
+// //         if (i < invoicesToDownload.length - 1) {
+// //           await new Promise((resolve) => setTimeout(resolve, 1000));
+// //         }
+
+// //       } catch (invoiceError) {
+// //         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+// //         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+// //       }
+// //     }
+
+// //     const successMessage =
+// //       invoicesToDownload.length === 1
+// //         ? "Invoice downloaded successfully!"
+// //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+// //     alert(successMessage);
+
+// //   } catch (error) {
+// //     console.error("Error during download process:", error);
+// //     alert(`Download failed: ${error.message}`);
+// //   } finally {
+// //     setIsDownloading(false);
+// //   }
+// // };
+
+
+// //   // Handle unexport (reopen) invoice - only for admin
+// //   const handleUnexport = async (invoice) => {
+// //     if (userRole !== "admin") {
+// //       alert("Access denied. Admin privileges required.");
+// //       return;
+// //     }
+
+// //     const confirmed = window.confirm(
+// //       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+// //     );
+// //     if (!confirmed) return;
+
+// //     try {
+// //       // Show loading state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = true;
+// //         openButton.textContent = "Opening...";
+// //       }
+
+// //       // Prepare the request body with the current invoice data
+// //       const requestBody = {
+// //         invoiceId: invoice.invoiceId || invoice.id || 0,
+// //         invoiceNumber: invoice.invoiceNumber || "string",
+// //         po_Number: invoice.po_Number || invoice.poNumber || "string",
+// //         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+// //         invoiceAmount: invoice.invoiceAmount || 0,
+// //         currency: invoice.currency || "USD",
+// //         createdAt: invoice.createdAt || new Date().toISOString(),
+// //         createdBy: invoice.createdBy || "string",
+// //         updatedAt: new Date().toISOString(),
+// //         updatedBy: "admin", // or get from current user context
+// //         billTo: invoice.billTo || "string",
+// //         remitTo: invoice.remitTo || "string",
+// //         isExported: false, // This is the key change - setting to false to reopen
+// //         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+// //       };
+
+// //       // API call to update the invoice using the correct endpoint
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/Invoices/${
+// //           invoice.invoiceId || invoice.id
+// //         }`,
+// //         {
+// //           method: "PUT", // Using PUT as per the API structure
+// //           headers: {
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify(requestBody),
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         const errorText = await response.text();
+// //         throw new Error(
+// //           `HTTP ${response.status}: ${errorText || response.statusText}`
+// //         );
+// //       }
+
+// //       // Check if response has content
+// //       let result = null;
+// //       const contentType = response.headers.get("Content-Type");
+// //       if (contentType && contentType.includes("application/json")) {
+// //         result = await response.json();
+// //       }
+
+// //       console.log("Invoice reopened successfully:", result);
+
+// //       // Update the local state
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+// //     } catch (error) {
+// //       console.error("Error reopening invoice:", error);
+
+// //       // More specific error messages
+// //       let errorMessage = "Failed to reopen invoice: ";
+// //       if (error.message.includes("404")) {
+// //         errorMessage += "Invoice not found or endpoint not available.";
+// //       } else if (error.message.includes("403")) {
+// //         errorMessage += "Access denied. Please check your permissions.";
+// //       } else if (error.message.includes("401")) {
+// //         errorMessage += "Authentication failed. Please log in again.";
+// //       } else {
+// //         errorMessage += error.message;
+// //       }
+
+// //       alert(errorMessage);
+// //     } finally {
+// //       // Reset button state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = false;
+// //         openButton.textContent = "OPEN";
+// //       }
+// //     }
+// //   };
+
+// //   // const handlePreview = async (invoice) => {
+// //   //   try {
+// //   //     setPreviewModalVisible(true);
+// //   //     setPreviewData(null);
+
+// //   //     const response = await fetch(
+// //   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //   //         invoice.invoiceNumber
+// //   //       )}`
+// //   //     );
+
+// //   //     if (!response.ok) {
+// //   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //   //     }
+
+// //   //     const apiData = await response.json();
+
+// //   //     const transformedData = [
+// //   //       {
+// //   //         invoiceId: apiData.invoiceId || " ",
+// //   //         invoiceDate: apiData.period || " ",
+// //   //         currency: apiData.currency || " ",
+// //   //         totalAmount: apiData.totalAmount || 0,
+
+// //   //         lineItems: (apiData.lineItems || []).map((item, index) => ({
+// //   //           poLine: item.poLine || " ",
+// //   //           plc: item.plc || " ",
+// //   //           vendor: item.vendor || " ",
+// //   //           employee: item.employee || " ",
+// //   //           hours: item.hours || 0,
+// //   //           rate: item.rate || 0,
+// //   //           amount: item.amount || 0,
+// //   //           line_No: item.line_No || " ",
+// //   //         })),
+
+// //   //         billTo: apiData.billTo || " ",
+// //   //         buyer: apiData.buyer || " ",
+// //   //         purchaseOrderId: apiData.po_Number || " ",
+// //   //         releaseNumber: apiData.po_rlse_Number || " ",
+// //   //         poStartEndDate: apiData.po_Start_End_Date || " ",
+// //   //         terms: apiData.terms || " ",
+// //   //         amountDue: apiData.totalAmount || 0,
+// //   //         period: apiData.period || " ",
+// //   //         po_Number: apiData.po_Number || " ",
+// //   //         po_rlse_Number: apiData.po_rlse_Number || " ",
+// //   //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
+// //   //       },
+// //   //     ];
+
+// //   //     setPreviewData(transformedData);
+// //   //   } catch (error) {
+// //   //     console.error("Error fetching invoice preview:", error);
+// //   //     alert(`Failed to load invoice preview: ${error.message}`);
+// //   //   }
+// //   // };
+  
+// //   const handlePreview = async (invoice) => {
+// //     try {
+// //       setPreviewModalVisible(true);
+// //       setPreviewData(null);
+ 
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //           invoice.invoiceNumber
+// //         )}`
+// //       );
+ 
+// //       if (!response.ok) {
+// //         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //       }
+ 
+// //       const apiData = await response.json();
+ 
+// //       const transformedData = [
+// //         {
+// //           invoiceId: apiData.invoiceId || " ",
+// //           period: apiData.period || " ",
+// //           // period: new Date(invoice.period).toISOString() || " ",
+// //           // period: apiData.period || " ",
+// //           currency: apiData.currency || " ",
+// //           totalAmount: apiData.totalAmount || 0,
+ 
+// //           lineItems: (apiData.lineItems || []).map((item, index) => ({
+// //             poLine: item.poLine || " ",
+// //             plc: item.plc || " ",
+// //             vendor: item.vendor || " ",
+// //             employee: item.employee || " ",
+// //             hours: item.hours || 0,
+// //             rate: item.rate || 0,
+// //             amount: item.amount || 0,
+// //             line_No: item.line_No || " ",
+// //           })),
+ 
+// //           billTo: apiData.billTo || " ",
+// //           buyer: apiData.buyer || " ",
+// //           po_Number: apiData.po_Number || " ",
+// //           po_rlse_Number: apiData.po_rlse_Number || " ",
+// //           po_Start_End_Date: apiData.po_Start_End_Date || " ",
+// //           terms: apiData.terms || " ",
+// //           amountDue: apiData.totalAmount || 0,
+// //         },
+// //       ];
+ 
+// //       setPreviewData(transformedData);
+// //     } catch (error) {
+// //       console.error("Error fetching invoice preview:", error);
+// //       alert(`Failed to load invoice preview: ${error.message}`);
+// //     }
+// //   };
+ 
+// //   const exportToCSV = async () => {
+// //     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //       selectedInvoices.has(invoice.invoiceId || index)
+// //     );
+
+// //     if (invoicesToExport.length === 0) {
+// //       alert("Please select invoices to export");
+// //       return;
+// //     }
+
+// //     try {
+// //       // Track successfully exported invoices for state update
+// //       const successfullyExportedIds = [];
+
+// //       for (let i = 0; i < invoicesToExport.length; i++) {
+// //         const invoice = invoicesToExport[i];
+// //         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //         if (!invoiceId) {
+// //           console.warn(
+// //             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //           );
+// //           continue;
+// //         }
+
+// //         try {
+// //           const columnHeaderValues = [
+// //             invoice.invoiceNumber || "",
+// //             formatDate(invoice.invoiceDate) || "",
+// //             invoice.invoiceAmount || 0,
+// //             invoice.currency || "USD",
+// //             formatDate(invoice.createdAt) || "",
+// //             "PLC001",
+// //             invoice.createdBy || "Employee",
+// //             "40.00",
+// //             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //             "0.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //             "40.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //           ];
+
+// //           const payload = {
+// //             ColumnHeaderValues: columnHeaderValues,
+// //             IncludeHeaders: true,
+// //             ExportFormat: "CSV",
+// //           };
+
+// //           const response = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //               invoiceId
+// //             )}`,
+// //             {
+// //               method: "POST",
+// //               headers: {
+// //                 Accept:
+// //                   "text/csv, application/csv, application/octet-stream, */*",
+// //                 "Content-Type": "application/json",
+// //               },
+// //             }
+// //           );
+
+// //           if (!response.ok) {
+// //             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //             try {
+// //               const errorData = await response.text();
+// //               if (errorData) {
+// //                 errorMessage += ` - ${errorData}`;
+// //               }
+// //             } catch (e) {
+// //               // Ignore if can't parse error
+// //             }
+// //             throw new Error(errorMessage);
+// //           }
+
+// //           const blob = await response.blob();
+
+// //           if (blob.type && blob.type.includes("application/json")) {
+// //             const text = await blob.text();
+// //             console.error("Received JSON instead of file:", text);
+// //             throw new Error("Server returned an error instead of a file");
+// //           }
+
+// //           let filename = `invoice_${invoiceId}_export.csv`;
+// //           const contentDisposition = response.headers.get(
+// //             "Content-Disposition"
+// //           );
+// //           if (contentDisposition) {
+// //             const filenameMatch = contentDisposition.match(
+// //               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //             );
+// //             if (filenameMatch && filenameMatch[1]) {
+// //               filename = filenameMatch[1].replace(/['"]/g, "");
+// //             }
+// //           }
+
+// //           const url = window.URL.createObjectURL(blob);
+// //           const link = document.createElement("a");
+// //           link.href = url;
+// //           link.download = filename;
+// //           link.style.display = "none";
+// //           document.body.appendChild(link);
+// //           link.click();
+
+// //           window.URL.revokeObjectURL(url);
+// //           document.body.removeChild(link);
+
+// //           // Mark this invoice as successfully exported
+// //           successfullyExportedIds.push(invoice.invoiceId);
+
+// //           // Update invoice export status in database
+// //           try {
+// //             const updateResponse = await fetch(
+// //               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //               {
+// //                 method: "PUT",
+// //                 headers: {
+// //                   "Content-Type": "application/json",
+// //                 },
+// //                 body: JSON.stringify({
+// //                   ...invoice,
+// //                   isExported: true, // Mark as exported
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin", // or get from current user context
+// //                 }),
+// //               }
+// //             );
+
+// //             if (!updateResponse.ok) {
+// //               console.warn(
+// //                 `Failed to update export status for invoice ${invoiceId}`
+// //               );
+// //             }
+// //           } catch (updateError) {
+// //             console.warn(
+// //               `Error updating export status for invoice ${invoiceId}:`,
+// //               updateError
+// //             );
+// //           }
+
+// //           if (i < invoicesToExport.length - 1) {
+// //             await new Promise((resolve) => setTimeout(resolve, 500));
+// //           }
+// //         } catch (invoiceError) {
+// //           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //           alert(
+// //             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //           );
+// //         }
+// //       }
+
+// //       // Update local state for successfully exported invoices
+// //       if (successfullyExportedIds.length > 0) {
+// //         setInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         setFilteredInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         // Clear selections for exported invoices since they can't be selected anymore
+// //         setSelectedInvoices((prev) => {
+// //           const newSelected = new Set(prev);
+// //           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //           return newSelected;
+// //         });
+
+// //         // Update select all checkbox state
+// //         setSelectAll(false); // Reset select all since exported invoices are deselected
+// //       }
+
+// //       const successMessage =
+// //         invoicesToExport.length === 1
+// //           ? "Invoice exported successfully!"
+// //           : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //       alert(successMessage);
+// //     } catch (error) {
+// //       console.error("Error during export process:", error);
+// //       alert(`Export failed: ${error.message}`);
+// //     }
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center">
+// //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+// //           <p className="text-gray-600">Loading invoices...</p>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+// //           <div className="text-red-600 mb-4">
+// //             <Receipt className="h-12 w-12 mx-auto mb-2" />
+// //             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+// //           </div>
+// //           <p className="text-red-700">{error}</p>
+// //           <button
+// //             onClick={() => window.location.reload()}
+// //             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+// //           >
+// //             Try Again
+// //           </button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <>
+// //       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen">
+// //         {/* Header */}
+// //         <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+// //           <div className="flex items-center justify-between">
+// //             <div className="flex items-center">
+// //               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+// //               <div>
+// //                 <h1 className="text-2xl font-bold text-gray-900">
+// //                   Invoice Export
+// //                 </h1>
+// //                 <p className="text-gray-600">
+// //                   Manage and export invoice data
+// //                 </p>
+// //               </div>
+// //             </div>
+// //             <div className="flex items-center space-x-3">
+// //               {/* Download Invoice Button */}
+// //               <button
+// //                 onClick={downloadInvoices}
+// //                 disabled={selectedInvoices.size === 0 || isDownloading}
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0 || isDownloading
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-blue-600 text-white hover:bg-blue-700"
+// //                 }`}
+// //               >
+// //                 <FileDown className="h-4 w-4 mr-2" />
+// //                 {isDownloading ? 'Downloading...' : `Download Invoice (${selectedInvoices.size})`}
+// //               </button>
+              
+// //               {/* Export Button */}
+// //               <button
+// //                 onClick={exportToCSV}
+// //                 disabled={selectedInvoices.size === 0}
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-green-600 text-white hover:bg-green-700"
+// //                 }`}
+// //               >
+// //                 <Download className="h-4 w-4 mr-2" />
+// //                 Export ({selectedInvoices.size})
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Filters */}
+// //         <div className="bg-white border-b border-gray-200 p-4">
+// //           <div className="flex items-center justify-start">
+// //             <div className="w-80 relative">
+// //               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+// //               <input
+// //                 type="text"
+// //                 placeholder="Filter by Invoice Number"
+// //                 value={filterInvoiceNumber}
+// //                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+// //                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+// //               />
+// //             </div>
+
+// //             {filterInvoiceNumber && (
+// //               <button
+// //                 onClick={() => setFilterInvoiceNumber("")}
+// //                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+// //               >
+// //                 Clear
+// //               </button>
+// //             )}
+// //           </div>
+// //         </div>
+
+// //         {/* Enhanced Table Container with Proper Sizing */}
+// //         <div className="flex-1 p-6">
+// //           {filteredInvoices.length === 0 ? (
+// //             <div className="flex items-center justify-center h-64">
+// //               <div className="text-center text-gray-500">
+// //                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+// //                 <p className="text-lg font-medium">No invoices found</p>
+// //                 <p className="text-sm">Try adjusting your filter criteria</p>
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+// //               {/* Table wrapper with enhanced horizontal scroll and proper width handling */}
+// //               <div 
+// //                 className="overflow-auto"
+// //                 style={getTableWrapperStyle()}
+// //               >
+// //                 <table className="w-full min-w-[1600px]"> {/* Increased minimum width for better spacing */}
+// //                   <thead className="bg-gray-50 sticky top-0 z-10">
+// //                     <tr>
+// //                       <th className="w-20 px-4 py-3 text-left border-b border-gray-200 bg-gray-50">
+// //                         <div className="flex items-center space-x-2">
+// //                           <input
+// //                             type="checkbox"
+// //                             checked={selectAll}
+// //                             onChange={(e) => handleSelectAll(e.target.checked)}
+// //                             disabled={selectableInvoices.length === 0}
+// //                             className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                               selectableInvoices.length === 0
+// //                                 ? "opacity-50 cursor-not-allowed"
+// //                                 : "cursor-pointer"
+// //                             }`}
+// //                           />
+// //                           <span className="text-xs font-medium text-gray-500 tracking-wider">
+// //                             All
+// //                           </span>
+// //                         </div>
+// //                       </th>
+// //                       <th className="min-w-[220px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Invoice Number
+// //                       </th>
+// //                       <th className="min-w-[280px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Vendor
+// //                       </th>
+// //                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Invoice Date
+// //                       </th>
+// //                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Amount
+// //                       </th>
+// //                       <th className="min-w-[100px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Currency
+// //                       </th>
+// //                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Created At
+// //                       </th>
+// //                       <th className="min-w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+// //                         Action
+// //                       </th>
+// //                     </tr>
+// //                   </thead>
+// //                   <tbody className="divide-y divide-gray-200 bg-white">
+// //                     {filteredInvoices.map((invoice, index) => {
+// //                       const invoiceId = invoice.invoiceId || invoice.id || index;
+// //                       return (
+// //                         <tr
+// //                           key={invoiceId}
+// //                           className="hover:bg-gray-50 transition-colors"
+// //                         >
+// //                           <td className="w-20 px-4 py-4 whitespace-nowrap">
+// //                             <input
+// //                               type="checkbox"
+// //                               checked={selectedInvoices.has(invoiceId)}
+// //                               onChange={(e) =>
+// //                                 handleSelectInvoice(
+// //                                   invoiceId,
+// //                                   e.target.checked,
+// //                                   invoice
+// //                                 )
+// //                               }
+// //                               disabled={invoice.isExported}
+// //                               className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                                 invoice.isExported
+// //                                   ? "opacity-50 cursor-not-allowed bg-gray-100"
+// //                                   : "cursor-pointer hover:bg-green-50"
+// //                               }`}
+// //                             />
+// //                           </td>
+// //                           <td className="min-w-[220px] px-6 py-4">
+// //                             <div className="text-sm font-medium text-gray-900 break-all" title={invoice.invoiceNumber || "N/A"}>
+// //                               {invoice.invoiceNumber || "N/A"}
+// //                             </div>
+// //                           </td>
+// //                           <td className="min-w-[280px] px-6 py-4">
+// //                             <div className="text-sm text-gray-900 break-all" title={invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}>
+// //                               {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+// //                             </div>
+// //                           </td>
+// //                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+// //                             <div className="text-sm text-gray-600">
+// //                               {formatDate(invoice.invoiceDate)}
+// //                             </div>
+// //                           </td>
+// //                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+// //                             <div className="text-sm text-gray-900 font-medium">
+// //                               {formatCurrency(
+// //                                 invoice.invoiceAmount,
+// //                                 invoice.currency
+// //                               )}
+// //                             </div>
+// //                           </td>
+// //                           <td className="min-w-[100px] px-6 py-4 whitespace-nowrap">
+// //                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+// //                               {invoice.currency || "USD"}
+// //                             </span>
+// //                           </td>
+// //                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+// //                             <div className="text-sm text-gray-600">
+// //                               {formatDate(invoice.createdAt)}
+// //                             </div>
+// //                           </td>
+// //                           <td className="min-w-[200px] px-6 py-4 whitespace-nowrap">
+// //                             <div className="flex items-center space-x-2">
+// //                               <button
+// //                                 onClick={() => handlePreview(invoice)}
+// //                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+// //                               >
+// //                                 <Eye className="h-4 w-4 mr-1" />
+// //                                 Preview
+// //                               </button>
+
+// //                               {/* OPEN button - only for admin and exported invoices */}
+// //                               {userRole === "admin" && invoice.isExported && (
+// //                                 <button
+// //                                   onClick={() => handleUnexport(invoice)}
+// //                                   data-open-invoice={
+// //                                     invoice.invoiceId || invoice.id
+// //                                   }
+// //                                   className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+// //                                 >
+// //                                   OPEN
+// //                                 </button>
+// //                               )}
+// //                             </div>
+// //                           </td>
+// //                         </tr>
+// //                       );
+// //                     })}
+// //                   </tbody>
+// //                 </table>
+// //               </div>
+              
+// //               {/* Table Info Footer */}
+// //               <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 flex justify-between items-center">
+// //                 {/* <span>Showing {filteredInvoices.length} invoices</span> */}
+// //                 {/* <span>Scroll horizontally to view all columns</span> */}
+// //               </div>
+// //             </div>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Preview Modal */}
+// //       {previewModalVisible && (
+// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+// //           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+// //             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+// //               <h2 className="text-xl font-semibold text-gray-900">
+// //                 Invoice Preview
+// //               </h2>
+// //               <button
+// //                 onClick={() => setPreviewModalVisible(false)}
+// //                 className="text-gray-400 hover:text-gray-600 transition-colors"
+// //               >
+// //                 <X className="h-6 w-6" />
+// //               </button>
+// //             </div>
+// //             <div className="p-6">
+// //               <InvoiceViewer
+// //                 data={previewData}
+// //                 setInvoiceModalVisible={setPreviewModalVisible}
+// //               />
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </>
+// //   );
+// // }
+
+// // import React, { useState, useEffect } from "react";
+// // import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// // import InvoiceViewer from "./InvoiceViewer";
+
+// // export default function InvoiceExport() {
+// //   const [invoices, setInvoices] = useState([]);
+// //   const [filteredInvoices, setFilteredInvoices] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// //   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+// //   const [selectAll, setSelectAll] = useState(false);
+// //   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+// //   const [previewData, setPreviewData] = useState(null);
+// //   const [userRole, setUserRole] = useState(null);
+
+// //   // Get user role from localStorage (set during login)
+// //   useEffect(() => {
+// //     const getUserRole = () => {
+// //       try {
+// //         // Try to get from loginResponse first
+// //         const loginResponse = localStorage.getItem("loginResponse");
+// //         if (loginResponse) {
+// //           const parsedResponse = JSON.parse(loginResponse);
+// //           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try userData
+// //         const userData = localStorage.getItem("userData");
+// //         if (userData) {
+// //           const parsedUserData = JSON.parse(userData);
+// //           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try individual userRole
+// //         const storedRole = localStorage.getItem("userRole");
+// //         if (storedRole) {
+// //           setUserRole(storedRole.toLowerCase());
+// //           return;
+// //         }
+
+// //         // Default fallback - temporarily set to admin for testing
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       } catch (error) {
+// //         console.error("Error parsing user data:", error);
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       }
+// //     };
+
+// //     getUserRole();
+// //   }, []);
+
+// //   // Fetch invoices from API
+// //   useEffect(() => {
+// //     const fetchInvoices = async () => {
+// //       try {
+// //         setLoading(true);
+// //         const response = await fetch(
+// //           "https://timesheet-subk.onrender.com/api/Invoices"
+// //         );
+
+// //         if (!response.ok) {
+// //           throw new Error(`HTTP error! status: ${response.status}`);
+// //         }
+
+// //         const data = await response.json();
+// //         setInvoices(data);
+// //         setFilteredInvoices(data);
+// //       } catch (err) {
+// //         console.error("Error fetching invoices:", err);
+// //         setError(err.message || "Failed to fetch invoices");
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     };
+
+// //     fetchInvoices();
+// //   }, []);
+
+// //   // Filter invoices based on invoice number filter
+// //   useEffect(() => {
+// //     let filtered = invoices;
+
+// //     // Filter by invoice number
+// //     if (filterInvoiceNumber) {
+// //       filtered = filtered.filter(
+// //         (invoice) =>
+// //           invoice.invoiceNumber &&
+// //           invoice.invoiceNumber
+// //             .toLowerCase()
+// //             .includes(filterInvoiceNumber.toLowerCase())
+// //       );
+// //     }
+
+// //     setFilteredInvoices(filtered);
+// //     // Reset selections when filter changes
+// //     setSelectedInvoices(new Set());
+// //     setSelectAll(false);
+// //   }, [invoices, filterInvoiceNumber]);
+
+// //   // Dynamic table container style based on content
+// //   const getTableContainerStyle = () => {
+// //     const headerHeight = 120; // Header section height
+// //     const filterHeight = 80; // Filter section height
+// //     const padding = 48; // Top and bottom padding (24px each)
+// //     const margin = 24; // Margin
+// //     const footerSpace = 20; // Space for any footer content
+
+// //     // Calculate minimum height needed for the content
+// //     const rowHeight = 61; // Approximate height per row (including border)
+// //     const headerRowHeight = 48; // Header row height
+// //     const minContentHeight =
+// //       headerRowHeight + filteredInvoices.length * rowHeight;
+
+// //     // Calculate available space
+// //     const availableHeight =
+// //       window.innerHeight -
+// //       headerHeight -
+// //       filterHeight -
+// //       padding -
+// //       margin -
+// //       footerSpace;
+
+// //     // Use the smaller of content height or available height, with reasonable limits
+// //     const dynamicHeight = Math.min(
+// //       Math.max(minContentHeight, 200), // Minimum 200px
+// //       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+// //     );
+
+// //     return {
+// //       height: `${dynamicHeight}px`,
+// //       minHeight: "200px",
+// //       maxHeight: `calc(100vh - ${
+// //         headerHeight + filterHeight + padding + margin + footerSpace
+// //       }px)`,
+// //     };
+// //   };
+
+// //   // Alternative: Get table wrapper style that adjusts to content
+// //   const getTableWrapperStyle = () => {
+// //     // If there are few items, don't use fixed height
+// //     if (filteredInvoices.length <= 5) {
+// //       return {
+// //         minHeight: "200px",
+// //         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+// //       };
+// //     }
+
+// //     // For more items, use scrollable container
+// //     return {
+// //       height: "calc(100vh - 300px)",
+// //       minHeight: "400px",
+// //     };
+// //   };
+
+// //   const formatDate = (dateString) => {
+// //     if (!dateString) return "N/A";
+// //     try {
+// //       const date = new Date(dateString);
+// //       const month = String(date.getMonth() + 1).padStart(2, "0");
+// //       const day = String(date.getDate()).padStart(2, "0");
+// //       const year = date.getFullYear();
+// //       return `${month}-${day}-${year}`;
+// //     } catch {
+// //       return dateString;
+// //     }
+// //   };
+
+// //   // Format currency helper
+// //   const formatCurrency = (amount, currency = "USD") => {
+// //     if (!amount && amount !== 0) return "N/A";
+// //     try {
+// //       return new Intl.NumberFormat("en-US", {
+// //         style: "currency",
+// //         currency: currency || "USD",
+// //       }).format(amount);
+// //     } catch {
+// //       return `${currency || "$"} ${amount}`;
+// //     }
+// //   };
+
+// //   // Calculate selectable invoices (only those that are not exported)
+// //   const selectableInvoices = filteredInvoices.filter(
+// //     (invoice) => !invoice.isExported
+// //   );
+// //   const disabledInvoices = filteredInvoices.filter(
+// //     (invoice) => invoice.isExported
+// //   );
+
+// //   // Handle select all checkbox
+// //   const handleSelectAll = (checked) => {
+// //     setSelectAll(checked);
+// //     if (checked) {
+// //       // Only select invoices that are not exported (isExported: false)
+// //       const allSelectableIds = new Set(
+// //         selectableInvoices.map(
+// //           (invoice, index) =>
+// //             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+// //         )
+// //       );
+// //       setSelectedInvoices(allSelectableIds);
+// //     } else {
+// //       setSelectedInvoices(new Set());
+// //     }
+// //   };
+
+// //   // Handle individual checkbox
+// //   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+// //     // Prevent selection if invoice is exported
+// //     if (invoice && invoice.isExported) return;
+
+// //     setSelectedInvoices((prev) => {
+// //       const newSelected = new Set(prev);
+// //       if (checked) {
+// //         newSelected.add(invoiceId);
+// //       } else {
+// //         newSelected.delete(invoiceId);
+// //       }
+
+// //       // Update select all state - check if all selectable invoices are selected
+// //       const allSelectableSelected =
+// //         selectableInvoices.length > 0 &&
+// //         selectableInvoices.every((inv) => {
+// //           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+// //           return newSelected.has(id);
+// //         });
+// //       setSelectAll(allSelectableSelected);
+
+// //       return newSelected;
+// //     });
+// //   };
+
+// //   // Handle unexport (reopen) invoice - only for admin
+// //   const handleUnexport = async (invoice) => {
+// //     if (userRole !== "admin") {
+// //       alert("Access denied. Admin privileges required.");
+// //       return;
+// //     }
+
+// //     const confirmed = window.confirm(
+// //       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+// //     );
+// //     if (!confirmed) return;
+
+// //     try {
+// //       // Show loading state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = true;
+// //         openButton.textContent = "Opening...";
+// //       }
+
+// //       // Prepare the request body with the current invoice data
+// //       const requestBody = {
+// //         invoiceId: invoice.invoiceId || invoice.id || 0,
+// //         invoiceNumber: invoice.invoiceNumber || "string",
+// //         po_Number: invoice.po_Number || invoice.poNumber || "string",
+// //         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+// //         invoiceAmount: invoice.invoiceAmount || 0,
+// //         currency: invoice.currency || "USD",
+// //         createdAt: invoice.createdAt || new Date().toISOString(),
+// //         createdBy: invoice.createdBy || "string",
+// //         updatedAt: new Date().toISOString(),
+// //         updatedBy: "admin", // or get from current user context
+// //         billTo: invoice.billTo || "string",
+// //         remitTo: invoice.remitTo || "string",
+// //         isExported: false, // This is the key change - setting to false to reopen
+// //         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+// //       };
+
+// //       // API call to update the invoice using the correct endpoint
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/Invoices/${
+// //           invoice.invoiceId || invoice.id
+// //         }`,
+// //         {
+// //           method: "PUT", // Using PUT as per the API structure
+// //           headers: {
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify(requestBody),
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         const errorText = await response.text();
+// //         throw new Error(
+// //           `HTTP ${response.status}: ${errorText || response.statusText}`
+// //         );
+// //       }
+
+// //       // Check if response has content
+// //       let result = null;
+// //       const contentType = response.headers.get("Content-Type");
+// //       if (contentType && contentType.includes("application/json")) {
+// //         result = await response.json();
+// //       }
+
+// //       console.log("Invoice reopened successfully:", result);
+
+// //       // Update the local state
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+// //     } catch (error) {
+// //       console.error("Error reopening invoice:", error);
+
+// //       // More specific error messages
+// //       let errorMessage = "Failed to reopen invoice: ";
+// //       if (error.message.includes("404")) {
+// //         errorMessage += "Invoice not found or endpoint not available.";
+// //       } else if (error.message.includes("403")) {
+// //         errorMessage += "Access denied. Please check your permissions.";
+// //       } else if (error.message.includes("401")) {
+// //         errorMessage += "Authentication failed. Please log in again.";
+// //       } else {
+// //         errorMessage += error.message;
+// //       }
+
+// //       alert(errorMessage);
+// //     } finally {
+// //       // Reset button state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = false;
+// //         openButton.textContent = "OPEN";
+// //       }
+// //     }
+// //   };
+
+// //   // Handle preview click
+// //   const handlePreview = async (invoice) => {
+// //     try {
+// //       setPreviewModalVisible(true);
+// //       setPreviewData(null);
+
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //           invoice.invoiceNumber
+// //         )}`
+// //       );
+
+// //       if (!response.ok) {
+// //         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //       }
+
+// //       const apiData = await response.json();
+
+// //       const transformedData = [
+// //         {
+// //           invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+// //           invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+// //           period: formatDate(
+// //             apiData.period || apiData.invoiceDate || invoice.invoiceDate
+// //           ),
+// //           currency: apiData.currency || invoice.currency || "USD",
+// //           totalAmount:
+// //             apiData.totalAmount ||
+// //             apiData.invoiceAmount ||
+// //             invoice.invoiceAmount ||
+// //             0,
+
+// //           lineItems: (
+// //             apiData.lineItems ||
+// //             apiData.invoiceTimesheetLines ||
+// //             []
+// //           ).map((item, index) => ({
+// //             poLine: item.poLine || item.timesheetLineNo || "",
+// //             plc: item.plc || "",
+// //             vendor: item.vendor || "",
+// //             employee: item.employee || item.createdBy || "",
+// //             hours: item.hours || item.mappedHours,
+// //             rate:
+// //               item.rate,
+// //             amount: item.amount || item.mappedAmount,
+// //             line_No: item.line_No || item.timesheetLineNo || index + 1,
+// //           })),
+
+// //           billTo:
+// //             apiData.billTo ||
+// //             "",
+// //           buyer: apiData.buyer || "",
+// //           purchaseOrderId: apiData.purchaseOrderId || "",
+// //           releaseNumber: apiData.releaseNumber || "",
+// //           changeOrderNumber: apiData.changeOrderNumber || "0",
+// //           poStartEndDate: apiData.poStartEndDate || "",
+// //           remitTo:
+// //             apiData.remitTo ||
+// //             "",
+// //           terms: apiData.terms || "",
+// //           amountDue:
+// //             apiData.amountDue ||
+// //             apiData.totalAmount ||
+// //             apiData.invoiceAmount ||
+// //             invoice.invoiceAmount ||
+// //             0,
+// //         },
+// //       ];
+
+// //       setPreviewData(transformedData);
+// //     } catch (error) {
+// //       console.error("Error fetching invoice preview:", error);
+// //       alert(`Failed to load invoice preview: ${error.message}`);
+
+// //       const fallbackData = [
+// //         {
+// //           invoiceId: invoice.invoiceNumber,
+// //           invoiceDate: formatDate(invoice.invoiceDate),
+// //           period: formatDate(invoice.invoiceDate),
+// //           currency: invoice.currency || "USD",
+// //           totalAmount: invoice.invoiceAmount || 0,
+// //           lineItems: [],
+// //           billTo:"",
+// //           buyer: "",
+// //           purchaseOrderId: "",
+// //           releaseNumber: "",
+// //           changeOrderNumber: "",
+// //           poStartEndDate: "",
+// //           remitTo: "",
+// //           terms: "",
+// //           amountDue: invoice.invoiceAmount || 0,
+// //         },
+// //       ];
+
+// //       setPreviewData(fallbackData);
+// //     }
+// //   };
+
+// //   // Export function (keeping your existing export logic)
+// //   // const exportToCSV = async () => {
+// //   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //   //     selectedInvoices.has(invoice.invoiceId || index)
+// //   //   );
+
+// //   //   if (invoicesToExport.length === 0) {
+// //   //     alert("Please select invoices to export");
+// //   //     return;
+// //   //   }
+
+// //   //   try {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = true;
+// //   //       exportButton.innerHTML =
+// //   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //   //     }
+
+// //   //     for (let i = 0; i < invoicesToExport.length; i++) {
+// //   //       const invoice = invoicesToExport[i];
+// //   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //   //       if (!invoiceId) {
+// //   //         console.warn(
+// //   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //   //         );
+// //   //         continue;
+// //   //       }
+
+// //   //       try {
+// //   //         const columnHeaderValues = [
+// //   //           invoice.invoiceNumber || "",
+// //   //           formatDate(invoice.invoiceDate) || "",
+// //   //           invoice.invoiceAmount || 0,
+// //   //           invoice.currency || "USD",
+// //   //           formatDate(invoice.createdAt) || "",
+// //   //           "PLC001",
+// //   //           invoice.createdBy || "Employee",
+// //   //           "40.00",
+// //   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //   //           "0.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //           "40.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //         ];
+
+// //   //         const payload = {
+// //   //           ColumnHeaderValues: columnHeaderValues,
+// //   //           IncludeHeaders: true,
+// //   //           ExportFormat: "CSV",
+// //   //         };
+
+// //   //         const response = await fetch(
+// //   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //   //             invoiceId
+// //   //           )}`,
+// //   //           {
+// //   //             method: "POST",
+// //   //             headers: {
+// //   //               Accept:
+// //   //                 "text/csv, application/csv, application/octet-stream, */*",
+// //   //               "Content-Type": "application/json",
+// //   //             },
+// //   //             // body: JSON.stringify(payload)
+// //   //           }
+// //   //         );
+
+// //   //         if (!response.ok) {
+// //   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //   //           try {
+// //   //             const errorData = await response.text();
+// //   //             if (errorData) {
+// //   //               errorMessage += ` - ${errorData}`;
+// //   //             }
+// //   //           } catch (e) {
+// //   //             // Ignore if can't parse error
+// //   //           }
+// //   //           throw new Error(errorMessage);
+// //   //         }
+
+// //   //         const blob = await response.blob();
+
+// //   //         if (blob.type && blob.type.includes("application/json")) {
+// //   //           const text = await blob.text();
+// //   //           console.error("Received JSON instead of file:", text);
+// //   //           throw new Error("Server returned an error instead of a file");
+// //   //         }
+
+// //   //         let filename = `invoice_${invoiceId}_export.csv`;
+// //   //         const contentDisposition = response.headers.get(
+// //   //           "Content-Disposition"
+// //   //         );
+// //   //         if (contentDisposition) {
+// //   //           const filenameMatch = contentDisposition.match(
+// //   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //   //           );
+// //   //           if (filenameMatch && filenameMatch[1]) {
+// //   //             filename = filenameMatch[1].replace(/['"]/g, "");
+// //   //           }
+// //   //         }
+
+// //   //         const url = window.URL.createObjectURL(blob);
+// //   //         const link = document.createElement("a");
+// //   //         link.href = url;
+// //   //         link.download = filename;
+// //   //         link.style.display = "none";
+// //   //         document.body.appendChild(link);
+// //   //         link.click();
+
+// //   //         window.URL.revokeObjectURL(url);
+// //   //         document.body.removeChild(link);
+
+// //   //         if (i < invoicesToExport.length - 1) {
+// //   //           await new Promise((resolve) => setTimeout(resolve, 500));
+// //   //         }
+// //   //       } catch (invoiceError) {
+// //   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //   //         alert(
+// //   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //   //         );
+// //   //       }
+// //   //     }
+
+// //   //     const successMessage =
+// //   //       invoicesToExport.length === 1
+// //   //         ? "Invoice exported successfully!"
+// //   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //   //     alert(successMessage);
+// //   //   } catch (error) {
+// //   //     console.error("Error during export process:", error);
+// //   //     alert(`Export failed: ${error.message}`);
+// //   //   } finally {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = false;
+// //   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //   //     }
+// //   //   }
+// //   // };
+// //   const exportToCSV = async () => {
+// //     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //       selectedInvoices.has(invoice.invoiceId || index)
+// //     );
+
+// //     if (invoicesToExport.length === 0) {
+// //       alert("Please select invoices to export");
+// //       return;
+// //     }
+
+// //     try {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = true;
+// //         exportButton.innerHTML =
+// //           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //       }
+
+// //       // Track successfully exported invoices for state update
+// //       const successfullyExportedIds = [];
+
+// //       for (let i = 0; i < invoicesToExport.length; i++) {
+// //         const invoice = invoicesToExport[i];
+// //         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //         if (!invoiceId) {
+// //           console.warn(
+// //             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //           );
+// //           continue;
+// //         }
+
+// //         try {
+// //           const columnHeaderValues = [
+// //             invoice.invoiceNumber || "",
+// //             formatDate(invoice.invoiceDate) || "",
+// //             invoice.invoiceAmount || 0,
+// //             invoice.currency || "USD",
+// //             formatDate(invoice.createdAt) || "",
+// //             "",
+// //             invoice.createdBy || "Employee",
+// //             "40.00",
+// //             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //             "0.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //             "40.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //           ];
+
+// //           const payload = {
+// //             ColumnHeaderValues: columnHeaderValues,
+// //             IncludeHeaders: true,
+// //             ExportFormat: "CSV",
+// //           };
+
+// //           const response = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //               invoiceId
+// //             )}`,
+// //             {
+// //               method: "POST",
+// //               headers: {
+// //                 Accept:
+// //                   "text/csv, application/csv, application/octet-stream, */*",
+// //                 "Content-Type": "application/json",
+// //               },
+// //               // body: JSON.stringify(payload)
+// //             }
+// //           );
+
+// //           if (!response.ok) {
+// //             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //             try {
+// //               const errorData = await response.text();
+// //               if (errorData) {
+// //                 errorMessage += ` - ${errorData}`;
+// //               }
+// //             } catch (e) {
+// //               // Ignore if can't parse error
+// //             }
+// //             throw new Error(errorMessage);
+// //           }
+
+// //           const blob = await response.blob();
+
+// //           if (blob.type && blob.type.includes("application/json")) {
+// //             const text = await blob.text();
+// //             console.error("Received JSON instead of file:", text);
+// //             throw new Error("Server returned an error instead of a file");
+// //           }
+
+// //           let filename = `invoice_${invoiceId}_export.csv`;
+// //           const contentDisposition = response.headers.get(
+// //             "Content-Disposition"
+// //           );
+// //           if (contentDisposition) {
+// //             const filenameMatch = contentDisposition.match(
+// //               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //             );
+// //             if (filenameMatch && filenameMatch[1]) {
+// //               filename = filenameMatch[1].replace(/['"]/g, "");
+// //             }
+// //           }
+
+// //           const url = window.URL.createObjectURL(blob);
+// //           const link = document.createElement("a");
+// //           link.href = url;
+// //           link.download = filename;
+// //           link.style.display = "none";
+// //           document.body.appendChild(link);
+// //           link.click();
+
+// //           window.URL.revokeObjectURL(url);
+// //           document.body.removeChild(link);
+
+// //           // Mark this invoice as successfully exported
+// //           successfullyExportedIds.push(invoice.invoiceId);
+
+// //           // **NEW: Update invoice export status in database**
+// //           try {
+// //             const updateResponse = await fetch(
+// //               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //               {
+// //                 method: "PUT",
+// //                 headers: {
+// //                   "Content-Type": "application/json",
+// //                 },
+// //                 body: JSON.stringify({
+// //                   ...invoice,
+// //                   isExported: true, // Mark as exported
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin", // or get from current user context
+// //                 }),
+// //               }
+// //             );
+
+// //             if (!updateResponse.ok) {
+// //               console.warn(
+// //                 `Failed to update export status for invoice ${invoiceId}`
+// //               );
+// //             }
+// //           } catch (updateError) {
+// //             console.warn(
+// //               `Error updating export status for invoice ${invoiceId}:`,
+// //               updateError
+// //             );
+// //           }
+
+// //           if (i < invoicesToExport.length - 1) {
+// //             await new Promise((resolve) => setTimeout(resolve, 500));
+// //           }
+// //         } catch (invoiceError) {
+// //           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //           alert(
+// //             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //           );
+// //         }
+// //       }
+
+// //       // **NEW: Update local state for successfully exported invoices**
+// //       if (successfullyExportedIds.length > 0) {
+// //         setInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         setFilteredInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         // Clear selections for exported invoices since they can't be selected anymore
+// //         setSelectedInvoices((prev) => {
+// //           const newSelected = new Set(prev);
+// //           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //           return newSelected;
+// //         });
+
+// //         // Update select all checkbox state
+// //         const remainingSelectableInvoices = filteredInvoices.filter(
+// //           (inv) =>
+// //             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+// //         );
+// //         setSelectAll(false); // Reset select all since exported invoices are deselected
+// //       }
+
+// //       const successMessage =
+// //         invoicesToExport.length === 1
+// //           ? "Invoice exported successfully!"
+// //           : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //       alert(successMessage);
+// //     } catch (error) {
+// //       console.error("Error during export process:", error);
+// //       alert(`Export failed: ${error.message}`);
+// //     } finally {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = false;
+// //         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //       }
+// //     }
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center">
+// //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+// //           <p className="text-gray-600">Loading invoices...</p>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+// //           <div className="text-red-600 mb-4">
+// //             <Receipt className="h-12 w-12 mx-auto mb-2" />
+// //             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+// //           </div>
+// //           <p className="text-red-700">{error}</p>
+// //           <button
+// //             onClick={() => window.location.reload()}
+// //             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+// //           >
+// //             Try Again
+// //           </button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <>
+// //       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+// //         {/* Header */}
+// //         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+// //           <div className="flex items-center justify-between">
+// //             <div className="flex items-center">
+// //               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+// //               <div>
+// //                 <h1 className="text-2xl font-bold text-gray-900">
+// //                   Invoice Export
+// //                 </h1>
+// //                 <p className="text-gray-600">
+// //                   Manage and export invoice data
+// //                   {/* {userRole === 'admin' && (
+// //                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+// //                                             Admin Mode
+// //                                         </span>
+// //                                     )} */}
+// //                 </p>
+// //               </div>
+// //             </div>
+// //             <div className="flex items-center space-x-4">
+// //               <button
+// //                 onClick={exportToCSV}
+// //                 disabled={selectedInvoices.size === 0}
+// //                 data-export-button
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-green-600 text-white hover:bg-green-700"
+// //                 }`}
+// //               >
+// //                 <Download className="h-4 w-4 mr-2" />
+// //                 Export ({selectedInvoices.size})
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Filters */}
+// //         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+// //           <div className="flex items-center justify-start">
+// //             <div className="w-80 relative">
+// //               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+// //               <input
+// //                 type="text"
+// //                 placeholder="Filter by Invoice Number"
+// //                 value={filterInvoiceNumber}
+// //                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+// //                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+// //               />
+// //             </div>
+
+// //             {filterInvoiceNumber && (
+// //               <button
+// //                 onClick={() => setFilterInvoiceNumber("")}
+// //                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+// //               >
+// //                 Clear
+// //               </button>
+// //             )}
+// //           </div>
+// //         </div>
+
+// //         {/* Table Container with Dynamic Height */}
+// //         <div className="flex-1 mt-6 pb-6">
+// //           {filteredInvoices.length === 0 ? (
+// //             <div className="flex items-center justify-center h-64">
+// //               <div className="text-center text-gray-500">
+// //                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+// //                 <p className="text-lg font-medium">No invoices found</p>
+// //                 <p className="text-sm">Try adjusting your filter criteria</p>
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <div
+// //               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+// //               style={getTableWrapperStyle()}
+// //             >
+// //               <table className="min-w-full">
+// //                 <thead className="bg-gray-50">
+// //                   <tr>
+// //                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       <div className="flex items-center space-x-2">
+// //                         <input
+// //                           type="checkbox"
+// //                           checked={selectAll}
+// //                           onChange={(e) => handleSelectAll(e.target.checked)}
+// //                           disabled={selectableInvoices.length === 0}
+// //                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                             selectableInvoices.length === 0
+// //                               ? "opacity-50 cursor-not-allowed"
+// //                               : disabledInvoices.length > 0
+// //                               ? "opacity-75"
+// //                               : "cursor-pointer"
+// //                           }`}
+// //                         />
+// //                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+// //                           All
+// //                         </span>
+// //                       </div>
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Number
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Vendor
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Date
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Amount
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Currency
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Created At
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Action
+// //                     </th>
+// //                   </tr>
+// //                 </thead>
+// //                 <tbody className="divide-y divide-gray-200">
+// //                   {filteredInvoices.map((invoice, index) => {
+// //                     const invoiceId = invoice.invoiceId || invoice.id || index;
+// //                     return (
+// //                       <tr
+// //                         key={invoiceId}
+// //                         className="hover:bg-gray-50 transition-colors"
+// //                       >
+// //                         <td className="px-6 py-4 whitespace-nowrap">
+// //                           <input
+// //                             type="checkbox"
+// //                             checked={selectedInvoices.has(invoiceId)}
+// //                             onChange={(e) =>
+// //                               handleSelectInvoice(
+// //                                 invoiceId,
+// //                                 e.target.checked,
+// //                                 invoice
+// //                               )
+// //                             }
+// //                             disabled={invoice.isExported}
+// //                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                               invoice.isExported
+// //                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+// //                                 : "cursor-pointer hover:bg-green-50"
+// //                             }`}
+// //                           />
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceNumber || "N/A"}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+// //                         </td>
+
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.invoiceDate)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+// //                           {formatCurrency(
+// //                             invoice.invoiceAmount,
+// //                             invoice.currency
+// //                           )}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+// //                             {invoice.currency || "USD"}
+// //                           </span>
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.createdAt)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <div className="flex items-center space-x-2">
+// //                             <button
+// //                               onClick={() => handlePreview(invoice)}
+// //                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+// //                             >
+// //                               <Eye className="h-4 w-4 mr-1" />
+// //                               Preview
+// //                             </button>
+
+// //                             {/* OPEN button - only for admin and exported invoices */}
+// //                             {userRole === "admin" && invoice.isExported && (
+// //                               <button
+// //                                 onClick={() => handleUnexport(invoice)}
+// //                                 data-open-invoice={
+// //                                   invoice.invoiceId || invoice.id
+// //                                 }
+// //                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+// //                               >
+// //                                 OPEN
+// //                               </button>
+// //                             )}
+// //                           </div>
+// //                         </td>
+// //                       </tr>
+// //                     );
+// //                   })}
+// //                 </tbody>
+// //               </table>
+// //             </div>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Preview Modal */}
+// //       {previewModalVisible && (
+// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+// //           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+// //             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+// //               <h2 className="text-xl font-semibold text-gray-900">
+// //                 Invoice Preview
+// //               </h2>
+// //               <button
+// //                 onClick={() => setPreviewModalVisible(false)}
+// //                 className="text-gray-400 hover:text-gray-600 transition-colors"
+// //               >
+// //                 <X className="h-6 w-6" />
+// //               </button>
+// //             </div>
+// //             <div className="p-6">
+// //               <InvoiceViewer
+// //                 data={previewData}
+// //                 setInvoiceModalVisible={setPreviewModalVisible}
+// //               />
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </>
+// //   );
+// // }
+
+// // import React, { useState, useEffect } from "react";
+// // import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// // import InvoiceViewer from "./InvoiceViewer";
+
+// // export default function InvoiceExport() {
+// //   const [invoices, setInvoices] = useState([]);
+// //   const [filteredInvoices, setFilteredInvoices] = useState([]);
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState(null);
+// //   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+// //   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+// //   const [selectAll, setSelectAll] = useState(false);
+// //   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+// //   const [previewData, setPreviewData] = useState(null);
+// //   const [userRole, setUserRole] = useState(null);
+
+// //   // Get user role from localStorage (set during login)
+// //   useEffect(() => {
+// //     const getUserRole = () => {
+// //       try {
+// //         // Try to get from loginResponse first
+// //         const loginResponse = localStorage.getItem("loginResponse");
+// //         if (loginResponse) {
+// //           const parsedResponse = JSON.parse(loginResponse);
+// //           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try userData
+// //         const userData = localStorage.getItem("userData");
+// //         if (userData) {
+// //           const parsedUserData = JSON.parse(userData);
+// //           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+// //           return;
+// //         }
+
+// //         // Fallback: try individual userRole
+// //         const storedRole = localStorage.getItem("userRole");
+// //         if (storedRole) {
+// //           setUserRole(storedRole.toLowerCase());
+// //           return;
+// //         }
+
+// //         // Default fallback - temporarily set to admin for testing
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       } catch (error) {
+// //         console.error("Error parsing user data:", error);
+// //         setUserRole("admin"); // Change this back to 'user' for production
+// //       }
+// //     };
+
+// //     getUserRole();
+// //   }, []);
+
+// //   // Fetch invoices from API
+// //   useEffect(() => {
+// //     const fetchInvoices = async () => {
+// //       try {
+// //         setLoading(true);
+// //         const response = await fetch(
+// //           "https://timesheet-subk.onrender.com/api/Invoices"
+// //         );
+
+// //         if (!response.ok) {
+// //           throw new Error(`HTTP error! status: ${response.status}`);
+// //         }
+
+// //         const data = await response.json();
+// //         setInvoices(data);
+// //         setFilteredInvoices(data);
+// //       } catch (err) {
+// //         console.error("Error fetching invoices:", err);
+// //         setError(err.message || "Failed to fetch invoices");
+// //       } finally {
+// //         setLoading(false);
+// //       }
+// //     };
+
+// //     fetchInvoices();
+// //   }, []);
+
+// //   // Filter invoices based on invoice number filter
+// //   useEffect(() => {
+// //     let filtered = invoices;
+
+// //     // Filter by invoice number
+// //     if (filterInvoiceNumber) {
+// //       filtered = filtered.filter(
+// //         (invoice) =>
+// //           invoice.invoiceNumber &&
+// //           invoice.invoiceNumber
+// //             .toLowerCase()
+// //             .includes(filterInvoiceNumber.toLowerCase())
+// //       );
+// //     }
+
+// //     setFilteredInvoices(filtered);
+// //     // Reset selections when filter changes
+// //     setSelectedInvoices(new Set());
+// //     setSelectAll(false);
+// //   }, [invoices, filterInvoiceNumber]);
+
+// //   // Dynamic table container style based on content
+// //   const getTableContainerStyle = () => {
+// //     const headerHeight = 120; // Header section height
+// //     const filterHeight = 80; // Filter section height
+// //     const padding = 48; // Top and bottom padding (24px each)
+// //     const margin = 24; // Margin
+// //     const footerSpace = 20; // Space for any footer content
+
+// //     // Calculate minimum height needed for the content
+// //     const rowHeight = 61; // Approximate height per row (including border)
+// //     const headerRowHeight = 48; // Header row height
+// //     const minContentHeight =
+// //       headerRowHeight + filteredInvoices.length * rowHeight;
+
+// //     // Calculate available space
+// //     const availableHeight =
+// //       window.innerHeight -
+// //       headerHeight -
+// //       filterHeight -
+// //       padding -
+// //       margin -
+// //       footerSpace;
+
+// //     // Use the smaller of content height or available height, with reasonable limits
+// //     const dynamicHeight = Math.min(
+// //       Math.max(minContentHeight, 200), // Minimum 200px
+// //       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+// //     );
+
+// //     return {
+// //       height: `${dynamicHeight}px`,
+// //       minHeight: "200px",
+// //       maxHeight: `calc(100vh - ${
+// //         headerHeight + filterHeight + padding + margin + footerSpace
+// //       }px)`,
+// //     };
+// //   };
+
+// //   // Alternative: Get table wrapper style that adjusts to content
+// //   const getTableWrapperStyle = () => {
+// //     // If there are few items, don't use fixed height
+// //     if (filteredInvoices.length <= 5) {
+// //       return {
+// //         minHeight: "200px",
+// //         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+// //       };
+// //     }
+
+// //     // For more items, use scrollable container
+// //     return {
+// //       height: "calc(100vh - 300px)",
+// //       minHeight: "400px",
+// //     };
+// //   };
+
+// //   const formatDate = (dateString) => {
+// //     if (!dateString) return "N/A";
+// //     try {
+// //       const date = new Date(dateString);
+// //       const month = String(date.getMonth() + 1).padStart(2, "0");
+// //       const day = String(date.getDate()).padStart(2, "0");
+// //       const year = date.getFullYear();
+// //       return `${month}-${day}-${year}`;
+// //     } catch {
+// //       return dateString;
+// //     }
+// //   };
+
+// //   // Format currency helper
+// //   const formatCurrency = (amount, currency = "USD") => {
+// //     if (!amount && amount !== 0) return "N/A";
+// //     try {
+// //       return new Intl.NumberFormat("en-US", {
+// //         style: "currency",
+// //         currency: currency || "USD",
+// //       }).format(amount);
+// //     } catch {
+// //       return `${currency || "$"} ${amount}`;
+// //     }
+// //   };
+
+// //   // Calculate selectable invoices (only those that are not exported)
+// //   const selectableInvoices = filteredInvoices.filter(
+// //     (invoice) => !invoice.isExported
+// //   );
+// //   const disabledInvoices = filteredInvoices.filter(
+// //     (invoice) => invoice.isExported
+// //   );
+
+// //   // Handle select all checkbox
+// //   const handleSelectAll = (checked) => {
+// //     setSelectAll(checked);
+// //     if (checked) {
+// //       // Only select invoices that are not exported (isExported: false)
+// //       const allSelectableIds = new Set(
+// //         selectableInvoices.map(
+// //           (invoice, index) =>
+// //             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+// //         )
+// //       );
+// //       setSelectedInvoices(allSelectableIds);
+// //     } else {
+// //       setSelectedInvoices(new Set());
+// //     }
+// //   };
+
+// //   // Handle individual checkbox
+// //   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+// //     // Prevent selection if invoice is exported
+// //     if (invoice && invoice.isExported) return;
+
+// //     setSelectedInvoices((prev) => {
+// //       const newSelected = new Set(prev);
+// //       if (checked) {
+// //         newSelected.add(invoiceId);
+// //       } else {
+// //         newSelected.delete(invoiceId);
+// //       }
+
+// //       // Update select all state - check if all selectable invoices are selected
+// //       const allSelectableSelected =
+// //         selectableInvoices.length > 0 &&
+// //         selectableInvoices.every((inv) => {
+// //           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+// //           return newSelected.has(id);
+// //         });
+// //       setSelectAll(allSelectableSelected);
+
+// //       return newSelected;
+// //     });
+// //   };
+
+// //   // Handle unexport (reopen) invoice - only for admin
+// //   const handleUnexport = async (invoice) => {
+// //     if (userRole !== "admin") {
+// //       alert("Access denied. Admin privileges required.");
+// //       return;
+// //     }
+
+// //     const confirmed = window.confirm(
+// //       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+// //     );
+// //     if (!confirmed) return;
+
+// //     try {
+// //       // Show loading state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = true;
+// //         openButton.textContent = "Opening...";
+// //       }
+
+// //       // Prepare the request body with the current invoice data
+// //       const requestBody = {
+// //         invoiceId: invoice.invoiceId || invoice.id || 0,
+// //         invoiceNumber: invoice.invoiceNumber || "string",
+// //         po_Number: invoice.po_Number || invoice.poNumber || "string",
+// //         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+// //         invoiceAmount: invoice.invoiceAmount || 0,
+// //         currency: invoice.currency || "USD",
+// //         createdAt: invoice.createdAt || new Date().toISOString(),
+// //         createdBy: invoice.createdBy || "string",
+// //         updatedAt: new Date().toISOString(),
+// //         updatedBy: "admin", // or get from current user context
+// //         billTo: invoice.billTo || "string",
+// //         remitTo: invoice.remitTo || "string",
+// //         isExported: false, // This is the key change - setting to false to reopen
+// //         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+// //       };
+
+// //       // API call to update the invoice using the correct endpoint
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/Invoices/${
+// //           invoice.invoiceId || invoice.id
+// //         }`,
+// //         {
+// //           method: "PUT", // Using PUT as per the API structure
+// //           headers: {
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify(requestBody),
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         const errorText = await response.text();
+// //         throw new Error(
+// //           `HTTP ${response.status}: ${errorText || response.statusText}`
+// //         );
+// //       }
+
+// //       // Check if response has content
+// //       let result = null;
+// //       const contentType = response.headers.get("Content-Type");
+// //       if (contentType && contentType.includes("application/json")) {
+// //         result = await response.json();
+// //       }
+
+// //       console.log("Invoice reopened successfully:", result);
+
+// //       // Update the local state
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+// //             ? { ...inv, isExported: false }
+// //             : inv
+// //         )
+// //       );
+
+// //       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+// //     } catch (error) {
+// //       console.error("Error reopening invoice:", error);
+
+// //       // More specific error messages
+// //       let errorMessage = "Failed to reopen invoice: ";
+// //       if (error.message.includes("404")) {
+// //         errorMessage += "Invoice not found or endpoint not available.";
+// //       } else if (error.message.includes("403")) {
+// //         errorMessage += "Access denied. Please check your permissions.";
+// //       } else if (error.message.includes("401")) {
+// //         errorMessage += "Authentication failed. Please log in again.";
+// //       } else {
+// //         errorMessage += error.message;
+// //       }
+
+// //       alert(errorMessage);
+// //     } finally {
+// //       // Reset button state
+// //       const openButton = document.querySelector(
+// //         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+// //       );
+// //       if (openButton) {
+// //         openButton.disabled = false;
+// //         openButton.textContent = "OPEN";
+// //       }
+// //     }
+// //   };
+
+// //   // Handle preview click
+// //   // const handlePreview = async (invoice) => {
+// //   //   try {
+// //   //     setPreviewModalVisible(true);
+// //   //     setPreviewData(null);
+
+// //   //     const response = await fetch(
+// //   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //   //         invoice.invoiceNumber
+// //   //       )}`
+// //   //     );
+
+// //   //     if (!response.ok) {
+// //   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //   //     }
+
+// //   //     const apiData = await response.json();
+
+// //   //     const transformedData = [
+// //   //       {
+// //   //         invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+// //   //         invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+// //   //         period: formatDate(
+// //   //           apiData.period || apiData.invoiceDate || invoice.invoiceDate
+// //   //         ),
+// //   //         currency: apiData.currency || invoice.currency || "USD",
+// //   //         totalAmount:
+// //   //           apiData.totalAmount ||
+// //   //           apiData.invoiceAmount ||
+// //   //           invoice.invoiceAmount ||
+// //   //           0,
+
+// //   //         lineItems: (
+// //   //           apiData.lineItems ||
+// //   //           apiData.invoiceTimesheetLines ||
+// //   //           []
+// //   //         ).map((item, index) => ({
+// //   //           poLine: item.poLine || item.timesheetLineNo || "",
+// //   //           plc: item.plc || "",
+// //   //           vendor: item.vendor || " ",
+// //   //           employee: item.employee || item.createdBy || " ",
+// //   //           hours: item.hours || item.mappedHours,
+// //   //           rate: item.rate || (item.mappedAmount || 0) / item.mappedHours || 0,
+// //   //           amount: item.amount || item.mappedAmount,
+// //   //           line_No: item.line_No || item.timesheetLineNo,
+// //   //         })),
+
+// //   //         billTo: apiData.billTo || " ",
+// //   //         buyer: apiData.buyer || " ",
+// //   //         purchaseOrderId: apiData.purchaseOrderId || " ",
+// //   //         releaseNumber: apiData.releaseNumber || "",
+// //   //         // changeOrderNumber: apiData.changeOrderNumber || "",
+// //   //         poStartEndDate: apiData.poStartEndDate || " ",
+// //   //         // remitTo:
+// //   //         //   apiData.remitTo ||
+// //   //         //   " ",
+// //   //         terms: apiData.terms || " ",
+// //   //         amountDue:
+// //   //           apiData.amountDue ||
+// //   //           apiData.totalAmount ||
+// //   //           apiData.invoiceAmount ||
+// //   //           invoice.invoiceAmount ||
+// //   //           0,
+// //   //       },
+// //   //     ];
+
+// //   //     setPreviewData(transformedData);
+// //   //   } catch (error) {
+// //   //     console.error("Error fetching invoice preview:", error);
+// //   //     alert(`Failed to load invoice preview: ${error.message}`);
+
+// //   //     // const fallbackData = [
+// //   //     //   {
+// //   //     //     invoiceId: invoice.invoiceNumber,
+// //   //     //     invoiceDate: formatDate(invoice.invoiceDate),
+// //   //     //     period: formatDate(invoice.invoiceDate),
+// //   //     //     currency: invoice.currency || "USD",
+// //   //     //     totalAmount: invoice.invoiceAmount || 0,
+// //   //     //     lineItems: [
+// //   //     //       {
+// //   //     //         poLine: "Default PO Line",
+// //   //     //         plc: "PLC001",
+// //   //     //         vendor: "Vendor",
+// //   //     //         employee: invoice.createdBy || "Employee",
+// //   //     //         hours: 40.0,
+// //   //     //         rate: (invoice.invoiceAmount || 0) / 40,
+// //   //     //         amount: invoice.invoiceAmount || 0,
+// //   //     //         line_No: 1,
+// //   //     //       },
+// //   //     //     ],
+// //   //     //     billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+// //   //     //     buyer: "Clore, Heather J",
+// //   //     //     purchaseOrderId: "2181218010",
+// //   //     //     releaseNumber: "3",
+// //   //     //     changeOrderNumber: "0",
+// //   //     //     poStartEndDate: "12/10/18 to 12/08/24",
+// //   //     //     remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+// //   //     //     terms: "PAYNPD",
+// //   //     //     amountDue: invoice.invoiceAmount || 0,
+// //   //     //   },
+// //   //     // ];
+
+// //   //     // setPreviewData(fallbackData);
+// //   //   }
+// //   // };
+
+// //   const handlePreview = async (invoice) => {
+// //     try {
+// //       setPreviewModalVisible(true);
+// //       setPreviewData(null);
+
+// //       const response = await fetch(
+// //         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+// //           invoice.invoiceNumber
+// //         )}`
+// //       );
+
+// //       if (!response.ok) {
+// //         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+// //       }
+
+// //       const apiData = await response.json();
+
+// //       const transformedData = [
+// //         {
+// //           invoiceId: apiData.invoiceId || " ",
+// //           invoiceDate: apiData.period || " ",
+// //           // period: apiData.period || " ",
+// //           currency: apiData.currency || " ",
+// //           totalAmount: apiData.totalAmount || 0,
+
+// //           lineItems: (apiData.lineItems || []).map((item, index) => ({
+// //             poLine: item.poLine || " ",
+// //             plc: item.plc || " ",
+// //             vendor: item.vendor || " ",
+// //             employee: item.employee || " ",
+// //             hours: item.hours || 0,
+// //             rate: item.rate || 0,
+// //             amount: item.amount || 0,
+// //             line_No: item.line_No || " ",
+// //           })),
+
+// //           billTo: apiData.billTo || " ",
+// //           buyer: apiData.buyer || " ",
+// //           purchaseOrderId: apiData.po_Number || " ",
+// //           releaseNumber: apiData.po_rlse_Number || " ",
+// //           poStartEndDate: apiData.po_Start_End_Date || " ",
+// //           terms: apiData.terms || " ",
+// //           amountDue: apiData.totalAmount || 0,
+// //         },
+// //       ];
+
+// //       setPreviewData(transformedData);
+// //     } catch (error) {
+// //       console.error("Error fetching invoice preview:", error);
+// //       alert(`Failed to load invoice preview: ${error.message}`);
+// //     }
+// //   };
+
+// //   // Export function (keeping your existing export logic)
+// //   // const exportToCSV = async () => {
+// //   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //   //     selectedInvoices.has(invoice.invoiceId || index)
+// //   //   );
+
+// //   //   if (invoicesToExport.length === 0) {
+// //   //     alert("Please select invoices to export");
+// //   //     return;
+// //   //   }
+
+// //   //   try {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = true;
+// //   //       exportButton.innerHTML =
+// //   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //   //     }
+
+// //   //     for (let i = 0; i < invoicesToExport.length; i++) {
+// //   //       const invoice = invoicesToExport[i];
+// //   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //   //       if (!invoiceId) {
+// //   //         console.warn(
+// //   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //   //         );
+// //   //         continue;
+// //   //       }
+
+// //   //       try {
+// //   //         const columnHeaderValues = [
+// //   //           invoice.invoiceNumber || "",
+// //   //           formatDate(invoice.invoiceDate) || "",
+// //   //           invoice.invoiceAmount || 0,
+// //   //           invoice.currency || "USD",
+// //   //           formatDate(invoice.createdAt) || "",
+// //   //           "PLC001",
+// //   //           invoice.createdBy || "Employee",
+// //   //           "40.00",
+// //   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //   //           "0.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //           "40.00",
+// //   //           (invoice.invoiceAmount || 0).toFixed(2),
+// //   //         ];
+
+// //   //         const payload = {
+// //   //           ColumnHeaderValues: columnHeaderValues,
+// //   //           IncludeHeaders: true,
+// //   //           ExportFormat: "CSV",
+// //   //         };
+
+// //   //         const response = await fetch(
+// //   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //   //             invoiceId
+// //   //           )}`,
+// //   //           {
+// //   //             method: "POST",
+// //   //             headers: {
+// //   //               Accept:
+// //   //                 "text/csv, application/csv, application/octet-stream, */*",
+// //   //               "Content-Type": "application/json",
+// //   //             },
+// //   //             // body: JSON.stringify(payload)
+// //   //           }
+// //   //         );
+
+// //   //         if (!response.ok) {
+// //   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //   //           try {
+// //   //             const errorData = await response.text();
+// //   //             if (errorData) {
+// //   //               errorMessage += ` - ${errorData}`;
+// //   //             }
+// //   //           } catch (e) {
+// //   //             // Ignore if can't parse error
+// //   //           }
+// //   //           throw new Error(errorMessage);
+// //   //         }
+
+// //   //         const blob = await response.blob();
+
+// //   //         if (blob.type && blob.type.includes("application/json")) {
+// //   //           const text = await blob.text();
+// //   //           console.error("Received JSON instead of file:", text);
+// //   //           throw new Error("Server returned an error instead of a file");
+// //   //         }
+
+// //   //         let filename = `invoice_${invoiceId}_export.csv`;
+// //   //         const contentDisposition = response.headers.get(
+// //   //           "Content-Disposition"
+// //   //         );
+// //   //         if (contentDisposition) {
+// //   //           const filenameMatch = contentDisposition.match(
+// //   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //   //           );
+// //   //           if (filenameMatch && filenameMatch[1]) {
+// //   //             filename = filenameMatch[1].replace(/['"]/g, "");
+// //   //           }
+// //   //         }
+
+// //   //         const url = window.URL.createObjectURL(blob);
+// //   //         const link = document.createElement("a");
+// //   //         link.href = url;
+// //   //         link.download = filename;
+// //   //         link.style.display = "none";
+// //   //         document.body.appendChild(link);
+// //   //         link.click();
+
+// //   //         window.URL.revokeObjectURL(url);
+// //   //         document.body.removeChild(link);
+
+// //   //         if (i < invoicesToExport.length - 1) {
+// //   //           await new Promise((resolve) => setTimeout(resolve, 500));
+// //   //         }
+// //   //       } catch (invoiceError) {
+// //   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //   //         alert(
+// //   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //   //         );
+// //   //       }
+// //   //     }
+
+// //   //     const successMessage =
+// //   //       invoicesToExport.length === 1
+// //   //         ? "Invoice exported successfully!"
+// //   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //   //     alert(successMessage);
+// //   //   } catch (error) {
+// //   //     console.error("Error during export process:", error);
+// //   //     alert(`Export failed: ${error.message}`);
+// //   //   } finally {
+// //   //     const exportButton = document.querySelector("[data-export-button]");
+// //   //     if (exportButton) {
+// //   //       exportButton.disabled = false;
+// //   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //   //     }
+// //   //   }
+// //   // };
+
+// //   const exportToCSV = async () => {
+// //     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //       selectedInvoices.has(invoice.invoiceId || index)
+// //     );
+
+// //     if (invoicesToExport.length === 0) {
+// //       alert("Please select invoices to export");
+// //       return;
+// //     }
+
+// //     try {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = true;
+// //         exportButton.innerHTML =
+// //           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+// //       }
+
+// //       // Track successfully exported invoices for state update
+// //       const successfullyExportedIds = [];
+
+// //       for (let i = 0; i < invoicesToExport.length; i++) {
+// //         const invoice = invoicesToExport[i];
+// //         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+// //         if (!invoiceId) {
+// //           console.warn(
+// //             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+// //           );
+// //           continue;
+// //         }
+
+// //         try {
+// //           const columnHeaderValues = [
+// //             invoice.invoiceNumber || "",
+// //             formatDate(invoice.invoiceDate) || "",
+// //             invoice.invoiceAmount || 0,
+// //             invoice.currency || "USD",
+// //             formatDate(invoice.createdAt) || "",
+// //             "PLC001",
+// //             invoice.createdBy || "Employee",
+// //             "40.00",
+// //             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+// //             "0.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //             "40.00",
+// //             (invoice.invoiceAmount || 0).toFixed(2),
+// //           ];
+
+// //           const payload = {
+// //             ColumnHeaderValues: columnHeaderValues,
+// //             IncludeHeaders: true,
+// //             ExportFormat: "CSV",
+// //           };
+
+// //           const response = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+// //               invoiceId
+// //             )}`,
+// //             {
+// //               method: "POST",
+// //               headers: {
+// //                 Accept:
+// //                   "text/csv, application/csv, application/octet-stream, */*",
+// //                 "Content-Type": "application/json",
+// //               },
+// //               // body: JSON.stringify(payload)
+// //             }
+// //           );
+
+// //           if (!response.ok) {
+// //             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //             try {
+// //               const errorData = await response.text();
+// //               if (errorData) {
+// //                 errorMessage += ` - ${errorData}`;
+// //               }
+// //             } catch (e) {
+// //               // Ignore if can't parse error
+// //             }
+// //             throw new Error(errorMessage);
+// //           }
+
+// //           const blob = await response.blob();
+
+// //           if (blob.type && blob.type.includes("application/json")) {
+// //             const text = await blob.text();
+// //             console.error("Received JSON instead of file:", text);
+// //             throw new Error("Server returned an error instead of a file");
+// //           }
+
+// //           let filename = `invoice_${invoiceId}_export.csv`;
+// //           const contentDisposition = response.headers.get(
+// //             "Content-Disposition"
+// //           );
+// //           if (contentDisposition) {
+// //             const filenameMatch = contentDisposition.match(
+// //               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //             );
+// //             if (filenameMatch && filenameMatch[1]) {
+// //               filename = filenameMatch[1].replace(/['"]/g, "");
+// //             }
+// //           }
+
+// //           const url = window.URL.createObjectURL(blob);
+// //           const link = document.createElement("a");
+// //           link.href = url;
+// //           link.download = filename;
+// //           link.style.display = "none";
+// //           document.body.appendChild(link);
+// //           link.click();
+
+// //           window.URL.revokeObjectURL(url);
+// //           document.body.removeChild(link);
+
+// //           // Mark this invoice as successfully exported
+// //           successfullyExportedIds.push(invoice.invoiceId);
+
+// //           // **NEW: Update invoice export status in database**
+// //           try {
+// //             const updateResponse = await fetch(
+// //               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //               {
+// //                 method: "PUT",
+// //                 headers: {
+// //                   "Content-Type": "application/json",
+// //                 },
+// //                 body: JSON.stringify({
+// //                   ...invoice,
+// //                   isExported: true, // Mark as exported
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin", // or get from current user context
+// //                 }),
+// //               }
+// //             );
+
+// //             if (!updateResponse.ok) {
+// //               console.warn(
+// //                 `Failed to update export status for invoice ${invoiceId}`
+// //               );
+// //             }
+// //           } catch (updateError) {
+// //             console.warn(
+// //               `Error updating export status for invoice ${invoiceId}:`,
+// //               updateError
+// //             );
+// //           }
+
+// //           if (i < invoicesToExport.length - 1) {
+// //             await new Promise((resolve) => setTimeout(resolve, 500));
+// //           }
+// //         } catch (invoiceError) {
+// //           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+// //           alert(
+// //             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+// //           );
+// //         }
+// //       }
+
+// //       // **NEW: Update local state for successfully exported invoices**
+// //       if (successfullyExportedIds.length > 0) {
+// //         setInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         setFilteredInvoices((prev) =>
+// //           prev.map((inv) =>
+// //             successfullyExportedIds.includes(inv.invoiceId)
+// //               ? {
+// //                   ...inv,
+// //                   isExported: true,
+// //                   updatedAt: new Date().toISOString(),
+// //                   updatedBy: "admin",
+// //                 }
+// //               : inv
+// //           )
+// //         );
+
+// //         // Clear selections for exported invoices since they can't be selected anymore
+// //         setSelectedInvoices((prev) => {
+// //           const newSelected = new Set(prev);
+// //           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //           return newSelected;
+// //         });
+
+// //         // Update select all checkbox state
+// //         const remainingSelectableInvoices = filteredInvoices.filter(
+// //           (inv) =>
+// //             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+// //         );
+// //         setSelectAll(false); // Reset select all since exported invoices are deselected
+// //       }
+
+// //       const successMessage =
+// //         invoicesToExport.length === 1
+// //           ? "Invoice exported successfully!"
+// //           : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //       alert(successMessage);
+// //     } catch (error) {
+// //       console.error("Error during export process:", error);
+// //       alert(`Export failed: ${error.message}`);
+// //     } finally {
+// //       const exportButton = document.querySelector("[data-export-button]");
+// //       if (exportButton) {
+// //         exportButton.disabled = false;
+// //         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+// //       }
+// //     }
+// //   };
+
+// //   if (loading) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center">
+// //           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+// //           <p className="text-gray-600">Loading invoices...</p>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   if (error) {
+// //     return (
+// //       <div className="ml-48 flex-1 flex items-center justify-center">
+// //         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+// //           <div className="text-red-600 mb-4">
+// //             <Receipt className="h-12 w-12 mx-auto mb-2" />
+// //             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+// //           </div>
+// //           <p className="text-red-700">{error}</p>
+// //           <button
+// //             onClick={() => window.location.reload()}
+// //             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+// //           >
+// //             Try Again
+// //           </button>
+// //         </div>
+// //       </div>
+// //     );
+// //   }
+
+// //   return (
+// //     <>
+// //       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+// //         {/* Header */}
+// //         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+// //           <div className="flex items-center justify-between">
+// //             <div className="flex items-center">
+// //               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+// //               <div>
+// //                 <h1 className="text-2xl font-bold text-gray-900">
+// //                   Invoice Export
+// //                 </h1>
+// //                 <p className="text-gray-600">
+// //                   Manage and export invoice data
+// //                   {/* {userRole === 'admin' && (
+// //                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+// //                                             Admin Mode
+// //                                         </span>
+// //                                     )} */}
+// //                 </p>
+// //               </div>
+// //             </div>
+// //             <div className="flex items-center space-x-4">
+// //               <button
+// //                 onClick={exportToCSV}
+// //                 disabled={selectedInvoices.size === 0}
+// //                 data-export-button
+// //                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+// //                   selectedInvoices.size === 0
+// //                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+// //                     : "bg-green-600 text-white hover:bg-green-700"
+// //                 }`}
+// //               >
+// //                 <Download className="h-4 w-4 mr-2" />
+// //                 Export ({selectedInvoices.size})
+// //               </button>
+// //             </div>
+// //           </div>
+// //         </div>
+
+// //         {/* Filters */}
+// //         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+// //           <div className="flex items-center justify-start">
+// //             <div className="w-80 relative">
+// //               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+// //               <input
+// //                 type="text"
+// //                 placeholder="Filter by Invoice Number"
+// //                 value={filterInvoiceNumber}
+// //                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+// //                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+// //               />
+// //             </div>
+
+// //             {filterInvoiceNumber && (
+// //               <button
+// //                 onClick={() => setFilterInvoiceNumber("")}
+// //                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+// //               >
+// //                 Clear
+// //               </button>
+// //             )}
+// //           </div>
+// //         </div>
+
+// //         {/* Table Container with Dynamic Height */}
+// //         <div className="flex-1 mt-6 pb-6">
+// //           {filteredInvoices.length === 0 ? (
+// //             <div className="flex items-center justify-center h-64">
+// //               <div className="text-center text-gray-500">
+// //                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+// //                 <p className="text-lg font-medium">No invoices found</p>
+// //                 <p className="text-sm">Try adjusting your filter criteria</p>
+// //               </div>
+// //             </div>
+// //           ) : (
+// //             <div
+// //               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+// //               style={getTableWrapperStyle()}
+// //             >
+// //               <table className="min-w-full">
+// //                 <thead className="bg-gray-50">
+// //                   <tr>
+// //                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       <div className="flex items-center space-x-2">
+// //                         <input
+// //                           type="checkbox"
+// //                           checked={selectAll}
+// //                           onChange={(e) => handleSelectAll(e.target.checked)}
+// //                           disabled={selectableInvoices.length === 0}
+// //                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                             selectableInvoices.length === 0
+// //                               ? "opacity-50 cursor-not-allowed"
+// //                               : disabledInvoices.length > 0
+// //                               ? "opacity-75"
+// //                               : "cursor-pointer"
+// //                           }`}
+// //                         />
+// //                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+// //                           All
+// //                         </span>
+// //                       </div>
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Number
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Vendor
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Invoice Date
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Amount
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Currency
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Created At
+// //                     </th>
+// //                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+// //                       Action
+// //                     </th>
+// //                   </tr>
+// //                 </thead>
+// //                 <tbody className="divide-y divide-gray-200">
+// //                   {filteredInvoices.map((invoice, index) => {
+// //                     const invoiceId = invoice.invoiceId || invoice.id || index;
+// //                     return (
+// //                       <tr
+// //                         key={invoiceId}
+// //                         className="hover:bg-gray-50 transition-colors"
+// //                       >
+// //                         <td className="px-6 py-4 whitespace-nowrap">
+// //                           <input
+// //                             type="checkbox"
+// //                             checked={selectedInvoices.has(invoiceId)}
+// //                             onChange={(e) =>
+// //                               handleSelectInvoice(
+// //                                 invoiceId,
+// //                                 e.target.checked,
+// //                                 invoice
+// //                               )
+// //                             }
+// //                             disabled={invoice.isExported}
+// //                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+// //                               invoice.isExported
+// //                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+// //                                 : "cursor-pointer hover:bg-green-50"
+// //                             }`}
+// //                           />
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceNumber || "N/A"}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+// //                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+// //                         </td>
+
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.invoiceDate)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+// //                           {formatCurrency(
+// //                             invoice.invoiceAmount,
+// //                             invoice.currency
+// //                           )}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+// //                             {invoice.currency || "USD"}
+// //                           </span>
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           {formatDate(invoice.createdAt)}
+// //                         </td>
+// //                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+// //                           <div className="flex items-center space-x-2">
+// //                             <button
+// //                               onClick={() => handlePreview(invoice)}
+// //                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+// //                             >
+// //                               <Eye className="h-4 w-4 mr-1" />
+// //                               Preview
+// //                             </button>
+
+// //                             {/* OPEN button - only for admin and exported invoices */}
+// //                             {userRole === "admin" && invoice.isExported && (
+// //                               <button
+// //                                 onClick={() => handleUnexport(invoice)}
+// //                                 data-open-invoice={
+// //                                   invoice.invoiceId || invoice.id
+// //                                 }
+// //                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+// //                               >
+// //                                 OPEN
+// //                               </button>
+// //                             )}
+// //                           </div>
+// //                         </td>
+// //                       </tr>
+// //                     );
+// //                   })}
+// //                 </tbody>
+// //               </table>
+// //             </div>
+// //           )}
+// //         </div>
+// //       </div>
+
+// //       {/* Preview Modal */}
+// //       {previewModalVisible && (
+// //         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+// //           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+// //             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+// //               <h2 className="text-xl font-semibold text-gray-900">
+// //                 Invoice Preview
+// //               </h2>
+// //               <button
+// //                 onClick={() => setPreviewModalVisible(false)}
+// //                 className="text-gray-400 hover:text-gray-600 transition-colors"
+// //               >
+// //                 <X className="h-6 w-6" />
+// //               </button>
+// //             </div>
+// //             <div className="p-6">
+// //               <InvoiceViewer
+// //                 data={previewData}
+// //                 setInvoiceModalVisible={setPreviewModalVisible}
+// //               />
+// //             </div>
+// //           </div>
+// //         </div>
+// //       )}
+// //     </>
+// //   );
+// // }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+// import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+// import logoImg from "../assets/image.png";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+//   const [isDownloading, setIsDownloading] = useState(false);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Enhanced table wrapper style that adjusts to content
+
+// //   const getTableWrapperStyle = () => {
+// //   return {
+// //     overflowX: "auto",
+// //     overflowY: "auto", 
+// //     maxHeight: "calc(100vh - 280px)",
+// //     minHeight: "400px",
+// //     width: "100%" 
+// //   };
+// // };
+
+// //   const getTableWrapperStyle = () => {
+// //   const baseStyle = {
+// //     // Enable both horizontal and vertical scrolling
+// //     overflowX: "auto",
+// //     overflowY: "auto",
+// //     // Ensure scrollbars are visible when needed
+// //     scrollbarGutter: "stable",
+// //   };
+
+// //   // Calculate available height based on viewport and other UI elements
+// //   const availableHeight = "calc(100vh - 250px)";
+// //   const minTableHeight = "300px";
+// //   const maxTableHeight = "calc(100vh - 180px)";
+
+// //   // If there are few items, allow natural height with limits
+// //   if (filteredInvoices.length <= 5) {
+// //     return {
+// //       ...baseStyle,
+// //       minHeight: minTableHeight,
+// //       maxHeight: maxTableHeight,
+// //       height: "auto",
+// //     };
+// //   }
+
+// //   // For more items, use fixed scrollable container
+// //   return {
+// //     ...baseStyle,
+// //     height: availableHeight,
+// //     minHeight: "400px",
+// //     maxHeight: maxTableHeight,
+// //   };
+// // };
+
+//   // const getTableWrapperStyle = () => {
+
+//   //   const baseStyle = {
+//   //   // Enable both horizontal and vertical scrolling
+//   //   overflowX: "auto",
+//   //   overflowY: "auto",
+//   //   // Ensure scrollbars are visible when needed
+//   //   scrollbarGutter: "stable",
+//   // };
+
+//   //  // Calculate available height based on viewport and other UI elements
+//   // const availableHeight = "calc(100vh - 280px)";
+//   // const minTableHeight = "300px";
+//   // const maxTableHeight = "calc(100vh - 180px)";
+
+//   //   // If there are few items, don't use fixed height
+//   //   if (filteredInvoices.length <= 5) {
+//   //     return {
+//   //       minHeight: "300px",
+//   //       maxHeight: "calc(100vh - 280px)",
+//   //       // minWidth: "1000px",
+//   //     };
+//   //   }
+//   //   // For more items, use scrollable container
+//   //   return {
+//   //     height: "calc(100vh - 280px)",
+//   //     minHeight: "400px",
+//   //     maxHeight: "calc(100vh - 280px)",
+//   //     // width: "calc(100vh - 200px)",
+//   //     // minWidth: "1000px",
+//   //     // maxWidth: "calc(100vh - 10px)",
+//   //   };
+//   // };
+//   // const getTableWrapperStyle = () => {
+//   //   const baseStyle = {
+//   //     // Enable both horizontal and vertical scrolling
+//   //     overflowX: "auto",
+//   //     overflowY: "auto",
+//   //     // Ensure scrollbars are visible when needed
+//   //     scrollbarGutter: "stable",
+//   //   };
+
+//   //   // Calculate available height based on viewport and other UI elements
+//   //   const availableHeight = "calc(100vh - 280px)";
+//   //   const minTableHeight = "300px";
+//   //   const maxTableHeight = "calc(100vh - 180px)"; // More generous max height
+
+//   //   // If there are few items, allow natural height with limits
+//   //   if (filteredInvoices.length <= 5) {
+//   //     return {
+//   //       ...baseStyle,
+//   //       minHeight: minTableHeight,
+//   //       maxHeight: maxTableHeight,
+//   //       // Let content determine height up to max
+//   //       height: "auto",
+//   //     };
+//   //   }
+
+//   //   // For more items, use fixed scrollable container
+//   //   return {
+//   //     ...baseStyle,
+//   //     height: availableHeight,
+//   //     minHeight: "400px",
+//   //     maxHeight: maxTableHeight,
+//   //   };
+//   // };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Create invoice HTML content exactly like InvoiceViewer with proper styling
+//   const createInvoiceHTML = (apiData, invoice) => {
+//     // Group line items by PO Line for rendering with headers
+//     const groupedByPoLine = (apiData.lineItems || []).reduce((groups, item) => {
+//       const key = item.poLine || "Other";
+//       if (!groups[key]) groups[key] = [];
+//       groups[key].push(item);
+//       return groups;
+//     }, {});
+
+//     return `
+//       <div style="max-width: 768px; margin: auto; padding: 20px; border: 2px solid #d1d5db; font-family: monospace; font-size: 15px; color: #1a202c; background-color: #fff;">
+//         <img src="${logoImg}" alt="Company Logo" style="height: 60px; object-fit: contain;" />
+//         <h1 style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600;">SUMARIA SYSTEMS, LLC</h1>
+        
+//         <div style="margin-bottom: 20px;">
+//           <div style="display: inline-block; width: 48%; vertical-align: top;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Subcontractor Invoice Number:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.invoiceId || invoice.invoiceNumber || ""}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Bill To:</span>
+//             </div>
+//             <div style="margin-bottom: 16px; white-space: pre-line;">
+//               ${apiData.billTo || ""}
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               <span style="font-weight: 700;">Buyer:</span>
+//               <span style="margin-left: 4px;">${apiData.buyer || " "}</span>
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Purchase Order ID:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.po_Number || ""} Release Number ${
+//       apiData.po_rlse_Number || ""
+//     }
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">PO Start and End Date:</span>
+//             </div>
+//             <div>${apiData.po_Start_End_Date || " "}</div>
+//           </div>
+          
+//           <div style="display: inline-block; width: 48%; vertical-align: top; margin-left: 4%;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Invoice Date:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.period || " "}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Billing Currency:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.currency || "USD"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Terms:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.terms || "NET 45"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Amount Due</span>
+//             </div>
+//             <div>
+//               $${(apiData.totalAmount || 0).toFixed(2)}
+//             </div>
+//           </div>
+//         </div>
+
+//         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+//           <thead>
+//             <tr>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 120px;">PLC</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 150px;">Vendor Employee</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 60px;">Rate</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Additional Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Amount</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${Object.entries(groupedByPoLine)
+//               .map(
+//                 ([poLine, items]) => `
+//               <tr>
+//                 <td colspan="8" style="font-weight: 700; font-size: 13px; padding: 8px 4px; border: 1px solid #d1d5db;">PO LINE ${poLine}</td>
+//               </tr>
+//               ${items
+//                 .map(
+//                   (item) => `
+//                 <tr>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="font-weight: 600; margin-bottom: 2px;">${
+//                       item.plc || ""
+//                     }</div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="margin-left: 10px;">
+//                       <div style="margin-bottom: 1px;">${
+//                         item.employee || ""
+//                       }</div>
+//                       <div>${item.vendor || ""}</div>
+//                     </div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(
+//                     item.hours || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.rate || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$0.00</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.amount || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(
+//                     item.hours || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.amount || 0
+//                   ).toFixed(2)}</td>
+//                 </tr>
+//               `
+//                 )
+//                 .join("")}
+//             `
+//               )
+//               .join("")}
+//           </tbody>
+//         </table>
+        
+//         <div style="text-align: right; font-weight: 600; font-size: 16px; margin-bottom: 24px;">
+//           Total Amount Due: $${(apiData.totalAmount || 0).toFixed(2)}
+//         </div>
+//       </div>
+//     `;
+//   };
+
+//   // Updated download function using exact InvoiceViewer format with invoice number filename
+//   // const downloadInvoices = async () => {
+//   //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToDownload.length === 0) {
+//   //     alert("Please select invoices to download");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     setIsDownloading(true);
+
+//   //     for (let i = 0; i < invoicesToDownload.length; i++) {
+//   //       const invoice = invoicesToDownload[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         // First fetch invoice preview data (same as preview functionality)
+//   //         const previewResponse = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //             invoice.invoiceNumber
+//   //           )}`
+//   //         );
+
+//   //         if (!previewResponse.ok) {
+//   //           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+//   //         }
+
+//   //         const apiData = await previewResponse.json();
+
+//   //         // Create temporary invoice element using exact InvoiceViewer format
+//   //         const tempInvoiceElement = document.createElement('div');
+//   //         tempInvoiceElement.style.position = 'absolute';
+//   //         tempInvoiceElement.style.left = '-9999px';
+//   //         tempInvoiceElement.style.width = '800px';
+//   //         tempInvoiceElement.style.backgroundColor = 'white';
+
+//   //         // Use the exact same HTML structure as InvoiceViewer with proper styling
+//   //         tempInvoiceElement.innerHTML = createInvoiceHTML(apiData, invoice);
+//   //         document.body.appendChild(tempInvoiceElement);
+
+//   //         // Generate PDF using the same method as InvoiceViewer
+//   //         const pdf = new jsPDF("p", "mm", "a4");
+//   //         const padding = 10;
+
+//   //         const canvas = await html2canvas(tempInvoiceElement, {
+//   //           scale: 2,
+//   //           useCORS: true,
+//   //           backgroundColor: '#ffffff'
+//   //         });
+
+//   //         const imgData = canvas.toDataURL("image/png");
+
+//   //         const pdfWidth = pdf.internal.pageSize.getWidth();
+//   //         const pdfHeight = pdf.internal.pageSize.getHeight();
+//   //         const usableWidth = pdfWidth - 2 * padding;
+//   //         const usableHeight = pdfHeight - 2 * padding;
+
+//   //         const imgProps = pdf.getImageProperties(imgData);
+//   //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//   //         let heightLeft = pdfImgHeight;
+//   //         let position = padding;
+
+//   //         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+//   //         heightLeft -= usableHeight;
+
+//   //         while (heightLeft > 0) {
+//   //           pdf.addPage();
+//   //           position = padding - heightLeft;
+//   //           pdf.addImage(
+//   //             imgData,
+//   //             "PNG",
+//   //             padding,
+//   //             position,
+//   //             usableWidth,
+//   //             pdfImgHeight
+//   //           );
+//   //           heightLeft -= usableHeight;
+//   //         }
+
+//   //         // Clean up temporary element
+//   //         document.body.removeChild(tempInvoiceElement);
+
+//   //         // Save PDF with invoice number as filename
+//   //         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+//   //         pdf.save(filename);
+
+//   //         // Add delay between downloads
+//   //         if (i < invoicesToDownload.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 1000));
+//   //         }
+
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+//   //         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToDownload.length === 1
+//   //         ? "Invoice downloaded successfully!"
+//   //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during download process:", error);
+//   //     alert(`Download failed: ${error.message}`);
+//   //   } finally {
+//   //     setIsDownloading(false);
+//   //   }
+//   // };
+
+//   const downloadInvoices = async () => {
+//     const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToDownload.length === 0) {
+//       alert("Please select invoices to download");
+//       return;
+//     }
+
+//     try {
+//       setIsDownloading(true);
+
+//       for (let i = 0; i < invoicesToDownload.length; i++) {
+//         const invoice = invoicesToDownload[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           // First fetch invoice preview data (same as preview functionality)
+//           const previewResponse = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//               invoice.invoiceNumber
+//             )}`
+//           );
+
+//           if (!previewResponse.ok) {
+//             throw new Error(
+//               `Failed to fetch invoice preview: ${previewResponse.status}`
+//             );
+//           }
+
+//           const apiData = await previewResponse.json();
+
+//           // Transform data exactly like in handlePreview
+//           const transformedData = [
+//             {
+//               invoiceId: apiData.invoiceId || " ",
+//               invoiceDate: apiData.period || " ",
+//               currency: apiData.currency || " ",
+//               totalAmount: apiData.totalAmount || 0,
+
+//               lineItems: (apiData.lineItems || []).map((item, index) => ({
+//                 poLine: item.poLine || " ",
+//                 plc: item.plc || " ",
+//                 vendor: item.vendor || " ",
+//                 employee: item.employee || " ",
+//                 hours: item.hours || 0,
+//                 rate: item.rate || 0,
+//                 amount: item.amount || 0,
+//                 line_No: item.line_No || " ",
+//               })),
+
+//               billTo: apiData.billTo || " ",
+//               buyer: apiData.buyer || " ",
+//               purchaseOrderId: apiData.po_Number || " ",
+//               releaseNumber: apiData.po_rlse_Number || " ",
+//               poStartEndDate: apiData.po_Start_End_Date || " ",
+//               terms: apiData.terms || " ",
+//               amountDue: apiData.totalAmount || 0,
+//               period: apiData.period || " ",
+//               po_Number: apiData.po_Number || " ",
+//               po_rlse_Number: apiData.po_rlse_Number || " ",
+//               po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//             },
+//           ];
+
+//           // Create temporary container to render InvoiceViewer component
+//           const tempContainer = document.createElement("div");
+//           tempContainer.style.position = "absolute";
+//           tempContainer.style.left = "-9999px";
+//           tempContainer.style.width = "800px";
+//           tempContainer.style.backgroundColor = "white";
+//           document.body.appendChild(tempContainer);
+
+//           // Create temporary React root and render InvoiceViewer
+//           const ReactDOM = (await import("react-dom/client")).default;
+//           const React = (await import("react")).default;
+
+//           // Import InvoiceViewer component
+//           const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//           const root = ReactDOM.createRoot(tempContainer);
+
+//           // Render InvoiceViewer component
+//           await new Promise((resolve) => {
+//             root.render(
+//               React.createElement(InvoiceViewer, {
+//                 data: transformedData,
+//                 setInvoiceModalVisible: () => {},
+//               })
+//             );
+
+//             // Wait for component to render
+//             setTimeout(resolve, 500);
+//           });
+
+//           // Find the invoice content div (the one with ref)
+//           const input = tempContainer.querySelector(
+//             'div[style*="max-width: 768px"]'
+//           );
+
+//           if (!input) {
+//             throw new Error("Invoice content not found");
+//           }
+
+//           // Use exact same PDF generation logic as handleDownloadPdf
+//           const pdf = new jsPDF("p", "mm", "a4");
+//           const padding = 10;
+//           const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+//           const imgData = canvas.toDataURL("image/png");
+
+//           const pdfWidth = pdf.internal.pageSize.getWidth();
+//           const pdfHeight = pdf.internal.pageSize.getHeight();
+
+//           const usableWidth = pdfWidth - 2 * padding;
+//           const usableHeight = pdfHeight - 2 * padding;
+
+//           const imgProps = pdf.getImageProperties(imgData);
+//           const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//           let heightLeft = pdfImgHeight;
+//           let position = padding;
+
+//           pdf.addImage(
+//             imgData,
+//             "PNG",
+//             padding,
+//             position,
+//             usableWidth,
+//             pdfImgHeight
+//           );
+//           heightLeft -= usableHeight;
+
+//           while (heightLeft > 0) {
+//             pdf.addPage();
+//             position = padding - heightLeft;
+//             pdf.addImage(
+//               imgData,
+//               "PNG",
+//               padding,
+//               position,
+//               usableWidth,
+//               pdfImgHeight
+//             );
+//             heightLeft -= usableHeight;
+//           }
+
+//           // Clean up
+//           root.unmount();
+//           document.body.removeChild(tempContainer);
+
+//           // Save PDF with invoice number as filename
+//           const filename = `${
+//             invoice.invoiceNumber || `invoice_${invoiceId}`
+//           }.pdf`;
+//           pdf.save(filename);
+
+//           // Add delay between downloads
+//           if (i < invoicesToDownload.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 1000));
+//           }
+//         } catch (invoiceError) {
+//           console.error(
+//             `Error downloading invoice ${invoiceId}:`,
+//             invoiceError
+//           );
+//           alert(
+//             `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       const successMessage =
+//         invoicesToDownload.length === 1
+//           ? "Invoice downloaded successfully!"
+//           : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during download process:", error);
+//       alert(`Download failed: ${error.message}`);
+//     } finally {
+//       setIsDownloading(false);
+//     }
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // const handlePreview = async (invoice) => {
+//   //   try {
+//   //     setPreviewModalVisible(true);
+//   //     setPreviewData(null);
+
+//   //     const response = await fetch(
+//   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //         invoice.invoiceNumber
+//   //       )}`
+//   //     );
+
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//   //     }
+
+//   //     const apiData = await response.json();
+
+//   //     const transformedData = [
+//   //       {
+//   //         invoiceId: apiData.invoiceId || " ",
+//   //         invoiceDate: apiData.period || " ",
+//   //         currency: apiData.currency || " ",
+//   //         totalAmount: apiData.totalAmount || 0,
+
+//   //         lineItems: (apiData.lineItems || []).map((item, index) => ({
+//   //           poLine: item.poLine || " ",
+//   //           plc: item.plc || " ",
+//   //           vendor: item.vendor || " ",
+//   //           employee: item.employee || " ",
+//   //           hours: item.hours || 0,
+//   //           rate: item.rate || 0,
+//   //           amount: item.amount || 0,
+//   //           line_No: item.line_No || " ",
+//   //         })),
+
+//   //         billTo: apiData.billTo || " ",
+//   //         buyer: apiData.buyer || " ",
+//   //         purchaseOrderId: apiData.po_Number || " ",
+//   //         releaseNumber: apiData.po_rlse_Number || " ",
+//   //         poStartEndDate: apiData.po_Start_End_Date || " ",
+//   //         terms: apiData.terms || " ",
+//   //         amountDue: apiData.totalAmount || 0,
+//   //         period: apiData.period || " ",
+//   //         po_Number: apiData.po_Number || " ",
+//   //         po_rlse_Number: apiData.po_rlse_Number || " ",
+//   //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//   //       },
+//   //     ];
+
+//   //     setPreviewData(transformedData);
+//   //   } catch (error) {
+//   //     console.error("Error fetching invoice preview:", error);
+//   //     alert(`Failed to load invoice preview: ${error.message}`);
+//   //   }
+//   // };
+
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceId || " ",
+//           period: apiData.period || " ",
+//           // period: new Date(invoice.period).toISOString() || " ",
+//           // period: apiData.period || " ",
+//           currency: apiData.currency || " ",
+//           totalAmount: apiData.totalAmount || 0,
+
+//           lineItems: (apiData.lineItems || []).map((item, index) => ({
+//             poLine: item.poLine || " ",
+//             plc: item.plc || " ",
+//             vendor: item.vendor || " ",
+//             employee: item.employee || " ",
+//             hours: item.hours || 0,
+//             rate: item.rate || 0,
+//             amount: item.amount || 0,
+//             line_No: item.line_No || " ",
+//           })),
+
+//           billTo: apiData.billTo || " ",
+//           buyer: apiData.buyer || " ",
+//           po_Number: apiData.po_Number || " ",
+//           po_rlse_Number: apiData.po_rlse_Number || " ",
+//           po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           terms: apiData.terms || " ",
+//           amountDue: apiData.totalAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+//     }
+//   };
+
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     // Track successfully exported invoices for state update
+//   //     const successfullyExportedIds = [];
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         // Mark this invoice as successfully exported
+//   //         successfullyExportedIds.push(invoice.invoiceId);
+
+//   //         // Update invoice export status in database
+//   //         try {
+//   //           const updateResponse = await fetch(
+//   //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//   //             {
+//   //               method: "PUT",
+//   //               headers: {
+//   //                 "Content-Type": "application/json",
+//   //               },
+//   //               body: JSON.stringify({
+//   //                 ...invoice,
+//   //                 isExported: true, // Mark as exported
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin", // or get from current user context
+//   //               }),
+//   //             }
+//   //           );
+
+//   //           if (!updateResponse.ok) {
+//   //             console.warn(
+//   //               `Failed to update export status for invoice ${invoiceId}`
+//   //             );
+//   //           }
+//   //         } catch (updateError) {
+//   //           console.warn(
+//   //             `Error updating export status for invoice ${invoiceId}:`,
+//   //             updateError
+//   //           );
+//   //         }
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     // Update local state for successfully exported invoices
+//   //     if (successfullyExportedIds.length > 0) {
+//   //       setInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       setFilteredInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       // Clear selections for exported invoices since they can't be selected anymore
+//   //       setSelectedInvoices((prev) => {
+//   //         const newSelected = new Set(prev);
+//   //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//   //         return newSelected;
+//   //       });
+
+//   //       // Update select all checkbox state
+//   //       setSelectAll(false); // Reset select all since exported invoices are deselected
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   }
+//   // };
+
+// //   const exportToCSV = async () => {
+// //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //     selectedInvoices.has(invoice.invoiceId || index)
+// //   );
+
+// //   if (invoicesToExport.length === 0) {
+// //     alert("Please select invoices to export");
+// //     return;
+// //   }
+
+// //   try {
+// //     // Track successfully exported invoices for state update
+// //     const successfullyExportedIds = [];
+    
+// //     // Collect all invoice IDs for bulk export
+// //     const invoiceIds = invoicesToExport
+// //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+// //       .filter(id => id); // Remove any null/undefined values
+
+// //     if (invoiceIds.length === 0) {
+// //       alert("No valid invoice IDs found for export");
+// //       return;
+// //     }
+
+// //     try {
+// //       // Use the new bulk export API endpoint
+// //       const response = await fetch(
+// //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+// //         {
+// //           method: "POST",
+// //           headers: {
+// //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify({
+// //             invoiceId: invoiceIds // Array of invoice IDs
+// //           })
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //         try {
+// //           const errorData = await response.text();
+// //           if (errorData) {
+// //             errorMessage += ` - ${errorData}`;
+// //           }
+// //         } catch (e) {
+// //           // Ignore if can't parse error
+// //         }
+// //         throw new Error(errorMessage);
+// //       }
+
+// //       const blob = await response.blob();
+
+// //       // Check if response is actually a file, not JSON error
+// //       if (blob.type && blob.type.includes("application/json")) {
+// //         const text = await blob.text();
+// //         console.error("Received JSON instead of file:", text);
+// //         throw new Error("Server returned an error instead of a file");
+// //       }
+
+// //       // Generate filename for bulk export
+// //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+// //       const contentDisposition = response.headers.get("Content-Disposition");
+// //       if (contentDisposition) {
+// //         const filenameMatch = contentDisposition.match(
+// //           /filename[^;=\n]*=((['"]).?*\2|[^;\n]*)/
+// //         );
+// //         if (filenameMatch && filenameMatch[1]) {
+// //           filename = filenameMatch[1].replace(/['"]/g, "");
+// //         }
+// //       }
+
+// //       // Download the file
+// //       const url = window.URL.createObjectURL(blob);
+// //       const link = document.createElement("a");
+// //       link.href = url;
+// //       link.download = filename;
+// //       link.style.display = "none";
+// //       document.body.appendChild(link);
+// //       link.click();
+
+// //       window.URL.revokeObjectURL(url);
+// //       document.body.removeChild(link);
+
+// //       // Mark all invoices as successfully exported
+// //       successfullyExportedIds.push(...invoiceIds);
+
+// //       // Update invoice export status in database for each invoice
+// //       for (const invoice of invoicesToExport) {
+// //         try {
+// //           const updateResponse = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //             {
+// //               method: "PUT",
+// //               headers: {
+// //                 "Content-Type": "application/json",
+// //               },
+// //               body: JSON.stringify({
+// //                 ...invoice,
+// //                 isExported: true, // Mark as exported
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin", // or get from current user context
+// //               }),
+// //             }
+// //           );
+
+// //           if (!updateResponse.ok) {
+// //             console.warn(
+// //               `Failed to update export status for invoice ${invoice.invoiceId}`
+// //             );
+// //           }
+// //         } catch (updateError) {
+// //           console.warn(
+// //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+// //             updateError
+// //           );
+// //         }
+// //       }
+
+// //     } catch (exportError) {
+// //       console.error("Error during bulk export:", exportError);
+// //       alert(`Failed to export invoices: ${exportError.message}`);
+// //       return;
+// //     }
+
+// //     // Update local state for successfully exported invoices
+// //     if (successfullyExportedIds.length > 0) {
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       // Clear selections for exported invoices since they can't be selected anymore
+// //       setSelectedInvoices((prev) => {
+// //         const newSelected = new Set(prev);
+// //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //         return newSelected;
+// //       });
+
+// //       // Update select all checkbox state
+// //       setSelectAll(false); // Reset select all since exported invoices are deselected
+// //     }
+
+// //     const successMessage =
+// //       invoicesToExport.length === 1
+// //         ? "Invoice exported successfully!"
+// //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //     alert(successMessage);
+
+// //   } catch (error) {
+// //     console.error("Error during export process:", error);
+// //     alert(`Export failed: ${error.message}`);
+// //   }
+// // };
+
+// // const exportToCSV = async () => {
+// //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //     selectedInvoices.has(invoice.invoiceId || index)
+// //   );
+
+// //   if (invoicesToExport.length === 0) {
+// //     alert("Please select invoices to export");
+// //     return;
+// //   }
+
+// //   try {
+// //     // Track successfully exported invoices for state update
+// //     const successfullyExportedIds = [];
+    
+// //     // Collect all invoice IDs for bulk export
+// //     const invoiceIds = invoicesToExport
+// //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+// //       .filter(id => id); // Remove any null/undefined values
+
+// //     if (invoiceIds.length === 0) {
+// //       alert("No valid invoice IDs found for export");
+// //       return;
+// //     }
+
+// //     try {
+// //       // Use the new bulk export API endpoint
+// //       const response = await fetch(
+// //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+// //         {
+// //           method: "POST",
+// //           headers: {
+// //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify({
+// //             invoiceId: invoiceIds // Array of invoice IDs
+// //           })
+// //         }
+// //       );
+
+// //       if (!response.ok) {
+// //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //         try {
+// //           const errorData = await response.text();
+// //           if (errorData) {
+// //             errorMessage += ` - ${errorData}`;
+// //           }
+// //         } catch (e) {
+// //           // Ignore if can't parse error
+// //         }
+// //         throw new Error(errorMessage);
+// //       }
+
+// //       const blob = await response.blob();
+
+// //       // Check if response is actually a file, not JSON error
+// //       if (blob.type && blob.type.includes("application/json")) {
+// //         const text = await blob.text();
+// //         console.error("Received JSON instead of file:", text);
+// //         throw new Error("Server returned an error instead of a file");
+// //       }
+
+// //       // Generate filename for bulk export
+// //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+// //       const contentDisposition = response.headers.get("Content-Disposition");
+// //       if (contentDisposition) {
+// //         // FIXED REGEX: Changed .?* to .*?
+// //         const filenameMatch = contentDisposition.match(
+// //           /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //         );
+// //         if (filenameMatch && filenameMatch[1]) {
+// //           filename = filenameMatch[1].replace(/['"]/g, "");
+// //         }
+// //       }
+
+// //       // Download the file
+// //       const url = window.URL.createObjectURL(blob);
+// //       const link = document.createElement("a");
+// //       link.href = url;
+// //       link.download = filename;
+// //       link.style.display = "none";
+// //       document.body.appendChild(link);
+// //       link.click();
+
+// //       window.URL.revokeObjectURL(url);
+// //       document.body.removeChild(link);
+
+// //       // Mark all invoices as successfully exported
+// //       successfullyExportedIds.push(...invoiceIds);
+
+// //       // Update invoice export status in database for each invoice
+// //       for (const invoice of invoicesToExport) {
+// //         try {
+// //           const updateResponse = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //             {
+// //               method: "PUT",
+// //               headers: {
+// //                 "Content-Type": "application/json",
+// //               },
+// //               body: JSON.stringify({
+// //                 ...invoice,
+// //                 isExported: true, // Mark as exported
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin", // or get from current user context
+// //               }),
+// //             }
+// //           );
+
+// //           if (!updateResponse.ok) {
+// //             console.warn(
+// //               `Failed to update export status for invoice ${invoice.invoiceId}`
+// //             );
+// //           }
+// //         } catch (updateError) {
+// //           console.warn(
+// //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+// //             updateError
+// //           );
+// //         }
+// //       }
+
+// //     } catch (exportError) {
+// //       console.error("Error during bulk export:", exportError);
+// //       alert(`Failed to export invoices: ${exportError.message}`);
+// //       return;
+// //     }
+
+// //     // Update local state for successfully exported invoices
+// //     if (successfullyExportedIds.length > 0) {
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       // Clear selections for exported invoices since they can't be selected anymore
+// //       setSelectedInvoices((prev) => {
+// //         const newSelected = new Set(prev);
+// //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //         return newSelected;
+// //       });
+
+// //       // Update select all checkbox state
+// //       setSelectAll(false); // Reset select all since exported invoices are deselected
+// //     }
+
+// //     const successMessage =
+// //       invoicesToExport.length === 1
+// //         ? "Invoice exported successfully!"
+// //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //     alert(successMessage);
+
+// //   } catch (error) {
+// //     console.error("Error during export process:", error);
+// //     alert(`Export failed: ${error.message}`);
+// //   }
+// // };
+
+// // const exportToCSV = async () => {
+// //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+// //     selectedInvoices.has(invoice.invoiceId || index)
+// //   );
+
+// //   if (invoicesToExport.length === 0) {
+// //     alert("Please select invoices to export");
+// //     return;
+// //   }
+
+// //   try {
+// //     // Track successfully exported invoices for state update
+// //     const successfullyExportedIds = [];
+    
+// //     // Collect all invoice IDs for bulk export
+// //     const invoiceIds = invoicesToExport
+// //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+// //       .filter(id => id) // Remove any null/undefined values
+// //       .map(id => parseInt(id, 10)) // Ensure they are integers
+// //       .filter(id => !isNaN(id)); // Remove any NaN values
+
+// //     if (invoiceIds.length === 0) {
+// //       alert("No valid invoice IDs found for export");
+// //       return;
+// //     }
+
+// //     console.log("Invoice IDs to export:", invoiceIds); // Debug log
+
+// //     try {
+// //       // Use the new bulk export API endpoint with correct field name
+// //       const response = await fetch(
+// //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+// //         {
+// //           method: "POST",
+// //           headers: {
+// //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+// //             "Content-Type": "application/json",
+// //           },
+// //           body: JSON.stringify({
+// //             InvoiceIds: invoiceIds // Changed from invoiceId to InvoiceIds (plural, capital I)
+// //           })
+// //         }
+// //       );
+
+// //       console.log("Request body:", JSON.stringify({ InvoiceIds: invoiceIds })); // Debug log
+
+// //       if (!response.ok) {
+// //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+// //         try {
+// //           const errorData = await response.text();
+// //           if (errorData) {
+// //             errorMessage += ` - ${errorData}`;
+// //           }
+// //         } catch (e) {
+// //           // Ignore if can't parse error
+// //         }
+// //         throw new Error(errorMessage);
+// //       }
+
+// //       const blob = await response.blob();
+
+// //       // Check if response is actually a file, not JSON error
+// //       if (blob.type && blob.type.includes("application/json")) {
+// //         const text = await blob.text();
+// //         console.error("Received JSON instead of file:", text);
+// //         throw new Error("Server returned an error instead of a file");
+// //       }
+
+// //       // Generate filename for bulk export
+// //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+// //       const contentDisposition = response.headers.get("Content-Disposition");
+// //       if (contentDisposition) {
+// //         const filenameMatch = contentDisposition.match(
+// //           /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+// //         );
+// //         if (filenameMatch && filenameMatch[1]) {
+// //           filename = filenameMatch[1].replace(/['"]/g, "");
+// //         }
+// //       }
+
+// //       // Download the file
+// //       const url = window.URL.createObjectURL(blob);
+// //       const link = document.createElement("a");
+// //       link.href = url;
+// //       link.download = filename;
+// //       link.style.display = "none";
+// //       document.body.appendChild(link);
+// //       link.click();
+
+// //       window.URL.revokeObjectURL(url);
+// //       document.body.removeChild(link);
+
+// //       // Mark all invoices as successfully exported
+// //       successfullyExportedIds.push(...invoiceIds);
+
+// //       // Update invoice export status in database for each invoice
+// //       for (const invoice of invoicesToExport) {
+// //         try {
+// //           const updateResponse = await fetch(
+// //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+// //             {
+// //               method: "PUT",
+// //               headers: {
+// //                 "Content-Type": "application/json",
+// //               },
+// //               body: JSON.stringify({
+// //                 ...invoice,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }),
+// //             }
+// //           );
+
+// //           if (!updateResponse.ok) {
+// //             console.warn(
+// //               `Failed to update export status for invoice ${invoice.invoiceId}`
+// //             );
+// //           }
+// //         } catch (updateError) {
+// //           console.warn(
+// //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+// //             updateError
+// //           );
+// //         }
+// //       }
+
+// //     } catch (exportError) {
+// //       console.error("Error during bulk export:", exportError);
+// //       alert(`Failed to export invoices: ${exportError.message}`);
+// //       return;
+// //     }
+
+// //     // Update local state for successfully exported invoices
+// //     if (successfullyExportedIds.length > 0) {
+// //       setInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       setFilteredInvoices((prev) =>
+// //         prev.map((inv) =>
+// //           successfullyExportedIds.includes(inv.invoiceId)
+// //             ? {
+// //                 ...inv,
+// //                 isExported: true,
+// //                 updatedAt: new Date().toISOString(),
+// //                 updatedBy: "admin",
+// //               }
+// //             : inv
+// //         )
+// //       );
+
+// //       // Clear selections for exported invoices
+// //       setSelectedInvoices((prev) => {
+// //         const newSelected = new Set(prev);
+// //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+// //         return newSelected;
+// //       });
+
+// //       setSelectAll(false);
+// //     }
+
+// //     const successMessage =
+// //       invoicesToExport.length === 1
+// //         ? "Invoice exported successfully!"
+// //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+// //     alert(successMessage);
+
+// //   } catch (error) {
+// //     console.error("Error during export process:", error);
+// //     alert(`Export failed: ${error.message}`);
+// //   }
+// // };
+
+// const exportToCSV = async () => {
+//   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
+
+//   if (invoicesToExport.length === 0) {
+//     alert("Please select invoices to export");
+//     return;
+//   }
+
+//   try {
+//     // Track successfully exported invoices for state update
+//     const successfullyExportedIds = [];
+    
+//     // Collect all invoice IDs for bulk export
+//     const invoiceIds = invoicesToExport
+//       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+//       .filter(id => id) // Remove any null/undefined values
+//       .map(id => parseInt(id, 10)) // Ensure they are integers
+//       .filter(id => !isNaN(id)); // Remove any NaN values
+
+//     if (invoiceIds.length === 0) {
+//       alert("No valid invoice IDs found for export");
+//       return;
+//     }
+
+//     console.log("Invoice IDs to export:", invoiceIds); // Debug log
+
+//     try {
+//       // Send the array directly as the request body (not wrapped in an object)
+//       const response = await fetch(
+//         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+//         {
+//           method: "POST",
+//           headers: {
+//             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(invoiceIds) // Send array directly, not wrapped in object
+//         }
+//       );
+
+//       console.log("Request body:", JSON.stringify(invoiceIds)); // Debug log
+
+//       if (!response.ok) {
+//         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//         try {
+//           const errorData = await response.text();
+//           if (errorData) {
+//             errorMessage += ` - ${errorData}`;
+//           }
+//         } catch (e) {
+//           // Ignore if can't parse error
+//         }
+//         throw new Error(errorMessage);
+//       }
+
+//       const blob = await response.blob();
+
+//       // Check if response is actually a file, not JSON error
+//       if (blob.type && blob.type.includes("application/json")) {
+//         const text = await blob.text();
+//         console.error("Received JSON instead of file:", text);
+//         throw new Error("Server returned an error instead of a file");
+//       }
+
+//       // Generate filename for bulk export
+//       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+//       const contentDisposition = response.headers.get("Content-Disposition");
+//       if (contentDisposition) {
+//         const filenameMatch = contentDisposition.match(
+//           /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//         );
+//         if (filenameMatch && filenameMatch[1]) {
+//           filename = filenameMatch[1].replace(/['"]/g, "");
+//         }
+//       }
+
+//       // Download the file
+//       const url = window.URL.createObjectURL(blob);
+//       const link = document.createElement("a");
+//       link.href = url;
+//       link.download = filename;
+//       link.style.display = "none";
+//       document.body.appendChild(link);
+//       link.click();
+
+//       window.URL.revokeObjectURL(url);
+//       document.body.removeChild(link);
+
+//       // Mark all invoices as successfully exported
+//       successfullyExportedIds.push(...invoiceIds);
+
+//       // Update invoice export status in database for each invoice
+//       for (const invoice of invoicesToExport) {
+//         try {
+//           const updateResponse = await fetch(
+//             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//             {
+//               method: "PUT",
+//               headers: {
+//                 "Content-Type": "application/json",
+//               },
+//               body: JSON.stringify({
+//                 ...invoice,
+//                 isExported: true,
+//                 updatedAt: new Date().toISOString(),
+//                 updatedBy: "admin",
+//               }),
+//             }
+//           );
+
+//           if (!updateResponse.ok) {
+//             console.warn(
+//               `Failed to update export status for invoice ${invoice.invoiceId}`
+//             );
+//           }
+//         } catch (updateError) {
+//           console.warn(
+//             `Error updating export status for invoice ${invoice.invoiceId}:`,
+//             updateError
+//           );
+//         }
+//       }
+
+//     } catch (exportError) {
+//       console.error("Error during bulk export:", exportError);
+//       alert(`Failed to export invoices: ${exportError.message}`);
+//       return;
+//     }
+
+//     // Update local state for successfully exported invoices
+//     if (successfullyExportedIds.length > 0) {
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           successfullyExportedIds.includes(inv.invoiceId)
+//             ? {
+//                 ...inv,
+//                 isExported: true,
+//                 updatedAt: new Date().toISOString(),
+//                 updatedBy: "admin",
+//               }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           successfullyExportedIds.includes(inv.invoiceId)
+//             ? {
+//                 ...inv,
+//                 isExported: true,
+//                 updatedAt: new Date().toISOString(),
+//                 updatedBy: "admin",
+//               }
+//             : inv
+//         )
+//       );
+
+//       // Clear selections for exported invoices
+//       setSelectedInvoices((prev) => {
+//         const newSelected = new Set(prev);
+//         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//         return newSelected;
+//       });
+
+//       setSelectAll(false);
+//     }
+
+//     const successMessage =
+//       invoicesToExport.length === 1
+//         ? "Invoice exported successfully!"
+//         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//     alert(successMessage);
+
+//   } catch (error) {
+//     console.error("Error during export process:", error);
+//     alert(`Export failed: ${error.message}`);
+//   }
+// };
+
+
+
+
+
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">Manage and export invoice data</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-3">
+//               {/* Download Invoice Button */}
+//               <button
+//                 onClick={downloadInvoices}
+//                 disabled={selectedInvoices.size === 0 || isDownloading}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0 || isDownloading
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-blue-600 text-white hover:bg-blue-700"
+//                 }`}
+//               >
+//                 <FileDown className="h-4 w-4 mr-2" />
+//                 {isDownloading
+//                   ? "Downloading..."
+//                   : `Download Invoice (${selectedInvoices.size})`}
+//               </button>
+
+//               {/* Export Button */}
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Enhanced Table Container with Proper Sizing */}
+//         {/* <div className="flex-1 p-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+//       <div 
+//         className="overflow-auto"
+//         style={{
+//           maxHeight: "calc(100vh - 280px)",
+//           minHeight: "400px"
+//         }}
+//       >
+//         <table className="w-full table-auto">
+//           <thead className="bg-gray-50 sticky top-0 z-10">
+//             <tr>
+//               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[80px]">
+//                 <div className="flex items-center space-x-2">
+//                   <input
+//                     type="checkbox"
+//                     checked={selectAll}
+//                     onChange={(e) => handleSelectAll(e.target.checked)}
+//                     disabled={selectableInvoices.length === 0}
+//                     className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                       selectableInvoices.length === 0
+//                         ? "opacity-50 cursor-not-allowed"
+//                         : "cursor-pointer"
+//                     }`}
+//                   />
+//                   <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                     All
+//                   </span>
+//                 </div>
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[200px]">
+//                 Invoice Number
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                 Work Order
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[250px]">
+//                 Vendor
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                 Invoice Date
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                 Amount
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[100px]">
+//                 Currency
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                 Created At
+//               </th>
+//               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                 Action
+//               </th>
+//               {userRole === "admin" && (
+//                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50 min-w-[120px]">
+//                   Correction
+//                 </th>
+//               )}
+//             </tr>
+//           </thead>
+//           <tbody className="divide-y divide-gray-200 bg-white">
+//             {filteredInvoices.map((invoice, index) => {
+//               const invoiceId = invoice.invoiceId || invoice.id || index;
+//               return (
+//                 <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
+//                   <td className="px-4 py-4 whitespace-nowrap">
+//                     <input
+//                       type="checkbox"
+//                       checked={selectedInvoices.has(invoiceId)}
+//                       onChange={(e) =>
+//                         handleSelectInvoice(invoiceId, e.target.checked, invoice)
+//                       }
+//                       disabled={invoice.isExported}
+//                       className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                         invoice.isExported
+//                           ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                           : "cursor-pointer hover:bg-green-50"
+//                       }`}
+//                     />
+//                   </td>
+//                   <td className="px-6 py-4">
+//                     <div className="text-sm font-medium text-gray-900" title={invoice.invoiceNumber || "N/A"}>
+//                       {invoice.invoiceNumber || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4">
+//                     <div className="text-sm font-medium text-gray-900" title={invoice.workOrder || "N/A"}>
+//                       {invoice.workOrder || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4">
+//                     <div className="text-sm text-gray-900" title={invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}>
+//                       {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-600">
+//                       {formatDate(invoice.invoiceDate)}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-900 font-medium">
+//                       {formatCurrency(invoice.invoiceAmount, invoice.currency)}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+//                       {invoice.currency || "USD"}
+//                     </span>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-600">
+//                       {formatDate(invoice.createdAt)}
+//                     </div>
+//                   </td>
+//                   <td className="px-6 py-4 whitespace-nowrap">
+//                     <div className="flex items-center space-x-2">
+//                       <button
+//                         onClick={() => handlePreview(invoice)}
+//                         className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                       >
+//                         <Eye className="h-4 w-4 mr-1" />
+//                         Preview
+//                       </button>
+//                     </div>
+//                   </td>
+//                   {userRole === "admin" && (
+//                     <td className="px-6 py-4 whitespace-nowrap">
+//                       {invoice.isExported && (
+//                         <button
+//                           onClick={() => handleUnexport(invoice)}
+//                           data-open-invoice={invoice.invoiceId || invoice.id}
+//                           className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                         >
+//                           OPEN
+//                         </button>
+//                       )}
+//                     </td>
+//                   )}
+//                 </tr>
+//               );
+//             })}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   )}
+        
+//         </div> */}
+//         {/* Enhanced Table Container with Proper Sizing */}
+// <div className="flex-1 p-6">
+//   {filteredInvoices.length === 0 ? (
+//     <div className="flex items-center justify-center h-64">
+//       <div className="text-center text-gray-500">
+//         <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//         <p className="text-lg font-medium">No invoices found</p>
+//         <p className="text-sm">Try adjusting your filter criteria</p>
+//       </div>
+//     </div>
+//   ) : (
+//     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//       <div 
+//         className="overflow-auto"
+//         style={{
+//           maxHeight: "calc(100vh - 280px)",
+//           minHeight: "400px",
+//           width: "100%"
+//         }}
+//       >
+//         <table className="min-w-full table-fixed">
+//           <thead className="bg-gray-50 sticky top-0 z-10">
+//             <tr>
+//               <th className="w-20 px-4 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 <div className="flex items-center space-x-2">
+//                   <input
+//                     type="checkbox"
+//                     checked={selectAll}
+//                     onChange={(e) => handleSelectAll(e.target.checked)}
+//                     disabled={selectableInvoices.length === 0}
+//                     className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                       selectableInvoices.length === 0
+//                         ? "opacity-50 cursor-not-allowed"
+//                         : "cursor-pointer"
+//                     }`}
+//                   />
+//                   <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                     All
+//                   </span>
+//                 </div>
+//               </th>
+//               <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Invoice Number
+//               </th>
+//               <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Work Order
+//               </th>
+//               <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Vendor
+//               </th>
+//               <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Invoice Date
+//               </th>
+//               <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Amount
+//               </th>
+//               <th className="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Currency
+//               </th>
+//               <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Created At
+//               </th>
+//               <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                 Action
+//               </th>
+//               {userRole === "admin" && (
+//                 <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                   Correction
+//                 </th>
+//               )}
+//             </tr>
+//           </thead>
+//           <tbody className="divide-y divide-gray-200 bg-white">
+//             {filteredInvoices.map((invoice, index) => {
+//               const invoiceId = invoice.invoiceId || invoice.id || index;
+//               return (
+//                 <tr key={invoiceId} className="hover:bg-gray-50 transition-colors">
+//                   <td className="w-20 px-4 py-4 whitespace-nowrap">
+//                     <input
+//                       type="checkbox"
+//                       checked={selectedInvoices.has(invoiceId)}
+//                       onChange={(e) =>
+//                         handleSelectInvoice(invoiceId, e.target.checked, invoice)
+//                       }
+//                       disabled={invoice.isExported}
+//                       className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                         invoice.isExported
+//                           ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                           : "cursor-pointer hover:bg-green-50"
+//                       }`}
+//                     />
+//                   </td>
+//                   <td className="w-48 px-6 py-4">
+//                     <div className="text-sm font-medium text-gray-900 truncate" title={invoice.invoiceNumber || "N/A"}>
+//                       {invoice.invoiceNumber || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="w-32 px-6 py-4">
+//                     <div className="text-sm font-medium text-gray-900 truncate" title={invoice.workOrder || "N/A"}>
+//                       {invoice.workOrder || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="w-64 px-6 py-4">
+//                     <div className="text-sm text-gray-900 truncate" title={invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}>
+//                       {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                     </div>
+//                   </td>
+//                   <td className="w-32 px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-600">
+//                       {formatDate(invoice.invoiceDate)}
+//                     </div>
+//                   </td>
+//                   <td className="w-32 px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-900 font-medium">
+//                       {formatCurrency(invoice.invoiceAmount, invoice.currency)}
+//                     </div>
+//                   </td>
+//                   <td className="w-24 px-6 py-4 whitespace-nowrap">
+//                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+//                       {invoice.currency || "USD"}
+//                     </span>
+//                   </td>
+//                   <td className="w-32 px-6 py-4 whitespace-nowrap">
+//                     <div className="text-sm text-gray-600">
+//                       {formatDate(invoice.createdAt)}
+//                     </div>
+//                   </td>
+//                   <td className="w-32 px-6 py-4 whitespace-nowrap">
+//                     <div className="flex items-center space-x-2">
+//                       <button
+//                         onClick={() => handlePreview(invoice)}
+//                         className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                       >
+//                         <Eye className="h-4 w-4 mr-1" />
+//                         Preview
+//                       </button>
+//                     </div>
+//                   </td>
+//                   {userRole === "admin" && (
+//                     <td className="w-32 px-6 py-4 whitespace-nowrap">
+//                       {invoice.isExported && (
+//                         <button
+//                           onClick={() => handleUnexport(invoice)}
+//                           data-open-invoice={invoice.invoiceId || invoice.id}
+//                           className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                         >
+//                           OPEN
+//                         </button>
+//                       )}
+//                     </td>
+//                   )}
+//                 </tr>
+//               );
+//             })}
+//           </tbody>
+//         </table>
+//       </div>
+//     </div>
+//   )}
+// </div>
+
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Dynamic table container style based on content
+//   const getTableContainerStyle = () => {
+//     const headerHeight = 120; // Header section height
+//     const filterHeight = 80; // Filter section height
+//     const padding = 48; // Top and bottom padding (24px each)
+//     const margin = 24; // Margin
+//     const footerSpace = 20; // Space for any footer content
+
+//     // Calculate minimum height needed for the content
+//     const rowHeight = 61; // Approximate height per row (including border)
+//     const headerRowHeight = 48; // Header row height
+//     const minContentHeight =
+//       headerRowHeight + filteredInvoices.length * rowHeight;
+
+//     // Calculate available space
+//     const availableHeight =
+//       window.innerHeight -
+//       headerHeight -
+//       filterHeight -
+//       padding -
+//       margin -
+//       footerSpace;
+
+//     // Use the smaller of content height or available height, with reasonable limits
+//     const dynamicHeight = Math.min(
+//       Math.max(minContentHeight, 200), // Minimum 200px
+//       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+//     );
+
+//     return {
+//       height: `${dynamicHeight}px`,
+//       minHeight: "200px",
+//       maxHeight: `calc(100vh - ${
+//         headerHeight + filterHeight + padding + margin + footerSpace
+//       }px)`,
+//     };
+//   };
+
+//   // Alternative: Get table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "200px",
+//         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+//       };
+//     }
+
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 300px)",
+//       minHeight: "400px",
+//     };
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+//   const disabledInvoices = filteredInvoices.filter(
+//     (invoice) => invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // Handle preview click
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+//           invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+//           period: formatDate(
+//             apiData.period || apiData.invoiceDate || invoice.invoiceDate
+//           ),
+//           currency: apiData.currency || invoice.currency || "USD",
+//           totalAmount:
+//             apiData.totalAmount ||
+//             apiData.invoiceAmount ||
+//             invoice.invoiceAmount ||
+//             0,
+
+//           lineItems: (
+//             apiData.lineItems ||
+//             apiData.invoiceTimesheetLines ||
+//             []
+//           ).map((item, index) => ({
+//             poLine: item.poLine || item.timesheetLineNo || "",
+//             plc: item.plc || "",
+//             vendor: item.vendor || "",
+//             employee: item.employee || item.createdBy || "",
+//             hours: item.hours || item.mappedHours,
+//             rate:
+//               item.rate,
+//             amount: item.amount || item.mappedAmount,
+//             line_No: item.line_No || item.timesheetLineNo || index + 1,
+//           })),
+
+//           billTo:
+//             apiData.billTo ||
+//             "",
+//           buyer: apiData.buyer || "",
+//           purchaseOrderId: apiData.purchaseOrderId || "",
+//           releaseNumber: apiData.releaseNumber || "",
+//           changeOrderNumber: apiData.changeOrderNumber || "0",
+//           poStartEndDate: apiData.poStartEndDate || "",
+//           remitTo:
+//             apiData.remitTo ||
+//             "",
+//           terms: apiData.terms || "",
+//           amountDue:
+//             apiData.amountDue ||
+//             apiData.totalAmount ||
+//             apiData.invoiceAmount ||
+//             invoice.invoiceAmount ||
+//             0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+
+//       const fallbackData = [
+//         {
+//           invoiceId: invoice.invoiceNumber,
+//           invoiceDate: formatDate(invoice.invoiceDate),
+//           period: formatDate(invoice.invoiceDate),
+//           currency: invoice.currency || "USD",
+//           totalAmount: invoice.invoiceAmount || 0,
+//           lineItems: [],
+//           billTo:"",
+//           buyer: "",
+//           purchaseOrderId: "",
+//           releaseNumber: "",
+//           changeOrderNumber: "",
+//           poStartEndDate: "",
+//           remitTo: "",
+//           terms: "",
+//           amountDue: invoice.invoiceAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(fallbackData);
+//     }
+//   };
+
+//   // Export function (keeping your existing export logic)
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = true;
+//   //       exportButton.innerHTML =
+//   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//   //     }
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //             // body: JSON.stringify(payload)
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   } finally {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = false;
+//   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//   //     }
+//   //   }
+//   // };
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = true;
+//         exportButton.innerHTML =
+//           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//       }
+
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       for (let i = 0; i < invoicesToExport.length; i++) {
+//         const invoice = invoicesToExport[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           const columnHeaderValues = [
+//             invoice.invoiceNumber || "",
+//             formatDate(invoice.invoiceDate) || "",
+//             invoice.invoiceAmount || 0,
+//             invoice.currency || "USD",
+//             formatDate(invoice.createdAt) || "",
+//             "",
+//             invoice.createdBy || "Employee",
+//             "40.00",
+//             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//             "0.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//             "40.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//           ];
+
+//           const payload = {
+//             ColumnHeaderValues: columnHeaderValues,
+//             IncludeHeaders: true,
+//             ExportFormat: "CSV",
+//           };
+
+//           const response = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//               invoiceId
+//             )}`,
+//             {
+//               method: "POST",
+//               headers: {
+//                 Accept:
+//                   "text/csv, application/csv, application/octet-stream, */*",
+//                 "Content-Type": "application/json",
+//               },
+//               // body: JSON.stringify(payload)
+//             }
+//           );
+
+//           if (!response.ok) {
+//             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//             try {
+//               const errorData = await response.text();
+//               if (errorData) {
+//                 errorMessage += ` - ${errorData}`;
+//               }
+//             } catch (e) {
+//               // Ignore if can't parse error
+//             }
+//             throw new Error(errorMessage);
+//           }
+
+//           const blob = await response.blob();
+
+//           if (blob.type && blob.type.includes("application/json")) {
+//             const text = await blob.text();
+//             console.error("Received JSON instead of file:", text);
+//             throw new Error("Server returned an error instead of a file");
+//           }
+
+//           let filename = `invoice_${invoiceId}_export.csv`;
+//           const contentDisposition = response.headers.get(
+//             "Content-Disposition"
+//           );
+//           if (contentDisposition) {
+//             const filenameMatch = contentDisposition.match(
+//               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//             );
+//             if (filenameMatch && filenameMatch[1]) {
+//               filename = filenameMatch[1].replace(/['"]/g, "");
+//             }
+//           }
+
+//           const url = window.URL.createObjectURL(blob);
+//           const link = document.createElement("a");
+//           link.href = url;
+//           link.download = filename;
+//           link.style.display = "none";
+//           document.body.appendChild(link);
+//           link.click();
+
+//           window.URL.revokeObjectURL(url);
+//           document.body.removeChild(link);
+
+//           // Mark this invoice as successfully exported
+//           successfullyExportedIds.push(invoice.invoiceId);
+
+//           // **NEW: Update invoice export status in database**
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true, // Mark as exported
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin", // or get from current user context
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoiceId}:`,
+//               updateError
+//             );
+//           }
+
+//           if (i < invoicesToExport.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 500));
+//           }
+//         } catch (invoiceError) {
+//           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//           alert(
+//             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       // **NEW: Update local state for successfully exported invoices**
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices since they can't be selected anymore
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         // Update select all checkbox state
+//         const remainingSelectableInvoices = filteredInvoices.filter(
+//           (inv) =>
+//             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+//         );
+//         setSelectAll(false); // Reset select all since exported invoices are deselected
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     } finally {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = false;
+//         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//       }
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">
+//                   Manage and export invoice data
+//                   {/* {userRole === 'admin' && (
+//                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+//                                             Admin Mode
+//                                         </span>
+//                                     )} */}
+//                 </p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-4">
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 data-export-button
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Table Container with Dynamic Height */}
+//         <div className="flex-1 mt-6 pb-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div
+//               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+//               style={getTableWrapperStyle()}
+//             >
+//               <table className="min-w-full">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       <div className="flex items-center space-x-2">
+//                         <input
+//                           type="checkbox"
+//                           checked={selectAll}
+//                           onChange={(e) => handleSelectAll(e.target.checked)}
+//                           disabled={selectableInvoices.length === 0}
+//                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                             selectableInvoices.length === 0
+//                               ? "opacity-50 cursor-not-allowed"
+//                               : disabledInvoices.length > 0
+//                               ? "opacity-75"
+//                               : "cursor-pointer"
+//                           }`}
+//                         />
+//                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                           All
+//                         </span>
+//                       </div>
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Number
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Vendor
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Date
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Amount
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Currency
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Created At
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="divide-y divide-gray-200">
+//                   {filteredInvoices.map((invoice, index) => {
+//                     const invoiceId = invoice.invoiceId || invoice.id || index;
+//                     return (
+//                       <tr
+//                         key={invoiceId}
+//                         className="hover:bg-gray-50 transition-colors"
+//                       >
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectedInvoices.has(invoiceId)}
+//                             onChange={(e) =>
+//                               handleSelectInvoice(
+//                                 invoiceId,
+//                                 e.target.checked,
+//                                 invoice
+//                               )
+//                             }
+//                             disabled={invoice.isExported}
+//                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               invoice.isExported
+//                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                 : "cursor-pointer hover:bg-green-50"
+//                             }`}
+//                           />
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceNumber || "N/A"}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                         </td>
+
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.invoiceDate)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+//                           {formatCurrency(
+//                             invoice.invoiceAmount,
+//                             invoice.currency
+//                           )}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+//                             {invoice.currency || "USD"}
+//                           </span>
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.createdAt)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <div className="flex items-center space-x-2">
+//                             <button
+//                               onClick={() => handlePreview(invoice)}
+//                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                             >
+//                               <Eye className="h-4 w-4 mr-1" />
+//                               Preview
+//                             </button>
+
+//                             {/* OPEN button - only for admin and exported invoices */}
+//                             {userRole === "admin" && invoice.isExported && (
+//                               <button
+//                                 onClick={() => handleUnexport(invoice)}
+//                                 data-open-invoice={
+//                                   invoice.invoiceId || invoice.id
+//                                 }
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                               >
+//                                 OPEN
+//                               </button>
+//                             )}
+//                           </div>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Dynamic table container style based on content
+//   const getTableContainerStyle = () => {
+//     const headerHeight = 120; // Header section height
+//     const filterHeight = 80; // Filter section height
+//     const padding = 48; // Top and bottom padding (24px each)
+//     const margin = 24; // Margin
+//     const footerSpace = 20; // Space for any footer content
+
+//     // Calculate minimum height needed for the content
+//     const rowHeight = 61; // Approximate height per row (including border)
+//     const headerRowHeight = 48; // Header row height
+//     const minContentHeight =
+//       headerRowHeight + filteredInvoices.length * rowHeight;
+
+//     // Calculate available space
+//     const availableHeight =
+//       window.innerHeight -
+//       headerHeight -
+//       filterHeight -
+//       padding -
+//       margin -
+//       footerSpace;
+
+//     // Use the smaller of content height or available height, with reasonable limits
+//     const dynamicHeight = Math.min(
+//       Math.max(minContentHeight, 200), // Minimum 200px
+//       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+//     );
+
+//     return {
+//       height: `${dynamicHeight}px`,
+//       minHeight: "200px",
+//       maxHeight: `calc(100vh - ${
+//         headerHeight + filterHeight + padding + margin + footerSpace
+//       }px)`,
+//     };
+//   };
+
+//   // Alternative: Get table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "200px",
+//         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+//       };
+//     }
+
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 300px)",
+//       minHeight: "400px",
+//     };
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+//   const disabledInvoices = filteredInvoices.filter(
+//     (invoice) => invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // Handle preview click
+//   // const handlePreview = async (invoice) => {
+//   //   try {
+//   //     setPreviewModalVisible(true);
+//   //     setPreviewData(null);
+
+//   //     const response = await fetch(
+//   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //         invoice.invoiceNumber
+//   //       )}`
+//   //     );
+
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//   //     }
+
+//   //     const apiData = await response.json();
+
+//   //     const transformedData = [
+//   //       {
+//   //         invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+//   //         invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+//   //         period: formatDate(
+//   //           apiData.period || apiData.invoiceDate || invoice.invoiceDate
+//   //         ),
+//   //         currency: apiData.currency || invoice.currency || "USD",
+//   //         totalAmount:
+//   //           apiData.totalAmount ||
+//   //           apiData.invoiceAmount ||
+//   //           invoice.invoiceAmount ||
+//   //           0,
+
+//   //         lineItems: (
+//   //           apiData.lineItems ||
+//   //           apiData.invoiceTimesheetLines ||
+//   //           []
+//   //         ).map((item, index) => ({
+//   //           poLine: item.poLine || item.timesheetLineNo || "",
+//   //           plc: item.plc || "",
+//   //           vendor: item.vendor || " ",
+//   //           employee: item.employee || item.createdBy || " ",
+//   //           hours: item.hours || item.mappedHours,
+//   //           rate: item.rate || (item.mappedAmount || 0) / item.mappedHours || 0,
+//   //           amount: item.amount || item.mappedAmount,
+//   //           line_No: item.line_No || item.timesheetLineNo,
+//   //         })),
+
+//   //         billTo: apiData.billTo || " ",
+//   //         buyer: apiData.buyer || " ",
+//   //         purchaseOrderId: apiData.purchaseOrderId || " ",
+//   //         releaseNumber: apiData.releaseNumber || "",
+//   //         // changeOrderNumber: apiData.changeOrderNumber || "",
+//   //         poStartEndDate: apiData.poStartEndDate || " ",
+//   //         // remitTo:
+//   //         //   apiData.remitTo ||
+//   //         //   " ",
+//   //         terms: apiData.terms || " ",
+//   //         amountDue:
+//   //           apiData.amountDue ||
+//   //           apiData.totalAmount ||
+//   //           apiData.invoiceAmount ||
+//   //           invoice.invoiceAmount ||
+//   //           0,
+//   //       },
+//   //     ];
+
+//   //     setPreviewData(transformedData);
+//   //   } catch (error) {
+//   //     console.error("Error fetching invoice preview:", error);
+//   //     alert(`Failed to load invoice preview: ${error.message}`);
+
+//   //     // const fallbackData = [
+//   //     //   {
+//   //     //     invoiceId: invoice.invoiceNumber,
+//   //     //     invoiceDate: formatDate(invoice.invoiceDate),
+//   //     //     period: formatDate(invoice.invoiceDate),
+//   //     //     currency: invoice.currency || "USD",
+//   //     //     totalAmount: invoice.invoiceAmount || 0,
+//   //     //     lineItems: [
+//   //     //       {
+//   //     //         poLine: "Default PO Line",
+//   //     //         plc: "PLC001",
+//   //     //         vendor: "Vendor",
+//   //     //         employee: invoice.createdBy || "Employee",
+//   //     //         hours: 40.0,
+//   //     //         rate: (invoice.invoiceAmount || 0) / 40,
+//   //     //         amount: invoice.invoiceAmount || 0,
+//   //     //         line_No: 1,
+//   //     //       },
+//   //     //     ],
+//   //     //     billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+//   //     //     buyer: "Clore, Heather J",
+//   //     //     purchaseOrderId: "2181218010",
+//   //     //     releaseNumber: "3",
+//   //     //     changeOrderNumber: "0",
+//   //     //     poStartEndDate: "12/10/18 to 12/08/24",
+//   //     //     remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+//   //     //     terms: "PAYNPD",
+//   //     //     amountDue: invoice.invoiceAmount || 0,
+//   //     //   },
+//   //     // ];
+
+//   //     // setPreviewData(fallbackData);
+//   //   }
+//   // };
+
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceId || " ",
+//           invoiceDate: apiData.period || " ",
+//           // period: apiData.period || " ",
+//           currency: apiData.currency || " ",
+//           totalAmount: apiData.totalAmount || 0,
+
+//           lineItems: (apiData.lineItems || []).map((item, index) => ({
+//             poLine: item.poLine || " ",
+//             plc: item.plc || " ",
+//             vendor: item.vendor || " ",
+//             employee: item.employee || " ",
+//             hours: item.hours || 0,
+//             rate: item.rate || 0,
+//             amount: item.amount || 0,
+//             line_No: item.line_No || " ",
+//           })),
+
+//           billTo: apiData.billTo || " ",
+//           buyer: apiData.buyer || " ",
+//           purchaseOrderId: apiData.po_Number || " ",
+//           releaseNumber: apiData.po_rlse_Number || " ",
+//           poStartEndDate: apiData.po_Start_End_Date || " ",
+//           terms: apiData.terms || " ",
+//           amountDue: apiData.totalAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+//     }
+//   };
+
+//   // Export function (keeping your existing export logic)
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = true;
+//   //       exportButton.innerHTML =
+//   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//   //     }
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //             // body: JSON.stringify(payload)
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   } finally {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = false;
+//   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//   //     }
+//   //   }
+//   // };
+
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = true;
+//         exportButton.innerHTML =
+//           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//       }
+
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       for (let i = 0; i < invoicesToExport.length; i++) {
+//         const invoice = invoicesToExport[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           const columnHeaderValues = [
+//             invoice.invoiceNumber || "",
+//             formatDate(invoice.invoiceDate) || "",
+//             invoice.invoiceAmount || 0,
+//             invoice.currency || "USD",
+//             formatDate(invoice.createdAt) || "",
+//             "PLC001",
+//             invoice.createdBy || "Employee",
+//             "40.00",
+//             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//             "0.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//             "40.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//           ];
+
+//           const payload = {
+//             ColumnHeaderValues: columnHeaderValues,
+//             IncludeHeaders: true,
+//             ExportFormat: "CSV",
+//           };
+
+//           const response = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//               invoiceId
+//             )}`,
+//             {
+//               method: "POST",
+//               headers: {
+//                 Accept:
+//                   "text/csv, application/csv, application/octet-stream, */*",
+//                 "Content-Type": "application/json",
+//               },
+//               // body: JSON.stringify(payload)
+//             }
+//           );
+
+//           if (!response.ok) {
+//             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//             try {
+//               const errorData = await response.text();
+//               if (errorData) {
+//                 errorMessage += ` - ${errorData}`;
+//               }
+//             } catch (e) {
+//               // Ignore if can't parse error
+//             }
+//             throw new Error(errorMessage);
+//           }
+
+//           const blob = await response.blob();
+
+//           if (blob.type && blob.type.includes("application/json")) {
+//             const text = await blob.text();
+//             console.error("Received JSON instead of file:", text);
+//             throw new Error("Server returned an error instead of a file");
+//           }
+
+//           let filename = `invoice_${invoiceId}_export.csv`;
+//           const contentDisposition = response.headers.get(
+//             "Content-Disposition"
+//           );
+//           if (contentDisposition) {
+//             const filenameMatch = contentDisposition.match(
+//               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//             );
+//             if (filenameMatch && filenameMatch[1]) {
+//               filename = filenameMatch[1].replace(/['"]/g, "");
+//             }
+//           }
+
+//           const url = window.URL.createObjectURL(blob);
+//           const link = document.createElement("a");
+//           link.href = url;
+//           link.download = filename;
+//           link.style.display = "none";
+//           document.body.appendChild(link);
+//           link.click();
+
+//           window.URL.revokeObjectURL(url);
+//           document.body.removeChild(link);
+
+//           // Mark this invoice as successfully exported
+//           successfullyExportedIds.push(invoice.invoiceId);
+
+//           // **NEW: Update invoice export status in database**
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true, // Mark as exported
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin", // or get from current user context
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoiceId}:`,
+//               updateError
+//             );
+//           }
+
+//           if (i < invoicesToExport.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 500));
+//           }
+//         } catch (invoiceError) {
+//           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//           alert(
+//             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       // **NEW: Update local state for successfully exported invoices**
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices since they can't be selected anymore
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         // Update select all checkbox state
+//         const remainingSelectableInvoices = filteredInvoices.filter(
+//           (inv) =>
+//             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+//         );
+//         setSelectAll(false); // Reset select all since exported invoices are deselected
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     } finally {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = false;
+//         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//       }
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">
+//                   Manage and export invoice data
+//                   {/* {userRole === 'admin' && (
+//                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+//                                             Admin Mode
+//                                         </span>
+//                                     )} */}
+//                 </p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-4">
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 data-export-button
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Table Container with Dynamic Height */}
+//         <div className="flex-1 mt-6 pb-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div
+//               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+//               style={getTableWrapperStyle()}
+//             >
+//               <table className="min-w-full">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       <div className="flex items-center space-x-2">
+//                         <input
+//                           type="checkbox"
+//                           checked={selectAll}
+//                           onChange={(e) => handleSelectAll(e.target.checked)}
+//                           disabled={selectableInvoices.length === 0}
+//                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                             selectableInvoices.length === 0
+//                               ? "opacity-50 cursor-not-allowed"
+//                               : disabledInvoices.length > 0
+//                               ? "opacity-75"
+//                               : "cursor-pointer"
+//                           }`}
+//                         />
+//                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                           All
+//                         </span>
+//                       </div>
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Number
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Vendor
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Date
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Amount
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Currency
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Created At
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="divide-y divide-gray-200">
+//                   {filteredInvoices.map((invoice, index) => {
+//                     const invoiceId = invoice.invoiceId || invoice.id || index;
+//                     return (
+//                       <tr
+//                         key={invoiceId}
+//                         className="hover:bg-gray-50 transition-colors"
+//                       >
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectedInvoices.has(invoiceId)}
+//                             onChange={(e) =>
+//                               handleSelectInvoice(
+//                                 invoiceId,
+//                                 e.target.checked,
+//                                 invoice
+//                               )
+//                             }
+//                             disabled={invoice.isExported}
+//                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               invoice.isExported
+//                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                 : "cursor-pointer hover:bg-green-50"
+//                             }`}
+//                           />
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceNumber || "N/A"}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                         </td>
+
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.invoiceDate)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+//                           {formatCurrency(
+//                             invoice.invoiceAmount,
+//                             invoice.currency
+//                           )}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+//                             {invoice.currency || "USD"}
+//                           </span>
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.createdAt)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <div className="flex items-center space-x-2">
+//                             <button
+//                               onClick={() => handlePreview(invoice)}
+//                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                             >
+//                               <Eye className="h-4 w-4 mr-1" />
+//                               Preview
+//                             </button>
+
+//                             {/* OPEN button - only for admin and exported invoices */}
+//                             {userRole === "admin" && invoice.isExported && (
+//                               <button
+//                                 onClick={() => handleUnexport(invoice)}
+//                                 data-open-invoice={
+//                                   invoice.invoiceId || invoice.id
+//                                 }
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                               >
+//                                 OPEN
+//                               </button>
+//                             )}
+//                           </div>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+// import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+// import logoImg from "../assets/image.png";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+//   const [isDownloading, setIsDownloading] = useState(false);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Enhanced table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "300px",
+//         maxHeight: "calc(100vh - 280px)",
+//       };
+//     }
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 280px)",
+//       minHeight: "400px",
+//       maxHeight: "calc(100vh - 280px)",
+//     };
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Create invoice HTML content exactly like InvoiceViewer with proper styling
+//   const createInvoiceHTML = (apiData, invoice) => {
+//     // Group line items by PO Line for rendering with headers
+//     const groupedByPoLine = (apiData.lineItems || []).reduce((groups, item) => {
+//       const key = item.poLine || "Other";
+//       if (!groups[key]) groups[key] = [];
+//       groups[key].push(item);
+//       return groups;
+//     }, {});
+
+//     return `
+//       <div style="max-width: 768px; margin: auto; padding: 20px; border: 2px solid #d1d5db; font-family: monospace; font-size: 15px; color: #1a202c; background-color: #fff;">
+//         <img src="${logoImg}" alt="Company Logo" style="height: 60px; object-fit: contain;" />
+//         <h1 style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600;">SUMARIA SYSTEMS, LLC</h1>
+
+//         <div style="margin-bottom: 20px;">
+//           <div style="display: inline-block; width: 48%; vertical-align: top;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Subcontractor Invoice Number:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.invoiceId || invoice.invoiceNumber || ""}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Bill To:</span>
+//             </div>
+//             <div style="margin-bottom: 16px; white-space: pre-line;">
+//               ${apiData.billTo || ""}
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               <span style="font-weight: 700;">Buyer:</span>
+//               <span style="margin-left: 4px;">${apiData.buyer || " "}</span>
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Purchase Order ID:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.po_Number || ""} Release Number ${apiData.po_rlse_Number || ""}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">PO Start and End Date:</span>
+//             </div>
+//             <div>${apiData.po_Start_End_Date || " "}</div>
+//           </div>
+
+//           <div style="display: inline-block; width: 48%; vertical-align: top; margin-left: 4%;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Invoice Date:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.period || " "}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Billing Currency:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.currency || "USD"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Terms:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.terms || "NET 45"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Amount Due</span>
+//             </div>
+//             <div>
+//               $${(apiData.totalAmount || 0).toFixed(2)}
+//             </div>
+//           </div>
+//         </div>
+
+//         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+//           <thead>
+//             <tr>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 120px;">PLC</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 150px;">Vendor Employee</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 60px;">Rate</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Additional Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Amount</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${Object.entries(groupedByPoLine).map(([poLine, items]) => `
+//               <tr>
+//                 <td colspan="8" style="font-weight: 700; font-size: 13px; padding: 8px 4px; border: 1px solid #d1d5db;">PO LINE ${poLine}</td>
+//               </tr>
+//               ${items.map(item => `
+//                 <tr>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="font-weight: 600; margin-bottom: 2px;">${item.plc || ""}</div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="margin-left: 10px;">
+//                       <div style="margin-bottom: 1px;">${item.employee || ""}</div>
+//                       <div>${item.vendor || ""}</div>
+//                     </div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(item.hours || 0).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.rate || 0).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$0.00</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.amount || 0).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(item.hours || 0).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(item.amount || 0).toFixed(2)}</td>
+//                 </tr>
+//               `).join('')}
+//             `).join('')}
+//           </tbody>
+//         </table>
+
+//         <div style="text-align: right; font-weight: 600; font-size: 16px; margin-bottom: 24px;">
+//           Total Amount Due: $${(apiData.totalAmount || 0).toFixed(2)}
+//         </div>
+//       </div>
+//     `;
+//   };
+
+//   // Updated download function using exact InvoiceViewer format with invoice number filename
+//   // const downloadInvoices = async () => {
+//   //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToDownload.length === 0) {
+//   //     alert("Please select invoices to download");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     setIsDownloading(true);
+
+//   //     for (let i = 0; i < invoicesToDownload.length; i++) {
+//   //       const invoice = invoicesToDownload[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         // First fetch invoice preview data (same as preview functionality)
+//   //         const previewResponse = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //             invoice.invoiceNumber
+//   //           )}`
+//   //         );
+
+//   //         if (!previewResponse.ok) {
+//   //           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+//   //         }
+
+//   //         const apiData = await previewResponse.json();
+
+//   //         // Create temporary invoice element using exact InvoiceViewer format
+//   //         const tempInvoiceElement = document.createElement('div');
+//   //         tempInvoiceElement.style.position = 'absolute';
+//   //         tempInvoiceElement.style.left = '-9999px';
+//   //         tempInvoiceElement.style.width = '800px';
+//   //         tempInvoiceElement.style.backgroundColor = 'white';
+
+//   //         // Use the exact same HTML structure as InvoiceViewer with proper styling
+//   //         tempInvoiceElement.innerHTML = createInvoiceHTML(apiData, invoice);
+//   //         document.body.appendChild(tempInvoiceElement);
+
+//   //         // Generate PDF using the same method as InvoiceViewer
+//   //         const pdf = new jsPDF("p", "mm", "a4");
+//   //         const padding = 10;
+
+//   //         const canvas = await html2canvas(tempInvoiceElement, {
+//   //           scale: 2,
+//   //           useCORS: true,
+//   //           backgroundColor: '#ffffff'
+//   //         });
+
+//   //         const imgData = canvas.toDataURL("image/png");
+
+//   //         const pdfWidth = pdf.internal.pageSize.getWidth();
+//   //         const pdfHeight = pdf.internal.pageSize.getHeight();
+//   //         const usableWidth = pdfWidth - 2 * padding;
+//   //         const usableHeight = pdfHeight - 2 * padding;
+
+//   //         const imgProps = pdf.getImageProperties(imgData);
+//   //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//   //         let heightLeft = pdfImgHeight;
+//   //         let position = padding;
+
+//   //         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+//   //         heightLeft -= usableHeight;
+
+//   //         while (heightLeft > 0) {
+//   //           pdf.addPage();
+//   //           position = padding - heightLeft;
+//   //           pdf.addImage(
+//   //             imgData,
+//   //             "PNG",
+//   //             padding,
+//   //             position,
+//   //             usableWidth,
+//   //             pdfImgHeight
+//   //           );
+//   //           heightLeft -= usableHeight;
+//   //         }
+
+//   //         // Clean up temporary element
+//   //         document.body.removeChild(tempInvoiceElement);
+
+//   //         // Save PDF with invoice number as filename
+//   //         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+//   //         pdf.save(filename);
+
+//   //         // Add delay between downloads
+//   //         if (i < invoicesToDownload.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 1000));
+//   //         }
+
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+//   //         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToDownload.length === 1
+//   //         ? "Invoice downloaded successfully!"
+//   //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during download process:", error);
+//   //     alert(`Download failed: ${error.message}`);
+//   //   } finally {
+//   //     setIsDownloading(false);
+//   //   }
+//   // };
+
+//   const downloadInvoices = async () => {
+//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
+
+//   if (invoicesToDownload.length === 0) {
+//     alert("Please select invoices to download");
+//     return;
+//   }
+
+//   try {
+//     setIsDownloading(true);
+
+//     for (let i = 0; i < invoicesToDownload.length; i++) {
+//       const invoice = invoicesToDownload[i];
+//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//       if (!invoiceId) {
+//         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+//         continue;
+//       }
+
+//       try {
+//         // First fetch invoice preview data (same as preview functionality)
+//         const previewResponse = await fetch(
+//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//             invoice.invoiceNumber
+//           )}`
+//         );
+
+//         if (!previewResponse.ok) {
+//           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+//         }
+
+//         const apiData = await previewResponse.json();
+
+//         // Transform data exactly like in handlePreview
+//         const transformedData = [
+//           {
+//             invoiceId: apiData.invoiceId || " ",
+//             invoiceDate: apiData.period || " ",
+//             currency: apiData.currency || " ",
+//             totalAmount: apiData.totalAmount || 0,
+
+//             lineItems: (apiData.lineItems || []).map((item, index) => ({
+//               poLine: item.poLine || " ",
+//               plc: item.plc || " ",
+//               vendor: item.vendor || " ",
+//               employee: item.employee || " ",
+//               hours: item.hours || 0,
+//               rate: item.rate || 0,
+//               amount: item.amount || 0,
+//               line_No: item.line_No || " ",
+//             })),
+
+//             billTo: apiData.billTo || " ",
+//             buyer: apiData.buyer || " ",
+//             purchaseOrderId: apiData.po_Number || " ",
+//             releaseNumber: apiData.po_rlse_Number || " ",
+//             poStartEndDate: apiData.po_Start_End_Date || " ",
+//             terms: apiData.terms || " ",
+//             amountDue: apiData.totalAmount || 0,
+//             period: apiData.period || " ",
+//             po_Number: apiData.po_Number || " ",
+//             po_rlse_Number: apiData.po_rlse_Number || " ",
+//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           },
+//         ];
+
+//         // Create temporary container to render InvoiceViewer component
+//         const tempContainer = document.createElement('div');
+//         tempContainer.style.position = 'absolute';
+//         tempContainer.style.left = '-9999px';
+//         tempContainer.style.width = '800px';
+//         tempContainer.style.backgroundColor = 'white';
+//         document.body.appendChild(tempContainer);
+
+//         // Create temporary React root and render InvoiceViewer
+//         const ReactDOM = (await import('react-dom/client')).default;
+//         const React = (await import('react')).default;
+
+//         // Import InvoiceViewer component
+//         const { default: InvoiceViewer } = await import('./InvoiceViewer');
+
+//         const root = ReactDOM.createRoot(tempContainer);
+
+//         // Render InvoiceViewer component
+//         await new Promise((resolve) => {
+//           root.render(
+//             React.createElement(InvoiceViewer, {
+//               data: transformedData,
+//               setInvoiceModalVisible: () => {},
+//             })
+//           );
+
+//           // Wait for component to render
+//           setTimeout(resolve, 500);
+//         });
+
+//         // Find the invoice content div (the one with ref)
+//         const input = tempContainer.querySelector('div[style*="max-width: 768px"]');
+
+//         if (!input) {
+//           throw new Error('Invoice content not found');
+//         }
+
+//         // Use exact same PDF generation logic as handleDownloadPdf
+//         const pdf = new jsPDF("p", "mm", "a4");
+//         const padding = 10;
+//         const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+//         const imgData = canvas.toDataURL("image/png");
+
+//         const pdfWidth = pdf.internal.pageSize.getWidth();
+//         const pdfHeight = pdf.internal.pageSize.getHeight();
+
+//         const usableWidth = pdfWidth - 2 * padding;
+//         const usableHeight = pdfHeight - 2 * padding;
+
+//         const imgProps = pdf.getImageProperties(imgData);
+//         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//         let heightLeft = pdfImgHeight;
+//         let position = padding;
+
+//         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+//         heightLeft -= usableHeight;
+
+//         while (heightLeft > 0) {
+//           pdf.addPage();
+//           position = padding - heightLeft;
+//           pdf.addImage(
+//             imgData,
+//             "PNG",
+//             padding,
+//             position,
+//             usableWidth,
+//             pdfImgHeight
+//           );
+//           heightLeft -= usableHeight;
+//         }
+
+//         // Clean up
+//         root.unmount();
+//         document.body.removeChild(tempContainer);
+
+//         // Save PDF with invoice number as filename
+//         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+//         pdf.save(filename);
+
+//         // Add delay between downloads
+//         if (i < invoicesToDownload.length - 1) {
+//           await new Promise((resolve) => setTimeout(resolve, 1000));
+//         }
+
+//       } catch (invoiceError) {
+//         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+//         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+//       }
+//     }
+
+//     const successMessage =
+//       invoicesToDownload.length === 1
+//         ? "Invoice downloaded successfully!"
+//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//     alert(successMessage);
+
+//   } catch (error) {
+//     console.error("Error during download process:", error);
+//     alert(`Download failed: ${error.message}`);
+//   } finally {
+//     setIsDownloading(false);
+//   }
+// };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // const handlePreview = async (invoice) => {
+//   //   try {
+//   //     setPreviewModalVisible(true);
+//   //     setPreviewData(null);
+
+//   //     const response = await fetch(
+//   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //         invoice.invoiceNumber
+//   //       )}`
+//   //     );
+
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//   //     }
+
+//   //     const apiData = await response.json();
+
+//   //     const transformedData = [
+//   //       {
+//   //         invoiceId: apiData.invoiceId || " ",
+//   //         invoiceDate: apiData.period || " ",
+//   //         currency: apiData.currency || " ",
+//   //         totalAmount: apiData.totalAmount || 0,
+
+//   //         lineItems: (apiData.lineItems || []).map((item, index) => ({
+//   //           poLine: item.poLine || " ",
+//   //           plc: item.plc || " ",
+//   //           vendor: item.vendor || " ",
+//   //           employee: item.employee || " ",
+//   //           hours: item.hours || 0,
+//   //           rate: item.rate || 0,
+//   //           amount: item.amount || 0,
+//   //           line_No: item.line_No || " ",
+//   //         })),
+
+//   //         billTo: apiData.billTo || " ",
+//   //         buyer: apiData.buyer || " ",
+//   //         purchaseOrderId: apiData.po_Number || " ",
+//   //         releaseNumber: apiData.po_rlse_Number || " ",
+//   //         poStartEndDate: apiData.po_Start_End_Date || " ",
+//   //         terms: apiData.terms || " ",
+//   //         amountDue: apiData.totalAmount || 0,
+//   //         period: apiData.period || " ",
+//   //         po_Number: apiData.po_Number || " ",
+//   //         po_rlse_Number: apiData.po_rlse_Number || " ",
+//   //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//   //       },
+//   //     ];
+
+//   //     setPreviewData(transformedData);
+//   //   } catch (error) {
+//   //     console.error("Error fetching invoice preview:", error);
+//   //     alert(`Failed to load invoice preview: ${error.message}`);
+//   //   }
+//   // };
+
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceId || " ",
+//           period: apiData.period || " ",
+//           // period: new Date(invoice.period).toISOString() || " ",
+//           // period: apiData.period || " ",
+//           currency: apiData.currency || " ",
+//           totalAmount: apiData.totalAmount || 0,
+
+//           lineItems: (apiData.lineItems || []).map((item, index) => ({
+//             poLine: item.poLine || " ",
+//             plc: item.plc || " ",
+//             vendor: item.vendor || " ",
+//             employee: item.employee || " ",
+//             hours: item.hours || 0,
+//             rate: item.rate || 0,
+//             amount: item.amount || 0,
+//             line_No: item.line_No || " ",
+//           })),
+
+//           billTo: apiData.billTo || " ",
+//           buyer: apiData.buyer || " ",
+//           po_Number: apiData.po_Number || " ",
+//           po_rlse_Number: apiData.po_rlse_Number || " ",
+//           po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           terms: apiData.terms || " ",
+//           amountDue: apiData.totalAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+//     }
+//   };
+
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       for (let i = 0; i < invoicesToExport.length; i++) {
+//         const invoice = invoicesToExport[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           const columnHeaderValues = [
+//             invoice.invoiceNumber || "",
+//             formatDate(invoice.invoiceDate) || "",
+//             invoice.invoiceAmount || 0,
+//             invoice.currency || "USD",
+//             formatDate(invoice.createdAt) || "",
+//             "PLC001",
+//             invoice.createdBy || "Employee",
+//             "40.00",
+//             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//             "0.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//             "40.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//           ];
+
+//           const payload = {
+//             ColumnHeaderValues: columnHeaderValues,
+//             IncludeHeaders: true,
+//             ExportFormat: "CSV",
+//           };
+
+//           const response = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//               invoiceId
+//             )}`,
+//             {
+//               method: "POST",
+//               headers: {
+//                 Accept:
+//                   "text/csv, application/csv, application/octet-stream, */*",
+//                 "Content-Type": "application/json",
+//               },
+//             }
+//           );
+
+//           if (!response.ok) {
+//             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//             try {
+//               const errorData = await response.text();
+//               if (errorData) {
+//                 errorMessage += ` - ${errorData}`;
+//               }
+//             } catch (e) {
+//               // Ignore if can't parse error
+//             }
+//             throw new Error(errorMessage);
+//           }
+
+//           const blob = await response.blob();
+
+//           if (blob.type && blob.type.includes("application/json")) {
+//             const text = await blob.text();
+//             console.error("Received JSON instead of file:", text);
+//             throw new Error("Server returned an error instead of a file");
+//           }
+
+//           let filename = `invoice_${invoiceId}_export.csv`;
+//           const contentDisposition = response.headers.get(
+//             "Content-Disposition"
+//           );
+//           if (contentDisposition) {
+//             const filenameMatch = contentDisposition.match(
+//               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//             );
+//             if (filenameMatch && filenameMatch[1]) {
+//               filename = filenameMatch[1].replace(/['"]/g, "");
+//             }
+//           }
+
+//           const url = window.URL.createObjectURL(blob);
+//           const link = document.createElement("a");
+//           link.href = url;
+//           link.download = filename;
+//           link.style.display = "none";
+//           document.body.appendChild(link);
+//           link.click();
+
+//           window.URL.revokeObjectURL(url);
+//           document.body.removeChild(link);
+
+//           // Mark this invoice as successfully exported
+//           successfullyExportedIds.push(invoice.invoiceId);
+
+//           // Update invoice export status in database
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true, // Mark as exported
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin", // or get from current user context
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoiceId}:`,
+//               updateError
+//             );
+//           }
+
+//           if (i < invoicesToExport.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 500));
+//           }
+//         } catch (invoiceError) {
+//           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//           alert(
+//             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       // Update local state for successfully exported invoices
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices since they can't be selected anymore
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         // Update select all checkbox state
+//         setSelectAll(false); // Reset select all since exported invoices are deselected
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">
+//                   Manage and export invoice data
+//                 </p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-3">
+//               {/* Download Invoice Button */}
+//               <button
+//                 onClick={downloadInvoices}
+//                 disabled={selectedInvoices.size === 0 || isDownloading}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0 || isDownloading
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-blue-600 text-white hover:bg-blue-700"
+//                 }`}
+//               >
+//                 <FileDown className="h-4 w-4 mr-2" />
+//                 {isDownloading ? 'Downloading...' : `Download Invoice (${selectedInvoices.size})`}
+//               </button>
+
+//               {/* Export Button */}
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Enhanced Table Container with Proper Sizing */}
+//         <div className="flex-1 p-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//               {/* Table wrapper with enhanced horizontal scroll and proper width handling */}
+//               <div
+//                 className="overflow-auto"
+//                 style={getTableWrapperStyle()}
+//               >
+//                 <table className="w-full min-w-[1600px]"> {/* Increased minimum width for better spacing */}
+//                   <thead className="bg-gray-50 sticky top-0 z-10">
+//                     <tr>
+//                       <th className="w-20 px-4 py-3 text-left border-b border-gray-200 bg-gray-50">
+//                         <div className="flex items-center space-x-2">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectAll}
+//                             onChange={(e) => handleSelectAll(e.target.checked)}
+//                             disabled={selectableInvoices.length === 0}
+//                             className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               selectableInvoices.length === 0
+//                                 ? "opacity-50 cursor-not-allowed"
+//                                 : "cursor-pointer"
+//                             }`}
+//                           />
+//                           <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                             All
+//                           </span>
+//                         </div>
+//                       </th>
+//                       <th className="min-w-[220px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Invoice Number
+//                       </th>
+//                       <th className="min-w-[280px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Vendor
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Invoice Date
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Amount
+//                       </th>
+//                       <th className="min-w-[100px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Currency
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Created At
+//                       </th>
+//                       <th className="min-w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Action
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody className="divide-y divide-gray-200 bg-white">
+//                     {filteredInvoices.map((invoice, index) => {
+//                       const invoiceId = invoice.invoiceId || invoice.id || index;
+//                       return (
+//                         <tr
+//                           key={invoiceId}
+//                           className="hover:bg-gray-50 transition-colors"
+//                         >
+//                           <td className="w-20 px-4 py-4 whitespace-nowrap">
+//                             <input
+//                               type="checkbox"
+//                               checked={selectedInvoices.has(invoiceId)}
+//                               onChange={(e) =>
+//                                 handleSelectInvoice(
+//                                   invoiceId,
+//                                   e.target.checked,
+//                                   invoice
+//                                 )
+//                               }
+//                               disabled={invoice.isExported}
+//                               className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                                 invoice.isExported
+//                                   ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                   : "cursor-pointer hover:bg-green-50"
+//                               }`}
+//                             />
+//                           </td>
+//                           <td className="min-w-[220px] px-6 py-4">
+//                             <div className="text-sm font-medium text-gray-900 break-all" title={invoice.invoiceNumber || "N/A"}>
+//                               {invoice.invoiceNumber || "N/A"}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[280px] px-6 py-4">
+//                             <div className="text-sm text-gray-900 break-all" title={invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}>
+//                               {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-600">
+//                               {formatDate(invoice.invoiceDate)}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-900 font-medium">
+//                               {formatCurrency(
+//                                 invoice.invoiceAmount,
+//                                 invoice.currency
+//                               )}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[100px] px-6 py-4 whitespace-nowrap">
+//                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+//                               {invoice.currency || "USD"}
+//                             </span>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-600">
+//                               {formatDate(invoice.createdAt)}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[200px] px-6 py-4 whitespace-nowrap">
+//                             <div className="flex items-center space-x-2">
+//                               <button
+//                                 onClick={() => handlePreview(invoice)}
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                               >
+//                                 <Eye className="h-4 w-4 mr-1" />
+//                                 Preview
+//                               </button>
+
+//                               {/* OPEN button - only for admin and exported invoices */}
+//                               {userRole === "admin" && invoice.isExported && (
+//                                 <button
+//                                   onClick={() => handleUnexport(invoice)}
+//                                   data-open-invoice={
+//                                     invoice.invoiceId || invoice.id
+//                                   }
+//                                   className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                                 >
+//                                   OPEN
+//                                 </button>
+//                               )}
+//                             </div>
+//                           </td>
+//                         </tr>
+//                       );
+//                     })}
+//                   </tbody>
+//                 </table>
+//               </div>
+
+//               {/* Table Info Footer */}
+//               <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 flex justify-between items-center">
+//                 {/* <span>Showing {filteredInvoices.length} invoices</span> */}
+//                 {/* <span>Scroll horizontally to view all columns</span> */}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Dynamic table container style based on content
+//   const getTableContainerStyle = () => {
+//     const headerHeight = 120; // Header section height
+//     const filterHeight = 80; // Filter section height
+//     const padding = 48; // Top and bottom padding (24px each)
+//     const margin = 24; // Margin
+//     const footerSpace = 20; // Space for any footer content
+
+//     // Calculate minimum height needed for the content
+//     const rowHeight = 61; // Approximate height per row (including border)
+//     const headerRowHeight = 48; // Header row height
+//     const minContentHeight =
+//       headerRowHeight + filteredInvoices.length * rowHeight;
+
+//     // Calculate available space
+//     const availableHeight =
+//       window.innerHeight -
+//       headerHeight -
+//       filterHeight -
+//       padding -
+//       margin -
+//       footerSpace;
+
+//     // Use the smaller of content height or available height, with reasonable limits
+//     const dynamicHeight = Math.min(
+//       Math.max(minContentHeight, 200), // Minimum 200px
+//       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+//     );
+
+//     return {
+//       height: `${dynamicHeight}px`,
+//       minHeight: "200px",
+//       maxHeight: `calc(100vh - ${
+//         headerHeight + filterHeight + padding + margin + footerSpace
+//       }px)`,
+//     };
+//   };
+
+//   // Alternative: Get table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "200px",
+//         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+//       };
+//     }
+
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 300px)",
+//       minHeight: "400px",
+//     };
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+//   const disabledInvoices = filteredInvoices.filter(
+//     (invoice) => invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // Handle preview click
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+//           invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+//           period: formatDate(
+//             apiData.period || apiData.invoiceDate || invoice.invoiceDate
+//           ),
+//           currency: apiData.currency || invoice.currency || "USD",
+//           totalAmount:
+//             apiData.totalAmount ||
+//             apiData.invoiceAmount ||
+//             invoice.invoiceAmount ||
+//             0,
+
+//           lineItems: (
+//             apiData.lineItems ||
+//             apiData.invoiceTimesheetLines ||
+//             []
+//           ).map((item, index) => ({
+//             poLine: item.poLine || item.timesheetLineNo || "",
+//             plc: item.plc || "",
+//             vendor: item.vendor || "",
+//             employee: item.employee || item.createdBy || "",
+//             hours: item.hours || item.mappedHours,
+//             rate:
+//               item.rate,
+//             amount: item.amount || item.mappedAmount,
+//             line_No: item.line_No || item.timesheetLineNo || index + 1,
+//           })),
+
+//           billTo:
+//             apiData.billTo ||
+//             "",
+//           buyer: apiData.buyer || "",
+//           purchaseOrderId: apiData.purchaseOrderId || "",
+//           releaseNumber: apiData.releaseNumber || "",
+//           changeOrderNumber: apiData.changeOrderNumber || "0",
+//           poStartEndDate: apiData.poStartEndDate || "",
+//           remitTo:
+//             apiData.remitTo ||
+//             "",
+//           terms: apiData.terms || "",
+//           amountDue:
+//             apiData.amountDue ||
+//             apiData.totalAmount ||
+//             apiData.invoiceAmount ||
+//             invoice.invoiceAmount ||
+//             0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+
+//       const fallbackData = [
+//         {
+//           invoiceId: invoice.invoiceNumber,
+//           invoiceDate: formatDate(invoice.invoiceDate),
+//           period: formatDate(invoice.invoiceDate),
+//           currency: invoice.currency || "USD",
+//           totalAmount: invoice.invoiceAmount || 0,
+//           lineItems: [],
+//           billTo:"",
+//           buyer: "",
+//           purchaseOrderId: "",
+//           releaseNumber: "",
+//           changeOrderNumber: "",
+//           poStartEndDate: "",
+//           remitTo: "",
+//           terms: "",
+//           amountDue: invoice.invoiceAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(fallbackData);
+//     }
+//   };
+
+//   // Export function (keeping your existing export logic)
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = true;
+//   //       exportButton.innerHTML =
+//   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//   //     }
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //             // body: JSON.stringify(payload)
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   } finally {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = false;
+//   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//   //     }
+//   //   }
+//   // };
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = true;
+//         exportButton.innerHTML =
+//           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//       }
+
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       for (let i = 0; i < invoicesToExport.length; i++) {
+//         const invoice = invoicesToExport[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           const columnHeaderValues = [
+//             invoice.invoiceNumber || "",
+//             formatDate(invoice.invoiceDate) || "",
+//             invoice.invoiceAmount || 0,
+//             invoice.currency || "USD",
+//             formatDate(invoice.createdAt) || "",
+//             "",
+//             invoice.createdBy || "Employee",
+//             "40.00",
+//             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//             "0.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//             "40.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//           ];
+
+//           const payload = {
+//             ColumnHeaderValues: columnHeaderValues,
+//             IncludeHeaders: true,
+//             ExportFormat: "CSV",
+//           };
+
+//           const response = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//               invoiceId
+//             )}`,
+//             {
+//               method: "POST",
+//               headers: {
+//                 Accept:
+//                   "text/csv, application/csv, application/octet-stream, */*",
+//                 "Content-Type": "application/json",
+//               },
+//               // body: JSON.stringify(payload)
+//             }
+//           );
+
+//           if (!response.ok) {
+//             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//             try {
+//               const errorData = await response.text();
+//               if (errorData) {
+//                 errorMessage += ` - ${errorData}`;
+//               }
+//             } catch (e) {
+//               // Ignore if can't parse error
+//             }
+//             throw new Error(errorMessage);
+//           }
+
+//           const blob = await response.blob();
+
+//           if (blob.type && blob.type.includes("application/json")) {
+//             const text = await blob.text();
+//             console.error("Received JSON instead of file:", text);
+//             throw new Error("Server returned an error instead of a file");
+//           }
+
+//           let filename = `invoice_${invoiceId}_export.csv`;
+//           const contentDisposition = response.headers.get(
+//             "Content-Disposition"
+//           );
+//           if (contentDisposition) {
+//             const filenameMatch = contentDisposition.match(
+//               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//             );
+//             if (filenameMatch && filenameMatch[1]) {
+//               filename = filenameMatch[1].replace(/['"]/g, "");
+//             }
+//           }
+
+//           const url = window.URL.createObjectURL(blob);
+//           const link = document.createElement("a");
+//           link.href = url;
+//           link.download = filename;
+//           link.style.display = "none";
+//           document.body.appendChild(link);
+//           link.click();
+
+//           window.URL.revokeObjectURL(url);
+//           document.body.removeChild(link);
+
+//           // Mark this invoice as successfully exported
+//           successfullyExportedIds.push(invoice.invoiceId);
+
+//           // **NEW: Update invoice export status in database**
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true, // Mark as exported
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin", // or get from current user context
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoiceId}:`,
+//               updateError
+//             );
+//           }
+
+//           if (i < invoicesToExport.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 500));
+//           }
+//         } catch (invoiceError) {
+//           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//           alert(
+//             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       // **NEW: Update local state for successfully exported invoices**
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices since they can't be selected anymore
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         // Update select all checkbox state
+//         const remainingSelectableInvoices = filteredInvoices.filter(
+//           (inv) =>
+//             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+//         );
+//         setSelectAll(false); // Reset select all since exported invoices are deselected
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     } finally {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = false;
+//         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//       }
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">
+//                   Manage and export invoice data
+//                   {/* {userRole === 'admin' && (
+//                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+//                                             Admin Mode
+//                                         </span>
+//                                     )} */}
+//                 </p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-4">
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 data-export-button
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Table Container with Dynamic Height */}
+//         <div className="flex-1 mt-6 pb-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div
+//               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+//               style={getTableWrapperStyle()}
+//             >
+//               <table className="min-w-full">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       <div className="flex items-center space-x-2">
+//                         <input
+//                           type="checkbox"
+//                           checked={selectAll}
+//                           onChange={(e) => handleSelectAll(e.target.checked)}
+//                           disabled={selectableInvoices.length === 0}
+//                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                             selectableInvoices.length === 0
+//                               ? "opacity-50 cursor-not-allowed"
+//                               : disabledInvoices.length > 0
+//                               ? "opacity-75"
+//                               : "cursor-pointer"
+//                           }`}
+//                         />
+//                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                           All
+//                         </span>
+//                       </div>
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Number
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Vendor
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Date
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Amount
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Currency
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Created At
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="divide-y divide-gray-200">
+//                   {filteredInvoices.map((invoice, index) => {
+//                     const invoiceId = invoice.invoiceId || invoice.id || index;
+//                     return (
+//                       <tr
+//                         key={invoiceId}
+//                         className="hover:bg-gray-50 transition-colors"
+//                       >
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectedInvoices.has(invoiceId)}
+//                             onChange={(e) =>
+//                               handleSelectInvoice(
+//                                 invoiceId,
+//                                 e.target.checked,
+//                                 invoice
+//                               )
+//                             }
+//                             disabled={invoice.isExported}
+//                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               invoice.isExported
+//                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                 : "cursor-pointer hover:bg-green-50"
+//                             }`}
+//                           />
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceNumber || "N/A"}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                         </td>
+
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.invoiceDate)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+//                           {formatCurrency(
+//                             invoice.invoiceAmount,
+//                             invoice.currency
+//                           )}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+//                             {invoice.currency || "USD"}
+//                           </span>
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.createdAt)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <div className="flex items-center space-x-2">
+//                             <button
+//                               onClick={() => handlePreview(invoice)}
+//                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                             >
+//                               <Eye className="h-4 w-4 mr-1" />
+//                               Preview
+//                             </button>
+
+//                             {/* OPEN button - only for admin and exported invoices */}
+//                             {userRole === "admin" && invoice.isExported && (
+//                               <button
+//                                 onClick={() => handleUnexport(invoice)}
+//                                 data-open-invoice={
+//                                   invoice.invoiceId || invoice.id
+//                                 }
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                               >
+//                                 OPEN
+//                               </button>
+//                             )}
+//                           </div>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Dynamic table container style based on content
+//   const getTableContainerStyle = () => {
+//     const headerHeight = 120; // Header section height
+//     const filterHeight = 80; // Filter section height
+//     const padding = 48; // Top and bottom padding (24px each)
+//     const margin = 24; // Margin
+//     const footerSpace = 20; // Space for any footer content
+
+//     // Calculate minimum height needed for the content
+//     const rowHeight = 61; // Approximate height per row (including border)
+//     const headerRowHeight = 48; // Header row height
+//     const minContentHeight =
+//       headerRowHeight + filteredInvoices.length * rowHeight;
+
+//     // Calculate available space
+//     const availableHeight =
+//       window.innerHeight -
+//       headerHeight -
+//       filterHeight -
+//       padding -
+//       margin -
+//       footerSpace;
+
+//     // Use the smaller of content height or available height, with reasonable limits
+//     const dynamicHeight = Math.min(
+//       Math.max(minContentHeight, 200), // Minimum 200px
+//       Math.max(availableHeight, 400) // Maximum available space, but at least 400px
+//     );
+
+//     return {
+//       height: `${dynamicHeight}px`,
+//       minHeight: "200px",
+//       maxHeight: `calc(100vh - ${
+//         headerHeight + filterHeight + padding + margin + footerSpace
+//       }px)`,
+//     };
+//   };
+
+//   // Alternative: Get table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "200px",
+//         maxHeight: "calc(100vh - 300px)", // Just prevent it from being too tall
+//       };
+//     }
+
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 300px)",
+//       minHeight: "400px",
+//     };
+//   };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+//   const disabledInvoices = filteredInvoices.filter(
+//     (invoice) => invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // Handle preview click
+//   // const handlePreview = async (invoice) => {
+//   //   try {
+//   //     setPreviewModalVisible(true);
+//   //     setPreviewData(null);
+
+//   //     const response = await fetch(
+//   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //         invoice.invoiceNumber
+//   //       )}`
+//   //     );
+
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//   //     }
+
+//   //     const apiData = await response.json();
+
+//   //     const transformedData = [
+//   //       {
+//   //         invoiceId: apiData.invoiceNumber || invoice.invoiceNumber,
+//   //         invoiceDate: formatDate(apiData.invoiceDate || invoice.invoiceDate),
+//   //         period: formatDate(
+//   //           apiData.period || apiData.invoiceDate || invoice.invoiceDate
+//   //         ),
+//   //         currency: apiData.currency || invoice.currency || "USD",
+//   //         totalAmount:
+//   //           apiData.totalAmount ||
+//   //           apiData.invoiceAmount ||
+//   //           invoice.invoiceAmount ||
+//   //           0,
+
+//   //         lineItems: (
+//   //           apiData.lineItems ||
+//   //           apiData.invoiceTimesheetLines ||
+//   //           []
+//   //         ).map((item, index) => ({
+//   //           poLine: item.poLine || item.timesheetLineNo || "",
+//   //           plc: item.plc || "",
+//   //           vendor: item.vendor || " ",
+//   //           employee: item.employee || item.createdBy || " ",
+//   //           hours: item.hours || item.mappedHours,
+//   //           rate: item.rate || (item.mappedAmount || 0) / item.mappedHours || 0,
+//   //           amount: item.amount || item.mappedAmount,
+//   //           line_No: item.line_No || item.timesheetLineNo,
+//   //         })),
+
+//   //         billTo: apiData.billTo || " ",
+//   //         buyer: apiData.buyer || " ",
+//   //         purchaseOrderId: apiData.purchaseOrderId || " ",
+//   //         releaseNumber: apiData.releaseNumber || "",
+//   //         // changeOrderNumber: apiData.changeOrderNumber || "",
+//   //         poStartEndDate: apiData.poStartEndDate || " ",
+//   //         // remitTo:
+//   //         //   apiData.remitTo ||
+//   //         //   " ",
+//   //         terms: apiData.terms || " ",
+//   //         amountDue:
+//   //           apiData.amountDue ||
+//   //           apiData.totalAmount ||
+//   //           apiData.invoiceAmount ||
+//   //           invoice.invoiceAmount ||
+//   //           0,
+//   //       },
+//   //     ];
+
+//   //     setPreviewData(transformedData);
+//   //   } catch (error) {
+//   //     console.error("Error fetching invoice preview:", error);
+//   //     alert(`Failed to load invoice preview: ${error.message}`);
+
+//   //     // const fallbackData = [
+//   //     //   {
+//   //     //     invoiceId: invoice.invoiceNumber,
+//   //     //     invoiceDate: formatDate(invoice.invoiceDate),
+//   //     //     period: formatDate(invoice.invoiceDate),
+//   //     //     currency: invoice.currency || "USD",
+//   //     //     totalAmount: invoice.invoiceAmount || 0,
+//   //     //     lineItems: [
+//   //     //       {
+//   //     //         poLine: "Default PO Line",
+//   //     //         plc: "PLC001",
+//   //     //         vendor: "Vendor",
+//   //     //         employee: invoice.createdBy || "Employee",
+//   //     //         hours: 40.0,
+//   //     //         rate: (invoice.invoiceAmount || 0) / 40,
+//   //     //         amount: invoice.invoiceAmount || 0,
+//   //     //         line_No: 1,
+//   //     //       },
+//   //     //     ],
+//   //     //     billTo: "SSAI\n10210 GREENBELT RD\nSUITE 600\nLANHAM\nMD\n20706",
+//   //     //     buyer: "Clore, Heather J",
+//   //     //     purchaseOrderId: "2181218010",
+//   //     //     releaseNumber: "3",
+//   //     //     changeOrderNumber: "0",
+//   //     //     poStartEndDate: "12/10/18 to 12/08/24",
+//   //     //     remitTo: "Vertex Aerospace, LLC\nPO Box 192\nGrasonville\nMD\n21638",
+//   //     //     terms: "PAYNPD",
+//   //     //     amountDue: invoice.invoiceAmount || 0,
+//   //     //   },
+//   //     // ];
+
+//   //     // setPreviewData(fallbackData);
+//   //   }
+//   // };
+
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceId || " ",
+//           invoiceDate: apiData.period || " ",
+//           // period: apiData.period || " ",
+//           currency: apiData.currency || " ",
+//           totalAmount: apiData.totalAmount || 0,
+
+//           lineItems: (apiData.lineItems || []).map((item, index) => ({
+//             poLine: item.poLine || " ",
+//             plc: item.plc || " ",
+//             vendor: item.vendor || " ",
+//             employee: item.employee || " ",
+//             hours: item.hours || 0,
+//             rate: item.rate || 0,
+//             amount: item.amount || 0,
+//             line_No: item.line_No || " ",
+//           })),
+
+//           billTo: apiData.billTo || " ",
+//           buyer: apiData.buyer || " ",
+//           purchaseOrderId: apiData.po_Number || " ",
+//           releaseNumber: apiData.po_rlse_Number || " ",
+//           poStartEndDate: apiData.po_Start_End_Date || " ",
+//           terms: apiData.terms || " ",
+//           amountDue: apiData.totalAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+//     }
+//   };
+
+//   // Export function (keeping your existing export logic)
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = true;
+//   //       exportButton.innerHTML =
+//   //         '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//   //     }
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //             // body: JSON.stringify(payload)
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   } finally {
+//   //     const exportButton = document.querySelector("[data-export-button]");
+//   //     if (exportButton) {
+//   //       exportButton.disabled = false;
+//   //       exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//   //     }
+//   //   }
+//   // };
+
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = true;
+//         exportButton.innerHTML =
+//           '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Exporting...';
+//       }
+
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       for (let i = 0; i < invoicesToExport.length; i++) {
+//         const invoice = invoicesToExport[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           const columnHeaderValues = [
+//             invoice.invoiceNumber || "",
+//             formatDate(invoice.invoiceDate) || "",
+//             invoice.invoiceAmount || 0,
+//             invoice.currency || "USD",
+//             formatDate(invoice.createdAt) || "",
+//             "PLC001",
+//             invoice.createdBy || "Employee",
+//             "40.00",
+//             ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//             "0.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//             "40.00",
+//             (invoice.invoiceAmount || 0).toFixed(2),
+//           ];
+
+//           const payload = {
+//             ColumnHeaderValues: columnHeaderValues,
+//             IncludeHeaders: true,
+//             ExportFormat: "CSV",
+//           };
+
+//           const response = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//               invoiceId
+//             )}`,
+//             {
+//               method: "POST",
+//               headers: {
+//                 Accept:
+//                   "text/csv, application/csv, application/octet-stream, */*",
+//                 "Content-Type": "application/json",
+//               },
+//               // body: JSON.stringify(payload)
+//             }
+//           );
+
+//           if (!response.ok) {
+//             let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//             try {
+//               const errorData = await response.text();
+//               if (errorData) {
+//                 errorMessage += ` - ${errorData}`;
+//               }
+//             } catch (e) {
+//               // Ignore if can't parse error
+//             }
+//             throw new Error(errorMessage);
+//           }
+
+//           const blob = await response.blob();
+
+//           if (blob.type && blob.type.includes("application/json")) {
+//             const text = await blob.text();
+//             console.error("Received JSON instead of file:", text);
+//             throw new Error("Server returned an error instead of a file");
+//           }
+
+//           let filename = `invoice_${invoiceId}_export.csv`;
+//           const contentDisposition = response.headers.get(
+//             "Content-Disposition"
+//           );
+//           if (contentDisposition) {
+//             const filenameMatch = contentDisposition.match(
+//               /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//             );
+//             if (filenameMatch && filenameMatch[1]) {
+//               filename = filenameMatch[1].replace(/['"]/g, "");
+//             }
+//           }
+
+//           const url = window.URL.createObjectURL(blob);
+//           const link = document.createElement("a");
+//           link.href = url;
+//           link.download = filename;
+//           link.style.display = "none";
+//           document.body.appendChild(link);
+//           link.click();
+
+//           window.URL.revokeObjectURL(url);
+//           document.body.removeChild(link);
+
+//           // Mark this invoice as successfully exported
+//           successfullyExportedIds.push(invoice.invoiceId);
+
+//           // **NEW: Update invoice export status in database**
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true, // Mark as exported
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin", // or get from current user context
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoiceId}:`,
+//               updateError
+//             );
+//           }
+
+//           if (i < invoicesToExport.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 500));
+//           }
+//         } catch (invoiceError) {
+//           console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//           alert(
+//             `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       // **NEW: Update local state for successfully exported invoices**
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices since they can't be selected anymore
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         // Update select all checkbox state
+//         const remainingSelectableInvoices = filteredInvoices.filter(
+//           (inv) =>
+//             !successfullyExportedIds.includes(inv.invoiceId) && !inv.isExported
+//         );
+//         setSelectAll(false); // Reset select all since exported invoices are deselected
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     } finally {
+//       const exportButton = document.querySelector("[data-export-button]");
+//       if (exportButton) {
+//         exportButton.disabled = false;
+//         exportButton.innerHTML = `<svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>Export (${selectedInvoices.size})`;
+//       }
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen px-6">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6 -mx-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">
+//                   Manage and export invoice data
+//                   {/* {userRole === 'admin' && (
+//                                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+//                                             Admin Mode
+//                                         </span>
+//                                     )} */}
+//                 </p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-4">
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 data-export-button
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4 -mx-6">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Table Container with Dynamic Height */}
+//         <div className="flex-1 mt-6 pb-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div
+//               className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto overflow-y-auto"
+//               style={getTableWrapperStyle()}
+//             >
+//               <table className="min-w-full">
+//                 <thead className="bg-gray-50">
+//                   <tr>
+//                     <th className="px-6 py-3 text-left border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       <div className="flex items-center space-x-2">
+//                         <input
+//                           type="checkbox"
+//                           checked={selectAll}
+//                           onChange={(e) => handleSelectAll(e.target.checked)}
+//                           disabled={selectableInvoices.length === 0}
+//                           className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                             selectableInvoices.length === 0
+//                               ? "opacity-50 cursor-not-allowed"
+//                               : disabledInvoices.length > 0
+//                               ? "opacity-75"
+//                               : "cursor-pointer"
+//                           }`}
+//                         />
+//                         <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                           All
+//                         </span>
+//                       </div>
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Number
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Vendor
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Invoice Date
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Amount
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Currency
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Created At
+//                     </th>
+//                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 sticky top-0 bg-gray-50 z-10">
+//                       Action
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody className="divide-y divide-gray-200">
+//                   {filteredInvoices.map((invoice, index) => {
+//                     const invoiceId = invoice.invoiceId || invoice.id || index;
+//                     return (
+//                       <tr
+//                         key={invoiceId}
+//                         className="hover:bg-gray-50 transition-colors"
+//                       >
+//                         <td className="px-6 py-4 whitespace-nowrap">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectedInvoices.has(invoiceId)}
+//                             onChange={(e) =>
+//                               handleSelectInvoice(
+//                                 invoiceId,
+//                                 e.target.checked,
+//                                 invoice
+//                               )
+//                             }
+//                             disabled={invoice.isExported}
+//                             className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               invoice.isExported
+//                                 ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                 : "cursor-pointer hover:bg-green-50"
+//                             }`}
+//                           />
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceNumber || "N/A"}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm font-small text-gray-900">
+//                           {invoice.invoiceTimesheetLines?.[0]?.vendor || "N/A"}
+//                         </td>
+
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.invoiceDate)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-small">
+//                           {formatCurrency(
+//                             invoice.invoiceAmount,
+//                             invoice.currency
+//                           )}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-small bg-blue-100 text-blue-800">
+//                             {invoice.currency || "USD"}
+//                           </span>
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           {formatDate(invoice.createdAt)}
+//                         </td>
+//                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+//                           <div className="flex items-center space-x-2">
+//                             <button
+//                               onClick={() => handlePreview(invoice)}
+//                               className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                             >
+//                               <Eye className="h-4 w-4 mr-1" />
+//                               Preview
+//                             </button>
+
+//                             {/* OPEN button - only for admin and exported invoices */}
+//                             {userRole === "admin" && invoice.isExported && (
+//                               <button
+//                                 onClick={() => handleUnexport(invoice)}
+//                                 data-open-invoice={
+//                                   invoice.invoiceId || invoice.id
+//                                 }
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                               >
+//                                 OPEN
+//                               </button>
+//                             )}
+//                           </div>
+//                         </td>
+//                       </tr>
+//                     );
+//                   })}
+//                 </tbody>
+//               </table>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
+
+// import React, { useState, useEffect } from "react";
+// import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
+// import InvoiceViewer from "./InvoiceViewer";
+// import html2canvas from "html2canvas";
+// import jsPDF from "jspdf";
+// import logoImg from "../assets/image.png";
+
+// export default function InvoiceExport() {
+//   const [invoices, setInvoices] = useState([]);
+//   const [filteredInvoices, setFilteredInvoices] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [filterInvoiceNumber, setFilterInvoiceNumber] = useState("");
+//   const [selectedInvoices, setSelectedInvoices] = useState(new Set());
+//   const [selectAll, setSelectAll] = useState(false);
+//   const [previewModalVisible, setPreviewModalVisible] = useState(false);
+//   const [previewData, setPreviewData] = useState(null);
+//   const [userRole, setUserRole] = useState(null);
+//   const [isDownloading, setIsDownloading] = useState(false);
+
+//   // Get user role from localStorage (set during login)
+//   useEffect(() => {
+//     const getUserRole = () => {
+//       try {
+//         // Try to get from loginResponse first
+//         const loginResponse = localStorage.getItem("loginResponse");
+//         if (loginResponse) {
+//           const parsedResponse = JSON.parse(loginResponse);
+//           setUserRole(parsedResponse.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try userData
+//         const userData = localStorage.getItem("userData");
+//         if (userData) {
+//           const parsedUserData = JSON.parse(userData);
+//           setUserRole(parsedUserData.role?.toLowerCase() || "user");
+//           return;
+//         }
+
+//         // Fallback: try individual userRole
+//         const storedRole = localStorage.getItem("userRole");
+//         if (storedRole) {
+//           setUserRole(storedRole.toLowerCase());
+//           return;
+//         }
+
+//         // Default fallback - temporarily set to admin for testing
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       } catch (error) {
+//         console.error("Error parsing user data:", error);
+//         setUserRole("admin"); // Change this back to 'user' for production
+//       }
+//     };
+
+//     getUserRole();
+//   }, []);
+
+//   // Fetch invoices from API
+//   useEffect(() => {
+//     const fetchInvoices = async () => {
+//       try {
+//         setLoading(true);
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/Invoices"
+//         );
+
+//         if (!response.ok) {
+//           throw new Error(`HTTP error! status: ${response.status}`);
+//         }
+
+//         const data = await response.json();
+//         setInvoices(data);
+//         setFilteredInvoices(data);
+//       } catch (err) {
+//         console.error("Error fetching invoices:", err);
+//         setError(err.message || "Failed to fetch invoices");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchInvoices();
+//   }, []);
+
+//   // Filter invoices based on invoice number filter
+//   useEffect(() => {
+//     let filtered = invoices;
+
+//     // Filter by invoice number
+//     if (filterInvoiceNumber) {
+//       filtered = filtered.filter(
+//         (invoice) =>
+//           invoice.invoiceNumber &&
+//           invoice.invoiceNumber
+//             .toLowerCase()
+//             .includes(filterInvoiceNumber.toLowerCase())
+//       );
+//     }
+
+//     setFilteredInvoices(filtered);
+//     // Reset selections when filter changes
+//     setSelectedInvoices(new Set());
+//     setSelectAll(false);
+//   }, [invoices, filterInvoiceNumber]);
+
+//   // Enhanced table wrapper style that adjusts to content
+//   const getTableWrapperStyle = () => {
+//     // If there are few items, don't use fixed height
+//     if (filteredInvoices.length <= 5) {
+//       return {
+//         minHeight: "300px",
+//         maxHeight: "calc(100vh - 280px)",
+//         // minWidth: "1000px",
+//       };
+//     }
+//     // For more items, use scrollable container
+//     return {
+//       height: "calc(100vh - 280px)",
+//       minHeight: "400px",
+//       maxHeight: "calc(100vh - 280px)",
+//       // width: "calc(100vh - 200px)",
+//       // minWidth: "1000px",
+//       // maxWidth: "calc(100vh - 10px)",
+//     };
+//   };
+//   // const getTableWrapperStyle = () => {
+//   //   const baseStyle = {
+//   //     // Enable both horizontal and vertical scrolling
+//   //     overflowX: "auto",
+//   //     overflowY: "auto",
+//   //     // Ensure scrollbars are visible when needed
+//   //     scrollbarGutter: "stable",
+//   //   };
+
+//   //   // Calculate available height based on viewport and other UI elements
+//   //   const availableHeight = "calc(100vh - 280px)";
+//   //   const minTableHeight = "300px";
+//   //   const maxTableHeight = "calc(100vh - 180px)"; // More generous max height
+
+//   //   // If there are few items, allow natural height with limits
+//   //   if (filteredInvoices.length <= 5) {
+//   //     return {
+//   //       ...baseStyle,
+//   //       minHeight: minTableHeight,
+//   //       maxHeight: maxTableHeight,
+//   //       // Let content determine height up to max
+//   //       height: "auto",
+//   //     };
+//   //   }
+
+//   //   // For more items, use fixed scrollable container
+//   //   return {
+//   //     ...baseStyle,
+//   //     height: availableHeight,
+//   //     minHeight: "400px",
+//   //     maxHeight: maxTableHeight,
+//   //   };
+//   // };
+
+//   const formatDate = (dateString) => {
+//     if (!dateString) return "N/A";
+//     try {
+//       const date = new Date(dateString);
+//       const month = String(date.getMonth() + 1).padStart(2, "0");
+//       const day = String(date.getDate()).padStart(2, "0");
+//       const year = date.getFullYear();
+//       return `${month}-${day}-${year}`;
+//     } catch {
+//       return dateString;
+//     }
+//   };
+
+//   // Format currency helper
+//   const formatCurrency = (amount, currency = "USD") => {
+//     if (!amount && amount !== 0) return "N/A";
+//     try {
+//       return new Intl.NumberFormat("en-US", {
+//         style: "currency",
+//         currency: currency || "USD",
+//       }).format(amount);
+//     } catch {
+//       return `${currency || "$"} ${amount}`;
+//     }
+//   };
+
+//   // Calculate selectable invoices (only those that are not exported)
+//   const selectableInvoices = filteredInvoices.filter(
+//     (invoice) => !invoice.isExported
+//   );
+
+//   // Handle select all checkbox
+//   const handleSelectAll = (checked) => {
+//     setSelectAll(checked);
+//     if (checked) {
+//       // Only select invoices that are not exported (isExported: false)
+//       const allSelectableIds = new Set(
+//         selectableInvoices.map(
+//           (invoice, index) =>
+//             invoice.invoiceId || filteredInvoices.indexOf(invoice)
+//         )
+//       );
+//       setSelectedInvoices(allSelectableIds);
+//     } else {
+//       setSelectedInvoices(new Set());
+//     }
+//   };
+
+//   // Handle individual checkbox
+//   const handleSelectInvoice = (invoiceId, checked, invoice) => {
+//     // Prevent selection if invoice is exported
+//     if (invoice && invoice.isExported) return;
+
+//     setSelectedInvoices((prev) => {
+//       const newSelected = new Set(prev);
+//       if (checked) {
+//         newSelected.add(invoiceId);
+//       } else {
+//         newSelected.delete(invoiceId);
+//       }
+
+//       // Update select all state - check if all selectable invoices are selected
+//       const allSelectableSelected =
+//         selectableInvoices.length > 0 &&
+//         selectableInvoices.every((inv) => {
+//           const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+//           return newSelected.has(id);
+//         });
+//       setSelectAll(allSelectableSelected);
+
+//       return newSelected;
+//     });
+//   };
+
+//   // Create invoice HTML content exactly like InvoiceViewer with proper styling
+//   const createInvoiceHTML = (apiData, invoice) => {
+//     // Group line items by PO Line for rendering with headers
+//     const groupedByPoLine = (apiData.lineItems || []).reduce((groups, item) => {
+//       const key = item.poLine || "Other";
+//       if (!groups[key]) groups[key] = [];
+//       groups[key].push(item);
+//       return groups;
+//     }, {});
+
+//     return `
+//       <div style="max-width: 768px; margin: auto; padding: 20px; border: 2px solid #d1d5db; font-family: monospace; font-size: 15px; color: #1a202c; background-color: #fff;">
+//         <img src="${logoImg}" alt="Company Logo" style="height: 60px; object-fit: contain;" />
+//         <h1 style="text-align: center; margin-bottom: 20px; font-size: 18px; font-weight: 600;">SUMARIA SYSTEMS, LLC</h1>
+
+//         <div style="margin-bottom: 20px;">
+//           <div style="display: inline-block; width: 48%; vertical-align: top;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Subcontractor Invoice Number:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.invoiceId || invoice.invoiceNumber || ""}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Bill To:</span>
+//             </div>
+//             <div style="margin-bottom: 16px; white-space: pre-line;">
+//               ${apiData.billTo || ""}
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               <span style="font-weight: 700;">Buyer:</span>
+//               <span style="margin-left: 4px;">${apiData.buyer || " "}</span>
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Purchase Order ID:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.po_Number || ""} Release Number ${
+//       apiData.po_rlse_Number || ""
+//     }
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">PO Start and End Date:</span>
+//             </div>
+//             <div>${apiData.po_Start_End_Date || " "}</div>
+//           </div>
+
+//           <div style="display: inline-block; width: 48%; vertical-align: top; margin-left: 4%;">
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Invoice Date:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.period || " "}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Billing Currency:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.currency || "USD"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Terms:</span>
+//             </div>
+//             <div style="margin-bottom: 16px;">
+//               ${apiData.terms || "NET 45"}
+//             </div>
+//             <div style="margin-bottom: 4px;">
+//               <span style="font-weight: 700;">Amount Due</span>
+//             </div>
+//             <div>
+//               $${(apiData.totalAmount || 0).toFixed(2)}
+
+//             </div>
+//           </div>
+//         </div>
+
+//         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+//           <thead>
+//             <tr>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 120px;">PLC</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: left; background-color: #f3f4f6; width: 150px;">Vendor Employee</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 60px;">Rate</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Additional Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Current Amount</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Hrs/Qty</th>
+//               <th style="border: 1px solid #d1d5db; padding: 4px; text-align: center; background-color: #f3f4f6; width: 80px;">Cumulative Amount</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             ${Object.entries(groupedByPoLine)
+//               .map(
+//                 ([poLine, items]) => `
+//               <tr>
+//                 <td colspan="8" style="font-weight: 700; font-size: 13px; padding: 8px 4px; border: 1px solid #d1d5db;">PO LINE ${poLine}</td>
+//               </tr>
+//               ${items
+//                 .map(
+//                   (item) => `
+//                 <tr>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="font-weight: 600; margin-bottom: 2px;">${
+//                       item.plc || ""
+//                     }</div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; vertical-align: top;">
+//                     <div style="margin-left: 10px;">
+//                       <div style="margin-bottom: 1px;">${
+//                         item.employee || ""
+//                       }</div>
+//                       <div>${item.vendor || ""}</div>
+//                     </div>
+//                   </td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(
+//                     item.hours || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.rate || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$0.00</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.amount || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">${(
+//                     item.hours || 0
+//                   ).toFixed(2)}</td>
+//                   <td style="border: 1px solid #d1d5db; padding: 4px; text-align: right;">$${(
+//                     item.amount || 0
+//                   ).toFixed(2)}</td>
+//                 </tr>
+//               `
+//                 )
+//                 .join("")}
+//             `
+//               )
+//               .join("")}
+//           </tbody>
+//         </table>
+
+//         <div style="text-align: right; font-weight: 600; font-size: 16px; margin-bottom: 24px;">
+//           Total Amount Due: $${(apiData.totalAmount || 0).toFixed(2)}
+//         </div>
+//       </div>
+//     `;
+//   };
+
+//   // Updated download function using exact InvoiceViewer format with invoice number filename
+//   // const downloadInvoices = async () => {
+//   //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToDownload.length === 0) {
+//   //     alert("Please select invoices to download");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     setIsDownloading(true);
+
+//   //     for (let i = 0; i < invoicesToDownload.length; i++) {
+//   //       const invoice = invoicesToDownload[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(`Skipping invoice without ID: ${JSON.stringify(invoice)}`);
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         // First fetch invoice preview data (same as preview functionality)
+//   //         const previewResponse = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //             invoice.invoiceNumber
+//   //           )}`
+//   //         );
+
+//   //         if (!previewResponse.ok) {
+//   //           throw new Error(`Failed to fetch invoice preview: ${previewResponse.status}`);
+//   //         }
+
+//   //         const apiData = await previewResponse.json();
+
+//   //         // Create temporary invoice element using exact InvoiceViewer format
+//   //         const tempInvoiceElement = document.createElement('div');
+//   //         tempInvoiceElement.style.position = 'absolute';
+//   //         tempInvoiceElement.style.left = '-9999px';
+//   //         tempInvoiceElement.style.width = '800px';
+//   //         tempInvoiceElement.style.backgroundColor = 'white';
+
+//   //         // Use the exact same HTML structure as InvoiceViewer with proper styling
+//   //         tempInvoiceElement.innerHTML = createInvoiceHTML(apiData, invoice);
+//   //         document.body.appendChild(tempInvoiceElement);
+
+//   //         // Generate PDF using the same method as InvoiceViewer
+//   //         const pdf = new jsPDF("p", "mm", "a4");
+//   //         const padding = 10;
+
+//   //         const canvas = await html2canvas(tempInvoiceElement, {
+//   //           scale: 2,
+//   //           useCORS: true,
+//   //           backgroundColor: '#ffffff'
+//   //         });
+
+//   //         const imgData = canvas.toDataURL("image/png");
+
+//   //         const pdfWidth = pdf.internal.pageSize.getWidth();
+//   //         const pdfHeight = pdf.internal.pageSize.getHeight();
+//   //         const usableWidth = pdfWidth - 2 * padding;
+//   //         const usableHeight = pdfHeight - 2 * padding;
+
+//   //         const imgProps = pdf.getImageProperties(imgData);
+//   //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//   //         let heightLeft = pdfImgHeight;
+//   //         let position = padding;
+
+//   //         pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+//   //         heightLeft -= usableHeight;
+
+//   //         while (heightLeft > 0) {
+//   //           pdf.addPage();
+//   //           position = padding - heightLeft;
+//   //           pdf.addImage(
+//   //             imgData,
+//   //             "PNG",
+//   //             padding,
+//   //             position,
+//   //             usableWidth,
+//   //             pdfImgHeight
+//   //           );
+//   //           heightLeft -= usableHeight;
+//   //         }
+
+//   //         // Clean up temporary element
+//   //         document.body.removeChild(tempInvoiceElement);
+
+//   //         // Save PDF with invoice number as filename
+//   //         const filename = `${invoice.invoiceNumber || `invoice_${invoiceId}`}.pdf`;
+//   //         pdf.save(filename);
+
+//   //         // Add delay between downloads
+//   //         if (i < invoicesToDownload.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 1000));
+//   //         }
+
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error downloading invoice ${invoiceId}:`, invoiceError);
+//   //         alert(`Failed to download invoice ${invoiceId}: ${invoiceError.message}`);
+//   //       }
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToDownload.length === 1
+//   //         ? "Invoice downloaded successfully!"
+//   //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during download process:", error);
+//   //     alert(`Download failed: ${error.message}`);
+//   //   } finally {
+//   //     setIsDownloading(false);
+//   //   }
+//   // };
+
+//   const downloadInvoices = async () => {
+//     const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToDownload.length === 0) {
+//       alert("Please select invoices to download");
+//       return;
+//     }
+
+//     try {
+//       setIsDownloading(true);
+
+//       for (let i = 0; i < invoicesToDownload.length; i++) {
+//         const invoice = invoicesToDownload[i];
+//         const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//         if (!invoiceId) {
+//           console.warn(
+//             `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//           );
+//           continue;
+//         }
+
+//         try {
+//           // First fetch invoice preview data (same as preview functionality)
+//           const previewResponse = await fetch(
+//             `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//               invoice.invoiceNumber
+//             )}`
+//           );
+
+//           if (!previewResponse.ok) {
+//             throw new Error(
+//               `Failed to fetch invoice preview: ${previewResponse.status}`
+//             );
+//           }
+
+//           const apiData = await previewResponse.json();
+
+//           // Transform data exactly like in handlePreview
+//           const transformedData = [
+//             {
+//               invoiceId: apiData.invoiceId || " ",
+//               invoiceDate: apiData.period || " ",
+//               currency: apiData.currency || " ",
+//               totalAmount: apiData.totalAmount || 0,
+
+//               lineItems: (apiData.lineItems || []).map((item, index) => ({
+//                 poLine: item.poLine || " ",
+//                 plc: item.plc || " ",
+//                 vendor: item.vendor || " ",
+//                 employee: item.employee || " ",
+//                 hours: item.hours || 0,
+//                 rate: item.rate || 0,
+//                 amount: item.amount || 0,
+//                 line_No: item.line_No || " ",
+//               })),
+
+//               billTo: apiData.billTo || " ",
+//               buyer: apiData.buyer || " ",
+//               purchaseOrderId: apiData.po_Number || " ",
+//               releaseNumber: apiData.po_rlse_Number || " ",
+//               poStartEndDate: apiData.po_Start_End_Date || " ",
+//               terms: apiData.terms || " ",
+//               amountDue: apiData.totalAmount || 0,
+//               period: apiData.period || " ",
+//               po_Number: apiData.po_Number || " ",
+//               po_rlse_Number: apiData.po_rlse_Number || " ",
+//               po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//             },
+//           ];
+
+//           // Create temporary container to render InvoiceViewer component
+//           const tempContainer = document.createElement("div");
+//           tempContainer.style.position = "absolute";
+//           tempContainer.style.left = "-9999px";
+//           tempContainer.style.width = "800px";
+//           tempContainer.style.backgroundColor = "white";
+//           document.body.appendChild(tempContainer);
+
+//           // Create temporary React root and render InvoiceViewer
+//           const ReactDOM = (await import("react-dom/client")).default;
+//           const React = (await import("react")).default;
+
+//           // Import InvoiceViewer component
+//           const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//           const root = ReactDOM.createRoot(tempContainer);
+
+//           // Render InvoiceViewer component
+//           await new Promise((resolve) => {
+//             root.render(
+//               React.createElement(InvoiceViewer, {
+//                 data: transformedData,
+//                 setInvoiceModalVisible: () => {},
+//               })
+//             );
+
+//             // Wait for component to render
+//             setTimeout(resolve, 500);
+//           });
+
+//           // Find the invoice content div (the one with ref)
+//           const input = tempContainer.querySelector(
+//             'div[style*="max-width: 768px"]'
+//           );
+
+//           if (!input) {
+//             throw new Error("Invoice content not found");
+//           }
+
+//           // Use exact same PDF generation logic as handleDownloadPdf
+//           const pdf = new jsPDF("p", "mm", "a4");
+//           const padding = 10;
+//           const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+//           const imgData = canvas.toDataURL("image/png");
+
+//           const pdfWidth = pdf.internal.pageSize.getWidth();
+//           const pdfHeight = pdf.internal.pageSize.getHeight();
+
+//           const usableWidth = pdfWidth - 2 * padding;
+//           const usableHeight = pdfHeight - 2 * padding;
+
+//           const imgProps = pdf.getImageProperties(imgData);
+//           const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+//           let heightLeft = pdfImgHeight;
+//           let position = padding;
+
+//           pdf.addImage(
+//             imgData,
+//             "PNG",
+//             padding,
+//             position,
+//             usableWidth,
+//             pdfImgHeight
+//           );
+//           heightLeft -= usableHeight;
+
+//           while (heightLeft > 0) {
+//             pdf.addPage();
+//             position = padding - heightLeft;
+//             pdf.addImage(
+//               imgData,
+//               "PNG",
+//               padding,
+//               position,
+//               usableWidth,
+//               pdfImgHeight
+//             );
+//             heightLeft -= usableHeight;
+//           }
+
+//           // Clean up
+//           root.unmount();
+//           document.body.removeChild(tempContainer);
+
+//           // Save PDF with invoice number as filename
+//           const filename = `${
+//             invoice.invoiceNumber || `invoice_${invoiceId}`
+//           }.pdf`;
+//           pdf.save(filename);
+
+//           // Add delay between downloads
+//           if (i < invoicesToDownload.length - 1) {
+//             await new Promise((resolve) => setTimeout(resolve, 1000));
+//           }
+//         } catch (invoiceError) {
+//           console.error(
+//             `Error downloading invoice ${invoiceId}:`,
+//             invoiceError
+//           );
+//           alert(
+//             `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//           );
+//         }
+//       }
+
+//       const successMessage =
+//         invoicesToDownload.length === 1
+//           ? "Invoice downloaded successfully!"
+//           : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during download process:", error);
+//       alert(`Download failed: ${error.message}`);
+//     } finally {
+//       setIsDownloading(false);
+//     }
+//   };
+
+//   // Handle unexport (reopen) invoice - only for admin
+//   const handleUnexport = async (invoice) => {
+//     if (userRole !== "admin") {
+//       alert("Access denied. Admin privileges required.");
+//       return;
+//     }
+
+//     const confirmed = window.confirm(
+//       `Are you sure you want to reopen invoice ${invoice.invoiceNumber}?`
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       // Show loading state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = true;
+//         openButton.textContent = "Opening...";
+//       }
+
+//       // Prepare the request body with the current invoice data
+//       const requestBody = {
+//         invoiceId: invoice.invoiceId || invoice.id || 0,
+//         invoiceNumber: invoice.invoiceNumber || "string",
+//         po_Number: invoice.po_Number || invoice.poNumber || "string",
+//         invoiceDate: invoice.invoiceDate || new Date().toISOString(),
+//         invoiceAmount: invoice.invoiceAmount || 0,
+//         currency: invoice.currency || "USD",
+//         createdAt: invoice.createdAt || new Date().toISOString(),
+//         createdBy: invoice.createdBy || "string",
+//         updatedAt: new Date().toISOString(),
+//         updatedBy: "admin", // or get from current user context
+//         billTo: invoice.billTo || "string",
+//         remitTo: invoice.remitTo || "string",
+//         isExported: false, // This is the key change - setting to false to reopen
+//         invoiceTimesheetLines: invoice.invoiceTimesheetLines || [],
+//       };
+
+//       // API call to update the invoice using the correct endpoint
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/Invoices/${
+//           invoice.invoiceId || invoice.id
+//         }`,
+//         {
+//           method: "PUT", // Using PUT as per the API structure
+//           headers: {
+//             "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(requestBody),
+//         }
+//       );
+
+//       if (!response.ok) {
+//         const errorText = await response.text();
+//         throw new Error(
+//           `HTTP ${response.status}: ${errorText || response.statusText}`
+//         );
+//       }
+
+//       // Check if response has content
+//       let result = null;
+//       const contentType = response.headers.get("Content-Type");
+//       if (contentType && contentType.includes("application/json")) {
+//         result = await response.json();
+//       }
+
+//       console.log("Invoice reopened successfully:", result);
+
+//       // Update the local state
+//       setInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       setFilteredInvoices((prev) =>
+//         prev.map((inv) =>
+//           (inv.invoiceId || inv.id) === (invoice.invoiceId || invoice.id)
+//             ? { ...inv, isExported: false }
+//             : inv
+//         )
+//       );
+
+//       alert(`Invoice ${invoice.invoiceNumber} has been reopened successfully!`);
+//     } catch (error) {
+//       console.error("Error reopening invoice:", error);
+
+//       // More specific error messages
+//       let errorMessage = "Failed to reopen invoice: ";
+//       if (error.message.includes("404")) {
+//         errorMessage += "Invoice not found or endpoint not available.";
+//       } else if (error.message.includes("403")) {
+//         errorMessage += "Access denied. Please check your permissions.";
+//       } else if (error.message.includes("401")) {
+//         errorMessage += "Authentication failed. Please log in again.";
+//       } else {
+//         errorMessage += error.message;
+//       }
+
+//       alert(errorMessage);
+//     } finally {
+//       // Reset button state
+//       const openButton = document.querySelector(
+//         `[data-open-invoice="${invoice.invoiceId || invoice.id}"]`
+//       );
+//       if (openButton) {
+//         openButton.disabled = false;
+//         openButton.textContent = "OPEN";
+//       }
+//     }
+//   };
+
+//   // const handlePreview = async (invoice) => {
+//   //   try {
+//   //     setPreviewModalVisible(true);
+//   //     setPreviewData(null);
+
+//   //     const response = await fetch(
+//   //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//   //         invoice.invoiceNumber
+//   //       )}`
+//   //     );
+
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//   //     }
+
+//   //     const apiData = await response.json();
+
+//   //     const transformedData = [
+//   //       {
+//   //         invoiceId: apiData.invoiceId || " ",
+//   //         invoiceDate: apiData.period || " ",
+//   //         currency: apiData.currency || " ",
+//   //         totalAmount: apiData.totalAmount || 0,
+
+//   //         lineItems: (apiData.lineItems || []).map((item, index) => ({
+//   //           poLine: item.poLine || " ",
+//   //           plc: item.plc || " ",
+//   //           vendor: item.vendor || " ",
+//   //           employee: item.employee || " ",
+//   //           hours: item.hours || 0,
+//   //           rate: item.rate || 0,
+//   //           amount: item.amount || 0,
+//   //           line_No: item.line_No || " ",
+//   //         })),
+
+//   //         billTo: apiData.billTo || " ",
+//   //         buyer: apiData.buyer || " ",
+//   //         purchaseOrderId: apiData.po_Number || " ",
+//   //         releaseNumber: apiData.po_rlse_Number || " ",
+//   //         poStartEndDate: apiData.po_Start_End_Date || " ",
+//   //         terms: apiData.terms || " ",
+//   //         amountDue: apiData.totalAmount || 0,
+//   //         period: apiData.period || " ",
+//   //         po_Number: apiData.po_Number || " ",
+//   //         po_rlse_Number: apiData.po_rlse_Number || " ",
+//   //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//   //       },
+//   //     ];
+
+//   //     setPreviewData(transformedData);
+//   //   } catch (error) {
+//   //     console.error("Error fetching invoice preview:", error);
+//   //     alert(`Failed to load invoice preview: ${error.message}`);
+//   //   }
+//   // };
+
+//   const handlePreview = async (invoice) => {
+//     try {
+//       setPreviewModalVisible(true);
+//       setPreviewData(null);
+
+//       const response = await fetch(
+//         `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//           invoice.invoiceNumber
+//         )}`
+//       );
+
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+//       }
+
+//       const apiData = await response.json();
+
+//       const transformedData = [
+//         {
+//           invoiceId: apiData.invoiceId || " ",
+//           period: apiData.period || " ",
+//           // period: new Date(invoice.period).toISOString() || " ",
+//           // period: apiData.period || " ",
+//           currency: apiData.currency || " ",
+//           totalAmount: apiData.totalAmount || 0,
+
+//           lineItems: (apiData.lineItems || []).map((item, index) => ({
+//             poLine: item.poLine || " ",
+//             plc: item.plc || " ",
+//             vendor: item.vendor || " ",
+//             employee: item.employee || " ",
+//             hours: item.hours || 0,
+//             rate: item.rate || 0,
+//             amount: item.amount || 0,
+//             line_No: item.line_No || " ",
+//           })),
+
+//           billTo: apiData.billTo || " ",
+//           buyer: apiData.buyer || " ",
+//           po_Number: apiData.po_Number || " ",
+//           po_rlse_Number: apiData.po_rlse_Number || " ",
+//           po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           terms: apiData.terms || " ",
+//           amountDue: apiData.totalAmount || 0,
+//         },
+//       ];
+
+//       setPreviewData(transformedData);
+//     } catch (error) {
+//       console.error("Error fetching invoice preview:", error);
+//       alert(`Failed to load invoice preview: ${error.message}`);
+//     }
+//   };
+
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     // Track successfully exported invoices for state update
+//   //     const successfullyExportedIds = [];
+
+//   //     for (let i = 0; i < invoicesToExport.length; i++) {
+//   //       const invoice = invoicesToExport[i];
+//   //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//   //       if (!invoiceId) {
+//   //         console.warn(
+//   //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//   //         );
+//   //         continue;
+//   //       }
+
+//   //       try {
+//   //         const columnHeaderValues = [
+//   //           invoice.invoiceNumber || "",
+//   //           formatDate(invoice.invoiceDate) || "",
+//   //           invoice.invoiceAmount || 0,
+//   //           invoice.currency || "USD",
+//   //           formatDate(invoice.createdAt) || "",
+//   //           "PLC001",
+//   //           invoice.createdBy || "Employee",
+//   //           "40.00",
+//   //           ((invoice.invoiceAmount || 0) / 40).toFixed(2),
+//   //           "0.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //           "40.00",
+//   //           (invoice.invoiceAmount || 0).toFixed(2),
+//   //         ];
+
+//   //         const payload = {
+//   //           ColumnHeaderValues: columnHeaderValues,
+//   //           IncludeHeaders: true,
+//   //           ExportFormat: "CSV",
+//   //         };
+
+//   //         const response = await fetch(
+//   //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoice?InvoiceId=${encodeURIComponent(
+//   //             invoiceId
+//   //           )}`,
+//   //           {
+//   //             method: "POST",
+//   //             headers: {
+//   //               Accept:
+//   //                 "text/csv, application/csv, application/octet-stream, */*",
+//   //               "Content-Type": "application/json",
+//   //             },
+//   //           }
+//   //         );
+
+//   //         if (!response.ok) {
+//   //           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //           try {
+//   //             const errorData = await response.text();
+//   //             if (errorData) {
+//   //               errorMessage += ` - ${errorData}`;
+//   //             }
+//   //           } catch (e) {
+//   //             // Ignore if can't parse error
+//   //           }
+//   //           throw new Error(errorMessage);
+//   //         }
+
+//   //         const blob = await response.blob();
+
+//   //         if (blob.type && blob.type.includes("application/json")) {
+//   //           const text = await blob.text();
+//   //           console.error("Received JSON instead of file:", text);
+//   //           throw new Error("Server returned an error instead of a file");
+//   //         }
+
+//   //         let filename = `invoice_${invoiceId}_export.csv`;
+//   //         const contentDisposition = response.headers.get(
+//   //           "Content-Disposition"
+//   //         );
+//   //         if (contentDisposition) {
+//   //           const filenameMatch = contentDisposition.match(
+//   //             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //           );
+//   //           if (filenameMatch && filenameMatch[1]) {
+//   //             filename = filenameMatch[1].replace(/['"]/g, "");
+//   //           }
+//   //         }
+
+//   //         const url = window.URL.createObjectURL(blob);
+//   //         const link = document.createElement("a");
+//   //         link.href = url;
+//   //         link.download = filename;
+//   //         link.style.display = "none";
+//   //         document.body.appendChild(link);
+//   //         link.click();
+
+//   //         window.URL.revokeObjectURL(url);
+//   //         document.body.removeChild(link);
+
+//   //         // Mark this invoice as successfully exported
+//   //         successfullyExportedIds.push(invoice.invoiceId);
+
+//   //         // Update invoice export status in database
+//   //         try {
+//   //           const updateResponse = await fetch(
+//   //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//   //             {
+//   //               method: "PUT",
+//   //               headers: {
+//   //                 "Content-Type": "application/json",
+//   //               },
+//   //               body: JSON.stringify({
+//   //                 ...invoice,
+//   //                 isExported: true, // Mark as exported
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin", // or get from current user context
+//   //               }),
+//   //             }
+//   //           );
+
+//   //           if (!updateResponse.ok) {
+//   //             console.warn(
+//   //               `Failed to update export status for invoice ${invoiceId}`
+//   //             );
+//   //           }
+//   //         } catch (updateError) {
+//   //           console.warn(
+//   //             `Error updating export status for invoice ${invoiceId}:`,
+//   //             updateError
+//   //           );
+//   //         }
+
+//   //         if (i < invoicesToExport.length - 1) {
+//   //           await new Promise((resolve) => setTimeout(resolve, 500));
+//   //         }
+//   //       } catch (invoiceError) {
+//   //         console.error(`Error exporting invoice ${invoiceId}:`, invoiceError);
+//   //         alert(
+//   //           `Failed to export invoice ${invoiceId}: ${invoiceError.message}`
+//   //         );
+//   //       }
+//   //     }
+
+//   //     // Update local state for successfully exported invoices
+//   //     if (successfullyExportedIds.length > 0) {
+//   //       setInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       setFilteredInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       // Clear selections for exported invoices since they can't be selected anymore
+//   //       setSelectedInvoices((prev) => {
+//   //         const newSelected = new Set(prev);
+//   //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//   //         return newSelected;
+//   //       });
+
+//   //       // Update select all checkbox state
+//   //       setSelectAll(false); // Reset select all since exported invoices are deselected
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   }
+//   // };
+
+//   //   const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     // Track successfully exported invoices for state update
+//   //     const successfullyExportedIds = [];
+
+//   //     // Collect all invoice IDs for bulk export
+//   //     const invoiceIds = invoicesToExport
+//   //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+//   //       .filter(id => id); // Remove any null/undefined values
+
+//   //     if (invoiceIds.length === 0) {
+//   //       alert("No valid invoice IDs found for export");
+//   //       return;
+//   //     }
+
+//   //     try {
+//   //       // Use the new bulk export API endpoint
+//   //       const response = await fetch(
+//   //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+//   //         {
+//   //           method: "POST",
+//   //           headers: {
+//   //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+//   //             "Content-Type": "application/json",
+//   //           },
+//   //           body: JSON.stringify({
+//   //             invoiceId: invoiceIds // Array of invoice IDs
+//   //           })
+//   //         }
+//   //       );
+
+//   //       if (!response.ok) {
+//   //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //         try {
+//   //           const errorData = await response.text();
+//   //           if (errorData) {
+//   //             errorMessage += ` - ${errorData}`;
+//   //           }
+//   //         } catch (e) {
+//   //           // Ignore if can't parse error
+//   //         }
+//   //         throw new Error(errorMessage);
+//   //       }
+
+//   //       const blob = await response.blob();
+
+//   //       // Check if response is actually a file, not JSON error
+//   //       if (blob.type && blob.type.includes("application/json")) {
+//   //         const text = await blob.text();
+//   //         console.error("Received JSON instead of file:", text);
+//   //         throw new Error("Server returned an error instead of a file");
+//   //       }
+
+//   //       // Generate filename for bulk export
+//   //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+//   //       const contentDisposition = response.headers.get("Content-Disposition");
+//   //       if (contentDisposition) {
+//   //         const filenameMatch = contentDisposition.match(
+//   //           /filename[^;=\n]*=((['"]).?*\2|[^;\n]*)/
+//   //         );
+//   //         if (filenameMatch && filenameMatch[1]) {
+//   //           filename = filenameMatch[1].replace(/['"]/g, "");
+//   //         }
+//   //       }
+
+//   //       // Download the file
+//   //       const url = window.URL.createObjectURL(blob);
+//   //       const link = document.createElement("a");
+//   //       link.href = url;
+//   //       link.download = filename;
+//   //       link.style.display = "none";
+//   //       document.body.appendChild(link);
+//   //       link.click();
+
+//   //       window.URL.revokeObjectURL(url);
+//   //       document.body.removeChild(link);
+
+//   //       // Mark all invoices as successfully exported
+//   //       successfullyExportedIds.push(...invoiceIds);
+
+//   //       // Update invoice export status in database for each invoice
+//   //       for (const invoice of invoicesToExport) {
+//   //         try {
+//   //           const updateResponse = await fetch(
+//   //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//   //             {
+//   //               method: "PUT",
+//   //               headers: {
+//   //                 "Content-Type": "application/json",
+//   //               },
+//   //               body: JSON.stringify({
+//   //                 ...invoice,
+//   //                 isExported: true, // Mark as exported
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin", // or get from current user context
+//   //               }),
+//   //             }
+//   //           );
+
+//   //           if (!updateResponse.ok) {
+//   //             console.warn(
+//   //               `Failed to update export status for invoice ${invoice.invoiceId}`
+//   //             );
+//   //           }
+//   //         } catch (updateError) {
+//   //           console.warn(
+//   //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+//   //             updateError
+//   //           );
+//   //         }
+//   //       }
+
+//   //     } catch (exportError) {
+//   //       console.error("Error during bulk export:", exportError);
+//   //       alert(`Failed to export invoices: ${exportError.message}`);
+//   //       return;
+//   //     }
+
+//   //     // Update local state for successfully exported invoices
+//   //     if (successfullyExportedIds.length > 0) {
+//   //       setInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       setFilteredInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       // Clear selections for exported invoices since they can't be selected anymore
+//   //       setSelectedInvoices((prev) => {
+//   //         const newSelected = new Set(prev);
+//   //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//   //         return newSelected;
+//   //       });
+
+//   //       // Update select all checkbox state
+//   //       setSelectAll(false); // Reset select all since exported invoices are deselected
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   }
+//   // };
+
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     // Track successfully exported invoices for state update
+//   //     const successfullyExportedIds = [];
+
+//   //     // Collect all invoice IDs for bulk export
+//   //     const invoiceIds = invoicesToExport
+//   //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+//   //       .filter(id => id); // Remove any null/undefined values
+
+//   //     if (invoiceIds.length === 0) {
+//   //       alert("No valid invoice IDs found for export");
+//   //       return;
+//   //     }
+
+//   //     try {
+//   //       // Use the new bulk export API endpoint
+//   //       const response = await fetch(
+//   //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+//   //         {
+//   //           method: "POST",
+//   //           headers: {
+//   //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+//   //             "Content-Type": "application/json",
+//   //           },
+//   //           body: JSON.stringify({
+//   //             invoiceId: invoiceIds // Array of invoice IDs
+//   //           })
+//   //         }
+//   //       );
+
+//   //       if (!response.ok) {
+//   //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //         try {
+//   //           const errorData = await response.text();
+//   //           if (errorData) {
+//   //             errorMessage += ` - ${errorData}`;
+//   //           }
+//   //         } catch (e) {
+//   //           // Ignore if can't parse error
+//   //         }
+//   //         throw new Error(errorMessage);
+//   //       }
+
+//   //       const blob = await response.blob();
+
+//   //       // Check if response is actually a file, not JSON error
+//   //       if (blob.type && blob.type.includes("application/json")) {
+//   //         const text = await blob.text();
+//   //         console.error("Received JSON instead of file:", text);
+//   //         throw new Error("Server returned an error instead of a file");
+//   //       }
+
+//   //       // Generate filename for bulk export
+//   //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+//   //       const contentDisposition = response.headers.get("Content-Disposition");
+//   //       if (contentDisposition) {
+//   //         // FIXED REGEX: Changed .?* to .*?
+//   //         const filenameMatch = contentDisposition.match(
+//   //           /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //         );
+//   //         if (filenameMatch && filenameMatch[1]) {
+//   //           filename = filenameMatch[1].replace(/['"]/g, "");
+//   //         }
+//   //       }
+
+//   //       // Download the file
+//   //       const url = window.URL.createObjectURL(blob);
+//   //       const link = document.createElement("a");
+//   //       link.href = url;
+//   //       link.download = filename;
+//   //       link.style.display = "none";
+//   //       document.body.appendChild(link);
+//   //       link.click();
+
+//   //       window.URL.revokeObjectURL(url);
+//   //       document.body.removeChild(link);
+
+//   //       // Mark all invoices as successfully exported
+//   //       successfullyExportedIds.push(...invoiceIds);
+
+//   //       // Update invoice export status in database for each invoice
+//   //       for (const invoice of invoicesToExport) {
+//   //         try {
+//   //           const updateResponse = await fetch(
+//   //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//   //             {
+//   //               method: "PUT",
+//   //               headers: {
+//   //                 "Content-Type": "application/json",
+//   //               },
+//   //               body: JSON.stringify({
+//   //                 ...invoice,
+//   //                 isExported: true, // Mark as exported
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin", // or get from current user context
+//   //               }),
+//   //             }
+//   //           );
+
+//   //           if (!updateResponse.ok) {
+//   //             console.warn(
+//   //               `Failed to update export status for invoice ${invoice.invoiceId}`
+//   //             );
+//   //           }
+//   //         } catch (updateError) {
+//   //           console.warn(
+//   //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+//   //             updateError
+//   //           );
+//   //         }
+//   //       }
+
+//   //     } catch (exportError) {
+//   //       console.error("Error during bulk export:", exportError);
+//   //       alert(`Failed to export invoices: ${exportError.message}`);
+//   //       return;
+//   //     }
+
+//   //     // Update local state for successfully exported invoices
+//   //     if (successfullyExportedIds.length > 0) {
+//   //       setInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       setFilteredInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       // Clear selections for exported invoices since they can't be selected anymore
+//   //       setSelectedInvoices((prev) => {
+//   //         const newSelected = new Set(prev);
+//   //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//   //         return newSelected;
+//   //       });
+
+//   //       // Update select all checkbox state
+//   //       setSelectAll(false); // Reset select all since exported invoices are deselected
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   }
+//   // };
+
+//   // const exportToCSV = async () => {
+//   //   const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//   //     selectedInvoices.has(invoice.invoiceId || index)
+//   //   );
+
+//   //   if (invoicesToExport.length === 0) {
+//   //     alert("Please select invoices to export");
+//   //     return;
+//   //   }
+
+//   //   try {
+//   //     // Track successfully exported invoices for state update
+//   //     const successfullyExportedIds = [];
+
+//   //     // Collect all invoice IDs for bulk export
+//   //     const invoiceIds = invoicesToExport
+//   //       .map(invoice => invoice.invoiceId || invoice.invoiceNumber)
+//   //       .filter(id => id) // Remove any null/undefined values
+//   //       .map(id => parseInt(id, 10)) // Ensure they are integers
+//   //       .filter(id => !isNaN(id)); // Remove any NaN values
+
+//   //     if (invoiceIds.length === 0) {
+//   //       alert("No valid invoice IDs found for export");
+//   //       return;
+//   //     }
+
+//   //     console.log("Invoice IDs to export:", invoiceIds); // Debug log
+
+//   //     try {
+//   //       // Use the new bulk export API endpoint with correct field name
+//   //       const response = await fetch(
+//   //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+//   //         {
+//   //           method: "POST",
+//   //           headers: {
+//   //             "Accept": "text/csv, application/csv, application/octet-stream, */*",
+//   //             "Content-Type": "application/json",
+//   //           },
+//   //           body: JSON.stringify({
+//   //             InvoiceIds: invoiceIds // Changed from invoiceId to InvoiceIds (plural, capital I)
+//   //           })
+//   //         }
+//   //       );
+
+//   //       console.log("Request body:", JSON.stringify({ InvoiceIds: invoiceIds })); // Debug log
+
+//   //       if (!response.ok) {
+//   //         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//   //         try {
+//   //           const errorData = await response.text();
+//   //           if (errorData) {
+//   //             errorMessage += ` - ${errorData}`;
+//   //           }
+//   //         } catch (e) {
+//   //           // Ignore if can't parse error
+//   //         }
+//   //         throw new Error(errorMessage);
+//   //       }
+
+//   //       const blob = await response.blob();
+
+//   //       // Check if response is actually a file, not JSON error
+//   //       if (blob.type && blob.type.includes("application/json")) {
+//   //         const text = await blob.text();
+//   //         console.error("Received JSON instead of file:", text);
+//   //         throw new Error("Server returned an error instead of a file");
+//   //       }
+
+//   //       // Generate filename for bulk export
+//   //       let filename = `bulk_invoice_export_${new Date().toISOString().split('T')[0]}.csv`;
+//   //       const contentDisposition = response.headers.get("Content-Disposition");
+//   //       if (contentDisposition) {
+//   //         const filenameMatch = contentDisposition.match(
+//   //           /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//   //         );
+//   //         if (filenameMatch && filenameMatch[1]) {
+//   //           filename = filenameMatch[1].replace(/['"]/g, "");
+//   //         }
+//   //       }
+
+//   //       // Download the file
+//   //       const url = window.URL.createObjectURL(blob);
+//   //       const link = document.createElement("a");
+//   //       link.href = url;
+//   //       link.download = filename;
+//   //       link.style.display = "none";
+//   //       document.body.appendChild(link);
+//   //       link.click();
+
+//   //       window.URL.revokeObjectURL(url);
+//   //       document.body.removeChild(link);
+
+//   //       // Mark all invoices as successfully exported
+//   //       successfullyExportedIds.push(...invoiceIds);
+
+//   //       // Update invoice export status in database for each invoice
+//   //       for (const invoice of invoicesToExport) {
+//   //         try {
+//   //           const updateResponse = await fetch(
+//   //             `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//   //             {
+//   //               method: "PUT",
+//   //               headers: {
+//   //                 "Content-Type": "application/json",
+//   //               },
+//   //               body: JSON.stringify({
+//   //                 ...invoice,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }),
+//   //             }
+//   //           );
+
+//   //           if (!updateResponse.ok) {
+//   //             console.warn(
+//   //               `Failed to update export status for invoice ${invoice.invoiceId}`
+//   //             );
+//   //           }
+//   //         } catch (updateError) {
+//   //           console.warn(
+//   //             `Error updating export status for invoice ${invoice.invoiceId}:`,
+//   //             updateError
+//   //           );
+//   //         }
+//   //       }
+
+//   //     } catch (exportError) {
+//   //       console.error("Error during bulk export:", exportError);
+//   //       alert(`Failed to export invoices: ${exportError.message}`);
+//   //       return;
+//   //     }
+
+//   //     // Update local state for successfully exported invoices
+//   //     if (successfullyExportedIds.length > 0) {
+//   //       setInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       setFilteredInvoices((prev) =>
+//   //         prev.map((inv) =>
+//   //           successfullyExportedIds.includes(inv.invoiceId)
+//   //             ? {
+//   //                 ...inv,
+//   //                 isExported: true,
+//   //                 updatedAt: new Date().toISOString(),
+//   //                 updatedBy: "admin",
+//   //               }
+//   //             : inv
+//   //         )
+//   //       );
+
+//   //       // Clear selections for exported invoices
+//   //       setSelectedInvoices((prev) => {
+//   //         const newSelected = new Set(prev);
+//   //         successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//   //         return newSelected;
+//   //       });
+
+//   //       setSelectAll(false);
+//   //     }
+
+//   //     const successMessage =
+//   //       invoicesToExport.length === 1
+//   //         ? "Invoice exported successfully!"
+//   //         : `${invoicesToExport.length} invoices exported successfully!`;
+
+//   //     alert(successMessage);
+
+//   //   } catch (error) {
+//   //     console.error("Error during export process:", error);
+//   //     alert(`Export failed: ${error.message}`);
+//   //   }
+//   // };
+
+//   const exportToCSV = async () => {
+//     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
+//       selectedInvoices.has(invoice.invoiceId || index)
+//     );
+
+//     if (invoicesToExport.length === 0) {
+//       alert("Please select invoices to export");
+//       return;
+//     }
+
+//     try {
+//       // Track successfully exported invoices for state update
+//       const successfullyExportedIds = [];
+
+//       // Collect all invoice IDs for bulk export
+//       const invoiceIds = invoicesToExport
+//         .map((invoice) => invoice.invoiceId || invoice.invoiceNumber)
+//         .filter((id) => id) // Remove any null/undefined values
+//         .map((id) => parseInt(id, 10)) // Ensure they are integers
+//         .filter((id) => !isNaN(id)); // Remove any NaN values
+
+//       if (invoiceIds.length === 0) {
+//         alert("No valid invoice IDs found for export");
+//         return;
+//       }
+
+//       console.log("Invoice IDs to export:", invoiceIds); // Debug log
+
+//       try {
+//         // Send the array directly as the request body (not wrapped in an object)
+//         const response = await fetch(
+//           "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+//           {
+//             method: "POST",
+//             headers: {
+//               Accept:
+//                 "text/csv, application/csv, application/octet-stream, */*",
+//               "Content-Type": "application/json",
+//             },
+//             body: JSON.stringify(invoiceIds), // Send array directly, not wrapped in object
+//           }
+//         );
+
+//         console.log("Request body:", JSON.stringify(invoiceIds)); // Debug log
+
+//         if (!response.ok) {
+//           let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+//           try {
+//             const errorData = await response.text();
+//             if (errorData) {
+//               errorMessage += ` - ${errorData}`;
+//             }
+//           } catch (e) {
+//             // Ignore if can't parse error
+//           }
+//           throw new Error(errorMessage);
+//         }
+
+//         const blob = await response.blob();
+
+//         // Check if response is actually a file, not JSON error
+//         if (blob.type && blob.type.includes("application/json")) {
+//           const text = await blob.text();
+//           console.error("Received JSON instead of file:", text);
+//           throw new Error("Server returned an error instead of a file");
+//         }
+
+//         // Generate filename for bulk export
+//         let filename = `bulk_invoice_export_${
+//           new Date().toISOString().split("T")[0]
+//         }.csv`;
+//         const contentDisposition = response.headers.get("Content-Disposition");
+//         if (contentDisposition) {
+//           const filenameMatch = contentDisposition.match(
+//             /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+//           );
+//           if (filenameMatch && filenameMatch[1]) {
+//             filename = filenameMatch[1].replace(/['"]/g, "");
+//           }
+//         }
+
+//         // Download the file
+//         const url = window.URL.createObjectURL(blob);
+//         const link = document.createElement("a");
+//         link.href = url;
+//         link.download = filename;
+//         link.style.display = "none";
+//         document.body.appendChild(link);
+//         link.click();
+
+//         window.URL.revokeObjectURL(url);
+//         document.body.removeChild(link);
+
+//         // Mark all invoices as successfully exported
+//         successfullyExportedIds.push(...invoiceIds);
+
+//         // Update invoice export status in database for each invoice
+//         for (const invoice of invoicesToExport) {
+//           try {
+//             const updateResponse = await fetch(
+//               `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+//               {
+//                 method: "PUT",
+//                 headers: {
+//                   "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                   ...invoice,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }),
+//               }
+//             );
+
+//             if (!updateResponse.ok) {
+//               console.warn(
+//                 `Failed to update export status for invoice ${invoice.invoiceId}`
+//               );
+//             }
+//           } catch (updateError) {
+//             console.warn(
+//               `Error updating export status for invoice ${invoice.invoiceId}:`,
+//               updateError
+//             );
+//           }
+//         }
+//       } catch (exportError) {
+//         console.error("Error during bulk export:", exportError);
+//         alert(`Failed to export invoices: ${exportError.message}`);
+//         return;
+//       }
+
+//       // Update local state for successfully exported invoices
+//       if (successfullyExportedIds.length > 0) {
+//         setInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         setFilteredInvoices((prev) =>
+//           prev.map((inv) =>
+//             successfullyExportedIds.includes(inv.invoiceId)
+//               ? {
+//                   ...inv,
+//                   isExported: true,
+//                   updatedAt: new Date().toISOString(),
+//                   updatedBy: "admin",
+//                 }
+//               : inv
+//           )
+//         );
+
+//         // Clear selections for exported invoices
+//         setSelectedInvoices((prev) => {
+//           const newSelected = new Set(prev);
+//           successfullyExportedIds.forEach((id) => newSelected.delete(id));
+//           return newSelected;
+//         });
+
+//         setSelectAll(false);
+//       }
+
+//       const successMessage =
+//         invoicesToExport.length === 1
+//           ? "Invoice exported successfully!"
+//           : `${invoicesToExport.length} invoices exported successfully!`;
+
+//       alert(successMessage);
+//     } catch (error) {
+//       console.error("Error during export process:", error);
+//       alert(`Export failed: ${error.message}`);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       // <div className="ml-48 flex-1 flex items-center justify-center">
+//       <div
+//         className="flex flex-col bg-gray-50 min-h-screen"
+//         style={{ marginLeft: "192px" }}
+//       >
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+//           <p className="text-gray-600">Loading invoices...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="ml-48 flex-1 flex items-center justify-center">
+//         <div className="text-center bg-red-50 p-8 rounded-lg border border-red-200">
+//           <div className="text-red-600 mb-4">
+//             <Receipt className="h-12 w-12 mx-auto mb-2" />
+//             <h2 className="text-lg font-semibold">Error Loading Invoices</h2>
+//           </div>
+//           <p className="text-red-700">{error}</p>
+//           <button
+//             onClick={() => window.location.reload()}
+//             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+//           >
+//             Try Again
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <>
+//       <div className="ml-48 flex-1 flex flex-col bg-gray-50 min-h-screen">
+//         {/* Header */}
+//         <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center">
+//               <Receipt className="h-8 w-8 text-green-600 mr-3" />
+//               <div>
+//                 <h1 className="text-2xl font-bold text-gray-900">
+//                   Invoice Export
+//                 </h1>
+//                 <p className="text-gray-600">Manage and export invoice data</p>
+//               </div>
+//             </div>
+//             <div className="flex items-center space-x-3">
+//               {/* Download Invoice Button */}
+//               <button
+//                 onClick={downloadInvoices}
+//                 disabled={selectedInvoices.size === 0 || isDownloading}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0 || isDownloading
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-blue-600 text-white hover:bg-blue-700"
+//                 }`}
+//               >
+//                 <FileDown className="h-4 w-4 mr-2" />
+//                 {isDownloading
+//                   ? "Downloading..."
+//                   : `Download Invoice (${selectedInvoices.size})`}
+//               </button>
+
+//               {/* Export Button */}
+//               <button
+//                 onClick={exportToCSV}
+//                 disabled={selectedInvoices.size === 0}
+//                 className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm ${
+//                   selectedInvoices.size === 0
+//                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+//                     : "bg-green-600 text-white hover:bg-green-700"
+//                 }`}
+//               >
+//                 <Download className="h-4 w-4 mr-2" />
+//                 Export ({selectedInvoices.size})
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Filters */}
+//         <div className="bg-white border-b border-gray-200 p-4">
+//           <div className="flex items-center justify-start">
+//             <div className="w-80 relative">
+//               <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+//               <input
+//                 type="text"
+//                 placeholder="Filter by Invoice Number"
+//                 value={filterInvoiceNumber}
+//                 onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+//                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+//               />
+//             </div>
+
+//             {filterInvoiceNumber && (
+//               <button
+//                 onClick={() => setFilterInvoiceNumber("")}
+//                 className="ml-3 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+//               >
+//                 Clear
+//               </button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Enhanced Table Container with Proper Sizing */}
+//         <div className="flex-1 p-6">
+//           {filteredInvoices.length === 0 ? (
+//             <div className="flex items-center justify-center h-64">
+//               <div className="text-center text-gray-500">
+//                 <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                 <p className="text-lg font-medium">No invoices found</p>
+//                 <p className="text-sm">Try adjusting your filter criteria</p>
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+//               {/* Table wrapper with enhanced horizontal scroll and proper width handling */}
+//               <div className="overflow-auto" style={getTableWrapperStyle()}>
+//                 <table className="w-full min-w-[1600px]">
+//                   {" "}
+//                   {/* Increased minimum width for better spacing */}
+//                   <thead className="bg-gray-50 sticky top-0 z-10">
+//                     <tr>
+//                       <th className="w-20 px-4 py-3 text-left border-b border-gray-200 bg-gray-50">
+//                         <div className="flex items-center space-x-2">
+//                           <input
+//                             type="checkbox"
+//                             checked={selectAll}
+//                             onChange={(e) => handleSelectAll(e.target.checked)}
+//                             disabled={selectableInvoices.length === 0}
+//                             className={`h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                               selectableInvoices.length === 0
+//                                 ? "opacity-50 cursor-not-allowed"
+//                                 : "cursor-pointer"
+//                             }`}
+//                           />
+//                           <span className="text-xs font-medium text-gray-500 tracking-wider">
+//                             All
+//                           </span>
+//                         </div>
+//                       </th>
+//                       <th className="min-w-[220px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Invoice Number
+//                       </th>
+//                       <th className="min-w-[280px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Work Order
+//                       </th>
+//                       <th className="min-w-[280px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Vendor
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Invoice Date
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Amount
+//                       </th>
+//                       <th className="min-w-[100px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Currency
+//                       </th>
+//                       <th className="min-w-[140px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Created At
+//                       </th>
+//                       <th className="min-w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                         Action
+//                       </th>
+//                       {userRole === "admin" && (
+//                         <th className="min-w-[200px] px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider border-b border-gray-200 bg-gray-50">
+//                           Correction
+//                         </th>
+//                       )}
+//                     </tr>
+//                   </thead>
+//                   <tbody className="divide-y divide-gray-200 bg-white">
+//                     {filteredInvoices.map((invoice, index) => {
+//                       const invoiceId =
+//                         invoice.invoiceId || invoice.id || index;
+//                       return (
+//                         <tr
+//                           key={invoiceId}
+//                           className="hover:bg-gray-50 transition-colors"
+//                         >
+//                           <td className="w-20 px-4 py-4 whitespace-nowrap">
+//                             <input
+//                               type="checkbox"
+//                               checked={selectedInvoices.has(invoiceId)}
+//                               onChange={(e) =>
+//                                 handleSelectInvoice(
+//                                   invoiceId,
+//                                   e.target.checked,
+//                                   invoice
+//                                 )
+//                               }
+//                               disabled={invoice.isExported}
+//                               className={`h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded ${
+//                                 invoice.isExported
+//                                   ? "opacity-50 cursor-not-allowed bg-gray-100"
+//                                   : "cursor-pointer hover:bg-green-50"
+//                               }`}
+//                             />
+//                           </td>
+//                           <td className="min-w-[220px] px-6 py-4">
+//                             <div
+//                               className="text-sm font-medium text-gray-900 break-all"
+//                               title={invoice.invoiceNumber || "N/A"}
+//                             >
+//                               {invoice.invoiceNumber || "N/A"}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[220px] px-6 py-4">
+//                             <div
+//                               className="text-sm font-medium text-gray-900 break-all"
+//                               title={invoice.invoiceNumber || "N/A"}
+//                             >
+//                               {invoice.workOrder || "N/A"}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[280px] px-6 py-4">
+//                             <div
+//                               className="text-sm text-gray-900 break-all"
+//                               title={
+//                                 invoice.invoiceTimesheetLines?.[0]?.vendor ||
+//                                 "N/A"
+//                               }
+//                             >
+//                               {invoice.invoiceTimesheetLines?.[0]?.vendor ||
+//                                 "N/A"}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-600">
+//                               {formatDate(invoice.invoiceDate)}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-900 font-medium">
+//                               {formatCurrency(
+//                                 invoice.invoiceAmount,
+//                                 invoice.currency
+//                               )}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[100px] px-6 py-4 whitespace-nowrap">
+//                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+//                               {invoice.currency || "USD"}
+//                             </span>
+//                           </td>
+//                           <td className="min-w-[140px] px-6 py-4 whitespace-nowrap">
+//                             <div className="text-sm text-gray-600">
+//                               {formatDate(invoice.createdAt)}
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[200px] px-6 py-4 whitespace-nowrap">
+//                             <div className="flex items-center space-x-2">
+//                               <button
+//                                 onClick={() => handlePreview(invoice)}
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+//                               >
+//                                 <Eye className="h-4 w-4 mr-1" />
+//                                 Preview
+//                               </button>
+//                             </div>
+//                           </td>
+//                           <td className="min-w-[200px] px-6 py-4 whitespace-nowrap">
+//                             {/* OPEN button - only for admin and exported invoices */}
+//                             {userRole === "admin" && invoice.isExported && (
+//                               <button
+//                                 onClick={() => handleUnexport(invoice)}
+//                                 data-open-invoice={
+//                                   invoice.invoiceId || invoice.id
+//                                 }
+//                                 className="inline-flex items-center px-3 py-1 rounded-md text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors font-medium"
+//                               >
+//                                 OPEN
+//                               </button>
+//                             )}
+//                           </td>
+//                         </tr>
+//                       );
+//                     })}
+//                   </tbody>
+//                 </table>
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Preview Modal */}
+//       {previewModalVisible && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+//             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+//               <h2 className="text-xl font-semibold text-gray-900">
+//                 Invoice Preview
+//               </h2>
+//               <button
+//                 onClick={() => setPreviewModalVisible(false)}
+//                 className="text-gray-400 hover:text-gray-600 transition-colors"
+//               >
+//                 <X className="h-6 w-6" />
+//               </button>
+//             </div>
+//             <div className="p-6">
+//               <InvoiceViewer
+//                 data={previewData}
+//                 setInvoiceModalVisible={setPreviewModalVisible}
+//               />
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </>
+//   );
+// }
 
 import React, { useState, useEffect } from "react";
 import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
@@ -266,58 +16353,173 @@ export default function InvoiceExport() {
   };
 
   // Handle preview click
+  // const handlePreview = async (invoice) => {
+  //   try {
+  //     setPreviewModalVisible(true);
+  //     setPreviewData(null);
+
+  //     const response = await fetch(
+  //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //         invoice.invoiceNumber
+  //       )}`
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+  //     }
+
+  //     const apiData = await response.json();
+
+  //     const transformedData = [
+  //       {
+  //         invoiceId: apiData.invoiceId || " ",
+  //         invoiceDate: formatDate(apiData.invoiceDate) || " ",
+  //         period: apiData.period || " ",
+  //         currency: apiData.currency || " ",
+  //         totalAmount: apiData.totalAmount || 0,
+
+  //         lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //           poLine: item.poLine || " ",
+  //           plc: item.plc || " ",
+  //           vendor: item.vendor || " ",
+  //           employee: item.employee || " ",
+  //           hours: item.hours || 0,
+  //           rate: item.rate || 0,
+  //           amount: item.amount || 0,
+  //           line_No: item.line_No || " ",
+  //         })),
+
+  //         billTo: apiData.billTo || " ",
+  //         buyer: apiData.buyer || " ",
+  //         po_Number: apiData.po_Number || " ",
+  //         po_rlse_Number: apiData.po_rlse_Number || " ",
+  //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //         terms: apiData.terms || " ",
+  //         amountDue: apiData.totalAmount || 0,
+  //       },
+  //     ];
+
+  //     setPreviewData(transformedData);
+  //   } catch (error) {
+  //     console.error("Error fetching invoice preview:", error);
+  //     alert(`Failed to load invoice preview: ${error.message}`);
+  //   }
+  // };
+
   const handlePreview = async (invoice) => {
-    try {
-      setPreviewModalVisible(true);
-      setPreviewData(null);
+  try {
+    setPreviewModalVisible(true);
+    setPreviewData(null);
 
-      const response = await fetch(
-        `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-          invoice.invoiceNumber
-        )}`
-      );
+    const response = await fetch(
+      `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+        invoice.invoiceNumber
+      )}`
+    );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch invoice preview: ${response.status}`);
+    }
+
+    const apiData = await response.json();
+
+    // Function to group and combine line items with same PLC, Vendor, and Employee
+    const groupAndCombineLineItems = (lineItems) => {
+      if (!lineItems || !Array.isArray(lineItems)) {
+        return [];
       }
 
-      const apiData = await response.json();
+      const groupedItems = {};
 
-      const transformedData = [
-        {
-          invoiceId: apiData.invoiceId || " ",
-          invoiceDate: formatDate(apiData.invoiceDate) || " ",
-          period: apiData.period || " ",
-          currency: apiData.currency || " ",
-          totalAmount: apiData.totalAmount || 0,
-
-          lineItems: (apiData.lineItems || []).map((item, index) => ({
+      lineItems.forEach((item, index) => {
+        // Create a unique key for grouping based on PLC, Vendor, and Employee
+        const plcKey = item.plc || '';
+        const vendorKey = item.vendor || '';
+        const employeeKey = item.employee || '';
+        
+        const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
+        
+        if (groupedItems[groupKey]) {
+          // Combine with existing group - sum hours and amounts
+          const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+          const newHours = parseFloat(item.hours) || 0;
+          groupedItems[groupKey].hours = existingHours + newHours;
+          
+          const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
+          const newAmount = parseFloat(item.amount) || 0;
+          groupedItems[groupKey].amount = existingAmount + newAmount;
+          
+          // Keep track of combined count for reference
+          groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
+          
+        } else {
+          // First occurrence of this combination
+          groupedItems[groupKey] = {
             poLine: item.poLine || " ",
             plc: item.plc || " ",
             vendor: item.vendor || " ",
             employee: item.employee || " ",
-            hours: item.hours || 0,
+            hours: parseFloat(item.hours) || 0,
             rate: item.rate || 0,
-            amount: item.amount || 0,
+            amount: parseFloat(item.amount) || 0,
             line_No: item.line_No || " ",
-          })),
+            combinedCount: 1
+          };
+        }
+      });
 
-          billTo: apiData.billTo || " ",
-          buyer: apiData.buyer || " ",
-          po_Number: apiData.po_Number || " ",
-          po_rlse_Number: apiData.po_rlse_Number || " ",
-          po_Start_End_Date: apiData.po_Start_End_Date || " ",
-          terms: apiData.terms || " ",
-          amountDue: apiData.totalAmount || 0,
-        },
-      ];
+      // Convert grouped items back to array with formatted values
+      return Object.values(groupedItems).map(item => ({
+        poLine: item.poLine,
+        plc: item.plc,
+        vendor: item.vendor,
+        employee: item.employee,
+        hours: Number(item.hours.toFixed(2)),
+        rate: item.rate,
+        amount: Number(item.amount.toFixed(2)),
+        line_No: item.line_No,
+      }));
+    };
 
-      setPreviewData(transformedData);
-    } catch (error) {
-      console.error("Error fetching invoice preview:", error);
-      alert(`Failed to load invoice preview: ${error.message}`);
-    }
-  };
+    // Group and combine line items
+    const combinedLineItems = groupAndCombineLineItems(apiData.lineItems || []);
+
+    // Recalculate total amount based on combined line items
+    const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+      return sum + (parseFloat(item.amount) || 0);
+    }, 0);
+
+    const transformedData = [
+      {
+        invoiceId: apiData.invoiceId || " ",
+        invoiceDate: formatDate(apiData.invoiceDate) || " ",
+        period: apiData.period || " ",
+        currency: apiData.currency || " ",
+        totalAmount: Number(newTotalAmount.toFixed(2)),
+
+        lineItems: combinedLineItems,
+
+        billTo: apiData.billTo || " ",
+        buyer: apiData.buyer || " ",
+        po_Number: apiData.po_Number || " ",
+        po_rlse_Number: apiData.po_rlse_Number || " ",
+        po_Start_End_Date: apiData.po_Start_End_Date || " ",
+        terms: apiData.terms || " ",
+        amountDue: Number(newTotalAmount.toFixed(2)),
+      },
+    ];
+
+    console.log("Original API data:", apiData);
+    console.log("Combined line items:", combinedLineItems);
+    console.log("Transformed preview data:", transformedData);
+
+    setPreviewData(transformedData);
+  } catch (error) {
+    console.error("Error fetching invoice preview:", error);
+    alert(`Failed to load invoice preview: ${error.message}`);
+  }
+};
+
 
   // Download invoices function
   // const downloadInvoices = async () => {
@@ -506,200 +16708,1726 @@ export default function InvoiceExport() {
   //     setIsDownloading(false);
   //   }
   // };
-  const downloadInvoices = async () => {
-    const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-      selectedInvoices.has(invoice.invoiceId || index)
-    );
 
-    if (invoicesToDownload.length === 0) {
-      alert("Please select invoices to download");
-      return;
-    }
+//   const downloadInvoices = async () => {
+//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
 
-    try {
-      setIsDownloading(true);
+//   if (invoicesToDownload.length === 0) {
+//     alert("Please select invoices to download");
+//     return;
+//   }
 
-      for (let i = 0; i < invoicesToDownload.length; i++) {
-        const invoice = invoicesToDownload[i];
-        const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+//   try {
+//     setIsDownloading(true);
 
-        if (!invoiceId) {
-          console.warn(
-            `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//     for (let i = 0; i < invoicesToDownload.length; i++) {
+//       const invoice = invoicesToDownload[i];
+//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//       if (!invoiceId) {
+//         console.warn(
+//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//         );
+//         continue;
+//       }
+
+//       try {
+//         // First fetch invoice preview data
+//         const previewResponse = await fetch(
+//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//             invoice.invoiceNumber
+//           )}`
+//         );
+
+//         if (!previewResponse.ok) {
+//           throw new Error(
+//             `Failed to fetch invoice preview: ${previewResponse.status}`
+//           );
+//         }
+
+//         const apiData = await previewResponse.json();
+
+//         // Transform data exactly like in handlePreview
+//         const transformedData = [
+//           {
+//             invoiceId: apiData.invoiceId || " ",
+//             invoiceDate: apiData.period || " ",
+//             currency: apiData.currency || " ",
+//             totalAmount: apiData.totalAmount || 0,
+
+//             lineItems: (apiData.lineItems || []).map((item, index) => ({
+//               poLine: item.poLine || " ",
+//               plc: item.plc || " ",
+//               vendor: item.vendor || " ",
+//               employee: item.employee || " ",
+//               hours: item.hours || 0,
+//               rate: item.rate || 0,
+//               amount: item.amount || 0,
+//               line_No: item.line_No || " ",
+//             })),
+
+//             billTo: apiData.billTo || " ",
+//             buyer: apiData.buyer || " ",
+//             purchaseOrderId: apiData.po_Number || " ",
+//             releaseNumber: apiData.po_rlse_Number || " ",
+//             poStartEndDate: apiData.po_Start_End_Date || " ",
+//             terms: apiData.terms || " ",
+//             amountDue: apiData.totalAmount || 0,
+//             period: apiData.period || " ",
+//             po_Number: apiData.po_Number || " ",
+//             po_rlse_Number: apiData.po_rlse_Number || " ",
+//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           },
+//         ];
+
+//         // Create temporary container with proper sizing for large invoices
+//         const tempContainer = document.createElement("div");
+//         tempContainer.style.position = "absolute";
+//         tempContainer.style.left = "-9999px";
+//         tempContainer.style.width = "210mm"; // A4 width
+//         tempContainer.style.minHeight = "297mm"; // A4 height
+//         tempContainer.style.backgroundColor = "white";
+//         tempContainer.style.padding = "0";
+//         tempContainer.style.margin = "0";
+//         tempContainer.style.overflow = "visible";
+//         document.body.appendChild(tempContainer);
+
+//         // Create temporary React root and render InvoiceViewer
+//         const ReactDOM = (await import("react-dom/client")).default;
+//         const React = (await import("react")).default;
+
+//         // Import InvoiceViewer component
+//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//         const root = ReactDOM.createRoot(tempContainer);
+
+//         // Render InvoiceViewer component
+//         await new Promise((resolve) => {
+//           root.render(
+//             React.createElement(InvoiceViewer, {
+//               data: transformedData,
+//               setInvoiceModalVisible: () => {},
+//             })
+//           );
+
+//           // Wait longer for component to render completely with all line items
+//           setTimeout(resolve, 1500);
+//         });
+
+//         // Find the invoice content div
+//         const input = tempContainer.querySelector(
+//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+//         ) || tempContainer.firstElementChild;
+
+//         if (!input) {
+//           throw new Error("Invoice content not found");
+//         }
+
+//         // Enhanced PDF generation for large invoices
+//         const pdf = new jsPDF("p", "mm", "a4");
+        
+//         // Improved html2canvas options for better quality and large content handling
+//         const canvas = await html2canvas(input, { 
+//           scale: 1.5, // Reduced scale for better performance with large content
+//           useCORS: true,
+//           allowTaint: true,
+//           backgroundColor: '#ffffff',
+//           scrollX: 0,
+//           scrollY: 0,
+//           width: input.scrollWidth,
+//           height: input.scrollHeight,
+//           windowWidth: input.scrollWidth,
+//           windowHeight: input.scrollHeight
+//         });
+        
+//         const imgData = canvas.toDataURL("image/png", 0.95); // Slightly compressed for smaller file size
+
+//         const pdfWidth = pdf.internal.pageSize.getWidth();
+//         const pdfHeight = pdf.internal.pageSize.getHeight();
+//         const padding = 5; // Reduced padding for more content space
+
+//         const usableWidth = pdfWidth - 2 * padding;
+//         const usableHeight = pdfHeight - 2 * padding;
+
+//         const imgProps = pdf.getImageProperties(imgData);
+//         const aspectRatio = imgProps.height / imgProps.width;
+//         const pdfImgHeight = usableWidth * aspectRatio;
+
+//         let heightLeft = pdfImgHeight;
+//         let position = padding;
+
+//         // Add first page
+//         pdf.addImage(
+//           imgData,
+//           "PNG",
+//           padding,
+//           position,
+//           usableWidth,
+//           pdfImgHeight
+//         );
+//         heightLeft -= usableHeight;
+
+//         // Add additional pages for large invoices
+//         while (heightLeft > 0) {
+//           pdf.addPage();
+//           position = -(pdfImgHeight - heightLeft) + padding;
+//           pdf.addImage(
+//             imgData,
+//             "PNG",
+//             padding,
+//             position,
+//             usableWidth,
+//             pdfImgHeight
+//           );
+//           heightLeft -= usableHeight;
+//         }
+
+//         // Clean up
+//         root.unmount();
+//         document.body.removeChild(tempContainer);
+
+//         // Save PDF with invoice number as filename
+//         const filename = `${
+//           invoice.invoiceNumber || `invoice_${invoiceId}`
+//         }.pdf`;
+//         pdf.save(filename);
+
+//         // Add delay between downloads to prevent browser blocking
+//         if (i < invoicesToDownload.length - 1) {
+//           await new Promise((resolve) => setTimeout(resolve, 2000));
+//         }
+//       } catch (invoiceError) {
+//         console.error(
+//           `Error downloading invoice ${invoiceId}:`,
+//           invoiceError
+//         );
+//         alert(
+//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//         );
+//       }
+//     }
+
+//     const successMessage =
+//       invoicesToDownload.length === 1
+//         ? "Invoice downloaded successfully!"
+//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//     alert(successMessage);
+//   } catch (error) {
+//     console.error("Error during download process:", error);
+//     alert(`Download failed: ${error.message}`);
+//   } finally {
+//     setIsDownloading(false);
+//   }
+// };
+
+
+const downloadInvoices = async () => {
+  const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+    selectedInvoices.has(invoice.invoiceId || index)
+  );
+
+  if (invoicesToDownload.length === 0) {
+    alert("Please select invoices to download");
+    return;
+  }
+
+  try {
+    setIsDownloading(true);
+
+    for (let i = 0; i < invoicesToDownload.length; i++) {
+      const invoice = invoicesToDownload[i];
+      const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+      if (!invoiceId) {
+        console.warn(
+          `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+        );
+        continue;
+      }
+
+      try {
+        // First fetch invoice preview data
+        const previewResponse = await fetch(
+          `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+            invoice.invoiceNumber
+          )}`
+        );
+
+        if (!previewResponse.ok) {
+          throw new Error(
+            `Failed to fetch invoice preview: ${previewResponse.status}`
           );
-          continue;
         }
 
-        try {
-          // First fetch invoice preview data (same as preview functionality)
-          const previewResponse = await fetch(
-            `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-              invoice.invoiceNumber
-            )}`
-          );
+        const apiData = await previewResponse.json();
 
-          if (!previewResponse.ok) {
-            throw new Error(
-              `Failed to fetch invoice preview: ${previewResponse.status}`
-            );
+        // Function to group and combine line items with same PLC, Vendor, and Employee
+        const groupAndCombineLineItems = (lineItems) => {
+          if (!lineItems || !Array.isArray(lineItems)) {
+            return [];
           }
 
-          const apiData = await previewResponse.json();
+          const groupedItems = {};
 
-          // Transform data exactly like in handlePreview
-          const transformedData = [
-            {
-              invoiceId: apiData.invoiceId || " ",
-              invoiceDate: apiData.period || " ",
-              currency: apiData.currency || " ",
-              totalAmount: apiData.totalAmount || 0,
-
-              lineItems: (apiData.lineItems || []).map((item, index) => ({
+          lineItems.forEach((item, index) => {
+            // Create a unique key for grouping based on PLC, Vendor, and Employee
+            const plcKey = item.plc || '';
+            const vendorKey = item.vendor || '';
+            const employeeKey = item.employee || '';
+            
+            const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
+            
+            if (groupedItems[groupKey]) {
+              // Combine with existing group - sum hours and amounts
+              const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+              const newHours = parseFloat(item.hours) || 0;
+              groupedItems[groupKey].hours = existingHours + newHours;
+              
+              const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
+              const newAmount = parseFloat(item.amount) || 0;
+              groupedItems[groupKey].amount = existingAmount + newAmount;
+              
+              // Keep track of combined count for reference
+              groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
+              
+            } else {
+              // First occurrence of this combination
+              groupedItems[groupKey] = {
                 poLine: item.poLine || " ",
                 plc: item.plc || " ",
                 vendor: item.vendor || " ",
                 employee: item.employee || " ",
-                hours: item.hours || 0,
+                hours: parseFloat(item.hours) || 0,
                 rate: item.rate || 0,
-                amount: item.amount || 0,
+                amount: parseFloat(item.amount) || 0,
                 line_No: item.line_No || " ",
-              })),
-
-              billTo: apiData.billTo || " ",
-              buyer: apiData.buyer || " ",
-              purchaseOrderId: apiData.po_Number || " ",
-              releaseNumber: apiData.po_rlse_Number || " ",
-              poStartEndDate: apiData.po_Start_End_Date || " ",
-              terms: apiData.terms || " ",
-              amountDue: apiData.totalAmount || 0,
-              period: apiData.period || " ",
-              po_Number: apiData.po_Number || " ",
-              po_rlse_Number: apiData.po_rlse_Number || " ",
-              po_Start_End_Date: apiData.po_Start_End_Date || " ",
-            },
-          ];
-
-          // Create temporary container to render InvoiceViewer component
-          const tempContainer = document.createElement("div");
-          tempContainer.style.position = "absolute";
-          tempContainer.style.left = "-9999px";
-          tempContainer.style.width = "800px";
-          tempContainer.style.backgroundColor = "white";
-          document.body.appendChild(tempContainer);
-
-          // Create temporary React root and render InvoiceViewer
-          const ReactDOM = (await import("react-dom/client")).default;
-          const React = (await import("react")).default;
-
-          // Import InvoiceViewer component
-          const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-          const root = ReactDOM.createRoot(tempContainer);
-
-          // Render InvoiceViewer component
-          await new Promise((resolve) => {
-            root.render(
-              React.createElement(InvoiceViewer, {
-                data: transformedData,
-                setInvoiceModalVisible: () => {},
-              })
-            );
-
-            // Wait for component to render
-            setTimeout(resolve, 500);
+                combinedCount: 1
+              };
+            }
           });
 
-          // Find the invoice content div (the one with ref)
-          const input = tempContainer.querySelector(
-            'div[style*="max-width: 768px"]'
-          );
+          // Convert grouped items back to array with formatted values
+          return Object.values(groupedItems).map(item => ({
+            poLine: item.poLine,
+            plc: item.plc,
+            vendor: item.vendor,
+            employee: item.employee,
+            hours: Number(item.hours.toFixed(2)),
+            rate: item.rate,
+            amount: Number(item.amount.toFixed(2)),
+            line_No: item.line_No,
+          }));
+        };
 
-          if (!input) {
-            throw new Error("Invoice content not found");
+        // Group and combine line items
+        const combinedLineItems = groupAndCombineLineItems(apiData.lineItems || []);
+
+        // Recalculate total amount based on combined line items
+        const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+          return sum + (parseFloat(item.amount) || 0);
+        }, 0);
+
+        // Transform data with combined line items
+        const transformedData = [
+          {
+            invoiceId: apiData.invoiceId || " ",
+            invoiceDate: apiData.period || " ",
+            currency: apiData.currency || " ",
+            totalAmount: Number(newTotalAmount.toFixed(2)),
+
+            lineItems: combinedLineItems,
+
+            billTo: apiData.billTo || " ",
+            buyer: apiData.buyer || " ",
+            purchaseOrderId: apiData.po_Number || " ",
+            releaseNumber: apiData.po_rlse_Number || " ",
+            poStartEndDate: apiData.po_Start_End_Date || " ",
+            terms: apiData.terms || " ",
+            amountDue: Number(newTotalAmount.toFixed(2)),
+            period: apiData.period || " ",
+            po_Number: apiData.po_Number || " ",
+            po_rlse_Number: apiData.po_rlse_Number || " ",
+            po_Start_End_Date: apiData.po_Start_End_Date || " ",
+          },
+        ];
+
+        console.log("Original API data for download:", apiData);
+        console.log("Combined line items for download:", combinedLineItems);
+        console.log("Transformed download data:", transformedData);
+
+        // Create temporary container
+        const tempContainer = document.createElement("div");
+        tempContainer.style.position = "absolute";
+        tempContainer.style.left = "-9999px";
+        tempContainer.style.top = "0";
+        tempContainer.style.width = "210mm";
+        tempContainer.style.backgroundColor = "white";
+        tempContainer.style.padding = "15mm";
+        tempContainer.style.margin = "0";
+        tempContainer.style.boxSizing = "border-box";
+        tempContainer.style.fontFamily = "Arial, sans-serif";
+        tempContainer.style.fontSize = "12px";
+        tempContainer.style.lineHeight = "1.4";
+        tempContainer.style.color = "#000000";
+        document.body.appendChild(tempContainer);
+
+        // Create temporary React root and render InvoiceViewer
+        const ReactDOM = (await import("react-dom/client")).default;
+        const React = (await import("react")).default;
+        const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+        const root = ReactDOM.createRoot(tempContainer);
+
+        await new Promise((resolve) => {
+          root.render(
+            React.createElement(InvoiceViewer, {
+              data: transformedData,
+              setInvoiceModalVisible: () => {},
+            })
+          );
+          setTimeout(resolve, 3000);
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const input = tempContainer.querySelector(
+          'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+        ) || tempContainer.firstElementChild || tempContainer;
+
+        if (!input) {
+          throw new Error("Invoice content not found");
+        }
+
+        // Ensure content is visible
+        input.style.display = "block";
+        input.style.visibility = "visible";
+        input.style.opacity = "1";
+
+        // Initialize PDF
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const usableWidth = pdfWidth - 2 * margin;
+        const usableHeight = pdfHeight - 2 * margin;
+
+        // Capture full content first
+        const fullCanvas = await html2canvas(input, {
+          scale: 1.5,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          scrollX: 0,
+          scrollY: 0,
+          width: input.scrollWidth || input.clientWidth,
+          height: input.scrollHeight || input.clientHeight,
+          windowWidth: 1200,
+          logging: false,
+        });
+
+        if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+          throw new Error("Canvas has zero dimensions");
+        }
+
+        const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+        
+        // Calculate scaling
+        const imgProps = pdf.getImageProperties(fullImgData);
+        const scale = usableWidth / imgProps.width;
+        const scaledHeight = imgProps.height * scale;
+
+        // Calculate pages needed
+        const pageHeight = usableHeight;
+        const totalPages = Math.ceil(scaledHeight / pageHeight);
+
+        // Smart page breaking - detect table rows and avoid cutting them
+        let currentY = 0;
+        let pageNumber = 0;
+
+        // Detect table rows by looking for horizontal patterns in the content
+        const detectTableRows = () => {
+          const rows = [];
+          const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
+          
+          if (tableElements.length > 0) {
+            tableElements.forEach(row => {
+              const rect = row.getBoundingClientRect();
+              const inputRect = input.getBoundingClientRect();
+              const relativeTop = rect.top - inputRect.top + input.scrollTop;
+              const relativeBottom = relativeTop + rect.height;
+              
+              rows.push({
+                top: relativeTop * scale,
+                bottom: relativeBottom * scale,
+                height: rect.height * scale
+              });
+            });
           }
+          
+          return rows.sort((a, b) => a.top - b.top);
+        };
 
-          // Use exact same PDF generation logic as handleDownloadPdf
-          const pdf = new jsPDF("p", "mm", "a4");
-          const padding = 10;
-          const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-          const imgData = canvas.toDataURL("image/png");
+        const tableRows = detectTableRows();
 
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-
-          const usableWidth = pdfWidth - 2 * padding;
-          const usableHeight = pdfHeight - 2 * padding;
-
-          const imgProps = pdf.getImageProperties(imgData);
-          const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
-
-          let heightLeft = pdfImgHeight;
-          let position = padding;
-
-          pdf.addImage(
-            imgData,
-            "PNG",
-            padding,
-            position,
-            usableWidth,
-            pdfImgHeight
-          );
-          heightLeft -= usableHeight;
-
-          while (heightLeft > 0) {
+        while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
+          if (pageNumber > 0) {
             pdf.addPage();
-            position = padding - heightLeft;
-            pdf.addImage(
-              imgData,
-              "PNG",
-              padding,
-              position,
-              usableWidth,
-              pdfImgHeight
+          }
+
+          let nextY = currentY + pageHeight;
+          
+          // Check if we would cut through a table row
+          if (tableRows.length > 0) {
+            for (const row of tableRows) {
+              // If a row would be cut by the page break
+              if (row.top < nextY && row.bottom > nextY) {
+                // If the row can fit on current page, adjust nextY to include it
+                if (row.bottom - currentY <= pageHeight) {
+                  nextY = row.bottom;
+                } else {
+                  // If row is too big for current page, move it to next page
+                  nextY = row.top;
+                }
+                break;
+              }
+            }
+          }
+
+          // Ensure we don't go beyond content
+          const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+          
+          if (actualHeight > 0) {
+            // Create canvas for this page section
+            const pageCanvas = document.createElement('canvas');
+            const pageCtx = pageCanvas.getContext('2d');
+            
+            const sourceY = currentY / scale;
+            const sourceHeight = actualHeight / scale;
+            
+            pageCanvas.width = fullCanvas.width;
+            pageCanvas.height = sourceHeight;
+            
+            // Draw the section
+            pageCtx.drawImage(
+              fullCanvas,
+              0, sourceY, fullCanvas.width, sourceHeight,
+              0, 0, fullCanvas.width, sourceHeight
             );
-            heightLeft -= usableHeight;
+            
+            const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+            
+            // Add to PDF
+            pdf.addImage(
+              pageImgData,
+              "PNG",
+              margin,
+              margin,
+              usableWidth,
+              actualHeight
+            );
           }
 
-          // Clean up
-          root.unmount();
-          document.body.removeChild(tempContainer);
+          currentY = nextY;
+          pageNumber++;
+        }
 
-          // Save PDF with invoice number as filename
-          const filename = `${
-            invoice.invoiceNumber || `invoice_${invoiceId}`
-          }.pdf`;
-          pdf.save(filename);
-
-          // Add delay between downloads
-          if (i < invoicesToDownload.length - 1) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        } catch (invoiceError) {
-          console.error(
-            `Error downloading invoice ${invoiceId}:`,
-            invoiceError
-          );
-          alert(
-            `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+        // Fallback: if no pages were created, add the full image
+        if (pageNumber === 0) {
+          pdf.addImage(
+            fullImgData,
+            "PNG",
+            margin,
+            margin,
+            usableWidth,
+            Math.min(scaledHeight, pageHeight)
           );
         }
+
+        // Clean up
+        root.unmount();
+        document.body.removeChild(tempContainer);
+
+        // Save PDF
+        const filename = `${
+          invoice.invoiceNumber || `invoice_${invoiceId}`
+        }.pdf`;
+        pdf.save(filename);
+
+        // Add delay between downloads
+        if (i < invoicesToDownload.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
+      } catch (invoiceError) {
+        console.error(
+          `Error downloading invoice ${invoiceId}:`,
+          invoiceError
+        );
+        alert(
+          `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+        );
       }
-
-      const successMessage =
-        invoicesToDownload.length === 1
-          ? "Invoice downloaded successfully!"
-          : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-      alert(successMessage);
-    } catch (error) {
-      console.error("Error during download process:", error);
-      alert(`Download failed: ${error.message}`);
-    } finally {
-      setIsDownloading(false);
     }
-  };
+
+    const successMessage =
+      invoicesToDownload.length === 1
+        ? "Invoice downloaded successfully!"
+        : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+    alert(successMessage);
+
+  } catch (error) {
+    console.error("Error during download process:", error);
+    alert(`Download failed: ${error.message}`);
+  } finally {
+    setIsDownloading(false);
+  }
+};
+
+
+
+
+// const downloadInvoices = async () => {
+//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
+
+//   if (invoicesToDownload.length === 0) {
+//     alert("Please select invoices to download");
+//     return;
+//   }
+
+//   try {
+//     setIsDownloading(true);
+
+//     for (let i = 0; i < invoicesToDownload.length; i++) {
+//       const invoice = invoicesToDownload[i];
+//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//       if (!invoiceId) {
+//         console.warn(
+//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//         );
+//         continue;
+//       }
+
+//       try {
+//         // First fetch invoice preview data
+//         const previewResponse = await fetch(
+//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//             invoice.invoiceNumber
+//           )}`
+//         );
+
+//         if (!previewResponse.ok) {
+//           throw new Error(
+//             `Failed to fetch invoice preview: ${previewResponse.status}`
+//           );
+//         }
+
+//         const apiData = await previewResponse.json();
+
+//         // Transform data exactly like in handlePreview
+//         const transformedData = [
+//           {
+//             invoiceId: apiData.invoiceId || " ",
+//             invoiceDate: apiData.period || " ",
+//             currency: apiData.currency || " ",
+//             totalAmount: apiData.totalAmount || 0,
+
+//             lineItems: (apiData.lineItems || []).map((item, index) => ({
+//               poLine: item.poLine || " ",
+//               plc: item.plc || " ",
+//               vendor: item.vendor || " ",
+//               employee: item.employee || " ",
+//               hours: item.hours || 0,
+//               rate: item.rate || 0,
+//               amount: item.amount || 0,
+//               line_No: item.line_No || " ",
+//             })),
+
+//             billTo: apiData.billTo || " ",
+//             buyer: apiData.buyer || " ",
+//             purchaseOrderId: apiData.po_Number || " ",
+//             releaseNumber: apiData.po_rlse_Number || " ",
+//             poStartEndDate: apiData.po_Start_End_Date || " ",
+//             terms: apiData.terms || " ",
+//             amountDue: apiData.totalAmount || 0,
+//             period: apiData.period || " ",
+//             po_Number: apiData.po_Number || " ",
+//             po_rlse_Number: apiData.po_rlse_Number || " ",
+//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           },
+//         ];
+
+//         // Create temporary container
+//         const tempContainer = document.createElement("div");
+//         tempContainer.style.position = "absolute";
+//         tempContainer.style.left = "-9999px";
+//         tempContainer.style.top = "0";
+//         tempContainer.style.width = "210mm";
+//         tempContainer.style.backgroundColor = "white";
+//         tempContainer.style.padding = "15mm";
+//         tempContainer.style.margin = "0";
+//         tempContainer.style.boxSizing = "border-box";
+//         tempContainer.style.fontFamily = "Arial, sans-serif";
+//         tempContainer.style.fontSize = "12px";
+//         tempContainer.style.lineHeight = "1.4";
+//         tempContainer.style.color = "#000000";
+//         document.body.appendChild(tempContainer);
+
+//         // Create temporary React root and render InvoiceViewer
+//         const ReactDOM = (await import("react-dom/client")).default;
+//         const React = (await import("react")).default;
+//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//         const root = ReactDOM.createRoot(tempContainer);
+
+//         await new Promise((resolve) => {
+//           root.render(
+//             React.createElement(InvoiceViewer, {
+//               data: transformedData,
+//               setInvoiceModalVisible: () => {},
+//             })
+//           );
+//           setTimeout(resolve, 3000);
+//         });
+
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+
+//         const input = tempContainer.querySelector(
+//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+//         ) || tempContainer.firstElementChild || tempContainer;
+
+//         if (!input) {
+//           throw new Error("Invoice content not found");
+//         }
+
+//         // Ensure content is visible
+//         input.style.display = "block";
+//         input.style.visibility = "visible";
+//         input.style.opacity = "1";
+
+//         // Initialize PDF
+//         const pdf = new jsPDF("p", "mm", "a4");
+//         const pdfWidth = pdf.internal.pageSize.getWidth();
+//         const pdfHeight = pdf.internal.pageSize.getHeight();
+//         const margin = 10;
+//         const usableWidth = pdfWidth - 2 * margin;
+//         const usableHeight = pdfHeight - 2 * margin;
+
+//         // Capture full content first
+//         const fullCanvas = await html2canvas(input, {
+//           scale: 1.5,
+//           useCORS: true,
+//           allowTaint: true,
+//           backgroundColor: '#ffffff',
+//           scrollX: 0,
+//           scrollY: 0,
+//           width: input.scrollWidth || input.clientWidth,
+//           height: input.scrollHeight || input.clientHeight,
+//           windowWidth: 1200,
+//           logging: false,
+//         });
+
+//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+//           throw new Error("Canvas has zero dimensions");
+//         }
+
+//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+        
+//         // Calculate scaling
+//         const imgProps = pdf.getImageProperties(fullImgData);
+//         const scale = usableWidth / imgProps.width;
+//         const scaledHeight = imgProps.height * scale;
+
+//         // Calculate pages needed
+//         const pageHeight = usableHeight;
+//         const totalPages = Math.ceil(scaledHeight / pageHeight);
+
+//         // Smart page breaking - detect table rows and avoid cutting them
+//         let currentY = 0;
+//         let pageNumber = 0;
+
+//         // Detect table rows by looking for horizontal patterns in the content
+//         const detectTableRows = () => {
+//           const rows = [];
+//           const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
+          
+//           if (tableElements.length > 0) {
+//             tableElements.forEach(row => {
+//               const rect = row.getBoundingClientRect();
+//               const inputRect = input.getBoundingClientRect();
+//               const relativeTop = rect.top - inputRect.top + input.scrollTop;
+//               const relativeBottom = relativeTop + rect.height;
+              
+//               rows.push({
+//                 top: relativeTop * scale,
+//                 bottom: relativeBottom * scale,
+//                 height: rect.height * scale
+//               });
+//             });
+//           }
+          
+//           return rows.sort((a, b) => a.top - b.top);
+//         };
+
+//         const tableRows = detectTableRows();
+
+//         while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
+//           if (pageNumber > 0) {
+//             pdf.addPage();
+//           }
+
+//           let nextY = currentY + pageHeight;
+          
+//           // Check if we would cut through a table row
+//           if (tableRows.length > 0) {
+//             for (const row of tableRows) {
+//               // If a row would be cut by the page break
+//               if (row.top < nextY && row.bottom > nextY) {
+//                 // If the row can fit on current page, adjust nextY to include it
+//                 if (row.bottom - currentY <= pageHeight) {
+//                   nextY = row.bottom;
+//                 } else {
+//                   // If row is too big for current page, move it to next page
+//                   nextY = row.top;
+//                 }
+//                 break;
+//               }
+//             }
+//           }
+
+//           // Ensure we don't go beyond content
+//           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+          
+//           if (actualHeight > 0) {
+//             // Create canvas for this page section
+//             const pageCanvas = document.createElement('canvas');
+//             const pageCtx = pageCanvas.getContext('2d');
+            
+//             const sourceY = currentY / scale;
+//             const sourceHeight = actualHeight / scale;
+            
+//             pageCanvas.width = fullCanvas.width;
+//             pageCanvas.height = sourceHeight;
+            
+//             // Draw the section
+//             pageCtx.drawImage(
+//               fullCanvas,
+//               0, sourceY, fullCanvas.width, sourceHeight,
+//               0, 0, fullCanvas.width, sourceHeight
+//             );
+            
+//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+            
+//             // Add to PDF
+//             pdf.addImage(
+//               pageImgData,
+//               "PNG",
+//               margin,
+//               margin,
+//               usableWidth,
+//               actualHeight
+//             );
+//           }
+
+//           currentY = nextY;
+//           pageNumber++;
+//         }
+
+//         // Fallback: if no pages were created, add the full image
+//         if (pageNumber === 0) {
+//           pdf.addImage(
+//             fullImgData,
+//             "PNG",
+//             margin,
+//             margin,
+//             usableWidth,
+//             Math.min(scaledHeight, pageHeight)
+//           );
+//         }
+
+//         // Clean up
+//         root.unmount();
+//         document.body.removeChild(tempContainer);
+
+//         // Save PDF
+//         const filename = `${
+//           invoice.invoiceNumber || `invoice_${invoiceId}`
+//         }.pdf`;
+//         pdf.save(filename);
+
+//         // Add delay between downloads
+//         if (i < invoicesToDownload.length - 1) {
+//           await new Promise((resolve) => setTimeout(resolve, 2000));
+//         }
+
+//       } catch (invoiceError) {
+//         console.error(
+//           `Error downloading invoice ${invoiceId}:`,
+//           invoiceError
+//         );
+//         alert(
+//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//         );
+//       }
+//     }
+
+//     const successMessage =
+//       invoicesToDownload.length === 1
+//         ? "Invoice downloaded successfully!"
+//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//     alert(successMessage);
+
+//   } catch (error) {
+//     console.error("Error during download process:", error);
+//     alert(`Download failed: ${error.message}`);
+//   } finally {
+//     setIsDownloading(false);
+//   }
+// };
+
+// const downloadInvoices = async () => {
+//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
+
+//   if (invoicesToDownload.length === 0) {
+//     alert("Please select invoices to download");
+//     return;
+//   }
+
+//   try {
+//     setIsDownloading(true);
+
+//     for (let i = 0; i < invoicesToDownload.length; i++) {
+//       const invoice = invoicesToDownload[i];
+//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//       if (!invoiceId) {
+//         console.warn(
+//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//         );
+//         continue;
+//       }
+
+//       try {
+//         // First fetch invoice preview data
+//         const previewResponse = await fetch(
+//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//             invoice.invoiceNumber
+//           )}`
+//         );
+
+//         if (!previewResponse.ok) {
+//           throw new Error(
+//             `Failed to fetch invoice preview: ${previewResponse.status}`
+//           );
+//         }
+
+//         const apiData = await previewResponse.json();
+
+//         // Transform data exactly like in handlePreview
+//         const transformedData = [
+//           {
+//             invoiceId: apiData.invoiceId || " ",
+//             invoiceDate: apiData.period || " ",
+//             currency: apiData.currency || " ",
+//             totalAmount: apiData.totalAmount || 0,
+
+//             lineItems: (apiData.lineItems || []).map((item, index) => ({
+//               poLine: item.poLine || " ",
+//               plc: item.plc || " ",
+//               vendor: item.vendor || " ",
+//               employee: item.employee || " ",
+//               hours: item.hours || 0,
+//               rate: item.rate || 0,
+//               amount: item.amount || 0,
+//               line_No: item.line_No || " ",
+//             })),
+
+//             billTo: apiData.billTo || " ",
+//             buyer: apiData.buyer || " ",
+//             purchaseOrderId: apiData.po_Number || " ",
+//             releaseNumber: apiData.po_rlse_Number || " ",
+//             poStartEndDate: apiData.po_Start_End_Date || " ",
+//             terms: apiData.terms || " ",
+//             amountDue: apiData.totalAmount || 0,
+//             period: apiData.period || " ",
+//             po_Number: apiData.po_Number || " ",
+//             po_rlse_Number: apiData.po_rlse_Number || " ",
+//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           },
+//         ];
+
+//         // Create temporary container with consistent styling
+//         const tempContainer = document.createElement("div");
+//         tempContainer.style.position = "absolute";
+//         tempContainer.style.left = "-9999px";
+//         tempContainer.style.top = "0";
+//         tempContainer.style.width = "210mm";
+//         tempContainer.style.backgroundColor = "white";
+//         tempContainer.style.padding = "15mm";
+//         tempContainer.style.margin = "0";
+//         tempContainer.style.boxSizing = "border-box";
+//         tempContainer.style.fontFamily = "Arial, sans-serif";
+//         tempContainer.style.fontSize = "12px";
+//         tempContainer.style.lineHeight = "1.4";
+//         tempContainer.style.color = "#000000";
+//         // Force consistent font rendering
+//         tempContainer.style.webkitFontSmoothing = "antialiased";
+//         tempContainer.style.mozOsxFontSmoothing = "grayscale";
+//         document.body.appendChild(tempContainer);
+
+//         // Create temporary React root and render InvoiceViewer
+//         const ReactDOM = (await import("react-dom/client")).default;
+//         const React = (await import("react")).default;
+//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//         const root = ReactDOM.createRoot(tempContainer);
+
+//         await new Promise((resolve) => {
+//           root.render(
+//             React.createElement(InvoiceViewer, {
+//               data: transformedData,
+//               setInvoiceModalVisible: () => {},
+//             })
+//           );
+//           setTimeout(resolve, 3000);
+//         });
+
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+
+//         // Find the complete invoice content (not just table)
+//         const input = tempContainer.querySelector(
+//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+//         ) || tempContainer.firstElementChild || tempContainer;
+
+//         if (!input) {
+//           throw new Error("Invoice content not found");
+//         }
+
+//         // Ensure all content is visible and properly styled
+//         input.style.display = "block";
+//         input.style.visibility = "visible";
+//         input.style.opacity = "1";
+        
+//         // Force consistent font sizes throughout
+//         const allElements = input.querySelectorAll('*');
+//         allElements.forEach(el => {
+//           if (el.style) {
+//             // Ensure consistent font sizes
+//             if (!el.style.fontSize || el.style.fontSize === '') {
+//               el.style.fontSize = '12px';
+//             }
+//             // Ensure visibility
+//             if (el.style.display === 'none') {
+//               el.style.display = 'block';
+//             }
+//             el.style.visibility = 'visible';
+//             el.style.opacity = '1';
+//           }
+//         });
+
+//         // Initialize PDF
+//         const pdf = new jsPDF("p", "mm", "a4");
+//         const pdfWidth = pdf.internal.pageSize.getWidth();
+//         const pdfHeight = pdf.internal.pageSize.getHeight();
+//         const margin = 10;
+//         const usableWidth = pdfWidth - 2 * margin;
+//         const usableHeight = pdfHeight - 2 * margin;
+
+//         // Capture the COMPLETE invoice content
+//         const fullCanvas = await html2canvas(input, {
+//           scale: 1.5,
+//           useCORS: true,
+//           allowTaint: true,
+//           backgroundColor: '#ffffff',
+//           scrollX: 0,
+//           scrollY: 0,
+//           width: input.scrollWidth || input.clientWidth,
+//           height: input.scrollHeight || input.clientHeight,
+//           windowWidth: 1200,
+//           windowHeight: input.scrollHeight || input.clientHeight,
+//           logging: false,
+//           onclone: (clonedDoc, element) => {
+//             // Ensure all elements maintain consistent styling in clone
+//             const allClonedElements = clonedDoc.querySelectorAll('*');
+//             allClonedElements.forEach(el => {
+//               if (el.style) {
+//                 el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
+//                 el.style.visibility = 'visible';
+//                 el.style.opacity = '1';
+//                 el.style.fontSize = el.style.fontSize || '12px';
+//                 el.style.fontFamily = 'Arial, sans-serif';
+//               }
+//             });
+//           }
+//         });
+
+//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+//           throw new Error("Canvas has zero dimensions");
+//         }
+
+//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+        
+//         // Calculate scaling to fit page width
+//         const imgProps = pdf.getImageProperties(fullImgData);
+//         const scale = usableWidth / imgProps.width;
+//         const scaledHeight = imgProps.height * scale;
+
+//         // Smart page breaking that respects content boundaries
+//         let currentY = 0;
+//         let pageNumber = 0;
+//         const rowHeight = 25 * scale; // Approximate row height in scaled units
+
+//         while (currentY < scaledHeight && pageNumber < 50) {
+//           if (pageNumber > 0) {
+//             pdf.addPage();
+//           }
+
+//           let nextY = currentY + usableHeight;
+          
+//           // If this isn't the last section, try to break at row boundary
+//           if (nextY < scaledHeight) {
+//             // Find a good break point near the end of the page
+//             const searchStart = Math.max(currentY + (usableHeight * 0.7), currentY);
+//             const searchEnd = nextY;
+            
+//             // Look for row boundaries in the last 30% of the page
+//             let bestBreak = nextY;
+//             for (let y = searchEnd; y >= searchStart; y -= rowHeight) {
+//               bestBreak = y;
+//               break; // Use the first row boundary we find
+//             }
+//             nextY = bestBreak;
+//           }
+
+//           const sectionHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+          
+//           if (sectionHeight > 0) {
+//             // Create canvas for this page section
+//             const pageCanvas = document.createElement('canvas');
+//             const pageCtx = pageCanvas.getContext('2d');
+            
+//             const sourceY = currentY / scale;
+//             const sourceHeight = sectionHeight / scale;
+            
+//             pageCanvas.width = fullCanvas.width;
+//             pageCanvas.height = sourceHeight;
+            
+//             // Draw the section with proper scaling
+//             pageCtx.drawImage(
+//               fullCanvas,
+//               0, sourceY, fullCanvas.width, sourceHeight,
+//               0, 0, fullCanvas.width, sourceHeight
+//             );
+            
+//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+            
+//             // Add to PDF with consistent scaling
+//             pdf.addImage(
+//               pageImgData,
+//               "PNG",
+//               margin,
+//               margin,
+//               usableWidth,
+//               sectionHeight
+//             );
+//           }
+
+//           currentY = nextY;
+//           pageNumber++;
+//         }
+
+//         // Fallback: if no pages were created, add the full image
+//         if (pageNumber === 0) {
+//           pdf.addImage(
+//             fullImgData,
+//             "PNG",
+//             margin,
+//             margin,
+//             usableWidth,
+//             Math.min(scaledHeight, usableHeight)
+//           );
+//         }
+
+//         // Clean up
+//         root.unmount();
+//         document.body.removeChild(tempContainer);
+
+//         // Save PDF
+//         const filename = `${
+//           invoice.invoiceNumber || `invoice_${invoiceId}`
+//         }.pdf`;
+//         pdf.save(filename);
+
+//         // Add delay between downloads
+//         if (i < invoicesToDownload.length - 1) {
+//           await new Promise((resolve) => setTimeout(resolve, 2000));
+//         }
+
+//       } catch (invoiceError) {
+//         console.error(
+//           `Error downloading invoice ${invoiceId}:`,
+//           invoiceError
+//         );
+//         alert(
+//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//         );
+//       }
+//     }
+
+//     const successMessage =
+//       invoicesToDownload.length === 1
+//         ? "Invoice downloaded successfully!"
+//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//     alert(successMessage);
+
+//   } catch (error) {
+//     console.error("Error during download process:", error);
+//     alert(`Download failed: ${error.message}`);
+//   } finally {
+//     setIsDownloading(false);
+//   }
+// };
+
+
+// const downloadInvoices = async () => {
+//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+//     selectedInvoices.has(invoice.invoiceId || index)
+//   );
+
+//   if (invoicesToDownload.length === 0) {
+//     alert("Please select invoices to download");
+//     return;
+//   }
+
+//   try {
+//     setIsDownloading(true);
+
+//     for (let i = 0; i < invoicesToDownload.length; i++) {
+//       const invoice = invoicesToDownload[i];
+//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+//       if (!invoiceId) {
+//         console.warn(
+//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+//         );
+//         continue;
+//       }
+
+//       try {
+//         // First fetch invoice preview data
+//         const previewResponse = await fetch(
+//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+//             invoice.invoiceNumber
+//           )}`
+//         );
+
+//         if (!previewResponse.ok) {
+//           throw new Error(
+//             `Failed to fetch invoice preview: ${previewResponse.status}`
+//           );
+//         }
+
+//         const apiData = await previewResponse.json();
+
+//         // Transform data exactly like in handlePreview
+//         const transformedData = [
+//           {
+//             invoiceId: apiData.invoiceId || " ",
+//             invoiceDate: apiData.period || " ",
+//             currency: apiData.currency || " ",
+//             totalAmount: apiData.totalAmount || 0,
+
+//             lineItems: (apiData.lineItems || []).map((item, index) => ({
+//               poLine: item.poLine || " ",
+//               plc: item.plc || " ",
+//               vendor: item.vendor || " ",
+//               employee: item.employee || " ",
+//               hours: item.hours || 0,
+//               rate: item.rate || 0,
+//               amount: item.amount || 0,
+//               line_No: item.line_No || " ",
+//             })),
+
+//             billTo: apiData.billTo || " ",
+//             buyer: apiData.buyer || " ",
+//             purchaseOrderId: apiData.po_Number || " ",
+//             releaseNumber: apiData.po_rlse_Number || " ",
+//             poStartEndDate: apiData.po_Start_End_Date || " ",
+//             terms: apiData.terms || " ",
+//             amountDue: apiData.totalAmount || 0,
+//             period: apiData.period || " ",
+//             po_Number: apiData.po_Number || " ",
+//             po_rlse_Number: apiData.po_rlse_Number || " ",
+//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+//           },
+//         ];
+
+//         // Create temporary container
+//         const tempContainer = document.createElement("div");
+//         tempContainer.style.position = "absolute";
+//         tempContainer.style.left = "-9999px";
+//         tempContainer.style.top = "0";
+//         tempContainer.style.width = "210mm";
+//         tempContainer.style.backgroundColor = "white";
+//         tempContainer.style.padding = "15mm";
+//         tempContainer.style.margin = "0";
+//         tempContainer.style.boxSizing = "border-box";
+//         tempContainer.style.fontFamily = "Arial, sans-serif";
+//         tempContainer.style.fontSize = "12px";
+//         tempContainer.style.lineHeight = "1.4";
+//         tempContainer.style.color = "#000000";
+//         document.body.appendChild(tempContainer);
+
+//         // Create temporary React root and render InvoiceViewer
+//         const ReactDOM = (await import("react-dom/client")).default;
+//         const React = (await import("react")).default;
+//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+//         const root = ReactDOM.createRoot(tempContainer);
+
+//         await new Promise((resolve) => {
+//           root.render(
+//             React.createElement(InvoiceViewer, {
+//               data: transformedData,
+//               setInvoiceModalVisible: () => {},
+//             })
+//           );
+//           setTimeout(resolve, 3000);
+//         });
+
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+
+//         const input = tempContainer.querySelector(
+//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+//         ) || tempContainer.firstElementChild || tempContainer;
+
+//         if (!input) {
+//           throw new Error("Invoice content not found");
+//         }
+
+//         input.style.display = "block";
+//         input.style.visibility = "visible";
+//         input.style.opacity = "1";
+
+//         // Initialize PDF
+//         const pdf = new jsPDF("p", "mm", "a4");
+//         const pdfWidth = pdf.internal.pageSize.getWidth();
+//         const pdfHeight = pdf.internal.pageSize.getHeight();
+//         const margin = 10;
+//         const usableWidth = pdfWidth - 2 * margin;
+//         const usableHeight = pdfHeight - 2 * margin;
+
+//         // Capture full content
+//         const fullCanvas = await html2canvas(input, {
+//           scale: 1.5,
+//           useCORS: true,
+//           allowTaint: true,
+//           backgroundColor: '#ffffff',
+//           scrollX: 0,
+//           scrollY: 0,
+//           width: input.scrollWidth || input.clientWidth,
+//           height: input.scrollHeight || input.clientHeight,
+//           windowWidth: 1200,
+//           logging: false,
+//         });
+
+//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+//           throw new Error("Canvas has zero dimensions");
+//         }
+
+//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+        
+//         // Calculate scaling
+//         const imgProps = pdf.getImageProperties(fullImgData);
+//         const scale = usableWidth / imgProps.width;
+//         const scaledHeight = imgProps.height * scale;
+
+//         // Get all table row elements and their positions
+//         const getRowBreakPoints = () => {
+//           const breakPoints = [0]; // Start with top of document
+          
+//           // Find all table rows, divs that look like rows, and elements with row-like content
+//           const rowSelectors = [
+//             'tr',
+//             'tbody tr', 
+//             '.table-row',
+//             '[class*="row"]',
+//             'div[style*="border"]',
+//             'div:has(table)',
+//             'div > div:nth-child(n+2)' // Multiple child divs that might be rows
+//           ];
+          
+//           const allRows = [];
+          
+//           rowSelectors.forEach(selector => {
+//             try {
+//               const elements = input.querySelectorAll(selector);
+//               elements.forEach(el => {
+//                 if (el.offsetHeight > 0) { // Only visible elements
+//                   allRows.push(el);
+//                 }
+//               });
+//             } catch (e) {
+//               // Skip invalid selectors
+//             }
+//           });
+
+//           // Get positions of all potential row elements
+//           allRows.forEach(row => {
+//             const rect = row.getBoundingClientRect();
+//             const inputRect = input.getBoundingClientRect();
+//             const relativeTop = (rect.top - inputRect.top + input.scrollTop) * scale;
+//             const relativeBottom = relativeTop + (rect.height * scale);
+            
+//             if (relativeTop > 0 && relativeTop < scaledHeight) {
+//               breakPoints.push(relativeTop);
+//               breakPoints.push(relativeBottom);
+//             }
+//           });
+
+//           // Remove duplicates and sort
+//           return [...new Set(breakPoints)].sort((a, b) => a - b);
+//         };
+
+//         const breakPoints = getRowBreakPoints();
+        
+//         let currentY = 0;
+//         let pageNumber = 0;
+
+//         while (currentY < scaledHeight && pageNumber < 50) {
+//           if (pageNumber > 0) {
+//             pdf.addPage();
+//           }
+
+//           let nextY = currentY + usableHeight;
+          
+//           // Find the best break point that doesn't cut content
+//           if (nextY < scaledHeight) { // Only adjust if we're not on the last section
+//             let bestBreakPoint = nextY;
+            
+//             // Look for a break point within 50 units before the natural break
+//             for (let i = breakPoints.length - 1; i >= 0; i--) {
+//               const breakPoint = breakPoints[i];
+//               if (breakPoint <= nextY && breakPoint >= currentY + (usableHeight * 0.3)) {
+//                 // Found a good break point that gives us at least 30% of page content
+//                 bestBreakPoint = breakPoint;
+//                 break;
+//               }
+//             }
+            
+//             nextY = bestBreakPoint;
+//           }
+
+//           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+          
+//           if (actualHeight > 0) {
+//             // Create canvas for this page section
+//             const pageCanvas = document.createElement('canvas');
+//             const pageCtx = pageCanvas.getContext('2d');
+            
+//             const sourceY = currentY / scale;
+//             const sourceHeight = actualHeight / scale;
+            
+//             pageCanvas.width = fullCanvas.width;
+//             pageCanvas.height = sourceHeight;
+            
+//             // Draw the section
+//             pageCtx.drawImage(
+//               fullCanvas,
+//               0, sourceY, fullCanvas.width, sourceHeight,
+//               0, 0, fullCanvas.width, sourceHeight
+//             );
+            
+//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+            
+//             // Add to PDF
+//             pdf.addImage(
+//               pageImgData,
+//               "PNG",
+//               margin,
+//               margin,
+//               usableWidth,
+//               actualHeight
+//             );
+//           }
+
+//           currentY = nextY;
+//           pageNumber++;
+//         }
+
+//         // Fallback: if no pages were created, add the full image
+//         if (pageNumber === 0) {
+//           pdf.addImage(
+//             fullImgData,
+//             "PNG",
+//             margin,
+//             margin,
+//             usableWidth,
+//             Math.min(scaledHeight, usableHeight)
+//           );
+//         }
+
+//         // Clean up
+//         root.unmount();
+//         document.body.removeChild(tempContainer);
+
+//         // Save PDF
+//         const filename = `${
+//           invoice.invoiceNumber || `invoice_${invoiceId}`
+//         }.pdf`;
+//         pdf.save(filename);
+
+//         // Add delay between downloads
+//         if (i < invoicesToDownload.length - 1) {
+//           await new Promise((resolve) => setTimeout(resolve, 2000));
+//         }
+
+//       } catch (invoiceError) {
+//         console.error(
+//           `Error downloading invoice ${invoiceId}:`,
+//           invoiceError
+//         );
+//         alert(
+//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+//         );
+//       }
+//     }
+
+//     const successMessage =
+//       invoicesToDownload.length === 1
+//         ? "Invoice downloaded successfully!"
+//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+//     alert(successMessage);
+
+//   } catch (error) {
+//     console.error("Error during download process:", error);
+//     alert(`Download failed: ${error.message}`);
+//   } finally {
+//     setIsDownloading(false);
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // const downloadInvoices = async () => {
+  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+  //     selectedInvoices.has(invoice.invoiceId || index)
+  //   );
+
+  //   if (invoicesToDownload.length === 0) {
+  //     alert("Please select invoices to download");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsDownloading(true);
+
+  //     for (let i = 0; i < invoicesToDownload.length; i++) {
+  //       const invoice = invoicesToDownload[i];
+  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+  //       if (!invoiceId) {
+  //         console.warn(
+  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+  //         );
+  //         continue;
+  //       }
+
+  //       try {
+  //         // First fetch invoice preview data (same as preview functionality)
+  //         const previewResponse = await fetch(
+  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             invoice.invoiceNumber
+  //           )}`
+  //         );
+
+  //         if (!previewResponse.ok) {
+  //           throw new Error(
+  //             `Failed to fetch invoice preview: ${previewResponse.status}`
+  //           );
+  //         }
+
+  //         const apiData = await previewResponse.json();
+
+  //         // Transform data exactly like in handlePreview
+  //         const transformedData = [
+  //           {
+  //             invoiceId: apiData.invoiceId || " ",
+  //             invoiceDate: apiData.period || " ",
+  //             currency: apiData.currency || " ",
+  //             totalAmount: apiData.totalAmount || 0,
+
+  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //               poLine: item.poLine || " ",
+  //               plc: item.plc || " ",
+  //               vendor: item.vendor || " ",
+  //               employee: item.employee || " ",
+  //               hours: item.hours || 0,
+  //               rate: item.rate || 0,
+  //               amount: item.amount || 0,
+  //               line_No: item.line_No || " ",
+  //             })),
+
+  //             billTo: apiData.billTo || " ",
+  //             buyer: apiData.buyer || " ",
+  //             purchaseOrderId: apiData.po_Number || " ",
+  //             releaseNumber: apiData.po_rlse_Number || " ",
+  //             poStartEndDate: apiData.po_Start_End_Date || " ",
+  //             terms: apiData.terms || " ",
+  //             amountDue: apiData.totalAmount || 0,
+  //             period: apiData.period || " ",
+  //             po_Number: apiData.po_Number || " ",
+  //             po_rlse_Number: apiData.po_rlse_Number || " ",
+  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //           },
+  //         ];
+
+  //         // Create temporary container to render InvoiceViewer component
+  //         const tempContainer = document.createElement("div");
+  //         tempContainer.style.position = "absolute";
+  //         tempContainer.style.left = "-9999px";
+  //         tempContainer.style.width = "800px";
+  //         tempContainer.style.backgroundColor = "white";
+  //         document.body.appendChild(tempContainer);
+
+  //         // Create temporary React root and render InvoiceViewer
+  //         const ReactDOM = (await import("react-dom/client")).default;
+  //         const React = (await import("react")).default;
+
+  //         // Import InvoiceViewer component
+  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+  //         const root = ReactDOM.createRoot(tempContainer);
+
+  //         // Render InvoiceViewer component
+  //         await new Promise((resolve) => {
+  //           root.render(
+  //             React.createElement(InvoiceViewer, {
+  //               data: transformedData,
+  //               setInvoiceModalVisible: () => {},
+  //             })
+  //           );
+
+  //           // Wait for component to render
+  //           setTimeout(resolve, 500);
+  //         });
+
+  //         // Find the invoice content div (the one with ref)
+  //         const input = tempContainer.querySelector(
+  //           'div[style*="max-width: 768px"]'
+  //         );
+
+  //         if (!input) {
+  //           throw new Error("Invoice content not found");
+  //         }
+
+  //         // Use exact same PDF generation logic as handleDownloadPdf
+  //         const pdf = new jsPDF("p", "mm", "a4");
+  //         const padding = 10;
+  //         const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //         const imgData = canvas.toDataURL("image/png");
+
+  //         const pdfWidth = pdf.internal.pageSize.getWidth();
+  //         const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  //         const usableWidth = pdfWidth - 2 * padding;
+  //         const usableHeight = pdfHeight - 2 * padding;
+
+  //         const imgProps = pdf.getImageProperties(imgData);
+  //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+  //         let heightLeft = pdfImgHeight;
+  //         let position = padding;
+
+  //         pdf.addImage(
+  //           imgData,
+  //           "PNG",
+  //           padding,
+  //           position,
+  //           usableWidth,
+  //           pdfImgHeight
+  //         );
+  //         heightLeft -= usableHeight;
+
+  //         while (heightLeft > 0) {
+  //           pdf.addPage();
+  //           position = padding - heightLeft;
+  //           pdf.addImage(
+  //             imgData,
+  //             "PNG",
+  //             padding,
+  //             position,
+  //             usableWidth,
+  //             pdfImgHeight
+  //           );
+  //           heightLeft -= usableHeight;
+  //         }
+
+  //         // Clean up
+  //         root.unmount();
+  //         document.body.removeChild(tempContainer);
+
+  //         // Save PDF with invoice number as filename
+  //         const filename = `${
+  //           invoice.invoiceNumber || `invoice_${invoiceId}`
+  //         }.pdf`;
+  //         pdf.save(filename);
+
+  //         // Add delay between downloads
+  //         if (i < invoicesToDownload.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 1000));
+  //         }
+  //       } catch (invoiceError) {
+  //         console.error(
+  //           `Error downloading invoice ${invoiceId}:`,
+  //           invoiceError
+  //         );
+  //         alert(
+  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+  //         );
+  //       }
+  //     }
+
+  //     const successMessage =
+  //       invoicesToDownload.length === 1
+  //         ? "Invoice downloaded successfully!"
+  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+  //     alert(successMessage);
+  //   } catch (error) {
+  //     console.error("Error during download process:", error);
+  //     alert(`Download failed: ${error.message}`);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
 
   // Export to CSV function
+  
   const exportToCSV = async () => {
     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
       selectedInvoices.has(invoice.invoiceId || index)
@@ -943,7 +18671,7 @@ export default function InvoiceExport() {
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
-              <FileDown className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" />
               {isDownloading
                 ? "Downloading..."
                 : `Download (${selectedInvoices.size})`}
@@ -961,7 +18689,7 @@ export default function InvoiceExport() {
       : 'bg-green-600 text-white hover:bg-green-700'
   }`}
 >
-  <Download className="h-4 w-4 mr-2" />
+  <FileDown className="h-4 w-4 mr-2" />
   {isExporting ? 'Exporting...' : `Export (${selectedInvoices.size})`}
 </button>
 
