@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
 import InvoiceViewer from "./InvoiceViewer";
@@ -1242,221 +1241,373 @@ const downloadInvoices = async () => {
           input.style.opacity = "1";
  
           // **COMPLETELY FIXED PDF GENERATION WITH PROPER ROW DETECTION**
-          const pdf = new jsPDF("p", "mm", "a4");
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const margin = 10;
-          const usableWidth = pdfWidth - 2 * margin;
-          const usableHeight = pdfHeight - 2 * margin;
-          const bottomPadding = 15; // Extra padding to prevent cutting
+        //   const pdf = new jsPDF("p", "mm", "a4");
+        //   const pdfWidth = pdf.internal.pageSize.getWidth();
+        //   const pdfHeight = pdf.internal.pageSize.getHeight();
+        //   const margin = 10;
+        //   const usableWidth = pdfWidth - 2 * margin;
+        //   const usableHeight = pdfHeight - 2 * margin;
+        //   const bottomPadding = 15; // Extra padding to prevent cutting
  
-          // Capture full content
-          const fullCanvas = await html2canvas(input, {
-            scale: 1.5,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: "#ffffff",
-            scrollX: 0,
-            scrollY: 0,
-            width: input.scrollWidth || input.clientWidth,
-            height: input.scrollHeight || input.clientHeight,
-            windowWidth: 1200,
-            logging: false,
-          });
+        //   // Capture full content
+        //   const fullCanvas = await html2canvas(input, {
+        //     scale: 1.5,
+        //     useCORS: true,
+        //     allowTaint: true,
+        //     backgroundColor: "#ffffff",
+        //     scrollX: 0,
+        //     scrollY: 0,
+        //     width: input.scrollWidth || input.clientWidth,
+        //     height: input.scrollHeight || input.clientHeight,
+        //     windowWidth: 1200,
+        //     logging: false,
+        //   });
  
-          if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-            throw new Error("Canvas has zero dimensions");
-          }
+        //   if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+        //     throw new Error("Canvas has zero dimensions");
+        //   }
  
-          const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-          const imgProps = pdf.getImageProperties(fullImgData);
-          const scale = usableWidth / imgProps.width;
-          const scaledHeight = imgProps.height * scale;
+        //   const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+        //   const imgProps = pdf.getImageProperties(fullImgData);
+        //   const scale = usableWidth / imgProps.width;
+        //   const scaledHeight = imgProps.height * scale;
  
-          // **IMPROVED TABLE ROW DETECTION**
-          const detectTableRowBoundaries = () => {
-            const rowBoundaries = [];
+        //   // **IMPROVED TABLE ROW DETECTION**
+        //   const detectTableRowBoundaries = () => {
+        //     const rowBoundaries = [];
  
-            // Look for table structure elements
-            const tableRows = input.querySelectorAll("tr");
-            const cellElements = input.querySelectorAll("td, th");
+        //     // Look for table structure elements
+        //     const tableRows = input.querySelectorAll("tr");
+        //     const cellElements = input.querySelectorAll("td, th");
  
-            if (tableRows.length > 0) {
-              // Use actual table rows
-              tableRows.forEach((row, index) => {
-                const rect = row.getBoundingClientRect();
-                const inputRect = input.getBoundingClientRect();
-                const relativeTop =
-                  (rect.top - inputRect.top + input.scrollTop) * scale;
-                const relativeBottom = relativeTop + rect.height * scale;
+        //     if (tableRows.length > 0) {
+        //       // Use actual table rows
+        //       tableRows.forEach((row, index) => {
+        //         const rect = row.getBoundingClientRect();
+        //         const inputRect = input.getBoundingClientRect();
+        //         const relativeTop =
+        //           (rect.top - inputRect.top + input.scrollTop) * scale;
+        //         const relativeBottom = relativeTop + rect.height * scale;
  
-                rowBoundaries.push({
-                  top: relativeTop,
-                  bottom: relativeBottom,
-                  height: rect.height * scale,
-                  element: row,
-                  index: index,
-                });
-              });
-            } else if (cellElements.length > 0) {
-              // Fallback: group cells into logical rows by vertical position
-              const cellPositions = Array.from(cellElements).map((cell) => {
-                const rect = cell.getBoundingClientRect();
-                const inputRect = input.getBoundingClientRect();
-                return {
-                  top: (rect.top - inputRect.top + input.scrollTop) * scale,
-                  bottom:
-                    (rect.top - inputRect.top + input.scrollTop + rect.height) *
-                    scale,
-                  height: rect.height * scale,
-                  element: cell,
-                };
-              });
+        //         rowBoundaries.push({
+        //           top: relativeTop,
+        //           bottom: relativeBottom,
+        //           height: rect.height * scale,
+        //           element: row,
+        //           index: index,
+        //         });
+        //       });
+        //     } else if (cellElements.length > 0) {
+        //       // Fallback: group cells into logical rows by vertical position
+        //       const cellPositions = Array.from(cellElements).map((cell) => {
+        //         const rect = cell.getBoundingClientRect();
+        //         const inputRect = input.getBoundingClientRect();
+        //         return {
+        //           top: (rect.top - inputRect.top + input.scrollTop) * scale,
+        //           bottom:
+        //             (rect.top - inputRect.top + input.scrollTop + rect.height) *
+        //             scale,
+        //           height: rect.height * scale,
+        //           element: cell,
+        //         };
+        //       });
  
-              // Group cells by similar top positions (within 5 pixels)
-              const tolerance = 5 * scale;
-              const groupedRows = [];
+        //       // Group cells by similar top positions (within 5 pixels)
+        //       const tolerance = 5 * scale;
+        //       const groupedRows = [];
  
-              cellPositions.forEach((cell) => {
-                let foundGroup = false;
-                for (const group of groupedRows) {
-                  if (Math.abs(group[0].top - cell.top) <= tolerance) {
-                    group.push(cell);
-                    foundGroup = true;
-                    break;
-                  }
-                }
-                if (!foundGroup) {
-                  groupedRows.push([cell]);
-                }
-              });
+        //       cellPositions.forEach((cell) => {
+        //         let foundGroup = false;
+        //         for (const group of groupedRows) {
+        //           if (Math.abs(group[0].top - cell.top) <= tolerance) {
+        //             group.push(cell);
+        //             foundGroup = true;
+        //             break;
+        //           }
+        //         }
+        //         if (!foundGroup) {
+        //           groupedRows.push([cell]);
+        //         }
+        //       });
  
-              // Create row boundaries from grouped cells
-              groupedRows.forEach((group, index) => {
-                const minTop = Math.min(...group.map((cell) => cell.top));
-                const maxBottom = Math.max(...group.map((cell) => cell.bottom));
+        //       // Create row boundaries from grouped cells
+        //       groupedRows.forEach((group, index) => {
+        //         const minTop = Math.min(...group.map((cell) => cell.top));
+        //         const maxBottom = Math.max(...group.map((cell) => cell.bottom));
  
-                rowBoundaries.push({
-                  top: minTop,
-                  bottom: maxBottom,
-                  height: maxBottom - minTop,
-                  index: index,
-                });
-              });
-            }
+        //         rowBoundaries.push({
+        //           top: minTop,
+        //           bottom: maxBottom,
+        //           height: maxBottom - minTop,
+        //           index: index,
+        //         });
+        //       });
+        //     }
  
-            return rowBoundaries.sort((a, b) => a.top - b.top);
-          };
+        //     return rowBoundaries.sort((a, b) => a.top - b.top);
+        //   };
  
-          const rowBoundaries = detectTableRowBoundaries();
-          console.log("Detected row boundaries:", rowBoundaries.length);
+        //   const rowBoundaries = detectTableRowBoundaries();
+        //   console.log("Detected row boundaries:", rowBoundaries.length);
  
-          // **SMART PAGE BREAKING WITH PROPER ROW HANDLING**
-          let currentY = 0;
-          let pageNumber = 0;
+        //   // **SMART PAGE BREAKING WITH PROPER ROW HANDLING**
+        //   let currentY = 0;
+        //   let pageNumber = 0;
  
-          while (currentY < scaledHeight && pageNumber < 50) {
-            if (pageNumber > 0) {
-              pdf.addPage();
-            }
+        //   while (currentY < scaledHeight && pageNumber < 50) {
+        //     if (pageNumber > 0) {
+        //       pdf.addPage();
+        //     }
  
-            const availableHeight = usableHeight - bottomPadding;
-            let nextY = currentY + availableHeight;
+        //     const availableHeight = usableHeight - bottomPadding;
+        //     let nextY = currentY + availableHeight;
  
-            // **IMPROVED ROW BOUNDARY CHECKING**
-            if (rowBoundaries.length > 0) {
-              // Find rows that would be affected by this page break
-              for (const row of rowBoundaries) {
-                // If we would cut through this row
-                if (
-                  row.top >= currentY &&
-                  row.top < nextY &&
-                  row.bottom > nextY
-                ) {
-                  // Check if entire row can fit on current page
-                  if (row.bottom - currentY <= availableHeight) {
-                    // Include the complete row
-                    nextY = row.bottom + 2; // Small buffer after row
-                  } else {
-                    // Move entire row to next page
-                    nextY = row.top;
-                  }
-                  break;
-                }
-                // If row starts within current page but extends beyond
-                else if (row.top < nextY && row.bottom > nextY) {
-                  // If most of row is on current page, include it
-                  const rowOnCurrentPage = nextY - row.top;
-                  const rowTotal = row.bottom - row.top;
+        //     // **IMPROVED ROW BOUNDARY CHECKING**
+        //     if (rowBoundaries.length > 0) {
+        //       // Find rows that would be affected by this page break
+        //       for (const row of rowBoundaries) {
+        //         // If we would cut through this row
+        //         if (
+        //           row.top >= currentY &&
+        //           row.top < nextY &&
+        //           row.bottom > nextY
+        //         ) {
+        //           // Check if entire row can fit on current page
+        //           if (row.bottom - currentY <= availableHeight) {
+        //             // Include the complete row
+        //             nextY = row.bottom + 2; // Small buffer after row
+        //           } else {
+        //             // Move entire row to next page
+        //             nextY = row.top;
+        //           }
+        //           break;
+        //         }
+        //         // If row starts within current page but extends beyond
+        //         else if (row.top < nextY && row.bottom > nextY) {
+        //           // If most of row is on current page, include it
+        //           const rowOnCurrentPage = nextY - row.top;
+        //           const rowTotal = row.bottom - row.top;
  
-                  if (rowOnCurrentPage >= rowTotal * 0.6) {
-                    nextY = row.bottom + 2;
-                  } else {
-                    nextY = row.top;
-                  }
-                  break;
-                }
-              }
-            }
+        //           if (rowOnCurrentPage >= rowTotal * 0.6) {
+        //             nextY = row.bottom + 2;
+        //           } else {
+        //             nextY = row.top;
+        //           }
+        //           break;
+        //         }
+        //       }
+        //     }
  
-            // Ensure we don't exceed total content
-            const actualHeight = Math.min(
-              nextY - currentY,
-              scaledHeight - currentY
-            );
+        //     // Ensure we don't exceed total content
+        //     const actualHeight = Math.min(
+        //       nextY - currentY,
+        //       scaledHeight - currentY
+        //     );
  
-            if (actualHeight > 0) {
-              // Create canvas section for this page
-              const pageCanvas = document.createElement("canvas");
-              const pageCtx = pageCanvas.getContext("2d");
+        //     if (actualHeight > 0) {
+        //       // Create canvas section for this page
+        //       const pageCanvas = document.createElement("canvas");
+        //       const pageCtx = pageCanvas.getContext("2d");
  
-              const sourceY = currentY / scale;
-              const sourceHeight = actualHeight / scale;
+        //       const sourceY = currentY / scale;
+        //       const sourceHeight = actualHeight / scale;
  
-              pageCanvas.width = fullCanvas.width;
-              pageCanvas.height = sourceHeight;
+        //       pageCanvas.width = fullCanvas.width;
+        //       pageCanvas.height = sourceHeight;
  
-              // Draw the specific section
-              pageCtx.drawImage(
-                fullCanvas,
-                0,
-                sourceY, // Source x, y
-                fullCanvas.width,
-                sourceHeight, // Source width, height
-                0,
-                0, // Destination x, y
-                fullCanvas.width,
-                sourceHeight // Destination width, height
-              );
+        //       // Draw the specific section
+        //       pageCtx.drawImage(
+        //         fullCanvas,
+        //         0,
+        //         sourceY, // Source x, y
+        //         fullCanvas.width,
+        //         sourceHeight, // Source width, height
+        //         0,
+        //         0, // Destination x, y
+        //         fullCanvas.width,
+        //         sourceHeight // Destination width, height
+        //       );
  
-              const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+        //       const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
  
-              // Add to PDF
-              pdf.addImage(
-                pageImgData,
-                "PNG",
-                margin,
-                margin,
-                usableWidth,
-                actualHeight
-              );
-            }
+        //       // Add to PDF
+        //       pdf.addImage(
+        //         pageImgData,
+        //         "PNG",
+        //         margin,
+        //         margin,
+        //         usableWidth,
+        //         actualHeight
+        //       );
+        //     }
  
-            currentY = nextY;
-            pageNumber++;
-          }
+        //     currentY = nextY;
+        //     pageNumber++;
+        //   }
  
-          // Fallback
-          if (pageNumber === 0) {
-            pdf.addImage(
-              fullImgData,
-              "PNG",
-              margin,
-              margin,
-              usableWidth,
-              Math.min(scaledHeight, usableHeight)
-            );
-          }
+        //   // Fallback
+        //   if (pageNumber === 0) {
+        //     pdf.addImage(
+        //       fullImgData,
+        //       "PNG",
+        //       margin,
+        //       margin,
+        //       usableWidth,
+        //       Math.min(scaledHeight, usableHeight)
+        //     );
+        //   }
+
+        // Initialize PDF with same settings as downloadInvoices
+const pdf = new jsPDF("p", "mm", "a4");
+const pdfWidth = pdf.internal.pageSize.getWidth();
+const pdfHeight = pdf.internal.pageSize.getHeight();
+const margin = 10;
+const usableWidth = pdfWidth - 2 * margin;
+const usableHeight = pdfHeight - 2 * margin;
+
+// Capture full content first with same settings as downloadInvoices
+const fullCanvas = await html2canvas(input, {
+  scale: 1.5,
+  useCORS: true,
+  allowTaint: true,
+  backgroundColor: "#ffffff",
+  scrollX: 0,
+  scrollY: 0,
+  width: input.scrollWidth || input.clientWidth,
+  height: input.scrollHeight || input.clientHeight,
+  windowWidth: 1200,
+  logging: false,
+});
+
+if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+  throw new Error("Canvas has zero dimensions");
+}
+
+const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+
+// Calculate scaling
+const imgProps = pdf.getImageProperties(fullImgData);
+const scale = usableWidth / imgProps.width;
+const scaledHeight = imgProps.height * scale;
+
+// Calculate pages needed
+const pageHeight = usableHeight;
+
+// Smart page breaking - detect table rows and avoid cutting them
+let currentY = 0;
+let pageNumber = 0;
+
+// Detect table rows by looking for horizontal patterns in the content
+const detectTableRows = () => {
+  const rows = [];
+  const tableElements = input.querySelectorAll(
+    'tr, .table-row, [class*="row"]'
+  );
+
+  if (tableElements.length > 0) {
+    tableElements.forEach((row) => {
+      const rect = row.getBoundingClientRect();
+      const inputRect = input.getBoundingClientRect();
+      const relativeTop = rect.top - inputRect.top + input.scrollTop;
+      const relativeBottom = relativeTop + rect.height;
+
+      rows.push({
+        top: relativeTop * scale,
+        bottom: relativeBottom * scale,
+        height: rect.height * scale,
+      });
+    });
+  }
+
+  return rows.sort((a, b) => a.top - b.top);
+};
+
+const tableRows = detectTableRows();
+
+while (currentY < scaledHeight && pageNumber < 50) {
+  // Safety limit
+  if (pageNumber > 0) {
+    pdf.addPage();
+  }
+
+  let nextY = currentY + pageHeight;
+
+  // Check if we would cut through a table row
+  if (tableRows.length > 0) {
+    for (const row of tableRows) {
+      // If a row would be cut by the page break
+      if (row.top < nextY && row.bottom > nextY) {
+        // If the row can fit on current page, adjust nextY to include it
+        if (row.bottom - currentY <= pageHeight) {
+          nextY = row.bottom;
+        } else {
+          // If row is too big for current page, move it to next page
+          nextY = row.top;
+        }
+        break;
+      }
+    }
+  }
+
+  // Ensure we don't go beyond content
+  const actualHeight = Math.min(
+    nextY - currentY,
+    scaledHeight - currentY
+  );
+
+  if (actualHeight > 0) {
+    // Create canvas for this page section
+    const pageCanvas = document.createElement("canvas");
+    const pageCtx = pageCanvas.getContext("2d");
+
+    const sourceY = currentY / scale;
+    const sourceHeight = actualHeight / scale;
+
+    pageCanvas.width = fullCanvas.width;
+    pageCanvas.height = sourceHeight;
+
+    // Draw the section
+    pageCtx.drawImage(
+      fullCanvas,
+      0,
+      sourceY,
+      fullCanvas.width,
+      sourceHeight,
+      0,
+      0,
+      fullCanvas.width,
+      sourceHeight
+    );
+
+    const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+    // Add to PDF
+    pdf.addImage(
+      pageImgData,
+      "PNG",
+      margin,
+      margin,
+      usableWidth,
+      actualHeight
+    );
+  }
+
+  currentY = nextY;
+  pageNumber++;
+}
+
+// Fallback: if no pages were created, add the full image
+if (pageNumber === 0) {
+  pdf.addImage(
+    fullImgData,
+    "PNG",
+    margin,
+    margin,
+    usableWidth,
+    Math.min(scaledHeight, pageHeight)
+  );
+}
+
  
           // Clean up
           root.unmount();
