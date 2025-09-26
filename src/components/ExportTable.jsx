@@ -4,6 +4,15 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import InvoiceViewer from "./Invoice";
+import {
+  Clock,
+  MessageSquare,
+  Download,
+  Receipt,
+  Package,
+  Users,
+} from "lucide-react";
+ 
 
 // Add these icon components after your imports
 const CrossIcon = () => (
@@ -1456,6 +1465,158 @@ const groupInvoiceData = (invoiceData) => {
   }));
 };
 
+// const handleGenerateInvoice = async (e) => {
+//   e.preventDefault();
+//   e.stopPropagation();
+//   if (actionLoading) return;
+
+//   if (selectedRows.size === 0) {
+//     showToast("Please select at least one timesheet to export", "warning");
+//     return;
+//   }
+
+//   try {
+//     setActionLoading(true);
+
+//     const selectedData = filteredRows.filter((row) =>
+//       selectedRows.has(row.id)
+//     );
+
+//     if (selectedData.length === 0) {
+//       showToast("No selected data to export", "warning");
+//       setActionLoading(false);
+//       return;
+//     }
+
+//     const payload = selectedData.map((row) => {
+//       const originalItem = row.originalItem;
+//       return {
+//         ...originalItem,
+//         CreatedBy:
+//           originalItem.CreatedBy ||
+//           currentUser?.username ||
+//           currentUser?.id ||
+//           "admin",
+//         UpdatedBy:
+//           originalItem.UpdatedBy ||
+//           currentUser?.username ||
+//           currentUser?.id ||
+//           "admin",
+//         CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
+//         UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
+//       };
+//     });
+
+//     const response = await fetch(
+//       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+//       {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//       }
+//     );
+
+//     if (!response.ok) {
+//       throw new Error(`HTTP error! status: ${response.status}`);
+//     }
+
+//     const invoiceData = await response.json();
+
+//     // Debug log the original invoice data received from API
+//     console.log("Original invoice data received:", invoiceData);
+
+//     // Process and group invoice data by combining same PLC+Vendor+Employee
+//     const processInvoiceData = (data) => {
+//       if (!data) return data;
+
+//       // If data is an array of invoices
+//       if (Array.isArray(data)) {
+//         return data.map(invoice => processInvoiceData(invoice));
+//       }
+
+//       // If data is a single invoice object with lineItems
+//       if (data && Array.isArray(data.lineItems)) {
+//         // Group line items by PLC + Vendor + Employee combination
+//         const groupedItems = {};
+        
+//         data.lineItems.forEach(item => {
+//           // Create a unique key for grouping - using exact field names from API
+//           const plcKey = item.plc || item.PLC || '';
+//           const vendorKey = item.vendor || item.vendorName || item.vendName || '';
+//           const employeeKey = item.employee || item.employeeName || item.resourceName || '';
+          
+//           const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
+          
+//           if (groupedItems[groupKey]) {
+//             // Combine with existing group - sum hours and amounts
+//             const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+//             const newHours = parseFloat(item.hours) || 0;
+//             groupedItems[groupKey].hours = existingHours + newHours;
+            
+//             const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
+//             const newAmount = parseFloat(item.amount) || 0;
+//             groupedItems[groupKey].amount = existingAmount + newAmount;
+            
+//             // Keep track of combined count for reference
+//             groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
+            
+//           } else {
+//             // First occurrence of this combination
+//             groupedItems[groupKey] = {
+//               ...item,
+//               hours: parseFloat(item.hours) || 0,
+//               amount: parseFloat(item.amount) || 0,
+//               combinedCount: 1
+//             };
+//           }
+//         });
+
+//         // Convert grouped items back to array with formatted values
+//         const combinedLineItems = Object.values(groupedItems).map(item => ({
+//           ...item,
+//           hours: Number(item.hours.toFixed(2)),
+//           amount: Number(item.amount.toFixed(2))
+//         }));
+
+//         // Recalculate total amounts
+//         const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+//           return sum + (parseFloat(item.amount) || 0);
+//         }, 0);
+
+//         return {
+//           ...data,
+//           lineItems: combinedLineItems,
+//           totalAmount: Number(newTotalAmount.toFixed(2)),
+//           amountDue: Number(newTotalAmount.toFixed(2))
+//         };
+//       }
+
+//       // Return data as-is if it doesn't have lineItems structure
+//       return data;
+//     };
+
+//     // Process the invoice data to combine similar items
+//     const processedInvoiceData = processInvoiceData(invoiceData);
+
+//     // Debug log the processed invoice data
+//     console.log("Processed invoice data with combined items:", processedInvoiceData);
+
+//     // Set the processed data to state for InvoiceViewer
+//     setShowInvoice(processedInvoiceData);
+
+//     showToast(
+//       `Invoice preview for ${selectedData.length} timesheets`,
+//       "success"
+//     );
+//     setInvoiceModalVisible(true);
+//   } catch (error) {
+//     console.error("Generate Invoice error:", error);
+//     showToast(error.message || "Invoice generation failed", "error");
+//   } finally {
+//     setActionLoading(false);
+//   }
+// };
+
 const handleGenerateInvoice = async (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -1513,25 +1674,21 @@ const handleGenerateInvoice = async (e) => {
 
     const invoiceData = await response.json();
 
-    // Debug log the original invoice data received from API
-    console.log("Original invoice data received:", invoiceData);
-
-    // Process and group invoice data by combining same PLC+Vendor+Employee
+    // Process and group invoice data for DISPLAY ONLY
     const processInvoiceData = (data) => {
       if (!data) return data;
 
-      // If data is an array of invoices
       if (Array.isArray(data)) {
         return data.map(invoice => processInvoiceData(invoice));
       }
 
-      // If data is a single invoice object with lineItems
       if (data && Array.isArray(data.lineItems)) {
-        // Group line items by PLC + Vendor + Employee combination
+        // Store original line items before grouping for API calls later
+        const originalLineItems = [...data.lineItems];
+        
         const groupedItems = {};
         
         data.lineItems.forEach(item => {
-          // Create a unique key for grouping - using exact field names from API
           const plcKey = item.plc || item.PLC || '';
           const vendorKey = item.vendor || item.vendorName || item.vendName || '';
           const employeeKey = item.employee || item.employeeName || item.resourceName || '';
@@ -1569,30 +1726,29 @@ const handleGenerateInvoice = async (e) => {
           amount: Number(item.amount.toFixed(2))
         }));
 
-        // Recalculate total amounts
+        // Recalculate total amounts from grouped data
         const newTotalAmount = combinedLineItems.reduce((sum, item) => {
           return sum + (parseFloat(item.amount) || 0);
         }, 0);
 
         return {
           ...data,
-          lineItems: combinedLineItems,
+          lineItems: combinedLineItems, // Grouped data for display
+          originalLineItems: originalLineItems, // Original ungrouped data for API calls
+          originalPayload: payload, // Store original payload for API calls
           totalAmount: Number(newTotalAmount.toFixed(2)),
           amountDue: Number(newTotalAmount.toFixed(2))
         };
       }
 
-      // Return data as-is if it doesn't have lineItems structure
       return data;
     };
 
-    // Process the invoice data to combine similar items
+    // Process the invoice data to combine similar items for display
     const processedInvoiceData = processInvoiceData(invoiceData);
 
-    // Debug log the processed invoice data
     console.log("Processed invoice data with combined items:", processedInvoiceData);
 
-    // Set the processed data to state for InvoiceViewer
     setShowInvoice(processedInvoiceData);
 
     showToast(
@@ -1607,6 +1763,7 @@ const handleGenerateInvoice = async (e) => {
     setActionLoading(false);
   }
 };
+
 
 
 
@@ -1872,20 +2029,32 @@ const handleGenerateInvoice = async (e) => {
     );
   }
 
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
+  //       <div className="flex-1 flex items-center justify-center">
+  //         <div className="flex items-center">
+  //           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //           <span className="ml-2">Loading export data...</span>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  // Add this before your return statement
+  
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2">Loading export data...</span>
-          </div>
+      <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
+        <div className="text-center">
+          <Download className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+          <p className="text-lg text-gray-600">Loading export data...</p>
         </div>
       </div>
     );
   }
-
-  // Add this before your return statement
+  
   const anyInvoiceGenerated = rows.some(
     (row) =>
       row["Invoice Generated"] === true ||

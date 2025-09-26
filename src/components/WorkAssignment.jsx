@@ -1661,7 +1661,7 @@ const WorkAssignment = () => {
   const [filterPOLineKey, setFilterPOLineKey] = useState('');
 
   // Updated column configuration with WA Code
-  const columns = ['Select', 'WA Code', 'Purchase Order', 'Purchase Order Release'];
+  const columns = ['Select', 'WA Code', 'Purchase Order', 'Purchase Order Release', 'PO Line Key'];
   const colWidth = 120;
   const selectColWidth = 80;
 
@@ -1961,13 +1961,13 @@ const WorkAssignment = () => {
             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           
-          {/* <input
+          <input
             type="text"
             value={filterPOLineKey}
             onChange={e => setFilterPOLineKey(e.target.value)}
             placeholder="Filter PO Line Key"
             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-          /> */}
+          />
         </div>
 
         {/* Data Table Container */}

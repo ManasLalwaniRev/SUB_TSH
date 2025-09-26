@@ -2736,92 +2736,415 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   //   pdf.save("invoice.pdf");
   // };
 
-  const handleDownloadPdf = async () => {
+  // const handleDownloadPdf = async () => {
+  //   setIsLoading(true);
+  //   if (!invoiceRef.current || !invoice) {
+  //     console.warn("Invoice content or data is missing.");
+  //     return;
+  //   }
+  //   const input = invoiceRef.current;
+  //   const totalAmount = invoice.lineItems.reduce(
+  //     (acc, line) => acc + line.amount,
+  //     0
+  //   );
+  //   // const invoicePayload = {
+  //   //   invoiceNumber: invoice.invoiceId,
+  //   //   invoiceDate: new Date(invoice.period).toISOString(),
+  //   //   invoiceAmount: totalAmount,
+  //   //   createdBy: "Test",
+  //   //   updatedBy: "Test",
+  //   //   invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+  //   //     // timesheetLineNo: line.poLine,
+  //   //     timesheetLineNo: line.line_No,
+  //   //     mappedHours: line.hours,
+  //   //     mappedAmount: line.amount,
+  //   //     createdBy: "Test",
+  //   //     updatedBy: "Test",
+  //   //   })),
+  //   // };
+
+  //   // try {
+  //   //   const response = await fetch(
+  //   //     "https://timesheet-subk.onrender.com/api/Invoices",
+  //   //     {
+  //   //       method: "POST",
+  //   //       headers: { "Content-Type": "application/json" },
+  //   //       body: JSON.stringify(invoicePayload),
+  //   //     }
+  //   //   );
+  //   //   if (!response.ok)
+  //   //     throw new Error(`Failed to create invoice: ${response.status}`);
+
+  //   const pdf = new jsPDF("p", "mm", "a4");
+  //   const padding = 10;
+  //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //   const imgData = canvas.toDataURL("image/png");
+
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  //   const usableWidth = pdfWidth - 2 * padding;
+  //   const usableHeight = pdfHeight - 2 * padding;
+
+  //   const imgProps = pdf.getImageProperties(imgData);
+  //   // const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  //   const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+  //   let heightLeft = pdfImgHeight;
+  //   // let position = 0;
+  //   let position = padding;
+
+  //   // pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //   // heightLeft -= pdfHeight;
+  //   pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+  //   heightLeft -= usableHeight;
+
+  //   // while (heightLeft > 0) {
+  //   //   position = heightLeft - pdfImgHeight;
+  //   //   pdf.addPage();
+  //   //   pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //   //   heightLeft -= pdfHeight;
+  //   // }
+  //   while (heightLeft > 0) {
+  //     pdf.addPage();
+  //     position = padding - heightLeft;
+  //     pdf.addImage(
+  //       imgData,
+  //       "PNG",
+  //       padding,
+  //       position,
+  //       usableWidth,
+  //       pdfImgHeight
+  //     );
+  //     heightLeft -= usableHeight;
+  //   }
+
+  //   pdf.save("invoice.pdf");
+  //   setIsLoading(false);
+  //   setInvoiceModalVisible(false);
+  // };
+
+   const handleDownloadPdf = async () => {
     setIsLoading(true);
+ 
     if (!invoiceRef.current || !invoice) {
       console.warn("Invoice content or data is missing.");
+      setIsLoading(false);
       return;
     }
-    const input = invoiceRef.current;
-    const totalAmount = invoice.lineItems.reduce(
-      (acc, line) => acc + line.amount,
-      0
-    );
-    // const invoicePayload = {
-    //   invoiceNumber: invoice.invoiceId,
-    //   invoiceDate: new Date(invoice.period).toISOString(),
-    //   invoiceAmount: totalAmount,
-    //   createdBy: "Test",
-    //   updatedBy: "Test",
-    //   invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
-    //     // timesheetLineNo: line.poLine,
-    //     timesheetLineNo: line.line_No,
-    //     mappedHours: line.hours,
-    //     mappedAmount: line.amount,
-    //     createdBy: "Test",
-    //     updatedBy: "Test",
-    //   })),
-    // };
-
-    // try {
-    //   const response = await fetch(
-    //     "https://timesheet-subk.onrender.com/api/Invoices",
-    //     {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(invoicePayload),
-    //     }
-    //   );
-    //   if (!response.ok)
-    //     throw new Error(`Failed to create invoice: ${response.status}`);
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const padding = 10;
-    const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    const usableWidth = pdfWidth - 2 * padding;
-    const usableHeight = pdfHeight - 2 * padding;
-
-    const imgProps = pdf.getImageProperties(imgData);
-    // const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
-
-    let heightLeft = pdfImgHeight;
-    // let position = 0;
-    let position = padding;
-
-    // pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
-    // heightLeft -= pdfHeight;
-    pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
-    heightLeft -= usableHeight;
-
-    // while (heightLeft > 0) {
-    //   position = heightLeft - pdfImgHeight;
-    //   pdf.addPage();
-    //   pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
-    //   heightLeft -= pdfHeight;
-    // }
-    while (heightLeft > 0) {
-      pdf.addPage();
-      position = padding - heightLeft;
-      pdf.addImage(
-        imgData,
-        "PNG",
-        padding,
-        position,
-        usableWidth,
-        pdfImgHeight
+ 
+    try {
+      // Get current invoice data
+      const currentInvoice = invoice;
+ 
+      // Group and combine line items (same logic as downloadInvoices)
+      const groupAndCombineLineItems = (lineItems) => {
+        if (!lineItems || !Array.isArray(lineItems)) {
+          return [];
+        }
+ 
+        const groupedItems = {};
+ 
+        lineItems.forEach((item) => {
+          const plcKey = item.plc || "";
+          const vendorKey = item.vendor || "";
+          const employeeKey = item.employee || "";
+          const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
+ 
+          if (groupedItems[groupKey]) {
+            const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+            const newHours = parseFloat(item.hours) || 0;
+            groupedItems[groupKey].hours = existingHours + newHours;
+ 
+            const existingAmount =
+              parseFloat(groupedItems[groupKey].amount) || 0;
+            const newAmount = parseFloat(item.amount) || 0;
+            groupedItems[groupKey].amount = existingAmount + newAmount;
+          } else {
+            groupedItems[groupKey] = {
+              poLine: item.poLine || " ",
+              plc: item.plc || " ",
+              vendor: item.vendor || " ",
+              employee: item.employee || " ",
+              hours: parseFloat(item.hours) || 0,
+              rate: item.rate || 0,
+              amount: parseFloat(item.amount) || 0,
+              line_No: item.line_No || " ",
+            };
+          }
+        });
+ 
+        return Object.values(groupedItems).map((item) => ({
+          poLine: item.poLine,
+          plc: item.plc,
+          vendor: item.vendor,
+          employee: item.employee,
+          hours: Number(item.hours.toFixed(2)),
+          rate: item.rate,
+          amount: Number(item.amount.toFixed(2)),
+          line_No: item.line_No,
+        }));
+      };
+ 
+      // Group and combine line items
+      const combinedLineItems = groupAndCombineLineItems(
+        currentInvoice.lineItems || []
       );
-      heightLeft -= usableHeight;
+ 
+      // Recalculate total amount based on combined line items
+      const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+        return sum + (parseFloat(item.amount) || 0);
+      }, 0);
+ 
+      // Transform data with combined line items (same structure as downloadInvoices)
+      const transformedData = [
+        {
+          invoiceId: currentInvoice.invoiceId || " ",
+          invoiceDate:
+            currentInvoice.period || currentInvoice.invoiceDate || " ",
+          currency: currentInvoice.currency || " ",
+          totalAmount: Number(newTotalAmount.toFixed(2)),
+          lineItems: combinedLineItems,
+          billTo: currentInvoice.billTo || " ",
+          buyer: currentInvoice.buyer || " ",
+          purchaseOrderId:
+            currentInvoice.po_Number || currentInvoice.purchaseOrderId || " ",
+          releaseNumber:
+            currentInvoice.po_rlse_Number ||
+            currentInvoice.releaseNumber ||
+            " ",
+          poStartEndDate:
+            currentInvoice.po_Start_End_Date ||
+            currentInvoice.poStartEndDate ||
+            " ",
+          terms: currentInvoice.terms || " ",
+          amountDue: Number(newTotalAmount.toFixed(2)),
+          period: currentInvoice.period || " ",
+          po_Number: currentInvoice.po_Number || " ",
+          po_rlse_Number: currentInvoice.po_rlse_Number || " ",
+          po_Start_End_Date: currentInvoice.po_Start_End_Date || " ",
+        },
+      ];
+ 
+      // Create temporary container with same styling as downloadInvoices
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "absolute";
+      tempContainer.style.left = "-9999px";
+      tempContainer.style.top = "0";
+      tempContainer.style.width = "210mm";
+      tempContainer.style.backgroundColor = "white";
+      tempContainer.style.padding = "14mm";
+      tempContainer.style.margin = "0";
+      tempContainer.style.boxSizing = "border-box";
+      tempContainer.style.fontFamily = "Arial, sans-serif";
+      tempContainer.style.fontSize = "12px";
+      tempContainer.style.lineHeight = "1.4";
+      tempContainer.style.color = "#000000";
+      document.body.appendChild(tempContainer);
+ 
+      // Create temporary React root and render InvoiceViewer
+      const ReactDOM = (await import("react-dom/client")).default;
+      const React = (await import("react")).default;
+      const { default: InvoiceViewer } = await import("./InvoiceViewer");
+ 
+      const root = ReactDOM.createRoot(tempContainer);
+ 
+      await new Promise((resolve) => {
+        root.render(
+          React.createElement(InvoiceViewer, {
+            data: transformedData,
+            setInvoiceModalVisible: () => {},
+          })
+        );
+        setTimeout(resolve, 3000);
+      });
+ 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+ 
+      const input =
+        tempContainer.querySelector(
+          'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+        ) ||
+        tempContainer.firstElementChild ||
+        tempContainer;
+ 
+      if (!input) {
+        throw new Error("Invoice content not found");
+      }
+ 
+      // Ensure content is visible
+      input.style.display = "block";
+      input.style.visibility = "visible";
+      input.style.opacity = "1";
+ 
+      // Initialize PDF with same settings as downloadInvoices
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableWidth = pdfWidth - 2 * margin;
+      const usableHeight = pdfHeight - 2 * margin;
+ 
+      // Capture full content first with same settings as downloadInvoices
+      const fullCanvas = await html2canvas(input, {
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        scrollX: 0,
+        scrollY: 0,
+        width: input.scrollWidth || input.clientWidth,
+        height: input.scrollHeight || input.clientHeight,
+        windowWidth: 1200,
+        logging: false,
+      });
+ 
+      if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+        throw new Error("Canvas has zero dimensions");
+      }
+ 
+      const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+ 
+      // Calculate scaling
+      const imgProps = pdf.getImageProperties(fullImgData);
+      const scale = usableWidth / imgProps.width;
+      const scaledHeight = imgProps.height * scale;
+ 
+      // Calculate pages needed
+      const pageHeight = usableHeight;
+ 
+      // Smart page breaking - detect table rows and avoid cutting them
+      let currentY = 0;
+      let pageNumber = 0;
+ 
+      // Detect table rows by looking for horizontal patterns in the content
+      const detectTableRows = () => {
+        const rows = [];
+        const tableElements = input.querySelectorAll(
+          'tr, .table-row, [class*="row"]'
+        );
+ 
+        if (tableElements.length > 0) {
+          tableElements.forEach((row) => {
+            const rect = row.getBoundingClientRect();
+            const inputRect = input.getBoundingClientRect();
+            const relativeTop = rect.top - inputRect.top + input.scrollTop;
+            const relativeBottom = relativeTop + rect.height;
+ 
+            rows.push({
+              top: relativeTop * scale,
+              bottom: relativeBottom * scale,
+              height: rect.height * scale,
+            });
+          });
+        }
+ 
+        return rows.sort((a, b) => a.top - b.top);
+      };
+ 
+      const tableRows = detectTableRows();
+ 
+      while (currentY < scaledHeight && pageNumber < 50) {
+        // Safety limit
+        if (pageNumber > 0) {
+          pdf.addPage();
+        }
+ 
+        let nextY = currentY + pageHeight;
+ 
+        // Check if we would cut through a table row
+        if (tableRows.length > 0) {
+          for (const row of tableRows) {
+            // If a row would be cut by the page break
+            if (row.top < nextY && row.bottom > nextY) {
+              // If the row can fit on current page, adjust nextY to include it
+              if (row.bottom - currentY <= pageHeight) {
+                nextY = row.bottom;
+              } else {
+                // If row is too big for current page, move it to next page
+                nextY = row.top;
+              }
+              break;
+            }
+          }
+        }
+ 
+        // Ensure we don't go beyond content
+        const actualHeight = Math.min(
+          nextY - currentY,
+          scaledHeight - currentY
+        );
+ 
+        if (actualHeight > 0) {
+          // Create canvas for this page section
+          const pageCanvas = document.createElement("canvas");
+          const pageCtx = pageCanvas.getContext("2d");
+ 
+          const sourceY = currentY / scale;
+          const sourceHeight = actualHeight / scale;
+ 
+          pageCanvas.width = fullCanvas.width;
+          pageCanvas.height = sourceHeight;
+ 
+          // Draw the section
+          pageCtx.drawImage(
+            fullCanvas,
+            0,
+            sourceY,
+            fullCanvas.width,
+            sourceHeight,
+            0,
+            0,
+            fullCanvas.width,
+            sourceHeight
+          );
+ 
+          const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+ 
+          // Add to PDF
+          pdf.addImage(
+            pageImgData,
+            "PNG",
+            margin,
+            margin,
+            usableWidth,
+            actualHeight
+          );
+        }
+ 
+        currentY = nextY;
+        pageNumber++;
+      }
+ 
+      // Fallback: if no pages were created, add the full image
+      if (pageNumber === 0) {
+        pdf.addImage(
+          fullImgData,
+          "PNG",
+          margin,
+          margin,
+          usableWidth,
+          Math.min(scaledHeight, pageHeight)
+        );
+      }
+ 
+      // Clean up
+      root.unmount();
+      document.body.removeChild(tempContainer);
+ 
+      // Save PDF with invoice number as filename
+      const filename = `${
+        currentInvoice.invoiceId || currentInvoice.invoiceNumber || "invoice"
+      }.pdf`;
+      pdf.save(filename);
+ 
+      setIsLoading(false);
+      setInvoiceModalVisible(false);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert(`Failed to generate PDF: ${error.message}`);
+      setIsLoading(false);
     }
-
-    pdf.save("invoice.pdf");
-    setIsLoading(false);
-    setInvoiceModalVisible(false);
   };
 
   // catch (error) {

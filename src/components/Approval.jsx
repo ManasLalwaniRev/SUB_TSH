@@ -5186,7 +5186,6 @@
 
 //   const timesheetDetailsRef = useRef(null);
 
-
 //   // Add ref for current selected row to track background color
 //   const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
 
@@ -5212,11 +5211,11 @@
 //     const day = today.getUTCDate();
 
 //     const dayOfWeek = today.getUTCDay(); // 0 for Sunday (UTC)
- 
+
 //     // Create a new Date object for today, firmly in UTC
 
 //     const todayUTC = new Date(Date.UTC(year, month, day));
- 
+
 //     // Calculate the upcoming Sunday by adding days to the UTC date
 
 //     // The (% 7) handles the case where today is already Sunday
@@ -5224,7 +5223,7 @@
 //     const daysToAdd = (7 - dayOfWeek) % 7;
 
 //     todayUTC.setUTCDate(todayUTC.getUTCDate() + daysToAdd);
- 
+
 //     // Format the final UTC date into a "YYYY-MM-DD" string for the state
 
 //     const finalYear = todayUTC.getUTCFullYear();
@@ -5234,11 +5233,10 @@
 //     const finalDay = String(todayUTC.getUTCDate()).padStart(2, '0');
 
 //     const formattedDateForState = `${finalYear}-${finalMonth}-${finalDay}`;
- 
+
 //     setSearchDate(formattedDateForState);
- 
+
 // }, []); // Empty dependency array ensures this runs only once
- 
 
 //   // const isAdmin = currentUser?.role === "admin";
 //   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
@@ -5653,7 +5651,7 @@
 //   const getStatusStyle = (status) => {
 //     // Convert to proper case instead of uppercase
 //     const statusProper = status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || "Pending";
-    
+
 //     switch (status?.toUpperCase()) {
 //         case "OPEN":
 //             return {
@@ -5743,10 +5741,10 @@
 //     const status = row.status?.toLowerCase();
 //     // Disable rows that are already approved or rejected
 //     return (
-//         status === "pending" || 
-//         status === "open" || 
-//         status === "un-notified" || 
-//         status === "submitted" || 
+//         status === "pending" ||
+//         status === "open" ||
+//         status === "un-notified" ||
+//         status === "submitted" ||
 //         status === "approved"
 //     ) && !row.isApproved && !row.isRejected && status !== "approved" && status !== "rejected";
 // };
@@ -5782,7 +5780,7 @@
 // //   if (event?.target?.type === 'checkbox') {
 // //     return;
 // //   }
-  
+
 // //   // Map the data correctly for the modal
 // //   const mappedData = {
 // //     "Employee ID": rowData["Employee ID"],
@@ -5792,9 +5790,9 @@
 // //     // Include all original data
 // //     ...rowData
 // //   };
-  
+
 // //   console.log("Row clicked, mapped data:", mappedData); // Debug log
-  
+
 // //   setSelectedTimesheetData(mappedData);
 // //   setCurrentSelectedRowId(rowData.id);
 // //   scrollToTimesheetDetail();
@@ -5810,24 +5808,22 @@
 //   if (event?.target?.type === 'checkbox') {
 //     return;
 //   }
-  
+
 //   // Set the selected resource ID and current row ID for highlighting
 //   setSelectedResourceId(rowData["Employee ID"]);
 //   setCurrentSelectedRowId(rowData.id);
-  
+
 //   // Auto scroll to timesheet details after a short delay to ensure component renders
 //   setTimeout(() => {
 //     if (timesheetDetailsRef.current) {
-//       timesheetDetailsRef.current.scrollIntoView({ 
-//         behavior: 'smooth', 
+//       timesheetDetailsRef.current.scrollIntoView({
+//         behavior: 'smooth',
 //         block: 'start',
 //         inline: 'nearest'
 //       });
 //     }
 //   }, 100);
 // };
-
-
 
 //   // Close detail view
 //   // const handleCloseDetail = () => {
@@ -5967,16 +5963,16 @@
 //   //     setLoading(false);
 //   //   }
 //   // };
-  
+
 //   const fetchData = async () => {
 //   if (!userLoaded || !currentUser || !currentUser.username )
 //     return;
 //   try {
 //     setLoading(true);
-    
+
 //     // Use the username from login response as resourceId (e.g., "9030668")
 //     const resourceId = currentUser.username;
-    
+
 //     // Updated API endpoint to use pending approvals by resource
 //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 
@@ -5984,7 +5980,7 @@
 //       method: "GET",
 //       headers: { "Content-Type": "application/json" },
 //     });
-    
+
 //     if (!response.ok)
 //       throw new Error(`HTTP error! status: ${response.status}`);
 //     const apiData = await response.json();
@@ -6134,18 +6130,18 @@
 //   const handleUnifiedSelectAll = (isSelected) => {
 //     setUnifiedSelectAll(isSelected);
 //     const updatedRows = [...rows];
-    
+
 //     // Only select actionable rows (not approved/rejected)
-//     const actionableRows = filteredRows.filter(row => 
-//         isRowActionable(row) && 
-//         row.status?.toLowerCase() !== "approved" && 
+//     const actionableRows = filteredRows.filter(row =>
+//         isRowActionable(row) &&
+//         row.status?.toLowerCase() !== "approved" &&
 //         row.status?.toLowerCase() !== "rejected"
 //     );
-    
+
 //     const notifiableRows = filteredRows.filter(
-//         row => 
-//             !row.isNotified && 
-//             row.status !== "notified" && 
+//         row =>
+//             !row.isNotified &&
+//             row.status !== "notified" &&
 //             row["Status"]?.toLowerCase() !== "notified" &&
 //             row.status?.toLowerCase() !== "approved" &&
 //             row.status?.toLowerCase() !== "rejected"
@@ -6173,7 +6169,6 @@
 //     setSelectAll(isSelected);
 //     setNotifySelectAll(isSelected);
 // };
-
 
 //   // Unified row select handler
 //   const handleUnifiedRowSelect = (rowIndex, isSelected) => {
@@ -6304,10 +6299,10 @@
 //     }
 
 //     // Check if any selected rows are already approved
-//     const hasApprovedRows = selectedRows.some(row => 
+//     const hasApprovedRows = selectedRows.some(row =>
 //         (row["Status"] || "").toLowerCase() === "approved"
 //     );
-    
+
 //     if (hasApprovedRows) {
 //         showToast("Cannot approve already approved timesheets.", "warning");
 //         return;
@@ -6366,7 +6361,7 @@
 //         const approvedIds = selectedRows.map((row) => row.id);
 //         setRows((prevRows) =>
 //           prevRows.map((row) =>
-//             approvedIds.includes(row.id)     
+//             approvedIds.includes(row.id)
 //               ? {
 //                   ...row,
 //                   isApproved: true,
@@ -6378,8 +6373,6 @@
 //           )
 //         );
 
-       
-       
 //       } else {
 //         showToast(
 //           "Failed to approve some timesheets. Please try again.",
@@ -6389,7 +6382,7 @@
 //     } catch (error) {
 //       showToast(
 //         "Failed to approve timesheets. Please check your connection.",
-//         "error" 
+//         "error"
 //       );
 //     } finally {
 //       setActionLoading(false);
@@ -6434,7 +6427,7 @@
 //         );
 //         setSelectedRows([]);
 //         setSelectAll(false);
-       
+
 //       } else {
 //         showToast(
 //           "Failed to reject some timesheets. Please try again.",
@@ -6635,7 +6628,7 @@
 
 //                 />
 // </div>
- 
+
 //               {/* Employee ID Filter */}
 // <div className="flex items-center">
 // <label htmlFor="filterEmpId" className="mr-2 text-xs font-semibold text-gray-600">
@@ -6658,7 +6651,7 @@
 
 //                 />
 // </div>
- 
+
 //               {/* Employee Name Filter */}
 // <div className="flex items-center">
 // <label htmlFor="filterEmpName" className="mr-2 text-xs font-semibold text-gray-600">
@@ -6686,14 +6679,13 @@
 
 //           {/* END: New Filter Section */}
 
-
 //           <div
 //             className="border border-gray-300 rounded bg-white shadow"
 //             style={{
 //               marginLeft: 24,
 //               marginRight: 24,
 //               width: "calc(100vw - 220px)",
-//               // 
+//               //
 //               //  maxWidth: "1200px", // Add maximum width
 //     minWidth: "800px", // Set minimum width for the 6 columns
 //               padding: "0.5rem",
@@ -6716,15 +6708,15 @@
 //         <button
 //           onClick={handleBulkApproveClick}
 //           disabled={
-//             actionLoading || 
-//             selectedRows.length === 0 || 
+//             actionLoading ||
+//             selectedRows.length === 0 ||
 //             selectedRows.some(row => (row["Status"] || "").toLowerCase() === "approved")
 //           }
 //           className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 //         >
 //           {actionLoading ? "Processing..." : `Approve (${selectedRows.length})`}
 //         </button>
-        
+
 //         {/* Always show Reject button when rows are selected */}
 //         <button
 //           onClick={handleBulkRejectClick}
@@ -6738,7 +6730,6 @@
 //   </div>
 // </div>
 
-
 //             <div
 //               style={{
 //                 overflowX: "auto",
@@ -6749,7 +6740,7 @@
 //                 flex: 1,
 //                 border: "1px solid #e5e7eb",
 //                 borderRadius: "4px",
-//                  scrollBehavior: "smooth", 
+//                  scrollBehavior: "smooth",
 //               }}
 //             >
 //               <table
@@ -6853,9 +6844,9 @@
 //                           // Add subtle border for current selected row
 //                           // border: currentSelectedRowId === row.id ? "2px solid #0891b2" : "1px solid transparent"
 //                            // Add opacity for disabled rows
-//         opacity: (row["Status"] || "").toLowerCase() === "approved" || 
+//         opacity: (row["Status"] || "").toLowerCase() === "approved" ||
 //                  (row["Status"] || "").toLowerCase() === "rejected" ? 0.7 : 1
-    
+
 //                         }}
 //                         onClick={() => handleRowClick(row)}
 //                         onMouseEnter={(e) =>
@@ -6958,8 +6949,8 @@
 //                 className="cursor-pointer"
 //                 // Updated disabled condition to include approved status
 //                 disabled={
-//                     !isRowActionable(row) || 
-//                     row.isNotified || 
+//                     !isRowActionable(row) ||
+//                     row.isNotified ||
 //                     (row["Status"] || "").toLowerCase() === "notified" ||
 //                     // (row["Status"] || "").toLowerCase() === "approved" ||
 //                     (row["Status"] || "").toLowerCase() === "rejected"
@@ -7013,11 +7004,10 @@
 //               />
 //             </div>
 //           )}
- 
+
 //         </div>
 //       </div>
-    
-    
+
 //     </div>
 //   );
 // }
@@ -7196,8 +7186,6 @@
 //   const [selectedTimesheetDate, setSelectedTimesheetDate] = useState(null);
 //   const [searchStatus, setSearchStatus] = useState("");
 
-
-
 //   useEffect(() => {
 //     const today = new Date();
 //     const year = today.getUTCFullYear();
@@ -7374,7 +7362,7 @@
 
 //   const getStatusStyle = (status) => {
 //     const statusProper = status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || "Pending";
-    
+
 //     switch (status?.toUpperCase()) {
 //         case "OPEN":
 //             return {
@@ -7454,9 +7442,9 @@
 //   // const isRowActionable = (row) => {
 //   //   const status = row.status?.toLowerCase();
 //   //   return (
-//   //       status === "pending" || 
-//   //       status === "open" || 
-//   //       status === "un-notified" || 
+//   //       status === "pending" ||
+//   //       status === "open" ||
+//   //       status === "un-notified" ||
 //   //       status === "submitted" ||
 //   //       status === "approved"  // Allow approved rows to be actionable for reject only
 //   //   ) && !row.isRejected && status !== "rejected";
@@ -7476,8 +7464,6 @@
 //   const status = row.status?.toLowerCase();
 //   return status === "approved" && !row.isRejected;
 // };
-
-
 
 //   const scrollToTimesheetDetail = () => {
 //     setTimeout(() => {
@@ -7502,21 +7488,21 @@
 //   //   if (event?.target?.type === 'checkbox') {
 //   //     return;
 //   //   }
-    
+
 //   //   setSelectedResourceId(rowData["Employee ID"]);
 //   //   setCurrentSelectedRowId(rowData.id);
-    
+
 //   //   setTimeout(() => {
 //   //     if (timesheetDetailsRef.current) {
-//   //       timesheetDetailsRef.current.scrollIntoView({ 
-//   //         behavior: 'smooth', 
+//   //       timesheetDetailsRef.current.scrollIntoView({
+//   //         behavior: 'smooth',
 //   //         block: 'start',
 //   //         inline: 'nearest'
 //   //       });
 //   //     }
 //   //   }, 100);
 //   // };
-  
+
 // //   const handleRowClick = (rowData) => {
 // //   setSelectedResourceId(rowData['Employee ID']);
 // //   setSelectedTimesheetDate(rowData.originalDate); // Add this line
@@ -7525,11 +7511,11 @@
 
 // // const handleRowClick = (rowData, event) => {
 // //   if (event?.target?.type === 'checkbox') return;
-  
+
 // //   setSelectedResourceId(rowData['Employee ID']);
-// //   setSelectedTimesheetDate(rowData.originalDate); // Add this line  
+// //   setSelectedTimesheetDate(rowData.originalDate); // Add this line
 // //   setCurrentSelectedRowId(rowData.id);
-  
+
 // //   setTimeout(() => {
 // //     if (timesheetDetailsRef.current) {
 // //       timesheetDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
@@ -7539,20 +7525,17 @@
 
 // const handleRowClick = (rowData, event) => {
 //   if (event?.target?.type === 'checkbox') return;
-  
+
 //   setSelectedResourceId(rowData["Employee ID"]);
 //   setSelectedTimesheetDate(rowData.originalDate); // Pass the specific date
 //   setCurrentSelectedRowId(rowData.id);
-  
+
 //   setTimeout(() => {
 //     if (timesheetDetailsRef.current) {
 //       timesheetDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
 //     }
 //   }, 100);
 // };
-
-
-
 
 //   const handleCloseDetails = () => {
 //     setSelectedResourceId(null);
@@ -7603,51 +7586,51 @@
 //   // CORRECTED: More robust grouping function with debugging
 // const groupDuplicateTimesheets = (timesheets) => {
 //   console.log("Input timesheets for grouping:", timesheets);
-  
+
 //   if (!Array.isArray(timesheets) || timesheets.length === 0) {
 //     return [];
 //   }
-  
+
 //   // Create a map to group by Employee ID + Timesheet Date
 //   const groupMap = new Map();
-  
+
 //   timesheets.forEach((timesheet, index) => {
 //     const employeeId = String(timesheet["Employee ID"] || "").trim();
 //     const timesheetDate = timesheet.originalDate || timesheet["Timesheet Date"];
 //     const key = `${employeeId}|${timesheetDate}`;
-    
+
 //     console.log(`Processing row ${index}:`, {
 //       employeeId,
-//       timesheetDate, 
+//       timesheetDate,
 //       key,
 //       hours: timesheet.Hours
 //     });
-    
+
 //     if (groupMap.has(key)) {
 //       // Group exists - sum the hours
 //       const existingEntry = groupMap.get(key);
 //       const currentHours = parseFloat(timesheet.Hours) || 0;
 //       const existingHours = parseFloat(existingEntry.Hours) || 0;
 //       const summedHours = existingHours + currentHours;
-      
+
 //       console.log(`Combining hours: ${existingHours} + ${currentHours} = ${summedHours}`);
-      
+
 //       existingEntry.Hours = formatHours ? formatHours(summedHours) : summedHours.toFixed(2);
-      
+
 //       // Combine metadata for bulk operations
 //       existingEntry.combinedIds = existingEntry.combinedIds || [existingEntry.id];
 //       existingEntry.combinedIds.push(timesheet.id);
-      
+
 //       existingEntry.combinedRequestIds = existingEntry.combinedRequestIds || [existingEntry.requestId];
 //       if (timesheet.requestId && !existingEntry.combinedRequestIds.includes(timesheet.requestId)) {
 //         existingEntry.combinedRequestIds.push(timesheet.requestId);
 //       }
-      
+
 //       existingEntry.combinedLineNos = existingEntry.combinedLineNos || [existingEntry.lineNo];
 //       if (timesheet.lineNo && !existingEntry.combinedLineNos.includes(timesheet.lineNo)) {
 //         existingEntry.combinedLineNos.push(timesheet.lineNo);
 //       }
-      
+
 //     } else {
 //       // First entry for this key
 //       const groupedEntry = { ...timesheet };
@@ -7655,30 +7638,27 @@
 //       groupedEntry.combinedRequestIds = [timesheet.requestId];
 //       groupedEntry.combinedLineNos = [timesheet.lineNo];
 //       groupMap.set(key, groupedEntry);
-      
+
 //       console.log(`Created new group for key: ${key}`, groupedEntry);
 //     }
 //   });
-  
+
 //   const result = Array.from(groupMap.values());
 //   console.log("Final grouped result:", result);
 //   return result;
 // };
 
-
-
-
 // const fetchData = async () => {
 //   if (!userLoaded || !currentUser || !currentUser.username) return;
-  
+
 //   try {
 //     setLoading(true);
-    
-//     // Use existing resourceId from currentUser.username 
+
+//     // Use existing resourceId from currentUser.username
 //     const resourceId = currentUser.username;
 //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 //     console.log("Fetching from:", apiUrl);
-    
+
 //     const response = await fetch(apiUrl, {
 //       method: "GET",
 //       headers: { "Content-Type": "application/json" },
@@ -7693,15 +7673,15 @@
 
 //     // Transform the nested structure into flat rows
 //     const flattenedData = [];
-    
+
 //     if (Array.isArray(apiData)) {
 //       apiData.forEach((timesheetEntry, entryIndex) => {
 //         console.log(`Processing timesheet entry ${entryIndex}:`, timesheetEntry);
-        
+
 //         if (timesheetEntry.timesheetHours && Array.isArray(timesheetEntry.timesheetHours)) {
 //           timesheetEntry.timesheetHours.forEach((dailyHour, hourIndex) => {
 //             console.log(`Processing daily hour ${hourIndex}:`, dailyHour);
-            
+
 //             // Create row for each daily entry
 //             const row = {
 //               id: dailyHour.id,
@@ -7711,23 +7691,23 @@
 //               selected: false,
 //               notifySelected: false,
 //               isApproved: timesheetEntry.status?.toLowerCase() === "approved",
-//               isRejected: timesheetEntry.status?.toLowerCase() === "rejected", 
+//               isRejected: timesheetEntry.status?.toLowerCase() === "rejected",
 //               isNotified: timesheetEntry.status?.toLowerCase() === "notified",
-              
+
 //               // Display fields matching your existing structure
-//               status: timesheetEntry.status?.toLowerCase(), 
+//               status: timesheetEntry.status?.toLowerCase(),
 //               "Status": timesheetEntry.status,
 //               "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
 //               "Employee ID": timesheetEntry.resource_Id,
 //               "Name": timesheetEntry.resource_Name || timesheetEntry.displayedName,
 //               "Hours": formatHours(dailyHour.hours),
-              
+
 //               // Additional fields for operations
 //               originalDate: timesheetEntry.timesheet_Date,
 //               approverUserId: timesheetEntry.approverUserId,
 //               "Comment": timesheetEntry.comment || "",
 //             };
-            
+
 //             flattenedData.push(row);
 //             console.log(`Added flattened row:`, row);
 //           });
@@ -7740,9 +7720,9 @@
 //     // Apply grouping to combine duplicate Employee ID + Date entries
 //     const groupedData = groupDuplicateTimesheets(flattenedData);
 //     console.log("Final grouped data:", groupedData);
-    
+
 //     setRows(groupedData);
-    
+
 //   } catch (error) {
 //     console.error("Error fetching data:", error);
 //     showToast(`Error fetching data: ${error.message}`, "error");
@@ -7752,15 +7732,12 @@
 //   }
 // };
 
-
-
-  
 //   // const fetchData = async () => {
 //   //   if (!userLoaded || !currentUser || !currentUser.username)
 //   //     return;
 //   //   try {
 //   //     setLoading(true);
-      
+
 //   //     const resourceId = currentUser.username;
 //   //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 
@@ -7768,7 +7745,7 @@
 //   //       method: "GET",
 //   //       headers: { "Content-Type": "application/json" },
 //   //     });
-      
+
 //   //     if (!response.ok)
 //   //       throw new Error(`HTTP error! status: ${response.status}`);
 //   //     const apiData = await response.json();
@@ -7833,7 +7810,6 @@
 // //     return rowDate === searchDateFormatted;
 // //   });
 // // }
-
 
 // //     if (searchEmployeeId.trim()) {
 // //       filtered = filtered.filter((row) =>
@@ -7932,8 +7908,6 @@
 //   return getSortedRows(filtered);
 // };
 
-
-
 //   const filteredRows = getFilteredRows();
 
 //   useEffect(() => {
@@ -7970,21 +7944,21 @@
 //   const handleUnifiedSelectAll = (isSelected) => {
 //     setUnifiedSelectAll(isSelected);
 //     const updatedRows = [...rows];
-    
+
 //     // Only select actionable rows (including approved for reject-only functionality)
-//     // const actionableRows = filteredRows.filter(row => 
-//     //     isRowActionable(row) && 
+//     // const actionableRows = filteredRows.filter(row =>
+//     //     isRowActionable(row) &&
 //     //     row.status?.toLowerCase() !== "rejected"
 //     // );
-//     const actionableRows = filteredRows.filter(row => 
-//     (isRowActionable(row) || isApprovedRowRejectableOnly(row)) && 
+//     const actionableRows = filteredRows.filter(row =>
+//     (isRowActionable(row) || isApprovedRowRejectableOnly(row)) &&
 //     row.status?.toLowerCase() !== "rejected"
 // );
 
 //     const notifiableRows = filteredRows.filter(
-//         row => 
-//             !row.isNotified && 
-//             row.status !== "notified" && 
+//         row =>
+//             !row.isNotified &&
+//             row.status !== "notified" &&
 //             row["Status"]?.toLowerCase() !== "notified" &&
 //             row.status?.toLowerCase() !== "rejected"
 //     );
@@ -8026,7 +8000,6 @@
 //   updatedRows[actualRowIndex].selected = isSelected;
 //   handleRowSelectUpdate(rowData, isSelected);
 // }
-
 
 //     if (
 //       !rowData.isNotified &&
@@ -8123,7 +8096,7 @@
 
 //   const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
 //   const allRequestsData = [];
-  
+
 //   selectedRows.forEach((row) => {
 //     // If this row has combined data from grouping, process all of them
 //     if (row.combinedRequestIds && row.combinedRequestIds.length > 0) {
@@ -8137,7 +8110,7 @@
 //           ipAddress: ipAddress,
 //           // Include original line numbers if available
 //           lineNo: row.combinedLineNos ? row.combinedLineNos[index] : row.lineNo,
-//           // Include original timesheet IDs if available  
+//           // Include original timesheet IDs if available
 //           timesheetId: row.combinedIds ? row.combinedIds[index] : row.id
 //         });
 //       });
@@ -8154,11 +8127,10 @@
 //       });
 //     }
 //   });
-  
+
 //   console.log(`Sending ${action} request for ${allRequestsData.length} individual timesheet entries:`, allRequestsData);
 //   return allRequestsData;
 // };
-
 
 //   // const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
 //   //   return selectedRows.map((row) => ({
@@ -8178,17 +8150,17 @@
 //       showToast("Please select at least one timesheet to approve.", "warning");
 //       return;
 //     }
-    
+
 //     // Check if any selected rows are already approved
-//     const hasApprovedRows = selectedRows.some(row => 
+//     const hasApprovedRows = selectedRows.some(row =>
 //         (row["Status"] || "").toLowerCase() === "approved"
 //     );
-    
+
 //     if (hasApprovedRows) {
 //         showToast("Cannot approve already approved timesheets.", "warning");
 //         return;
 //     }
-    
+
 //     performBulkApprove("Bulk approved");
 //   };
 
@@ -8200,7 +8172,7 @@
 //   //   setPendingAction("reject");
 //   //   setShowReasonModal(true);
 //   // };
-  
+
 //   const handleBulkRejectClick = () => {
 //   if (selectedRows.length === 0) {
 //     showToast("Please select at least one timesheet to reject.", "warning");
@@ -8208,10 +8180,10 @@
 //   }
 
 //   // Allow rejection of approved status
-//   const hasNonRejectableRows = selectedRows.some(row => 
+//   const hasNonRejectableRows = selectedRows.some(row =>
 //     row["Status"]?.toLowerCase() === "rejected"
 //   );
-  
+
 //   if (hasNonRejectableRows) {
 //     showToast("Cannot reject already rejected timesheets.", "warning");
 //     return;
@@ -8246,9 +8218,9 @@
 //       reason,
 //       userIpAddress
 //     );
-    
+
 //     console.log("Bulk Approve Payload:", requestBody);
-    
+
 //     const response = await fetch(
 //       "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
 //       {
@@ -8257,22 +8229,22 @@
 //         body: JSON.stringify(requestBody),
 //       }
 //     );
-    
+
 //     if (response.ok) {
 //       const totalProcessed = requestBody.length;
 //       showToast(
 //         `Successfully approved ${totalProcessed} timesheet entries with reason: "${reason}"`,
 //         "success"
 //       );
-      
+
 //       // Update all grouped entries in the state
-//       const approvedIds = selectedRows.flatMap(row => 
+//       const approvedIds = selectedRows.flatMap(row =>
 //         row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
 //       );
-      
+
 //       setRows((prevRows) =>
 //         prevRows.map((row) =>
-//           approvedIds.includes(row.id) || 
+//           approvedIds.includes(row.id) ||
 //           (row.combinedIds && row.combinedIds.some(id => approvedIds.includes(id)))
 //             ? {
 //                 ...row,
@@ -8284,7 +8256,7 @@
 //             : row
 //         )
 //       );
-      
+
 //       setSelectedRows([]);
 //       setSelectAll(false);
 //     } else {
@@ -8317,9 +8289,9 @@
 //       reason,
 //       userIpAddress
 //     );
-    
+
 //     console.log("Bulk Reject Payload:", requestBody);
-    
+
 //     const response = await fetch(
 //       "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
 //       {
@@ -8328,19 +8300,19 @@
 //         body: JSON.stringify(requestBody),
 //       }
 //     );
-    
+
 //     if (response.ok) {
 //       const totalProcessed = requestBody.length;
 //       showToast(
 //         `Successfully rejected ${totalProcessed} timesheet entries with reason: "${reason}"`,
 //         "success"
 //       );
-      
+
 //       // Update all grouped entries in the state
-//       const rejectedIds = selectedRows.flatMap(row => 
+//       const rejectedIds = selectedRows.flatMap(row =>
 //         row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
 //       );
-      
+
 //       setRows((prevRows) =>
 //         prevRows.map((row) =>
 //           rejectedIds.includes(row.id) ||
@@ -8355,7 +8327,7 @@
 //             : row
 //         )
 //       );
-      
+
 //       setSelectedRows([]);
 //       setSelectAll(false);
 //     } else {
@@ -8377,8 +8349,6 @@
 //     setRejectLoading(false);
 //   }
 // };
-
-
 
 //   // const performBulkApprove = async (reason) => {
 //   //   setActionLoading(true);
@@ -8405,7 +8375,7 @@
 //   //       const approvedIds = selectedRows.map((row) => row.id);
 //   //       setRows((prevRows) =>
 //   //         prevRows.map((row) =>
-//   //           approvedIds.includes(row.id)     
+//   //           approvedIds.includes(row.id)
 //   //             ? {
 //   //                 ...row,
 //   //                 isApproved: true,
@@ -8427,7 +8397,7 @@
 //   //   } catch (error) {
 //   //     showToast(
 //   //       "Failed to approve timesheets. Please check your connection.",
-//   //       "error" 
+//   //       "error"
 //   //     );
 //   //   } finally {
 //   //     setActionLoading(false);
@@ -8593,7 +8563,7 @@
 //                   autoComplete="off"
 //                 />
 //               </div>
- 
+
 //               <div className="flex items-center">
 //                 <label htmlFor="filterEmpId" className="mr-2 text-xs font-semibold text-gray-600">
 //                   Employee ID
@@ -8607,7 +8577,7 @@
 //                   className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
 //                 />
 //               </div>
- 
+
 //               <div className="flex items-center">
 //                 <label htmlFor="filterEmpName" className="mr-2 text-xs font-semibold text-gray-600">
 //                   Employee Name
@@ -8656,7 +8626,6 @@
 //   />
 // </div>
 
-
 //             </div>
 //           </fieldset>
 
@@ -8681,14 +8650,14 @@
 //   <div className="flex gap-2">
 //     {isAdmin && (
 //       <>
-       
+
 // {(() => {
-//   const approveEligibleCount = selectedRows.filter(row => 
-//     row["Status"]?.toLowerCase() !== "approved" && 
+//   const approveEligibleCount = selectedRows.filter(row =>
+//     row["Status"]?.toLowerCase() !== "approved" &&
 //     row["Status"]?.toLowerCase() !== "rejected"
 //   ).length;
 
-//   const rejectEligibleCount = selectedRows.filter(row => 
+//   const rejectEligibleCount = selectedRows.filter(row =>
 //     row["Status"]?.toLowerCase() !== "rejected"
 //   ).length;
 
@@ -8700,15 +8669,15 @@
 //       <button
 //         onClick={handleBulkApproveClick}
 //         disabled={
-//           approveLoading || 
-//           approveEligibleCount === 0 || 
+//           approveLoading ||
+//           approveEligibleCount === 0 ||
 //           hasApprovedSelected
 //         }
 //         className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
 //       >
 //         {approveLoading ? "Processing..." : `Approve (${approveEligibleCount})`}
 //       </button>
-      
+
 //       {/* Reject button */}
 //       <button
 //         onClick={handleBulkRejectClick}
@@ -8724,7 +8693,6 @@
 //     )}
 //   </div>
 // </div>
-
 
 //             <div
 //               style={{
@@ -8832,7 +8800,7 @@
 //                               ? "#f9fafb"
 //                               : "white",
 //                           cursor: "pointer",
-//                           opacity: (row["Status"] || "").toLowerCase() === "approved" || 
+//                           opacity: (row["Status"] || "").toLowerCase() === "approved" ||
 //                                    (row["Status"] || "").toLowerCase() === "rejected" ? 0.7 : 1
 //                         }}
 //                         onClick={() => handleRowClick(row)}
@@ -8885,13 +8853,11 @@
 //                                 // Updated disabled condition: Enable checkbox for approved status
 //                                 // disabled={!isRowActionable(row) || row.isNotified || (row["Status"]?.toLowerCase() === "notified") || (row["Status"]?.toLowerCase() === "rejected")}
 //                                  disabled={
-//   !(isRowActionable(row) || isApprovedRowRejectableOnly(row)) || 
-//   row.isNotified || 
-//   (row.status?.toLowerCase() === "notified") || 
+//   !(isRowActionable(row) || isApprovedRowRejectableOnly(row)) ||
+//   row.isNotified ||
+//   (row.status?.toLowerCase() === "notified") ||
 //   (row.status?.toLowerCase() === "rejected")
 // }
-
-
 
 //                               />
 //                             ) : (
@@ -9012,7 +8978,7 @@ const columnsAdmin = [
   "Timesheet Date",
   "Employee ID",
   "Name",
-  // "Work Order",
+  "Work Order",
   "Hours",
 ];
 
@@ -9133,8 +9099,8 @@ export default function Approval() {
     const daysToAdd = (7 - dayOfWeek) % 7;
     todayUTC.setUTCDate(todayUTC.getUTCDate() + daysToAdd);
     const finalYear = todayUTC.getUTCFullYear();
-    const finalMonth = String(todayUTC.getUTCMonth() + 1).padStart(2, '0');
-    const finalDay = String(todayUTC.getUTCDate()).padStart(2, '0');
+    const finalMonth = String(todayUTC.getUTCMonth() + 1).padStart(2, "0");
+    const finalDay = String(todayUTC.getUTCDate()).padStart(2, "0");
     const formattedDateForState = `${finalYear}-${finalMonth}-${finalDay}`;
     setSearchDate(formattedDateForState);
   }, []);
@@ -9298,96 +9264,105 @@ export default function Approval() {
   };
 
   const getStatusStyle = (status) => {
-    const statusProper = status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() || "Pending";
-    
+    const statusProper =
+      status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() ||
+      "Pending";
+
     switch (status?.toUpperCase()) {
-        case "OPEN":
-            return {
-                backgroundColor: "#dbeafe",
-                color: "#2563eb",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "APPROVED":
-            return {
-                backgroundColor: "#dcfce7",
-                color: "#16a34a",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "REJECTED":
-            return {
-                backgroundColor: "#fce7f3",
-                color: "#ec4899",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "PENDING":
-            return {
-                backgroundColor: "#fef9c3",
-                color: "#ca8a04",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "SUBMITTED":
-            return {
-                backgroundColor: "#e0e7ff",
-                color: "#4338ca",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "NOTIFIED":
-            return {
-                backgroundColor: "#dbeafe",
-                color: "#2563eb",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        case "UN-NOTIFIED":
-        case "UNNOTIFIED":
-            return {
-                backgroundColor: "#dcfce7",
-                color: "#16a34a",
-                fontWeight: "600",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
-        default:
-            return {
-                backgroundColor: "#f3f4f6",
-                color: "#6b7280",
-                fontWeight: "500",
-                padding: "4px 8px",
-                fontSize: "11px",
-                display: "inline-block",
-                borderRadius: "9999px",
-            };
+      case "OPEN":
+        return {
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "APPROVED":
+        return {
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "REJECTED":
+        return {
+          backgroundColor: "#fce7f3",
+          color: "#ec4899",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "PENDING":
+        return {
+          backgroundColor: "#fef9c3",
+          color: "#ca8a04",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "SUBMITTED":
+        return {
+          backgroundColor: "#e0e7ff",
+          color: "#4338ca",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "NOTIFIED":
+        return {
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "UN-NOTIFIED":
+      case "UNNOTIFIED":
+        return {
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      default:
+        return {
+          backgroundColor: "#f3f4f6",
+          color: "#6b7280",
+          fontWeight: "500",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
     }
   };
 
   const isRowActionable = (row) => {
     const status = row.status?.toLowerCase();
-    return (status === "pending" || status === "open" || status === "un-notified" || status === "submitted") && !row.isRejected && status !== "rejected";
+    return (
+      (status === "pending" ||
+        status === "open" ||
+        status === "un-notified" ||
+        status === "submitted") &&
+      !row.isRejected &&
+      status !== "rejected"
+    );
   };
 
   // Create a separate function for approved rows that can only be rejected
@@ -9416,15 +9391,19 @@ export default function Approval() {
   };
 
   const handleRowClick = (rowData, event) => {
-    if (event?.target?.type === 'checkbox') return;
-    
+    if (event?.target?.type === "checkbox") return;
+
     setSelectedResourceId(rowData["Employee ID"]);
     setSelectedTimesheetDate(rowData.originalDate); // Pass the specific date
     setCurrentSelectedRowId(rowData.id);
-    
+
     setTimeout(() => {
       if (timesheetDetailsRef.current) {
-        timesheetDetailsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        timesheetDetailsRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
       }
     }, 100);
   };
@@ -9471,57 +9450,72 @@ export default function Approval() {
   }, []);
 
   useEffect(() => {
-    if (userLoaded && currentUser && currentUser.username)
-      fetchData();
+    if (userLoaded && currentUser && currentUser.username) fetchData();
   }, [userLoaded, currentUser]);
 
   const groupDuplicateTimesheets = (timesheets) => {
     console.log("Input timesheets for grouping:", timesheets);
-    
+
     if (!Array.isArray(timesheets) || timesheets.length === 0) {
       return [];
     }
-    
+
     // Create a map to group by Employee ID + Timesheet Date
     const groupMap = new Map();
-    
+
     timesheets.forEach((timesheet, index) => {
       const employeeId = String(timesheet["Employee ID"] || "").trim();
-      const timesheetDate = timesheet.originalDate || timesheet["Timesheet Date"];
+      const timesheetDate =
+        timesheet.originalDate || timesheet["Timesheet Date"];
       const key = `${employeeId}|${timesheetDate}`;
-      
+
       console.log(`Processing row ${index}:`, {
         employeeId,
-        timesheetDate, 
+        timesheetDate,
         key,
-        hours: timesheet.Hours
+        hours: timesheet.Hours,
       });
-      
+
       if (groupMap.has(key)) {
         // Group exists - sum the hours
         const existingEntry = groupMap.get(key);
         const currentHours = parseFloat(timesheet.Hours) || 0;
         const existingHours = parseFloat(existingEntry.Hours) || 0;
         const summedHours = existingHours + currentHours;
-        
-        console.log(`Combining hours: ${existingHours} + ${currentHours} = ${summedHours}`);
-        
-        existingEntry.Hours = formatHours ? formatHours(summedHours) : summedHours.toFixed(2);
-        
+
+        console.log(
+          `Combining hours: ${existingHours} + ${currentHours} = ${summedHours}`
+        );
+
+        existingEntry.Hours = formatHours
+          ? formatHours(summedHours)
+          : summedHours.toFixed(2);
+
         // Combine metadata for bulk operations
-        existingEntry.combinedIds = existingEntry.combinedIds || [existingEntry.id];
+        existingEntry.combinedIds = existingEntry.combinedIds || [
+          existingEntry.id,
+        ];
         existingEntry.combinedIds.push(timesheet.id);
-        
-        existingEntry.combinedRequestIds = existingEntry.combinedRequestIds || [existingEntry.requestId];
-        if (timesheet.requestId && !existingEntry.combinedRequestIds.includes(timesheet.requestId)) {
+
+        existingEntry.combinedRequestIds = existingEntry.combinedRequestIds || [
+          existingEntry.requestId,
+        ];
+        if (
+          timesheet.requestId &&
+          !existingEntry.combinedRequestIds.includes(timesheet.requestId)
+        ) {
           existingEntry.combinedRequestIds.push(timesheet.requestId);
         }
-        
-        existingEntry.combinedLineNos = existingEntry.combinedLineNos || [existingEntry.lineNo];
-        if (timesheet.lineNo && !existingEntry.combinedLineNos.includes(timesheet.lineNo)) {
+
+        existingEntry.combinedLineNos = existingEntry.combinedLineNos || [
+          existingEntry.lineNo,
+        ];
+        if (
+          timesheet.lineNo &&
+          !existingEntry.combinedLineNos.includes(timesheet.lineNo)
+        ) {
           existingEntry.combinedLineNos.push(timesheet.lineNo);
         }
-        
       } else {
         // First entry for this key
         const groupedEntry = { ...timesheet };
@@ -9529,11 +9523,11 @@ export default function Approval() {
         groupedEntry.combinedRequestIds = [timesheet.requestId];
         groupedEntry.combinedLineNos = [timesheet.lineNo];
         groupMap.set(key, groupedEntry);
-        
+
         console.log(`Created new group for key: ${key}`, groupedEntry);
       }
     });
-    
+
     const result = Array.from(groupMap.values());
     console.log("Final grouped result:", result);
     return result;
@@ -9541,15 +9535,15 @@ export default function Approval() {
 
   const fetchData = async () => {
     if (!userLoaded || !currentUser || !currentUser.username) return;
-    
+
     try {
       setLoading(true);
-      
-      // Use existing resourceId from currentUser.username 
+
+      // Use existing resourceId from currentUser.username
       const resourceId = currentUser.username;
       const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
       console.log("Fetching from:", apiUrl);
-      
+
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -9564,15 +9558,21 @@ export default function Approval() {
 
       // Transform the nested structure into flat rows
       const flattenedData = [];
-      
+
       if (Array.isArray(apiData)) {
         apiData.forEach((timesheetEntry, entryIndex) => {
-          console.log(`Processing timesheet entry ${entryIndex}:`, timesheetEntry);
-          
-          if (timesheetEntry.timesheetHours && Array.isArray(timesheetEntry.timesheetHours)) {
+          console.log(
+            `Processing timesheet entry ${entryIndex}:`,
+            timesheetEntry
+          );
+
+          if (
+            timesheetEntry.timesheetHours &&
+            Array.isArray(timesheetEntry.timesheetHours)
+          ) {
             timesheetEntry.timesheetHours.forEach((dailyHour, hourIndex) => {
               console.log(`Processing daily hour ${hourIndex}:`, dailyHour);
-              
+
               // Create row for each daily entry
               const row = {
                 id: dailyHour.id,
@@ -9582,24 +9582,26 @@ export default function Approval() {
                 selected: false,
                 notifySelected: false,
                 isApproved: timesheetEntry.status?.toLowerCase() === "approved",
-                isRejected: timesheetEntry.status?.toLowerCase() === "rejected", 
+                isRejected: timesheetEntry.status?.toLowerCase() === "rejected",
                 isNotified: timesheetEntry.status?.toLowerCase() === "notified",
-                
+
                 // Display fields matching your existing structure
-                status: timesheetEntry.status?.toLowerCase(), 
-                "Status": timesheetEntry.status,
+                status: timesheetEntry.status?.toLowerCase(),
+                Status: timesheetEntry.status,
                 "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
                 "Employee ID": timesheetEntry.resource_Id,
-                "Name": timesheetEntry.resource_Name || timesheetEntry.displayedName,
-                // "Work Order": timesheetEntry.workOrder || timesheetEntry.work_Order || "", // Add Work Order field
-                "Hours": formatHours(dailyHour.hours),
-                
+                Name:
+                  timesheetEntry.resource_Name || timesheetEntry.displayedName,
+                "Work Order":
+                  timesheetEntry.workOrder || timesheetEntry.work_Order || "", // Add Work Order field
+                Hours: formatHours(dailyHour.hours),
+
                 // Additional fields for operations
                 originalDate: timesheetEntry.timesheet_Date,
                 approverUserId: timesheetEntry.approverUserId,
-                "Comment": timesheetEntry.comment || "",
+                Comment: timesheetEntry.comment || "",
               };
-              
+
               flattenedData.push(row);
               console.log(`Added flattened row:`, row);
             });
@@ -9612,9 +9614,8 @@ export default function Approval() {
       // Apply grouping to combine duplicate Employee ID + Date entries
       const groupedData = groupDuplicateTimesheets(flattenedData);
       console.log("Final grouped data:", groupedData);
-      
+
       setRows(groupedData);
-      
     } catch (error) {
       console.error("Error fetching data:", error);
       showToast(`Error fetching data: ${error.message}`, "error");
@@ -9630,7 +9631,7 @@ export default function Approval() {
 
     if (searchDate) {
       const searchDateFormatted = formatDateFromInput(searchDate);
-      filtered = filtered.filter(row => {
+      filtered = filtered.filter((row) => {
         const rowDate = row["Timesheet Date"];
         return rowDate === searchDateFormatted;
       });
@@ -9699,32 +9700,33 @@ export default function Approval() {
   const handleUnifiedSelectAll = (isSelected) => {
     setUnifiedSelectAll(isSelected);
     const updatedRows = [...rows];
-    
-    const actionableRows = filteredRows.filter(row => 
-        (isRowActionable(row) || isApprovedRowRejectableOnly(row)) && 
+
+    const actionableRows = filteredRows.filter(
+      (row) =>
+        (isRowActionable(row) || isApprovedRowRejectableOnly(row)) &&
         row.status?.toLowerCase() !== "rejected"
     );
 
     const notifiableRows = filteredRows.filter(
-        row => 
-            !row.isNotified && 
-            row.status !== "notified" && 
-            row["Status"]?.toLowerCase() !== "notified" &&
-            row.status?.toLowerCase() !== "rejected"
+      (row) =>
+        !row.isNotified &&
+        row.status !== "notified" &&
+        row["Status"]?.toLowerCase() !== "notified" &&
+        row.status?.toLowerCase() !== "rejected"
     );
 
     actionableRows.forEach((filteredRow) => {
-        const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
-        if (actualRowIndex !== -1) {
-            updatedRows[actualRowIndex].selected = isSelected;
-        }
+      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+      if (actualRowIndex !== -1) {
+        updatedRows[actualRowIndex].selected = isSelected;
+      }
     });
 
     notifiableRows.forEach((filteredRow) => {
-        const actualRowIndex = rows.findIndex(row => row.id === filteredRow.id);
-        if (actualRowIndex !== -1) {
-            updatedRows[actualRowIndex].notifySelected = isSelected;
-        }
+      const actualRowIndex = rows.findIndex((row) => row.id === filteredRow.id);
+      if (actualRowIndex !== -1) {
+        updatedRows[actualRowIndex].notifySelected = isSelected;
+      }
     });
 
     setRows(updatedRows);
@@ -9839,7 +9841,7 @@ export default function Approval() {
 
   const buildBulkRequestBody = (selectedRows, action, reason, ipAddress) => {
     const allRequestsData = [];
-    
+
     selectedRows.forEach((row) => {
       // If this row has combined data from grouping, process all of them
       if (row.combinedRequestIds && row.combinedRequestIds.length > 0) {
@@ -9849,12 +9851,16 @@ export default function Approval() {
             requestId: requestId,
             levelNo: row.levelNo || 1,
             approverUserId: currentUser.approvalUserId || row.approverUserId,
-            comment: `${action === "approve" ? "Approved" : "Rejected"} by ${currentUser.name}: ${reason}`,
+            comment: `${action === "approve" ? "Approved" : "Rejected"} by ${
+              currentUser.name
+            }: ${reason}`,
             ipAddress: ipAddress,
             // Include original line numbers if available
-            lineNo: row.combinedLineNos ? row.combinedLineNos[index] : row.lineNo,
-            // Include original timesheet IDs if available  
-            timesheetId: row.combinedIds ? row.combinedIds[index] : row.id
+            lineNo: row.combinedLineNos
+              ? row.combinedLineNos[index]
+              : row.lineNo,
+            // Include original timesheet IDs if available
+            timesheetId: row.combinedIds ? row.combinedIds[index] : row.id,
           });
         });
       } else {
@@ -9863,15 +9869,20 @@ export default function Approval() {
           requestId: row.requestId || row.id,
           levelNo: row.levelNo || 1,
           approverUserId: currentUser.approvalUserId || row.approverUserId,
-          comment: `${action === "approve" ? "Approved" : "Rejected"} by ${currentUser.name}: ${reason}`,
+          comment: `${action === "approve" ? "Approved" : "Rejected"} by ${
+            currentUser.name
+          }: ${reason}`,
           ipAddress: ipAddress,
           lineNo: row.lineNo,
-          timesheetId: row.id
+          timesheetId: row.id,
         });
       }
     });
-    
-    console.log(`Sending ${action} request for ${allRequestsData.length} individual timesheet entries:`, allRequestsData);
+
+    console.log(
+      `Sending ${action} request for ${allRequestsData.length} individual timesheet entries:`,
+      allRequestsData
+    );
     return allRequestsData;
   };
 
@@ -9881,17 +9892,17 @@ export default function Approval() {
       showToast("Please select at least one timesheet to approve.", "warning");
       return;
     }
-    
+
     // Check if any selected rows are already approved
-    const hasApprovedRows = selectedRows.some(row => 
-        (row["Status"] || "").toLowerCase() === "approved"
+    const hasApprovedRows = selectedRows.some(
+      (row) => (row["Status"] || "").toLowerCase() === "approved"
     );
-    
+
     if (hasApprovedRows) {
-        showToast("Cannot approve already approved timesheets.", "warning");
-        return;
+      showToast("Cannot approve already approved timesheets.", "warning");
+      return;
     }
-    
+
     performBulkApprove("Bulk approved");
   };
 
@@ -9902,10 +9913,10 @@ export default function Approval() {
     }
 
     // Allow rejection of approved status
-    const hasNonRejectableRows = selectedRows.some(row => 
-      row["Status"]?.toLowerCase() === "rejected"
+    const hasNonRejectableRows = selectedRows.some(
+      (row) => row["Status"]?.toLowerCase() === "rejected"
     );
-    
+
     if (hasNonRejectableRows) {
       showToast("Cannot reject already rejected timesheets.", "warning");
       return;
@@ -9939,9 +9950,9 @@ export default function Approval() {
         reason,
         userIpAddress
       );
-      
+
       console.log("Bulk Approve Payload:", requestBody);
-      
+
       const response = await fetch(
         "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
         {
@@ -9950,23 +9961,26 @@ export default function Approval() {
           body: JSON.stringify(requestBody),
         }
       );
-      
+
       if (response.ok) {
         const totalProcessed = requestBody.length;
         showToast(
           `Successfully approved ${totalProcessed} timesheet entries with reason: "${reason}"`,
           "success"
         );
-        
+
         // Update all grouped entries in the state
-        const approvedIds = selectedRows.flatMap(row => 
-          row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
+        const approvedIds = selectedRows.flatMap((row) =>
+          row.combinedIds && row.combinedIds.length > 0
+            ? row.combinedIds
+            : [row.id]
         );
-        
+
         setRows((prevRows) =>
           prevRows.map((row) =>
-            approvedIds.includes(row.id) || 
-            (row.combinedIds && row.combinedIds.some(id => approvedIds.includes(id)))
+            approvedIds.includes(row.id) ||
+            (row.combinedIds &&
+              row.combinedIds.some((id) => approvedIds.includes(id)))
               ? {
                   ...row,
                   isApproved: true,
@@ -9977,7 +9991,7 @@ export default function Approval() {
               : row
           )
         );
-        
+
         setSelectedRows([]);
         setSelectAll(false);
       } else {
@@ -10008,9 +10022,9 @@ export default function Approval() {
         reason,
         userIpAddress
       );
-      
+
       console.log("Bulk Reject Payload:", requestBody);
-      
+
       const response = await fetch(
         "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
         {
@@ -10019,23 +10033,26 @@ export default function Approval() {
           body: JSON.stringify(requestBody),
         }
       );
-      
+
       if (response.ok) {
         const totalProcessed = requestBody.length;
         showToast(
           `Successfully rejected ${totalProcessed} timesheet entries with reason: "${reason}"`,
           "success"
         );
-        
+
         // Update all grouped entries in the state
-        const rejectedIds = selectedRows.flatMap(row => 
-          row.combinedIds && row.combinedIds.length > 0 ? row.combinedIds : [row.id]
+        const rejectedIds = selectedRows.flatMap((row) =>
+          row.combinedIds && row.combinedIds.length > 0
+            ? row.combinedIds
+            : [row.id]
         );
-        
+
         setRows((prevRows) =>
           prevRows.map((row) =>
             rejectedIds.includes(row.id) ||
-            (row.combinedIds && row.combinedIds.some(id => rejectedIds.includes(id)))
+            (row.combinedIds &&
+              row.combinedIds.some((id) => rejectedIds.includes(id)))
               ? {
                   ...row,
                   isRejected: true,
@@ -10046,7 +10063,7 @@ export default function Approval() {
               : row
           )
         );
-        
+
         setSelectedRows([]);
         setSelectAll(false);
       } else {
@@ -10144,10 +10161,15 @@ export default function Approval() {
               width: "calc(100vw - 220px)",
             }}
           >
-            <legend className="text-sm font-semibold text-gray-600 px-2">Filters</legend>
+            <legend className="text-sm font-semibold text-gray-600 px-2">
+              Filters
+            </legend>
             <div className="flex items-center gap-6 flex-wrap">
               <div className="flex items-center">
-                <label htmlFor="filterDate" className="mr-2 text-xs font-semibold text-gray-600">
+                <label
+                  htmlFor="filterDate"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
                   Date
                 </label>
                 <DatePicker
@@ -10173,9 +10195,12 @@ export default function Approval() {
                   autoComplete="off"
                 />
               </div>
- 
+
               <div className="flex items-center">
-                <label htmlFor="filterEmpId" className="mr-2 text-xs font-semibold text-gray-600">
+                <label
+                  htmlFor="filterEmpId"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
                   Employee ID
                 </label>
                 <input
@@ -10187,9 +10212,12 @@ export default function Approval() {
                   className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
- 
+
               <div className="flex items-center">
-                <label htmlFor="filterEmpName" className="mr-2 text-xs font-semibold text-gray-600">
+                <label
+                  htmlFor="filterEmpName"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
                   Employee Name
                 </label>
                 <input
@@ -10203,7 +10231,10 @@ export default function Approval() {
               </div>
 
               <div className="flex items-center">
-                <label htmlFor="filterStatus" className="mr-2 text-xs font-semibold text-gray-600">
+                <label
+                  htmlFor="filterStatus"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
                   Status
                 </label>
                 <select
@@ -10235,56 +10266,64 @@ export default function Approval() {
               flexDirection: "column",
             }}
           >
-          <div
-            className="flex justify-between items-center mb-2 w-full"
-            style={{ flexShrink: 0 }}
-          >
-            <div className="flex gap-2">
-              {isAdmin && (
-                <>
-                 
-                  {(() => {
-                    const approveEligibleCount = selectedRows.filter(row => 
-                      row["Status"]?.toLowerCase() !== "approved" && 
-                      row["Status"]?.toLowerCase() !== "rejected"
-                    ).length;
+            <div
+              className="flex justify-between items-center mb-2 w-full"
+              style={{ flexShrink: 0 }}
+            >
+              <div className="flex gap-2">
+                {isAdmin && (
+                  <>
+                    {(() => {
+                      const approveEligibleCount = selectedRows.filter(
+                        (row) =>
+                          row["Status"]?.toLowerCase() !== "approved" &&
+                          row["Status"]?.toLowerCase() !== "rejected"
+                      ).length;
 
-                    const rejectEligibleCount = selectedRows.filter(row => 
-                      row["Status"]?.toLowerCase() !== "rejected"
-                    ).length;
+                      const rejectEligibleCount = selectedRows.filter(
+                        (row) => row["Status"]?.toLowerCase() !== "rejected"
+                      ).length;
 
-                    const hasApprovedSelected = selectedRows.some(row => row["Status"]?.toLowerCase() === "approved");
+                      const hasApprovedSelected = selectedRows.some(
+                        (row) => row["Status"]?.toLowerCase() === "approved"
+                      );
 
-                    return (
-                      <>
-                        {/* Approve button */}
-                        <button
-                          onClick={handleBulkApproveClick}
-                          disabled={
-                            approveLoading || 
-                            approveEligibleCount === 0 || 
-                            hasApprovedSelected
-                          }
-                          className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {approveLoading ? "Processing..." : `Approve (${approveEligibleCount})`}
-                        </button>
-                        
-                        {/* Reject button */}
-                        <button
-                          onClick={handleBulkRejectClick}
-                          disabled={rejectLoading || rejectEligibleCount === 0}
-                          className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {rejectLoading ? "Processing..." : `Reject (${rejectEligibleCount})`}
-                        </button>
-                      </>
-                    );
-                  })()}
-                </>
-              )}
+                      return (
+                        <>
+                          {/* Approve button */}
+                          <button
+                            onClick={handleBulkApproveClick}
+                            disabled={
+                              approveLoading ||
+                              approveEligibleCount === 0 ||
+                              hasApprovedSelected
+                            }
+                            className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {approveLoading
+                              ? "Processing..."
+                              : `Approve (${approveEligibleCount})`}
+                          </button>
+
+                          {/* Reject button */}
+                          <button
+                            onClick={handleBulkRejectClick}
+                            disabled={
+                              rejectLoading || rejectEligibleCount === 0
+                            }
+                            className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {rejectLoading
+                              ? "Processing..."
+                              : `Reject (${rejectEligibleCount})`}
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+              </div>
             </div>
-          </div>
 
             <div
               style={{
@@ -10304,7 +10343,7 @@ export default function Approval() {
                   borderCollapse: "collapse",
                   fontSize: "11px",
                   width: "100%",
-                  tableLayout: "fixed"
+                  tableLayout: "fixed",
                 }}
               >
                 <thead
@@ -10392,8 +10431,12 @@ export default function Approval() {
                               ? "#f9fafb"
                               : "white",
                           cursor: "pointer",
-                          opacity: (row["Status"] || "").toLowerCase() === "approved" || 
-                                   (row["Status"] || "").toLowerCase() === "rejected" ? 0.7 : 1
+                          opacity:
+                            (row["Status"] || "").toLowerCase() ===
+                              "approved" ||
+                            (row["Status"] || "").toLowerCase() === "rejected"
+                              ? 0.7
+                              : 1,
                         }}
                         onClick={() => handleRowClick(row)}
                         onMouseEnter={(e) =>
@@ -10429,13 +10472,25 @@ export default function Approval() {
                             }}
                           >
                             {col === "Status" ? (
-                              <span style={getStatusStyle(row[col] || "PENDING")}>
-                                {(row[col] || "Pending").charAt(0).toUpperCase() + (row[col] || "Pending").slice(1).toLowerCase()}
+                              <span
+                                style={getStatusStyle(row[col] || "PENDING")}
+                              >
+                                {(row[col] || "Pending")
+                                  .charAt(0)
+                                  .toUpperCase() +
+                                  (row[col] || "Pending")
+                                    .slice(1)
+                                    .toLowerCase()}
                               </span>
                             ) : col === "All" ? (
                               <input
                                 type="checkbox"
-                                checked={row.selected || false || row.notifySelected || false}
+                                checked={
+                                  row.selected ||
+                                  false ||
+                                  row.notifySelected ||
+                                  false
+                                }
                                 onChange={(e) => {
                                   e.stopPropagation();
                                   handleUnifiedRowSelect(rdx, e.target.checked);
@@ -10443,10 +10498,13 @@ export default function Approval() {
                                 onClick={(e) => e.stopPropagation()}
                                 className="cursor-pointer"
                                 disabled={
-                                  !(isRowActionable(row) || isApprovedRowRejectableOnly(row)) || 
-                                  row.isNotified || 
-                                  (row.status?.toLowerCase() === "notified") || 
-                                  (row.status?.toLowerCase() === "rejected")
+                                  !(
+                                    isRowActionable(row) ||
+                                    isApprovedRowRejectableOnly(row)
+                                  ) ||
+                                  row.isNotified ||
+                                  row.status?.toLowerCase() === "notified" ||
+                                  row.status?.toLowerCase() === "rejected"
                                 }
                               />
                             ) : (
@@ -10502,4 +10560,3 @@ export default function Approval() {
     </div>
   );
 }
-

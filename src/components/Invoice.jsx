@@ -5412,9 +5412,152 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   const [invoicesCreated, setInvoicesCreated] = useState(new Set());
   const invoiceRefs = useRef([]);
 
+  // Store original ungrouped data for API calls
+  const originalInvoiceData = useRef(data);
+
   if (!data || !Array.isArray(data) || data.length === 0) {
     return <div>No invoice data available</div>;
   }
+
+  // Handle API calls only (no download) when clicking "Confirm"
+  // const handleConfirmInvoices = async () => {
+  //   setIsLoading(true);
+
+  //   try {
+  //     const successfulInvoices = new Set();
+
+  //     // Process each invoice separately with API calls
+  //     for (let i = 0; i < data.length; i++) {
+  //       const invoice = data[i];
+
+  //       try {
+  //         const totalAmount = invoice.lineItems.reduce(
+  //           (acc, line) => acc + line.amount,
+  //           0
+  //         );
+
+  //         // const invoicePayload = {
+  //         //   invoiceNumber: invoice.invoiceId,
+
+  //         //   invoiceAmount: totalAmount,
+  //         //   createdBy: "Test",
+  //         //   updatedBy: "Test",
+  //         //   billTo: invoice.billTo,
+  //         //   remitTo: invoice.remitTo,
+  //         //   po_Number: invoice.po_Number,
+  //         //   currency: invoice.currency,
+  //         //   invoiceTimesheetLines: invoice.lineItems.map((line) => ({
+  //         //     poLineNumber: line.poLine,
+  //         //     timesheetLineNo: line.line_No,
+  //         //     mappedHours: line.hours,
+  //         //     mappedAmount: line.amount,
+  //         //     rate: line.rate,
+  //         //     employee: line.employee,
+  //         //     vendor: line.vendor,
+  //         //     plc: line.plc,
+  //         //     hours_Date: line.hours_Date,
+  //         //     createdBy: "Test",
+  //         //     updatedBy: "Test",
+  //         //   })),
+  //         // };
+
+  //         const invoicePayload = {
+  //           invoiceNumber: invoice.invoiceId,
+  //           invoiceDate: new Date(invoice.period).toISOString(),
+  //           invoiceAmount: invoice.totalAmount,
+  //           createdBy: "Test",
+  //           updatedBy: "Test",
+  //           billTo: invoice.billTo,
+  //           remitTo: invoice.remitTo,
+  //           po_Number: invoice.po_Number,
+  //           po_rlse_Number: invoice.po_rlse_Number,
+  //           po_Start_End_Date: invoice.po_Start_End_Date,
+  //           buyer: invoice.buyer,
+  //           terms: invoice.terms,
+  //           currency: invoice.currency,
+  //           invoiceTimesheetLines: invoice.lineItems.map((line) => ({
+  //             poLineNumber: line.poLine,
+  //             timesheetLineNo: line.line_No,
+  //             mappedHours: line.hours,
+  //             mappedAmount: line.amount,
+  //             rate: line.rate,
+  //             employee: line.employee,
+  //             vendor: line.vendor,
+  //             plc: line.plc,
+  //             hours_Date: line.hours_Date,
+  //             createdBy: "Test",
+  //             updatedBy: "Test",
+  //           })),
+  //         };
+
+  //         console.log(
+  //           `Creating invoice ${i + 1}/${data.length}:`,
+  //           invoicePayload
+  //         );
+
+  //         const response = await fetch(
+  //           "https://timesheet-subk.onrender.com/api/Invoices",
+  //           {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify(invoicePayload),
+  //           }
+  //         );
+
+  //         if (!response.ok) {
+  //           throw new Error(
+  //             `Failed to create invoice ${invoice.invoiceId}: ${response.status}`
+  //           );
+  //         }
+
+  //         const responseData = await response.json();
+  //         console.log(`Invoice ${i + 1} created successfully:`, responseData);
+
+  //         successfulInvoices.add(i);
+  //         toast.success(
+  //           `Invoice ${i + 1} (${invoice.invoiceId}) created successfully`
+  //         );
+
+  //         // Small delay between API calls to prevent overwhelming the server
+  //         if (i < data.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 500));
+  //         }
+  //       } catch (error) {
+  //         console.error(`Error creating invoice ${i + 1}:`, error);
+  //         toast.error(`Failed to create invoice ${i + 1}: ${error.message}`);
+  //       }
+  //     }
+
+  //     setInvoicesCreated(successfulInvoices);
+
+  //     if (successfulInvoices.size === data.length) {
+  //       toast.success(
+  //         `All ${data.length} invoices created successfully! You can now download them individually.`
+  //       );
+  //     } else if (successfulInvoices.size > 0) {
+  //       toast.warning(
+  //         `${successfulInvoices.size}/${data.length} invoices created successfully. Some failed - check individual statuses.`
+  //       );
+  //     } else {
+  //       toast.error("Failed to create any invoices. Please try again.");
+  //     }
+
+  //     setInvoiceModalVisible(false);
+  //     // Call success callback
+  //     if (onInvoiceSuccess && successfulInvoices.size > 0) {
+  //       setTimeout(() => {
+  //         onInvoiceSuccess(
+  //           data.filter((_, index) => successfulInvoices.has(index))
+  //         );
+  //       }, 1000);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in invoice confirmation process:", error);
+  //     toast.error("Error processing invoices");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Handle API calls only (no download) when clicking "Confirm"
   const handleConfirmInvoices = async () => {
@@ -5424,39 +5567,14 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       const successfulInvoices = new Set();
 
       // Process each invoice separately with API calls
-      for (let i = 0; i < data.length; i++) {
-        const invoice = data[i];
+      for (let i = 0; i < originalInvoiceData.current.length; i++) {
+        const invoice = originalInvoiceData.current[i];
 
         try {
-          const totalAmount = invoice.lineItems.reduce(
-            (acc, line) => acc + line.amount,
-            0
-          );
-
-          // const invoicePayload = {
-          //   invoiceNumber: invoice.invoiceId,
-
-          //   invoiceAmount: totalAmount,
-          //   createdBy: "Test",
-          //   updatedBy: "Test",
-          //   billTo: invoice.billTo,
-          //   remitTo: invoice.remitTo,
-          //   po_Number: invoice.po_Number,
-          //   currency: invoice.currency,
-          //   invoiceTimesheetLines: invoice.lineItems.map((line) => ({
-          //     poLineNumber: line.poLine,
-          //     timesheetLineNo: line.line_No,
-          //     mappedHours: line.hours,
-          //     mappedAmount: line.amount,
-          //     rate: line.rate,
-          //     employee: line.employee,
-          //     vendor: line.vendor,
-          //     plc: line.plc,
-          //     hours_Date: line.hours_Date,
-          //     createdBy: "Test",
-          //     updatedBy: "Test",
-          //   })),
-          // };
+          // Calculate total from ORIGINAL ungrouped line items
+          const totalAmount = invoice.originalLineItems 
+            ? invoice.originalLineItems.reduce((acc, line) => acc + line.amount, 0)
+            : invoice.lineItems.reduce((acc, line) => acc + line.amount, 0);
 
           const invoicePayload = {
             invoiceNumber: invoice.invoiceId,
@@ -5472,7 +5590,8 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
             buyer: invoice.buyer,
             terms: invoice.terms,
             currency: invoice.currency,
-            invoiceTimesheetLines: invoice.lineItems.map((line) => ({
+            // Use ORIGINAL ungrouped line items for API call
+            invoiceTimesheetLines: (invoice.originalLineItems || invoice.lineItems).map((line) => ({
               poLineNumber: line.poLine,
               timesheetLineNo: line.line_No,
               mappedHours: line.hours,
@@ -5488,7 +5607,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
           };
 
           console.log(
-            `Creating invoice ${i + 1}/${data.length}:`,
+            `Creating invoice ${i + 1}/${originalInvoiceData.current.length}:`,
             invoicePayload
           );
 
@@ -5516,7 +5635,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
           );
 
           // Small delay between API calls to prevent overwhelming the server
-          if (i < data.length - 1) {
+          if (i < originalInvoiceData.current.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 500));
           }
         } catch (error) {
@@ -5527,13 +5646,13 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
 
       setInvoicesCreated(successfulInvoices);
 
-      if (successfulInvoices.size === data.length) {
+      if (successfulInvoices.size === originalInvoiceData.current.length) {
         toast.success(
-          `All ${data.length} invoices created successfully! You can now download them individually.`
+          `All ${originalInvoiceData.current.length} invoices created successfully! You can now download them individually.`
         );
       } else if (successfulInvoices.size > 0) {
         toast.warning(
-          `${successfulInvoices.size}/${data.length} invoices created successfully. Some failed - check individual statuses.`
+          `${successfulInvoices.size}/${originalInvoiceData.current.length} invoices created successfully. Some failed - check individual statuses.`
         );
       } else {
         toast.error("Failed to create any invoices. Please try again.");
@@ -5544,7 +5663,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       if (onInvoiceSuccess && successfulInvoices.size > 0) {
         setTimeout(() => {
           onInvoiceSuccess(
-            data.filter((_, index) => successfulInvoices.has(index))
+            originalInvoiceData.current.filter((_, index) => successfulInvoices.has(index))
           );
         }, 1000);
       }
