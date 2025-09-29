@@ -329,7 +329,8 @@ export default function MainTable() {
     const [searchDate, setSearchDate] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [timesheetToEdit, setTimesheetToEdit] = useState(null);
-    const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    // const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState({ key: 'Timesheet End Date', direction: 'asc' });
     const [selectedTimesheetData, setSelectedTimesheetData] = useState(null);
     const [currentSelectedRowId, setCurrentSelectedRowId] = useState(null);
     const [hoveredRowId, setHoveredRowId] = useState(null);
@@ -691,15 +692,25 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
                     <div className="border border-gray-300 rounded bg-white shadow-md p-2 w-full max-w-[calc(100vw-220px)] mx-auto">
                         <div className="flex justify-end items-center mb-2">
                             {canNotify && (
+                                // <div className="flex gap-2">
+                                //     <button
+                                //         onClick={handleNotify}
+                                //         className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
+                                //         disabled={!selectedTimesheetData || !['OPEN', 'REJECTED'].includes(selectedTimesheetData.Status?.toUpperCase()) || isNotifying}                                    >
+                                //         {isNotifying ? 'Submitting...' : `Submit`}
+                                //     </button>
+                                //     <button onClick={handleCreateClick} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs">Create</button>
+                                // </div>
                                 <div className="flex gap-2">
-                                    <button
-                                        onClick={handleNotify}
-                                        className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
-                                        disabled={!selectedTimesheetData || !['OPEN', 'REJECTED'].includes(selectedTimesheetData.Status?.toUpperCase()) || isNotifying}                                    >
-                                        {isNotifying ? 'Submitting...' : `Submit`}
-                                    </button>
-                                    <button onClick={handleCreateClick} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs">Create</button>
-                                </div>
+    <button onClick={handleCreateClick} className="bg-green-600 text-white px-4 py-1.5 rounded text-xs">Create</button>
+    <button
+        onClick={handleNotify}
+        className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
+        disabled={!selectedTimesheetData || !['OPEN', 'REJECTED'].includes(selectedTimesheetData.Status?.toUpperCase()) || isNotifying}
+    >
+        {isNotifying ? 'Submitting...' : `Submit`}
+    </button>
+</div>
                             )}
                         </div>
                         <div className="overflow-auto max-h-[75vh]">
