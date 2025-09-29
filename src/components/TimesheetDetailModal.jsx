@@ -1729,7 +1729,8 @@ const copyLines = () => {
             if (!initialLine) {
                 const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
                 if (totalHours > 0) {
-                    const payload = { Description: currentLine.description || 'New Timesheet Line', ProjId: currentLine.project || '', Plc: currentLine.plc || '', PayType: currentLine.payType || 'SR', PoNumber: currentLine.poNumber || '', RlseNumber: currentLine.rlseNumber || "0", Resource_Id: String(timesheetData["Employee ID"]), PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0, Timesheet_Date: new Date(timesheetData.Date).toISOString(), CreatedBy: String(timesheetData["Employee ID"]), TimesheetHours: days.map(day => ({ Ts_Date: weekDates[day], Hours: currentLine.hours[day] || 0 })) };
+                    const payload = { Description: currentLine.description || 'New Timesheet Line', ProjId: currentLine.project || '', Plc: currentLine.plc || '', PayType: currentLine.payType || 'SR', PoNumber: currentLine.poNumber || '', RlseNumber: currentLine.rlseNumber || "0", Resource_Id: String(timesheetData["Employee ID"]), PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0, WorkOrder: currentLine.wa_Code || '', 
+    pm_User_Id: currentLine.pmUserID || null,  Timesheet_Date: new Date(timesheetData.Date).toISOString(), CreatedBy: String(timesheetData["Employee ID"]), TimesheetHours: days.map(day => ({ Ts_Date: weekDates[day], Hours: currentLine.hours[day] || 0 })) };
                     promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }));
                 }
                 return;
