@@ -572,15 +572,25 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
             return !searchDate || row.Date === formatDate(searchDate);
         })
         .sort((a, b) => {
-            if (!sortConfig.key) return 0;
-            const key = sortConfig.key === "Timesheet End Date" ? "Date" : sortConfig.key;
-            const aVal = a[key];
-            const bVal = b[key];
-            if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-            return 0;
-        });
+    if (!sortConfig.key) return 0;
+    const key = sortConfig.key === "Timesheet End Date" ? "Date" : sortConfig.key;
+    const aVal = a[key];
+    const bVal = b[key];
 
+    // Check if we are sorting the date column
+    if (key === 'Date') {
+        const dateA = new Date(aVal);
+        const dateB = new Date(bVal);
+        if (dateA < dateB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (dateA > dateB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+    }
+
+    // Fallback for non-date columns (like Hours, Status)
+    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+});
     const handleCloseDetail = () => {
         setSelectedTimesheetData(null);
         setCurrentSelectedRowId(null);
@@ -733,7 +743,8 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
 </div>
                             )}
                         </div>
-                        <div className="overflow-auto max-h-[75vh]">
+                        {/* <div className="overflow-auto max-h-[75vh]"> */}
+                        <div className="overflow-auto max-h-60">
                             <table className="w-full text-xs border-collapse">
                                 <thead className="sticky top-0 bg-gray-100 z-10">
                                     <tr>
