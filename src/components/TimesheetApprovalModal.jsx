@@ -1019,6 +1019,17 @@ export default function TimesheetApprovalView({
     }
   };
 
+  //day wise total
+  const dailyTotals = React.useMemo(() => {
+    const totals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
+    lines.forEach((line) => {
+      days.forEach((day) => {
+        totals[day] += parseFloat(line.hours[day] || 0);
+      });
+    });
+    return totals;
+  }, [lines, days]);
+
   if (isLoading) {
     return (
       <div className="w-full mt-4 p-6 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1037,17 +1048,17 @@ export default function TimesheetApprovalView({
     "Project",
     "PLC",
     "Pay Type",
-    "PO Number",
-    "RLSE Number",
-    "PO Line Number",
+    "Po Id",
+    "Release",
+    "PO LN No",
     ...headerDates,
     "Total Hours",
   ];
 
   return (
-    <div className="w-full mt-4 bg-white border border-gray-300 rounded-lg shadow-lg">
+    <div className="w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
       {/* Header Section */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <div className="flex justify-between items-center p-2 border-b border-gray-300 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
             Timesheet Details
@@ -1065,7 +1076,7 @@ export default function TimesheetApprovalView({
       </div>
 
       {/* Content Section */}
-      <div className="p-4">
+      <div className="p-2">
         {lines.length === 0 ? (
           <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
             <div className="text-lg font-medium mb-2">No Data Found</div>
@@ -1079,7 +1090,7 @@ export default function TimesheetApprovalView({
                   {tableHeaders.map((header, index) => (
                     <th
                       key={`header-${index}-${header}`}
-                      className="p-3 text-left font-semibold text-gray-700 whitespace-nowrap border-r border-gray-200 last:border-r-0"
+                      className="p-3 text-center font-semibold text-gray-700 whitespace-nowrap border-r border-gray-200 last:border-r-0"
                     >
                       {header}
                     </th>
@@ -1106,13 +1117,13 @@ export default function TimesheetApprovalView({
                         </div>
                       </td>
                       {/* Work Order column */}
-                      <td className="p-2 min-w-[140px] border-r border-gray-200">
+                      <td className="p-2  border-r border-gray-200  text-center">
                         <div className="text-sm font-mono text-gray-700">
                           {line.workOrder || "-"}
                         </div>
                       </td>
                       {/* Description column */}
-                      <td className="p-2 min-w-[250px] border-r border-gray-200">
+                      <td className="p-2   border-r border-gray-200">
                         <div
                           className="text-sm font-medium text-gray-900 truncate"
                           title={line.description}
@@ -1121,37 +1132,37 @@ export default function TimesheetApprovalView({
                         </div>
                       </td>
                       {/* Project column */}
-                      <td className="p-2 min-w-[180px] border-r border-gray-200">
+                      <td className="p-2  text-center border-r border-gray-200">
                         <div className="text-sm text-gray-700 font-mono">
                           {line.project || "-"}
                         </div>
                       </td>
                       {/* PLC column */}
-                      <td className="p-2 min-w-[100px] border-r border-gray-200">
+                      <td className="p-2  text-center border-r border-gray-200">
                         <div className="text-sm text-gray-700">
                           {line.plc || "-"}
                         </div>
                       </td>
                       {/* Pay Type column */}
-                      <td className="p-2 min-w-[100px] border-r border-gray-200">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+                      <td className="p-2  text-center border-r border-gray-200">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs  font-medium">
                           {line.payType}
                         </span>
                       </td>
                       {/* PO Number column */}
-                      <td className="p-2 min-w-[130px] border-r border-gray-200">
-                        <div className="text-sm text-gray-700">
+                      <td className="p-2  text-center  border-r border-gray-200">
+                        <div className="text-sm text-gray-700 truncate">
                           {line.poNumber || "-"}
                         </div>
                       </td>
                       {/* RLSE Number column */}
-                      <td className="p-2 min-w-[100px] border-r border-gray-200">
+                      <td className="p-2  text-center border-r border-gray-200">
                         <div className="text-sm text-gray-700">
                           {line.rlseNumber || "-"}
                         </div>
                       </td>
                       {/* PO Line Number column */}
-                      <td className="p-2 min-w-[120px] border-r border-gray-200">
+                      <td className="p-2  text-center border-r border-gray-200">
                         <div className="text-sm text-gray-700">
                           {line.poLineNumber || "-"}
                         </div>
@@ -1187,6 +1198,29 @@ export default function TimesheetApprovalView({
                   );
                 })}
               </tbody>
+
+              <tfoot className="bg-slate-100/70 sticky bottom-0">
+                <tr className="border-t-2 border-gray-300 font-semibold">
+                  <td colSpan={9} className="p-3 text-right">
+                    Total Hours
+                  </td>
+                  {days.map((day) => (
+                    <td key={day} className="p-2 text-center">
+                      <div className="w-20 p-1.5 font-semibold">
+                        {dailyTotals[day].toFixed(2)}
+                      </div>
+                    </td>
+                  ))}
+                  <td className="p-3 text-center font-bold text-blue-700 pr-4">
+                    {lines
+                      .reduce(
+                        (acc, line) => acc + (parseFloat(line.totalHours) || 0),
+                        0
+                      )
+                      .toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}

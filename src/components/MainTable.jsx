@@ -340,6 +340,25 @@ export default function MainTable() {
     const userRole = currentUser?.role?.toLowerCase();
     const canNotify = !!currentUser;
 
+     const dateToYyyyMmDd = (date) => {
+        if (!date || !(date instanceof Date)) return '';
+        const year = date.getUTCFullYear();
+        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = date.getUTCDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const handleDateChange = (e) => {
+        const dateString = e.target.value;
+        if (dateString) {
+            // Parse the date string as UTC to avoid timezone issues
+            const [year, month, day] = dateString.split('-').map(Number);
+            setSearchDate(new Date(Date.UTC(year, month - 1, day)));
+        } else {
+            setSearchDate(null);
+        }
+    };
+
     // ✅ Updated column header here
     const columns = [
         "Status", "Timesheet End Date", "Hours"
@@ -374,16 +393,18 @@ export default function MainTable() {
 
     // set default date to the current week's Sunday (UTC)
     useEffect(() => {
-        const today = new Date();
-        const year = today.getUTCFullYear();
-        const month = today.getUTCMonth();
-        const day = today.getUTCDate();
-        const dayOfWeek = today.getUTCDay(); // 0 for Sunday
-        const todayUTC = new Date(Date.UTC(year, month, day));
-        const daysToAdd = (7 - dayOfWeek) % 7;
-        todayUTC.setUTCDate(todayUTC.getUTCDate() + daysToAdd);
-        setSearchDate(todayUTC);
-    }, []);
+    const today = new Date();
+    const dayOfWeek = today.getDay(); 
+    const daysToAdd = (7 - dayOfWeek) % 7;
+    const targetSunday = new Date(today);
+    targetSunday.setDate(today.getDate() + daysToAdd);
+    const searchDateUTC = new Date(Date.UTC(
+        targetSunday.getFullYear(),
+        targetSunday.getMonth(),
+        targetSunday.getDate()
+    ));
+    setSearchDate(searchDateUTC);
+}, []);
 
     useEffect(() => {
         if (userLoaded && currentUser) {
@@ -664,15 +685,14 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
                                 <label htmlFor="filterDate" className="mr-2 text-xs font-semibold text-gray-600">
                                     Date
                                 </label>
-                                <DatePicker
-                                    id="filterDate"
-                                    selected={searchDate}
-                                    onChange={setSearchDate}
-                                    dateFormat="MM/dd/yyyy"
-                                    placeholderText="Filter by Date (MM/DD/YYYY)"
-                                    className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                    isClearable
-                                />
+                                <input
+    type="date"
+    id="filterDate"
+    value={dateToYyyyMmDd(searchDate)}
+    onChange={handleDateChange}
+    // className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+    className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+/>
                             </div>
                             <div className="flex items-center">
                                 <label htmlFor="employeeId" className="mr-2 text-xs font-semibold text-gray-600">

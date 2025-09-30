@@ -19,7 +19,6 @@ export default function InvoiceExport() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-
   // Table dimensions matching ExportTable
   const colWidth = 120;
   const minTableWidth = 2200; // Fixed width to force horizontal scroll
@@ -319,119 +318,121 @@ export default function InvoiceExport() {
   // };
 
   const handlePreview = async (invoice) => {
-  try {
-    setPreviewModalVisible(true);
-    setPreviewData(null);
+    try {
+      setPreviewModalVisible(true);
+      setPreviewData(null);
 
-    const response = await fetch(
-      `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-        invoice.invoiceNumber
-      )}`
-    );
+      const response = await fetch(
+        `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+          invoice.invoiceNumber
+        )}`
+      );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch invoice preview: ${response.status}`);
-    }
-
-    const apiData = await response.json();
-
-    // Function to group and combine line items with same PLC, Vendor, and Employee
-    const groupAndCombineLineItems = (lineItems) => {
-      if (!lineItems || !Array.isArray(lineItems)) {
-        return [];
+      if (!response.ok) {
+        throw new Error(`Failed to fetch invoice preview: ${response.status}`);
       }
 
-      const groupedItems = {};
+      const apiData = await response.json();
 
-      lineItems.forEach((item, index) => {
-        // Create a unique key for grouping based on PLC, Vendor, and Employee
-        const plcKey = item.plc || '';
-        const vendorKey = item.vendor || '';
-        const employeeKey = item.employee || '';
-        
-        const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
-        
-        if (groupedItems[groupKey]) {
-          // Combine with existing group - sum hours and amounts
-          const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
-          const newHours = parseFloat(item.hours) || 0;
-          groupedItems[groupKey].hours = existingHours + newHours;
-          
-          const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
-          const newAmount = parseFloat(item.amount) || 0;
-          groupedItems[groupKey].amount = existingAmount + newAmount;
-          
-          // Keep track of combined count for reference
-          groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
-          
-        } else {
-          // First occurrence of this combination
-          groupedItems[groupKey] = {
-            poLine: item.poLine || " ",
-            plc: item.plc || " ",
-            vendor: item.vendor || " ",
-            employee: item.employee || " ",
-            hours: parseFloat(item.hours) || 0,
-            rate: item.rate || 0,
-            amount: parseFloat(item.amount) || 0,
-            line_No: item.line_No || " ",
-            combinedCount: 1
-          };
+      // Function to group and combine line items with same PLC, Vendor, and Employee
+      const groupAndCombineLineItems = (lineItems) => {
+        if (!lineItems || !Array.isArray(lineItems)) {
+          return [];
         }
-      });
 
-      // Convert grouped items back to array with formatted values
-      return Object.values(groupedItems).map(item => ({
-        poLine: item.poLine,
-        plc: item.plc,
-        vendor: item.vendor,
-        employee: item.employee,
-        hours: Number(item.hours.toFixed(2)),
-        rate: item.rate,
-        amount: Number(item.amount.toFixed(2)),
-        line_No: item.line_No,
-      }));
-    };
+        const groupedItems = {};
 
-    // Group and combine line items
-    const combinedLineItems = groupAndCombineLineItems(apiData.lineItems || []);
+        lineItems.forEach((item, index) => {
+          // Create a unique key for grouping based on PLC, Vendor, and Employee
+          const plcKey = item.plc || "";
+          const vendorKey = item.vendor || "";
+          const employeeKey = item.employee || "";
 
-    // Recalculate total amount based on combined line items
-    const newTotalAmount = combinedLineItems.reduce((sum, item) => {
-      return sum + (parseFloat(item.amount) || 0);
-    }, 0);
+          const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
 
-    const transformedData = [
-      {
-        invoiceId: apiData.invoiceId || " ",
-        invoiceDate: formatDate(apiData.invoiceDate) || " ",
-        period: apiData.period || " ",
-        currency: apiData.currency || " ",
-        totalAmount: Number(newTotalAmount.toFixed(2)),
+          if (groupedItems[groupKey]) {
+            // Combine with existing group - sum hours and amounts
+            const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
+            const newHours = parseFloat(item.hours) || 0;
+            groupedItems[groupKey].hours = existingHours + newHours;
 
-        lineItems: combinedLineItems,
+            const existingAmount =
+              parseFloat(groupedItems[groupKey].amount) || 0;
+            const newAmount = parseFloat(item.amount) || 0;
+            groupedItems[groupKey].amount = existingAmount + newAmount;
 
-        billTo: apiData.billTo || " ",
-        buyer: apiData.buyer || " ",
-        po_Number: apiData.po_Number || " ",
-        po_rlse_Number: apiData.po_rlse_Number || " ",
-        po_Start_End_Date: apiData.po_Start_End_Date || " ",
-        terms: apiData.terms || " ",
-        amountDue: Number(newTotalAmount.toFixed(2)),
-      },
-    ];
+            // Keep track of combined count for reference
+            groupedItems[groupKey].combinedCount =
+              (groupedItems[groupKey].combinedCount || 1) + 1;
+          } else {
+            // First occurrence of this combination
+            groupedItems[groupKey] = {
+              poLine: item.poLine || " ",
+              plc: item.plc || " ",
+              vendor: item.vendor || " ",
+              employee: item.employee || " ",
+              hours: parseFloat(item.hours) || 0,
+              rate: item.rate || 0,
+              amount: parseFloat(item.amount) || 0,
+              line_No: item.line_No || " ",
+              combinedCount: 1,
+            };
+          }
+        });
 
-    console.log("Original API data:", apiData);
-    console.log("Combined line items:", combinedLineItems);
-    console.log("Transformed preview data:", transformedData);
+        // Convert grouped items back to array with formatted values
+        return Object.values(groupedItems).map((item) => ({
+          poLine: item.poLine,
+          plc: item.plc,
+          vendor: item.vendor,
+          employee: item.employee,
+          hours: Number(item.hours.toFixed(2)),
+          rate: item.rate,
+          amount: Number(item.amount.toFixed(2)),
+          line_No: item.line_No,
+        }));
+      };
 
-    setPreviewData(transformedData);
-  } catch (error) {
-    console.error("Error fetching invoice preview:", error);
-    alert(`Failed to load invoice preview: ${error.message}`);
-  }
-};
+      // Group and combine line items
+      const combinedLineItems = groupAndCombineLineItems(
+        apiData.lineItems || []
+      );
 
+      // Recalculate total amount based on combined line items
+      const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+        return sum + (parseFloat(item.amount) || 0);
+      }, 0);
+
+      const transformedData = [
+        {
+          invoiceId: apiData.invoiceId || " ",
+          invoiceDate: formatDate(apiData.invoiceDate) || " ",
+          period: apiData.period || " ",
+          currency: apiData.currency || " ",
+          totalAmount: Number(newTotalAmount.toFixed(2)),
+
+          lineItems: combinedLineItems,
+
+          billTo: apiData.billTo || " ",
+          buyer: apiData.buyer || " ",
+          po_Number: apiData.po_Number || " ",
+          po_rlse_Number: apiData.po_rlse_Number || " ",
+          po_Start_End_Date: apiData.po_Start_End_Date || " ",
+          terms: apiData.terms || " ",
+          amountDue: Number(newTotalAmount.toFixed(2)),
+        },
+      ];
+
+      console.log("Original API data:", apiData);
+      console.log("Combined line items:", combinedLineItems);
+      console.log("Transformed preview data:", transformedData);
+
+      setPreviewData(transformedData);
+    } catch (error) {
+      console.error("Error fetching invoice preview:", error);
+      alert(`Failed to load invoice preview: ${error.message}`);
+    }
+  };
 
   // Download invoices function
   // const downloadInvoices = async () => {
@@ -621,577 +622,580 @@ export default function InvoiceExport() {
   //   }
   // };
 
-//   const downloadInvoices = async () => {
-//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-//     selectedInvoices.has(invoice.invoiceId || index)
-//   );
+  //   const downloadInvoices = async () => {
+  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+  //     selectedInvoices.has(invoice.invoiceId || index)
+  //   );
 
-//   if (invoicesToDownload.length === 0) {
-//     alert("Please select invoices to download");
-//     return;
-//   }
+  //   if (invoicesToDownload.length === 0) {
+  //     alert("Please select invoices to download");
+  //     return;
+  //   }
 
-//   try {
-//     setIsDownloading(true);
+  //   try {
+  //     setIsDownloading(true);
 
-//     for (let i = 0; i < invoicesToDownload.length; i++) {
-//       const invoice = invoicesToDownload[i];
-//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+  //     for (let i = 0; i < invoicesToDownload.length; i++) {
+  //       const invoice = invoicesToDownload[i];
+  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
 
-//       if (!invoiceId) {
-//         console.warn(
-//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-//         );
-//         continue;
-//       }
+  //       if (!invoiceId) {
+  //         console.warn(
+  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+  //         );
+  //         continue;
+  //       }
 
-//       try {
-//         // First fetch invoice preview data
-//         const previewResponse = await fetch(
-//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-//             invoice.invoiceNumber
-//           )}`
-//         );
+  //       try {
+  //         // First fetch invoice preview data
+  //         const previewResponse = await fetch(
+  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             invoice.invoiceNumber
+  //           )}`
+  //         );
 
-//         if (!previewResponse.ok) {
-//           throw new Error(
-//             `Failed to fetch invoice preview: ${previewResponse.status}`
-//           );
-//         }
+  //         if (!previewResponse.ok) {
+  //           throw new Error(
+  //             `Failed to fetch invoice preview: ${previewResponse.status}`
+  //           );
+  //         }
 
-//         const apiData = await previewResponse.json();
+  //         const apiData = await previewResponse.json();
 
-//         // Transform data exactly like in handlePreview
-//         const transformedData = [
-//           {
-//             invoiceId: apiData.invoiceId || " ",
-//             invoiceDate: apiData.period || " ",
-//             currency: apiData.currency || " ",
-//             totalAmount: apiData.totalAmount || 0,
+  //         // Transform data exactly like in handlePreview
+  //         const transformedData = [
+  //           {
+  //             invoiceId: apiData.invoiceId || " ",
+  //             invoiceDate: apiData.period || " ",
+  //             currency: apiData.currency || " ",
+  //             totalAmount: apiData.totalAmount || 0,
 
-//             lineItems: (apiData.lineItems || []).map((item, index) => ({
-//               poLine: item.poLine || " ",
-//               plc: item.plc || " ",
-//               vendor: item.vendor || " ",
-//               employee: item.employee || " ",
-//               hours: item.hours || 0,
-//               rate: item.rate || 0,
-//               amount: item.amount || 0,
-//               line_No: item.line_No || " ",
-//             })),
+  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //               poLine: item.poLine || " ",
+  //               plc: item.plc || " ",
+  //               vendor: item.vendor || " ",
+  //               employee: item.employee || " ",
+  //               hours: item.hours || 0,
+  //               rate: item.rate || 0,
+  //               amount: item.amount || 0,
+  //               line_No: item.line_No || " ",
+  //             })),
 
-//             billTo: apiData.billTo || " ",
-//             buyer: apiData.buyer || " ",
-//             purchaseOrderId: apiData.po_Number || " ",
-//             releaseNumber: apiData.po_rlse_Number || " ",
-//             poStartEndDate: apiData.po_Start_End_Date || " ",
-//             terms: apiData.terms || " ",
-//             amountDue: apiData.totalAmount || 0,
-//             period: apiData.period || " ",
-//             po_Number: apiData.po_Number || " ",
-//             po_rlse_Number: apiData.po_rlse_Number || " ",
-//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
-//           },
-//         ];
+  //             billTo: apiData.billTo || " ",
+  //             buyer: apiData.buyer || " ",
+  //             purchaseOrderId: apiData.po_Number || " ",
+  //             releaseNumber: apiData.po_rlse_Number || " ",
+  //             poStartEndDate: apiData.po_Start_End_Date || " ",
+  //             terms: apiData.terms || " ",
+  //             amountDue: apiData.totalAmount || 0,
+  //             period: apiData.period || " ",
+  //             po_Number: apiData.po_Number || " ",
+  //             po_rlse_Number: apiData.po_rlse_Number || " ",
+  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //           },
+  //         ];
 
-//         // Create temporary container with proper sizing for large invoices
-//         const tempContainer = document.createElement("div");
-//         tempContainer.style.position = "absolute";
-//         tempContainer.style.left = "-9999px";
-//         tempContainer.style.width = "210mm"; // A4 width
-//         tempContainer.style.minHeight = "297mm"; // A4 height
-//         tempContainer.style.backgroundColor = "white";
-//         tempContainer.style.padding = "0";
-//         tempContainer.style.margin = "0";
-//         tempContainer.style.overflow = "visible";
-//         document.body.appendChild(tempContainer);
+  //         // Create temporary container with proper sizing for large invoices
+  //         const tempContainer = document.createElement("div");
+  //         tempContainer.style.position = "absolute";
+  //         tempContainer.style.left = "-9999px";
+  //         tempContainer.style.width = "210mm"; // A4 width
+  //         tempContainer.style.minHeight = "297mm"; // A4 height
+  //         tempContainer.style.backgroundColor = "white";
+  //         tempContainer.style.padding = "0";
+  //         tempContainer.style.margin = "0";
+  //         tempContainer.style.overflow = "visible";
+  //         document.body.appendChild(tempContainer);
 
-//         // Create temporary React root and render InvoiceViewer
-//         const ReactDOM = (await import("react-dom/client")).default;
-//         const React = (await import("react")).default;
+  //         // Create temporary React root and render InvoiceViewer
+  //         const ReactDOM = (await import("react-dom/client")).default;
+  //         const React = (await import("react")).default;
 
-//         // Import InvoiceViewer component
-//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+  //         // Import InvoiceViewer component
+  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
 
-//         const root = ReactDOM.createRoot(tempContainer);
+  //         const root = ReactDOM.createRoot(tempContainer);
 
-//         // Render InvoiceViewer component
-//         await new Promise((resolve) => {
-//           root.render(
-//             React.createElement(InvoiceViewer, {
-//               data: transformedData,
-//               setInvoiceModalVisible: () => {},
-//             })
-//           );
+  //         // Render InvoiceViewer component
+  //         await new Promise((resolve) => {
+  //           root.render(
+  //             React.createElement(InvoiceViewer, {
+  //               data: transformedData,
+  //               setInvoiceModalVisible: () => {},
+  //             })
+  //           );
 
-//           // Wait longer for component to render completely with all line items
-//           setTimeout(resolve, 1500);
-//         });
+  //           // Wait longer for component to render completely with all line items
+  //           setTimeout(resolve, 1500);
+  //         });
 
-//         // Find the invoice content div
-//         const input = tempContainer.querySelector(
-//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-//         ) || tempContainer.firstElementChild;
+  //         // Find the invoice content div
+  //         const input = tempContainer.querySelector(
+  //           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+  //         ) || tempContainer.firstElementChild;
 
-//         if (!input) {
-//           throw new Error("Invoice content not found");
-//         }
+  //         if (!input) {
+  //           throw new Error("Invoice content not found");
+  //         }
 
-//         // Enhanced PDF generation for large invoices
-//         const pdf = new jsPDF("p", "mm", "a4");
-        
-//         // Improved html2canvas options for better quality and large content handling
-//         const canvas = await html2canvas(input, { 
-//           scale: 1.5, // Reduced scale for better performance with large content
-//           useCORS: true,
-//           allowTaint: true,
-//           backgroundColor: '#ffffff',
-//           scrollX: 0,
-//           scrollY: 0,
-//           width: input.scrollWidth,
-//           height: input.scrollHeight,
-//           windowWidth: input.scrollWidth,
-//           windowHeight: input.scrollHeight
-//         });
-        
-//         const imgData = canvas.toDataURL("image/png", 0.95); // Slightly compressed for smaller file size
+  //         // Enhanced PDF generation for large invoices
+  //         const pdf = new jsPDF("p", "mm", "a4");
 
-//         const pdfWidth = pdf.internal.pageSize.getWidth();
-//         const pdfHeight = pdf.internal.pageSize.getHeight();
-//         const padding = 5; // Reduced padding for more content space
+  //         // Improved html2canvas options for better quality and large content handling
+  //         const canvas = await html2canvas(input, {
+  //           scale: 1.5, // Reduced scale for better performance with large content
+  //           useCORS: true,
+  //           allowTaint: true,
+  //           backgroundColor: '#ffffff',
+  //           scrollX: 0,
+  //           scrollY: 0,
+  //           width: input.scrollWidth,
+  //           height: input.scrollHeight,
+  //           windowWidth: input.scrollWidth,
+  //           windowHeight: input.scrollHeight
+  //         });
 
-//         const usableWidth = pdfWidth - 2 * padding;
-//         const usableHeight = pdfHeight - 2 * padding;
+  //         const imgData = canvas.toDataURL("image/png", 0.95); // Slightly compressed for smaller file size
 
-//         const imgProps = pdf.getImageProperties(imgData);
-//         const aspectRatio = imgProps.height / imgProps.width;
-//         const pdfImgHeight = usableWidth * aspectRatio;
+  //         const pdfWidth = pdf.internal.pageSize.getWidth();
+  //         const pdfHeight = pdf.internal.pageSize.getHeight();
+  //         const padding = 5; // Reduced padding for more content space
 
-//         let heightLeft = pdfImgHeight;
-//         let position = padding;
+  //         const usableWidth = pdfWidth - 2 * padding;
+  //         const usableHeight = pdfHeight - 2 * padding;
 
-//         // Add first page
-//         pdf.addImage(
-//           imgData,
-//           "PNG",
-//           padding,
-//           position,
-//           usableWidth,
-//           pdfImgHeight
-//         );
-//         heightLeft -= usableHeight;
+  //         const imgProps = pdf.getImageProperties(imgData);
+  //         const aspectRatio = imgProps.height / imgProps.width;
+  //         const pdfImgHeight = usableWidth * aspectRatio;
 
-//         // Add additional pages for large invoices
-//         while (heightLeft > 0) {
-//           pdf.addPage();
-//           position = -(pdfImgHeight - heightLeft) + padding;
-//           pdf.addImage(
-//             imgData,
-//             "PNG",
-//             padding,
-//             position,
-//             usableWidth,
-//             pdfImgHeight
-//           );
-//           heightLeft -= usableHeight;
-//         }
+  //         let heightLeft = pdfImgHeight;
+  //         let position = padding;
 
-//         // Clean up
-//         root.unmount();
-//         document.body.removeChild(tempContainer);
+  //         // Add first page
+  //         pdf.addImage(
+  //           imgData,
+  //           "PNG",
+  //           padding,
+  //           position,
+  //           usableWidth,
+  //           pdfImgHeight
+  //         );
+  //         heightLeft -= usableHeight;
 
-//         // Save PDF with invoice number as filename
-//         const filename = `${
-//           invoice.invoiceNumber || `invoice_${invoiceId}`
-//         }.pdf`;
-//         pdf.save(filename);
+  //         // Add additional pages for large invoices
+  //         while (heightLeft > 0) {
+  //           pdf.addPage();
+  //           position = -(pdfImgHeight - heightLeft) + padding;
+  //           pdf.addImage(
+  //             imgData,
+  //             "PNG",
+  //             padding,
+  //             position,
+  //             usableWidth,
+  //             pdfImgHeight
+  //           );
+  //           heightLeft -= usableHeight;
+  //         }
 
-//         // Add delay between downloads to prevent browser blocking
-//         if (i < invoicesToDownload.length - 1) {
-//           await new Promise((resolve) => setTimeout(resolve, 2000));
-//         }
-//       } catch (invoiceError) {
-//         console.error(
-//           `Error downloading invoice ${invoiceId}:`,
-//           invoiceError
-//         );
-//         alert(
-//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-//         );
-//       }
-//     }
+  //         // Clean up
+  //         root.unmount();
+  //         document.body.removeChild(tempContainer);
 
-//     const successMessage =
-//       invoicesToDownload.length === 1
-//         ? "Invoice downloaded successfully!"
-//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+  //         // Save PDF with invoice number as filename
+  //         const filename = `${
+  //           invoice.invoiceNumber || `invoice_${invoiceId}`
+  //         }.pdf`;
+  //         pdf.save(filename);
 
-//     alert(successMessage);
-//   } catch (error) {
-//     console.error("Error during download process:", error);
-//     alert(`Download failed: ${error.message}`);
-//   } finally {
-//     setIsDownloading(false);
-//   }
-// };
+  //         // Add delay between downloads to prevent browser blocking
+  //         if (i < invoicesToDownload.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 2000));
+  //         }
+  //       } catch (invoiceError) {
+  //         console.error(
+  //           `Error downloading invoice ${invoiceId}:`,
+  //           invoiceError
+  //         );
+  //         alert(
+  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+  //         );
+  //       }
+  //     }
 
+  //     const successMessage =
+  //       invoicesToDownload.length === 1
+  //         ? "Invoice downloaded successfully!"
+  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
 
-const downloadInvoices = async () => {
-  const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-    selectedInvoices.has(invoice.invoiceId || index)
-  );
+  //     alert(successMessage);
+  //   } catch (error) {
+  //     console.error("Error during download process:", error);
+  //     alert(`Download failed: ${error.message}`);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
 
-  if (invoicesToDownload.length === 0) {
-    alert("Please select invoices to download");
-    return;
-  }
+  const downloadInvoices = async () => {
+    const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+      selectedInvoices.has(invoice.invoiceId || index)
+    );
 
-  try {
-    setIsDownloading(true);
+    if (invoicesToDownload.length === 0) {
+      alert("Please select invoices to download");
+      return;
+    }
 
-    for (let i = 0; i < invoicesToDownload.length; i++) {
-      const invoice = invoicesToDownload[i];
-      const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+    try {
+      setIsDownloading(true);
 
-      if (!invoiceId) {
-        console.warn(
-          `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-        );
-        continue;
-      }
+      for (let i = 0; i < invoicesToDownload.length; i++) {
+        const invoice = invoicesToDownload[i];
+        const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
 
-      try {
-        // First fetch invoice preview data
-        const previewResponse = await fetch(
-          `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-            invoice.invoiceNumber
-          )}`
-        );
-
-        if (!previewResponse.ok) {
-          throw new Error(
-            `Failed to fetch invoice preview: ${previewResponse.status}`
+        if (!invoiceId) {
+          console.warn(
+            `Skipping invoice without ID: ${JSON.stringify(invoice)}`
           );
+          continue;
         }
 
-        const apiData = await previewResponse.json();
+        try {
+          // First fetch invoice preview data
+          const previewResponse = await fetch(
+            `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+              invoice.invoiceNumber
+            )}`
+          );
 
-        // Function to group and combine line items with same PLC, Vendor, and Employee
-        const groupAndCombineLineItems = (lineItems) => {
-          if (!lineItems || !Array.isArray(lineItems)) {
-            return [];
+          if (!previewResponse.ok) {
+            throw new Error(
+              `Failed to fetch invoice preview: ${previewResponse.status}`
+            );
           }
 
-          const groupedItems = {};
+          const apiData = await previewResponse.json();
 
-          lineItems.forEach((item, index) => {
-            // Create a unique key for grouping based on PLC, Vendor, and Employee
-            const plcKey = item.plc || '';
-            const vendorKey = item.vendor || '';
-            const employeeKey = item.employee || '';
-            
-            const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
-            
-            if (groupedItems[groupKey]) {
-              // Combine with existing group - sum hours and amounts
-              const existingHours = parseFloat(groupedItems[groupKey].hours) || 0;
-              const newHours = parseFloat(item.hours) || 0;
-              groupedItems[groupKey].hours = existingHours + newHours;
-              
-              const existingAmount = parseFloat(groupedItems[groupKey].amount) || 0;
-              const newAmount = parseFloat(item.amount) || 0;
-              groupedItems[groupKey].amount = existingAmount + newAmount;
-              
-              // Keep track of combined count for reference
-              groupedItems[groupKey].combinedCount = (groupedItems[groupKey].combinedCount || 1) + 1;
-              
-            } else {
-              // First occurrence of this combination
-              groupedItems[groupKey] = {
-                poLine: item.poLine || " ",
-                plc: item.plc || " ",
-                vendor: item.vendor || " ",
-                employee: item.employee || " ",
-                hours: parseFloat(item.hours) || 0,
-                rate: item.rate || 0,
-                amount: parseFloat(item.amount) || 0,
-                line_No: item.line_No || " ",
-                combinedCount: 1
-              };
+          // Function to group and combine line items with same PLC, Vendor, and Employee
+          const groupAndCombineLineItems = (lineItems) => {
+            if (!lineItems || !Array.isArray(lineItems)) {
+              return [];
             }
-          });
 
-          // Convert grouped items back to array with formatted values
-          return Object.values(groupedItems).map(item => ({
-            poLine: item.poLine,
-            plc: item.plc,
-            vendor: item.vendor,
-            employee: item.employee,
-            hours: Number(item.hours.toFixed(2)),
-            rate: item.rate,
-            amount: Number(item.amount.toFixed(2)),
-            line_No: item.line_No,
-          }));
-        };
+            const groupedItems = {};
 
-        // Group and combine line items
-        const combinedLineItems = groupAndCombineLineItems(apiData.lineItems || []);
+            lineItems.forEach((item, index) => {
+              // Create a unique key for grouping based on PLC, Vendor, and Employee
+              const plcKey = item.plc || "";
+              const vendorKey = item.vendor || "";
+              const employeeKey = item.employee || "";
 
-        // Recalculate total amount based on combined line items
-        const newTotalAmount = combinedLineItems.reduce((sum, item) => {
-          return sum + (parseFloat(item.amount) || 0);
-        }, 0);
+              const groupKey = `${plcKey}_${vendorKey}_${employeeKey}`;
 
-        // Transform data with combined line items
-        const transformedData = [
-          {
-            invoiceId: apiData.invoiceId || " ",
-            invoiceDate: apiData.period || " ",
-            currency: apiData.currency || " ",
-            totalAmount: Number(newTotalAmount.toFixed(2)),
+              if (groupedItems[groupKey]) {
+                // Combine with existing group - sum hours and amounts
+                const existingHours =
+                  parseFloat(groupedItems[groupKey].hours) || 0;
+                const newHours = parseFloat(item.hours) || 0;
+                groupedItems[groupKey].hours = existingHours + newHours;
 
-            lineItems: combinedLineItems,
+                const existingAmount =
+                  parseFloat(groupedItems[groupKey].amount) || 0;
+                const newAmount = parseFloat(item.amount) || 0;
+                groupedItems[groupKey].amount = existingAmount + newAmount;
 
-            billTo: apiData.billTo || " ",
-            buyer: apiData.buyer || " ",
-            purchaseOrderId: apiData.po_Number || " ",
-            releaseNumber: apiData.po_rlse_Number || " ",
-            poStartEndDate: apiData.po_Start_End_Date || " ",
-            terms: apiData.terms || " ",
-            amountDue: Number(newTotalAmount.toFixed(2)),
-            period: apiData.period || " ",
-            po_Number: apiData.po_Number || " ",
-            po_rlse_Number: apiData.po_rlse_Number || " ",
-            po_Start_End_Date: apiData.po_Start_End_Date || " ",
-          },
-        ];
+                // Keep track of combined count for reference
+                groupedItems[groupKey].combinedCount =
+                  (groupedItems[groupKey].combinedCount || 1) + 1;
+              } else {
+                // First occurrence of this combination
+                groupedItems[groupKey] = {
+                  poLine: item.poLine || " ",
+                  plc: item.plc || " ",
+                  vendor: item.vendor || " ",
+                  employee: item.employee || " ",
+                  hours: parseFloat(item.hours) || 0,
+                  rate: item.rate || 0,
+                  amount: parseFloat(item.amount) || 0,
+                  line_No: item.line_No || " ",
+                  combinedCount: 1,
+                };
+              }
+            });
 
-        console.log("Original API data for download:", apiData);
-        console.log("Combined line items for download:", combinedLineItems);
-        console.log("Transformed download data:", transformedData);
+            // Convert grouped items back to array with formatted values
+            return Object.values(groupedItems).map((item) => ({
+              poLine: item.poLine,
+              plc: item.plc,
+              vendor: item.vendor,
+              employee: item.employee,
+              hours: Number(item.hours.toFixed(2)),
+              rate: item.rate,
+              amount: Number(item.amount.toFixed(2)),
+              line_No: item.line_No,
+            }));
+          };
 
-        // Create temporary container
-    //     const tempContainer = document.createElement("div");
-    //     tempContainer.style.position = "absolute";
-    //     tempContainer.style.left = "-9999px";
-    //     tempContainer.style.top = "0";
-    //     tempContainer.style.width = "210mm";
-    //     tempContainer.style.backgroundColor = "white";
-    //     tempContainer.style.padding = "14mm";
-    //     tempContainer.style.margin = "0";
-    //     tempContainer.style.boxSizing = "border-box";
-    //     tempContainer.style.fontFamily = "Arial, sans-serif";
-    //     tempContainer.style.fontSize = "12px";
-    //     tempContainer.style.lineHeight = "1.4";
-    //     tempContainer.style.color = "#000000";
-    //     document.body.appendChild(tempContainer);
+          // Group and combine line items
+          const combinedLineItems = groupAndCombineLineItems(
+            apiData.lineItems || []
+          );
 
-    //     // Create temporary React root and render InvoiceViewer
-    //     const ReactDOM = (await import("react-dom/client")).default;
-    //     const React = (await import("react")).default;
-    //     const { default: InvoiceViewer } = await import("./InvoiceViewer");
+          // Recalculate total amount based on combined line items
+          const newTotalAmount = combinedLineItems.reduce((sum, item) => {
+            return sum + (parseFloat(item.amount) || 0);
+          }, 0);
 
-    //     const root = ReactDOM.createRoot(tempContainer);
+          // Transform data with combined line items
+          const transformedData = [
+            {
+              invoiceId: apiData.invoiceId || " ",
+              invoiceDate: apiData.period || " ",
+              currency: apiData.currency || " ",
+              totalAmount: Number(newTotalAmount.toFixed(2)),
 
-    //     await new Promise((resolve) => {
-    //       root.render(
-    //         React.createElement(InvoiceViewer, {
-    //           data: transformedData,
-    //           setInvoiceModalVisible: () => {},
-    //         })
-    //       );
-    //       setTimeout(resolve, 3000);
-    //     });
+              lineItems: combinedLineItems,
 
-    //     await new Promise(resolve => setTimeout(resolve, 1000));
+              billTo: apiData.billTo || " ",
+              buyer: apiData.buyer || " ",
+              purchaseOrderId: apiData.po_Number || " ",
+              releaseNumber: apiData.po_rlse_Number || " ",
+              poStartEndDate: apiData.po_Start_End_Date || " ",
+              terms: apiData.terms || " ",
+              amountDue: Number(newTotalAmount.toFixed(2)),
+              period: apiData.period || " ",
+              po_Number: apiData.po_Number || " ",
+              po_rlse_Number: apiData.po_rlse_Number || " ",
+              po_Start_End_Date: apiData.po_Start_End_Date || " ",
+            },
+          ];
 
-    //     const input = tempContainer.querySelector(
-    //       'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-    //     ) || tempContainer.firstElementChild || tempContainer;
+          console.log("Original API data for download:", apiData);
+          console.log("Combined line items for download:", combinedLineItems);
+          console.log("Transformed download data:", transformedData);
 
-    //     if (!input) {
-    //       throw new Error("Invoice content not found");
-    //     }
+          // Create temporary container
+          //     const tempContainer = document.createElement("div");
+          //     tempContainer.style.position = "absolute";
+          //     tempContainer.style.left = "-9999px";
+          //     tempContainer.style.top = "0";
+          //     tempContainer.style.width = "210mm";
+          //     tempContainer.style.backgroundColor = "white";
+          //     tempContainer.style.padding = "14mm";
+          //     tempContainer.style.margin = "0";
+          //     tempContainer.style.boxSizing = "border-box";
+          //     tempContainer.style.fontFamily = "Arial, sans-serif";
+          //     tempContainer.style.fontSize = "12px";
+          //     tempContainer.style.lineHeight = "1.4";
+          //     tempContainer.style.color = "#000000";
+          //     document.body.appendChild(tempContainer);
 
-    //     // Ensure content is visible
-    //     input.style.display = "block";
-    //     input.style.visibility = "visible";
-    //     input.style.opacity = "1";
+          //     // Create temporary React root and render InvoiceViewer
+          //     const ReactDOM = (await import("react-dom/client")).default;
+          //     const React = (await import("react")).default;
+          //     const { default: InvoiceViewer } = await import("./InvoiceViewer");
 
-    //     // Initialize PDF
-    //     const pdf = new jsPDF("p", "mm", "a4");
-    //     const pdfWidth = pdf.internal.pageSize.getWidth();
-    //     const pdfHeight = pdf.internal.pageSize.getHeight();
-    //     const margin = 10;
-    //     const usableWidth = pdfWidth - 2 * margin;
-    //     const usableHeight = pdfHeight - 2 * margin;
+          //     const root = ReactDOM.createRoot(tempContainer);
 
-    //     // Capture full content first
-    //     const fullCanvas = await html2canvas(input, {
-    //       scale: 1.5,
-    //       useCORS: true,
-    //       allowTaint: true,
-    //       backgroundColor: '#ffffff',
-    //       scrollX: 0,
-    //       scrollY: 0,
-    //       width: input.scrollWidth || input.clientWidth,
-    //       height: input.scrollHeight || input.clientHeight,
-    //       windowWidth: 1200,
-    //       logging: false,
-    //     });
+          //     await new Promise((resolve) => {
+          //       root.render(
+          //         React.createElement(InvoiceViewer, {
+          //           data: transformedData,
+          //           setInvoiceModalVisible: () => {},
+          //         })
+          //       );
+          //       setTimeout(resolve, 3000);
+          //     });
 
-    //     if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-    //       throw new Error("Canvas has zero dimensions");
-    //     }
+          //     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    //     const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-        
-    //     // Calculate scaling
-    //     const imgProps = pdf.getImageProperties(fullImgData);
-    //     const scale = usableWidth / imgProps.width;
-    //     const scaledHeight = imgProps.height * scale;
+          //     const input = tempContainer.querySelector(
+          //       'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+          //     ) || tempContainer.firstElementChild || tempContainer;
 
-    //     // Calculate pages needed
-    //     const pageHeight = usableHeight;
-    //     const totalPages = Math.ceil(scaledHeight / pageHeight);
+          //     if (!input) {
+          //       throw new Error("Invoice content not found");
+          //     }
 
-    //     // Smart page breaking - detect table rows and avoid cutting them
-    //     let currentY = 0;
-    //     let pageNumber = 0;
+          //     // Ensure content is visible
+          //     input.style.display = "block";
+          //     input.style.visibility = "visible";
+          //     input.style.opacity = "1";
 
-    //     // Detect table rows by looking for horizontal patterns in the content
-    //     const detectTableRows = () => {
-    //       const rows = [];
-    //       const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
-          
-    //       if (tableElements.length > 0) {
-    //         tableElements.forEach(row => {
-    //           const rect = row.getBoundingClientRect();
-    //           const inputRect = input.getBoundingClientRect();
-    //           const relativeTop = rect.top - inputRect.top + input.scrollTop;
-    //           const relativeBottom = relativeTop + rect.height;
-              
-    //           rows.push({
-    //             top: relativeTop * scale,
-    //             bottom: relativeBottom * scale,
-    //             height: rect.height * scale
-    //           });
-    //         });
-    //       }
-          
-    //       return rows.sort((a, b) => a.top - b.top);
-    //     };
+          //     // Initialize PDF
+          //     const pdf = new jsPDF("p", "mm", "a4");
+          //     const pdfWidth = pdf.internal.pageSize.getWidth();
+          //     const pdfHeight = pdf.internal.pageSize.getHeight();
+          //     const margin = 10;
+          //     const usableWidth = pdfWidth - 2 * margin;
+          //     const usableHeight = pdfHeight - 2 * margin;
 
-    //     const tableRows = detectTableRows();
+          //     // Capture full content first
+          //     const fullCanvas = await html2canvas(input, {
+          //       scale: 1.5,
+          //       useCORS: true,
+          //       allowTaint: true,
+          //       backgroundColor: '#ffffff',
+          //       scrollX: 0,
+          //       scrollY: 0,
+          //       width: input.scrollWidth || input.clientWidth,
+          //       height: input.scrollHeight || input.clientHeight,
+          //       windowWidth: 1200,
+          //       logging: false,
+          //     });
 
-    //     while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
-    //       if (pageNumber > 0) {
-    //         pdf.addPage();
-    //       }
+          //     if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+          //       throw new Error("Canvas has zero dimensions");
+          //     }
 
-    //       let nextY = currentY + pageHeight;
-          
-    //       // Check if we would cut through a table row
-    //       if (tableRows.length > 0) {
-    //         for (const row of tableRows) {
-    //           // If a row would be cut by the page break
-    //           if (row.top < nextY && row.bottom > nextY) {
-    //             // If the row can fit on current page, adjust nextY to include it
-    //             if (row.bottom - currentY <= pageHeight) {
-    //               nextY = row.bottom;
-    //             } else {
-    //               // If row is too big for current page, move it to next page
-    //               nextY = row.top;
-    //             }
-    //             break;
-    //           }
-    //         }
-    //       }
+          //     const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
 
-    //       // Ensure we don't go beyond content
-    //       const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
-          
-    //       if (actualHeight > 0) {
-    //         // Create canvas for this page section
-    //         const pageCanvas = document.createElement('canvas');
-    //         const pageCtx = pageCanvas.getContext('2d');
-            
-    //         const sourceY = currentY / scale;
-    //         const sourceHeight = actualHeight / scale;
-            
-    //         pageCanvas.width = fullCanvas.width;
-    //         pageCanvas.height = sourceHeight;
-            
-    //         // Draw the section
-    //         pageCtx.drawImage(
-    //           fullCanvas,
-    //           0, sourceY, fullCanvas.width, sourceHeight,
-    //           0, 0, fullCanvas.width, sourceHeight
-    //         );
-            
-    //         const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
-            
-    //         // Add to PDF
-    //         pdf.addImage(
-    //           pageImgData,
-    //           "PNG",
-    //           margin,
-    //           margin,
-    //           usableWidth,
-    //           actualHeight
-    //         );
-    //       }
+          //     // Calculate scaling
+          //     const imgProps = pdf.getImageProperties(fullImgData);
+          //     const scale = usableWidth / imgProps.width;
+          //     const scaledHeight = imgProps.height * scale;
 
-    //       currentY = nextY;
-    //       pageNumber++;
-    //     }
+          //     // Calculate pages needed
+          //     const pageHeight = usableHeight;
+          //     const totalPages = Math.ceil(scaledHeight / pageHeight);
 
-    //     // Fallback: if no pages were created, add the full image
-    //     if (pageNumber === 0) {
-    //       pdf.addImage(
-    //         fullImgData,
-    //         "PNG",
-    //         margin,
-    //         margin,
-    //         usableWidth,
-    //         Math.min(scaledHeight, pageHeight)
-    //       );
-    //     }
+          //     // Smart page breaking - detect table rows and avoid cutting them
+          //     let currentY = 0;
+          //     let pageNumber = 0;
 
-    //     // Clean up
-    //     root.unmount();
-    //     document.body.removeChild(tempContainer);
+          //     // Detect table rows by looking for horizontal patterns in the content
+          //     const detectTableRows = () => {
+          //       const rows = [];
+          //       const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
 
-    //     // Save PDF
-    //     const filename = `${
-    //       invoice.invoiceNumber || `invoice_${invoiceId}`
-    //     }.pdf`;
-    //     pdf.save(filename);
+          //       if (tableElements.length > 0) {
+          //         tableElements.forEach(row => {
+          //           const rect = row.getBoundingClientRect();
+          //           const inputRect = input.getBoundingClientRect();
+          //           const relativeTop = rect.top - inputRect.top + input.scrollTop;
+          //           const relativeBottom = relativeTop + rect.height;
 
-    //     // Add delay between downloads
-    //     if (i < invoicesToDownload.length - 1) {
-    //       await new Promise((resolve) => setTimeout(resolve, 2000));
-    //     }
+          //           rows.push({
+          //             top: relativeTop * scale,
+          //             bottom: relativeBottom * scale,
+          //             height: rect.height * scale
+          //           });
+          //         });
+          //       }
 
-    //   } catch (invoiceError) {
-    //     console.error(
-    //       `Error downloading invoice ${invoiceId}:`,
-    //       invoiceError
-    //     );
-    //     alert(
-    //       `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-    //     );
-    //   }
-    // }
+          //       return rows.sort((a, b) => a.top - b.top);
+          //     };
 
-    // const successMessage =
-    //   invoicesToDownload.length === 1
-    //     ? "Invoice downloaded successfully!"
-    //     : `${invoicesToDownload.length} invoices downloaded successfully!`;
+          //     const tableRows = detectTableRows();
 
-    // alert(successMessage);
+          //     while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
+          //       if (pageNumber > 0) {
+          //         pdf.addPage();
+          //       }
 
-    // Create temporary container
+          //       let nextY = currentY + pageHeight;
+
+          //       // Check if we would cut through a table row
+          //       if (tableRows.length > 0) {
+          //         for (const row of tableRows) {
+          //           // If a row would be cut by the page break
+          //           if (row.top < nextY && row.bottom > nextY) {
+          //             // If the row can fit on current page, adjust nextY to include it
+          //             if (row.bottom - currentY <= pageHeight) {
+          //               nextY = row.bottom;
+          //             } else {
+          //               // If row is too big for current page, move it to next page
+          //               nextY = row.top;
+          //             }
+          //             break;
+          //           }
+          //         }
+          //       }
+
+          //       // Ensure we don't go beyond content
+          //       const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+
+          //       if (actualHeight > 0) {
+          //         // Create canvas for this page section
+          //         const pageCanvas = document.createElement('canvas');
+          //         const pageCtx = pageCanvas.getContext('2d');
+
+          //         const sourceY = currentY / scale;
+          //         const sourceHeight = actualHeight / scale;
+
+          //         pageCanvas.width = fullCanvas.width;
+          //         pageCanvas.height = sourceHeight;
+
+          //         // Draw the section
+          //         pageCtx.drawImage(
+          //           fullCanvas,
+          //           0, sourceY, fullCanvas.width, sourceHeight,
+          //           0, 0, fullCanvas.width, sourceHeight
+          //         );
+
+          //         const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+          //         // Add to PDF
+          //         pdf.addImage(
+          //           pageImgData,
+          //           "PNG",
+          //           margin,
+          //           margin,
+          //           usableWidth,
+          //           actualHeight
+          //         );
+          //       }
+
+          //       currentY = nextY;
+          //       pageNumber++;
+          //     }
+
+          //     // Fallback: if no pages were created, add the full image
+          //     if (pageNumber === 0) {
+          //       pdf.addImage(
+          //         fullImgData,
+          //         "PNG",
+          //         margin,
+          //         margin,
+          //         usableWidth,
+          //         Math.min(scaledHeight, pageHeight)
+          //       );
+          //     }
+
+          //     // Clean up
+          //     root.unmount();
+          //     document.body.removeChild(tempContainer);
+
+          //     // Save PDF
+          //     const filename = `${
+          //       invoice.invoiceNumber || `invoice_${invoiceId}`
+          //     }.pdf`;
+          //     pdf.save(filename);
+
+          //     // Add delay between downloads
+          //     if (i < invoicesToDownload.length - 1) {
+          //       await new Promise((resolve) => setTimeout(resolve, 2000));
+          //     }
+
+          //   } catch (invoiceError) {
+          //     console.error(
+          //       `Error downloading invoice ${invoiceId}:`,
+          //       invoiceError
+          //     );
+          //     alert(
+          //       `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+          //     );
+          //   }
+          // }
+
+          // const successMessage =
+          //   invoicesToDownload.length === 1
+          //     ? "Invoice downloaded successfully!"
+          //     : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+          // alert(successMessage);
+
+          // Create temporary container
           const tempContainer = document.createElement("div");
           tempContainer.style.position = "absolute";
           tempContainer.style.left = "-9999px";
@@ -1206,13 +1210,13 @@ const downloadInvoices = async () => {
           tempContainer.style.lineHeight = "1.4";
           tempContainer.style.color = "#000000";
           document.body.appendChild(tempContainer);
- 
+
           const ReactDOM = (await import("react-dom/client")).default;
           const React = (await import("react")).default;
           const { default: InvoiceViewer } = await import("./InvoiceViewer");
- 
+
           const root = ReactDOM.createRoot(tempContainer);
- 
+
           await new Promise((resolve) => {
             root.render(
               React.createElement(InvoiceViewer, {
@@ -1222,403 +1226,402 @@ const downloadInvoices = async () => {
             );
             setTimeout(resolve, 3000);
           });
- 
+
           await new Promise((resolve) => setTimeout(resolve, 1000));
- 
+
           const input =
             tempContainer.querySelector(
               'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
             ) ||
             tempContainer.firstElementChild ||
             tempContainer;
- 
+
           if (!input) {
             throw new Error("Invoice content not found");
           }
- 
+
           input.style.display = "block";
           input.style.visibility = "visible";
           input.style.opacity = "1";
- 
+
           // **COMPLETELY FIXED PDF GENERATION WITH PROPER ROW DETECTION**
-        //   const pdf = new jsPDF("p", "mm", "a4");
-        //   const pdfWidth = pdf.internal.pageSize.getWidth();
-        //   const pdfHeight = pdf.internal.pageSize.getHeight();
-        //   const margin = 10;
-        //   const usableWidth = pdfWidth - 2 * margin;
-        //   const usableHeight = pdfHeight - 2 * margin;
-        //   const bottomPadding = 15; // Extra padding to prevent cutting
- 
-        //   // Capture full content
-        //   const fullCanvas = await html2canvas(input, {
-        //     scale: 1.5,
-        //     useCORS: true,
-        //     allowTaint: true,
-        //     backgroundColor: "#ffffff",
-        //     scrollX: 0,
-        //     scrollY: 0,
-        //     width: input.scrollWidth || input.clientWidth,
-        //     height: input.scrollHeight || input.clientHeight,
-        //     windowWidth: 1200,
-        //     logging: false,
-        //   });
- 
-        //   if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-        //     throw new Error("Canvas has zero dimensions");
-        //   }
- 
-        //   const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-        //   const imgProps = pdf.getImageProperties(fullImgData);
-        //   const scale = usableWidth / imgProps.width;
-        //   const scaledHeight = imgProps.height * scale;
- 
-        //   // **IMPROVED TABLE ROW DETECTION**
-        //   const detectTableRowBoundaries = () => {
-        //     const rowBoundaries = [];
- 
-        //     // Look for table structure elements
-        //     const tableRows = input.querySelectorAll("tr");
-        //     const cellElements = input.querySelectorAll("td, th");
- 
-        //     if (tableRows.length > 0) {
-        //       // Use actual table rows
-        //       tableRows.forEach((row, index) => {
-        //         const rect = row.getBoundingClientRect();
-        //         const inputRect = input.getBoundingClientRect();
-        //         const relativeTop =
-        //           (rect.top - inputRect.top + input.scrollTop) * scale;
-        //         const relativeBottom = relativeTop + rect.height * scale;
- 
-        //         rowBoundaries.push({
-        //           top: relativeTop,
-        //           bottom: relativeBottom,
-        //           height: rect.height * scale,
-        //           element: row,
-        //           index: index,
-        //         });
-        //       });
-        //     } else if (cellElements.length > 0) {
-        //       // Fallback: group cells into logical rows by vertical position
-        //       const cellPositions = Array.from(cellElements).map((cell) => {
-        //         const rect = cell.getBoundingClientRect();
-        //         const inputRect = input.getBoundingClientRect();
-        //         return {
-        //           top: (rect.top - inputRect.top + input.scrollTop) * scale,
-        //           bottom:
-        //             (rect.top - inputRect.top + input.scrollTop + rect.height) *
-        //             scale,
-        //           height: rect.height * scale,
-        //           element: cell,
-        //         };
-        //       });
- 
-        //       // Group cells by similar top positions (within 5 pixels)
-        //       const tolerance = 5 * scale;
-        //       const groupedRows = [];
- 
-        //       cellPositions.forEach((cell) => {
-        //         let foundGroup = false;
-        //         for (const group of groupedRows) {
-        //           if (Math.abs(group[0].top - cell.top) <= tolerance) {
-        //             group.push(cell);
-        //             foundGroup = true;
-        //             break;
-        //           }
-        //         }
-        //         if (!foundGroup) {
-        //           groupedRows.push([cell]);
-        //         }
-        //       });
- 
-        //       // Create row boundaries from grouped cells
-        //       groupedRows.forEach((group, index) => {
-        //         const minTop = Math.min(...group.map((cell) => cell.top));
-        //         const maxBottom = Math.max(...group.map((cell) => cell.bottom));
- 
-        //         rowBoundaries.push({
-        //           top: minTop,
-        //           bottom: maxBottom,
-        //           height: maxBottom - minTop,
-        //           index: index,
-        //         });
-        //       });
-        //     }
- 
-        //     return rowBoundaries.sort((a, b) => a.top - b.top);
-        //   };
- 
-        //   const rowBoundaries = detectTableRowBoundaries();
-        //   console.log("Detected row boundaries:", rowBoundaries.length);
- 
-        //   // **SMART PAGE BREAKING WITH PROPER ROW HANDLING**
-        //   let currentY = 0;
-        //   let pageNumber = 0;
- 
-        //   while (currentY < scaledHeight && pageNumber < 50) {
-        //     if (pageNumber > 0) {
-        //       pdf.addPage();
-        //     }
- 
-        //     const availableHeight = usableHeight - bottomPadding;
-        //     let nextY = currentY + availableHeight;
- 
-        //     // **IMPROVED ROW BOUNDARY CHECKING**
-        //     if (rowBoundaries.length > 0) {
-        //       // Find rows that would be affected by this page break
-        //       for (const row of rowBoundaries) {
-        //         // If we would cut through this row
-        //         if (
-        //           row.top >= currentY &&
-        //           row.top < nextY &&
-        //           row.bottom > nextY
-        //         ) {
-        //           // Check if entire row can fit on current page
-        //           if (row.bottom - currentY <= availableHeight) {
-        //             // Include the complete row
-        //             nextY = row.bottom + 2; // Small buffer after row
-        //           } else {
-        //             // Move entire row to next page
-        //             nextY = row.top;
-        //           }
-        //           break;
-        //         }
-        //         // If row starts within current page but extends beyond
-        //         else if (row.top < nextY && row.bottom > nextY) {
-        //           // If most of row is on current page, include it
-        //           const rowOnCurrentPage = nextY - row.top;
-        //           const rowTotal = row.bottom - row.top;
- 
-        //           if (rowOnCurrentPage >= rowTotal * 0.6) {
-        //             nextY = row.bottom + 2;
-        //           } else {
-        //             nextY = row.top;
-        //           }
-        //           break;
-        //         }
-        //       }
-        //     }
- 
-        //     // Ensure we don't exceed total content
-        //     const actualHeight = Math.min(
-        //       nextY - currentY,
-        //       scaledHeight - currentY
-        //     );
- 
-        //     if (actualHeight > 0) {
-        //       // Create canvas section for this page
-        //       const pageCanvas = document.createElement("canvas");
-        //       const pageCtx = pageCanvas.getContext("2d");
- 
-        //       const sourceY = currentY / scale;
-        //       const sourceHeight = actualHeight / scale;
- 
-        //       pageCanvas.width = fullCanvas.width;
-        //       pageCanvas.height = sourceHeight;
- 
-        //       // Draw the specific section
-        //       pageCtx.drawImage(
-        //         fullCanvas,
-        //         0,
-        //         sourceY, // Source x, y
-        //         fullCanvas.width,
-        //         sourceHeight, // Source width, height
-        //         0,
-        //         0, // Destination x, y
-        //         fullCanvas.width,
-        //         sourceHeight // Destination width, height
-        //       );
- 
-        //       const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
- 
-        //       // Add to PDF
-        //       pdf.addImage(
-        //         pageImgData,
-        //         "PNG",
-        //         margin,
-        //         margin,
-        //         usableWidth,
-        //         actualHeight
-        //       );
-        //     }
- 
-        //     currentY = nextY;
-        //     pageNumber++;
-        //   }
- 
-        //   // Fallback
-        //   if (pageNumber === 0) {
-        //     pdf.addImage(
-        //       fullImgData,
-        //       "PNG",
-        //       margin,
-        //       margin,
-        //       usableWidth,
-        //       Math.min(scaledHeight, usableHeight)
-        //     );
-        //   }
+          //   const pdf = new jsPDF("p", "mm", "a4");
+          //   const pdfWidth = pdf.internal.pageSize.getWidth();
+          //   const pdfHeight = pdf.internal.pageSize.getHeight();
+          //   const margin = 10;
+          //   const usableWidth = pdfWidth - 2 * margin;
+          //   const usableHeight = pdfHeight - 2 * margin;
+          //   const bottomPadding = 15; // Extra padding to prevent cutting
 
-        // Initialize PDF with same settings as downloadInvoices
-const pdf = new jsPDF("p", "mm", "a4");
-const pdfWidth = pdf.internal.pageSize.getWidth();
-const pdfHeight = pdf.internal.pageSize.getHeight();
-const margin = 10;
-const usableWidth = pdfWidth - 2 * margin;
-const usableHeight = pdfHeight - 2 * margin;
+          //   // Capture full content
+          //   const fullCanvas = await html2canvas(input, {
+          //     scale: 1.5,
+          //     useCORS: true,
+          //     allowTaint: true,
+          //     backgroundColor: "#ffffff",
+          //     scrollX: 0,
+          //     scrollY: 0,
+          //     width: input.scrollWidth || input.clientWidth,
+          //     height: input.scrollHeight || input.clientHeight,
+          //     windowWidth: 1200,
+          //     logging: false,
+          //   });
 
-// Capture full content first with same settings as downloadInvoices
-const fullCanvas = await html2canvas(input, {
-  scale: 1.5,
-  useCORS: true,
-  allowTaint: true,
-  backgroundColor: "#ffffff",
-  scrollX: 0,
-  scrollY: 0,
-  width: input.scrollWidth || input.clientWidth,
-  height: input.scrollHeight || input.clientHeight,
-  windowWidth: 1200,
-  logging: false,
-});
+          //   if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+          //     throw new Error("Canvas has zero dimensions");
+          //   }
 
-if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-  throw new Error("Canvas has zero dimensions");
-}
+          //   const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+          //   const imgProps = pdf.getImageProperties(fullImgData);
+          //   const scale = usableWidth / imgProps.width;
+          //   const scaledHeight = imgProps.height * scale;
 
-const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+          //   // **IMPROVED TABLE ROW DETECTION**
+          //   const detectTableRowBoundaries = () => {
+          //     const rowBoundaries = [];
 
-// Calculate scaling
-const imgProps = pdf.getImageProperties(fullImgData);
-const scale = usableWidth / imgProps.width;
-const scaledHeight = imgProps.height * scale;
+          //     // Look for table structure elements
+          //     const tableRows = input.querySelectorAll("tr");
+          //     const cellElements = input.querySelectorAll("td, th");
 
-// Calculate pages needed
-const pageHeight = usableHeight;
+          //     if (tableRows.length > 0) {
+          //       // Use actual table rows
+          //       tableRows.forEach((row, index) => {
+          //         const rect = row.getBoundingClientRect();
+          //         const inputRect = input.getBoundingClientRect();
+          //         const relativeTop =
+          //           (rect.top - inputRect.top + input.scrollTop) * scale;
+          //         const relativeBottom = relativeTop + rect.height * scale;
 
-// Smart page breaking - detect table rows and avoid cutting them
-let currentY = 0;
-let pageNumber = 0;
+          //         rowBoundaries.push({
+          //           top: relativeTop,
+          //           bottom: relativeBottom,
+          //           height: rect.height * scale,
+          //           element: row,
+          //           index: index,
+          //         });
+          //       });
+          //     } else if (cellElements.length > 0) {
+          //       // Fallback: group cells into logical rows by vertical position
+          //       const cellPositions = Array.from(cellElements).map((cell) => {
+          //         const rect = cell.getBoundingClientRect();
+          //         const inputRect = input.getBoundingClientRect();
+          //         return {
+          //           top: (rect.top - inputRect.top + input.scrollTop) * scale,
+          //           bottom:
+          //             (rect.top - inputRect.top + input.scrollTop + rect.height) *
+          //             scale,
+          //           height: rect.height * scale,
+          //           element: cell,
+          //         };
+          //       });
 
-// Detect table rows by looking for horizontal patterns in the content
-const detectTableRows = () => {
-  const rows = [];
-  const tableElements = input.querySelectorAll(
-    'tr, .table-row, [class*="row"]'
-  );
+          //       // Group cells by similar top positions (within 5 pixels)
+          //       const tolerance = 5 * scale;
+          //       const groupedRows = [];
 
-  if (tableElements.length > 0) {
-    tableElements.forEach((row) => {
-      const rect = row.getBoundingClientRect();
-      const inputRect = input.getBoundingClientRect();
-      const relativeTop = rect.top - inputRect.top + input.scrollTop;
-      const relativeBottom = relativeTop + rect.height;
+          //       cellPositions.forEach((cell) => {
+          //         let foundGroup = false;
+          //         for (const group of groupedRows) {
+          //           if (Math.abs(group[0].top - cell.top) <= tolerance) {
+          //             group.push(cell);
+          //             foundGroup = true;
+          //             break;
+          //           }
+          //         }
+          //         if (!foundGroup) {
+          //           groupedRows.push([cell]);
+          //         }
+          //       });
 
-      rows.push({
-        top: relativeTop * scale,
-        bottom: relativeBottom * scale,
-        height: rect.height * scale,
-      });
-    });
-  }
+          //       // Create row boundaries from grouped cells
+          //       groupedRows.forEach((group, index) => {
+          //         const minTop = Math.min(...group.map((cell) => cell.top));
+          //         const maxBottom = Math.max(...group.map((cell) => cell.bottom));
 
-  return rows.sort((a, b) => a.top - b.top);
-};
+          //         rowBoundaries.push({
+          //           top: minTop,
+          //           bottom: maxBottom,
+          //           height: maxBottom - minTop,
+          //           index: index,
+          //         });
+          //       });
+          //     }
 
-const tableRows = detectTableRows();
+          //     return rowBoundaries.sort((a, b) => a.top - b.top);
+          //   };
 
-while (currentY < scaledHeight && pageNumber < 50) {
-  // Safety limit
-  if (pageNumber > 0) {
-    pdf.addPage();
-  }
+          //   const rowBoundaries = detectTableRowBoundaries();
+          //   console.log("Detected row boundaries:", rowBoundaries.length);
 
-  let nextY = currentY + pageHeight;
+          //   // **SMART PAGE BREAKING WITH PROPER ROW HANDLING**
+          //   let currentY = 0;
+          //   let pageNumber = 0;
 
-  // Check if we would cut through a table row
-  if (tableRows.length > 0) {
-    for (const row of tableRows) {
-      // If a row would be cut by the page break
-      if (row.top < nextY && row.bottom > nextY) {
-        // If the row can fit on current page, adjust nextY to include it
-        if (row.bottom - currentY <= pageHeight) {
-          nextY = row.bottom;
-        } else {
-          // If row is too big for current page, move it to next page
-          nextY = row.top;
-        }
-        break;
-      }
-    }
-  }
+          //   while (currentY < scaledHeight && pageNumber < 50) {
+          //     if (pageNumber > 0) {
+          //       pdf.addPage();
+          //     }
 
-  // Ensure we don't go beyond content
-  const actualHeight = Math.min(
-    nextY - currentY,
-    scaledHeight - currentY
-  );
+          //     const availableHeight = usableHeight - bottomPadding;
+          //     let nextY = currentY + availableHeight;
 
-  if (actualHeight > 0) {
-    // Create canvas for this page section
-    const pageCanvas = document.createElement("canvas");
-    const pageCtx = pageCanvas.getContext("2d");
+          //     // **IMPROVED ROW BOUNDARY CHECKING**
+          //     if (rowBoundaries.length > 0) {
+          //       // Find rows that would be affected by this page break
+          //       for (const row of rowBoundaries) {
+          //         // If we would cut through this row
+          //         if (
+          //           row.top >= currentY &&
+          //           row.top < nextY &&
+          //           row.bottom > nextY
+          //         ) {
+          //           // Check if entire row can fit on current page
+          //           if (row.bottom - currentY <= availableHeight) {
+          //             // Include the complete row
+          //             nextY = row.bottom + 2; // Small buffer after row
+          //           } else {
+          //             // Move entire row to next page
+          //             nextY = row.top;
+          //           }
+          //           break;
+          //         }
+          //         // If row starts within current page but extends beyond
+          //         else if (row.top < nextY && row.bottom > nextY) {
+          //           // If most of row is on current page, include it
+          //           const rowOnCurrentPage = nextY - row.top;
+          //           const rowTotal = row.bottom - row.top;
 
-    const sourceY = currentY / scale;
-    const sourceHeight = actualHeight / scale;
+          //           if (rowOnCurrentPage >= rowTotal * 0.6) {
+          //             nextY = row.bottom + 2;
+          //           } else {
+          //             nextY = row.top;
+          //           }
+          //           break;
+          //         }
+          //       }
+          //     }
 
-    pageCanvas.width = fullCanvas.width;
-    pageCanvas.height = sourceHeight;
+          //     // Ensure we don't exceed total content
+          //     const actualHeight = Math.min(
+          //       nextY - currentY,
+          //       scaledHeight - currentY
+          //     );
 
-    // Draw the section
-    pageCtx.drawImage(
-      fullCanvas,
-      0,
-      sourceY,
-      fullCanvas.width,
-      sourceHeight,
-      0,
-      0,
-      fullCanvas.width,
-      sourceHeight
-    );
+          //     if (actualHeight > 0) {
+          //       // Create canvas section for this page
+          //       const pageCanvas = document.createElement("canvas");
+          //       const pageCtx = pageCanvas.getContext("2d");
 
-    const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+          //       const sourceY = currentY / scale;
+          //       const sourceHeight = actualHeight / scale;
 
-    // Add to PDF
-    pdf.addImage(
-      pageImgData,
-      "PNG",
-      margin,
-      margin,
-      usableWidth,
-      actualHeight
-    );
-  }
+          //       pageCanvas.width = fullCanvas.width;
+          //       pageCanvas.height = sourceHeight;
 
-  currentY = nextY;
-  pageNumber++;
-}
+          //       // Draw the specific section
+          //       pageCtx.drawImage(
+          //         fullCanvas,
+          //         0,
+          //         sourceY, // Source x, y
+          //         fullCanvas.width,
+          //         sourceHeight, // Source width, height
+          //         0,
+          //         0, // Destination x, y
+          //         fullCanvas.width,
+          //         sourceHeight // Destination width, height
+          //       );
 
-// Fallback: if no pages were created, add the full image
-if (pageNumber === 0) {
-  pdf.addImage(
-    fullImgData,
-    "PNG",
-    margin,
-    margin,
-    usableWidth,
-    Math.min(scaledHeight, pageHeight)
-  );
-}
+          //       const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
 
- 
+          //       // Add to PDF
+          //       pdf.addImage(
+          //         pageImgData,
+          //         "PNG",
+          //         margin,
+          //         margin,
+          //         usableWidth,
+          //         actualHeight
+          //       );
+          //     }
+
+          //     currentY = nextY;
+          //     pageNumber++;
+          //   }
+
+          //   // Fallback
+          //   if (pageNumber === 0) {
+          //     pdf.addImage(
+          //       fullImgData,
+          //       "PNG",
+          //       margin,
+          //       margin,
+          //       usableWidth,
+          //       Math.min(scaledHeight, usableHeight)
+          //     );
+          //   }
+
+          // Initialize PDF with same settings as downloadInvoices
+          const pdf = new jsPDF("p", "mm", "a4");
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const margin = 10;
+          const usableWidth = pdfWidth - 2 * margin;
+          const usableHeight = pdfHeight - 2 * margin;
+
+          // Capture full content first with same settings as downloadInvoices
+          const fullCanvas = await html2canvas(input, {
+            scale: 1.5,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            scrollX: 0,
+            scrollY: 0,
+            width: input.scrollWidth || input.clientWidth,
+            height: input.scrollHeight || input.clientHeight,
+            windowWidth: 1200,
+            logging: false,
+          });
+
+          if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+            throw new Error("Canvas has zero dimensions");
+          }
+
+          const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+
+          // Calculate scaling
+          const imgProps = pdf.getImageProperties(fullImgData);
+          const scale = usableWidth / imgProps.width;
+          const scaledHeight = imgProps.height * scale;
+
+          // Calculate pages needed
+          const pageHeight = usableHeight;
+
+          // Smart page breaking - detect table rows and avoid cutting them
+          let currentY = 0;
+          let pageNumber = 0;
+
+          // Detect table rows by looking for horizontal patterns in the content
+          const detectTableRows = () => {
+            const rows = [];
+            const tableElements = input.querySelectorAll(
+              'tr, .table-row, [class*="row"]'
+            );
+
+            if (tableElements.length > 0) {
+              tableElements.forEach((row) => {
+                const rect = row.getBoundingClientRect();
+                const inputRect = input.getBoundingClientRect();
+                const relativeTop = rect.top - inputRect.top + input.scrollTop;
+                const relativeBottom = relativeTop + rect.height;
+
+                rows.push({
+                  top: relativeTop * scale,
+                  bottom: relativeBottom * scale,
+                  height: rect.height * scale,
+                });
+              });
+            }
+
+            return rows.sort((a, b) => a.top - b.top);
+          };
+
+          const tableRows = detectTableRows();
+
+          while (currentY < scaledHeight && pageNumber < 50) {
+            // Safety limit
+            if (pageNumber > 0) {
+              pdf.addPage();
+            }
+
+            let nextY = currentY + pageHeight;
+
+            // Check if we would cut through a table row
+            if (tableRows.length > 0) {
+              for (const row of tableRows) {
+                // If a row would be cut by the page break
+                if (row.top < nextY && row.bottom > nextY) {
+                  // If the row can fit on current page, adjust nextY to include it
+                  if (row.bottom - currentY <= pageHeight) {
+                    nextY = row.bottom;
+                  } else {
+                    // If row is too big for current page, move it to next page
+                    nextY = row.top;
+                  }
+                  break;
+                }
+              }
+            }
+
+            // Ensure we don't go beyond content
+            const actualHeight = Math.min(
+              nextY - currentY,
+              scaledHeight - currentY
+            );
+
+            if (actualHeight > 0) {
+              // Create canvas for this page section
+              const pageCanvas = document.createElement("canvas");
+              const pageCtx = pageCanvas.getContext("2d");
+
+              const sourceY = currentY / scale;
+              const sourceHeight = actualHeight / scale;
+
+              pageCanvas.width = fullCanvas.width;
+              pageCanvas.height = sourceHeight;
+
+              // Draw the section
+              pageCtx.drawImage(
+                fullCanvas,
+                0,
+                sourceY,
+                fullCanvas.width,
+                sourceHeight,
+                0,
+                0,
+                fullCanvas.width,
+                sourceHeight
+              );
+
+              const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+              // Add to PDF
+              pdf.addImage(
+                pageImgData,
+                "PNG",
+                margin,
+                margin,
+                usableWidth,
+                actualHeight
+              );
+            }
+
+            currentY = nextY;
+            pageNumber++;
+          }
+
+          // Fallback: if no pages were created, add the full image
+          if (pageNumber === 0) {
+            pdf.addImage(
+              fullImgData,
+              "PNG",
+              margin,
+              margin,
+              usableWidth,
+              Math.min(scaledHeight, pageHeight)
+            );
+          }
+
           // Clean up
           root.unmount();
           document.body.removeChild(tempContainer);
- 
+
           // Save PDF
           const filename = `${
             invoice.invoiceNumber || `invoice_${invoiceId}`
           }.pdf`;
           pdf.save(filename);
- 
+
           if (i < invoicesToDownload.length - 1) {
             await new Promise((resolve) => setTimeout(resolve, 2000));
           }
@@ -1632,967 +1635,947 @@ if (pageNumber === 0) {
           );
         }
       }
- 
+
       const successMessage =
         invoicesToDownload.length === 1
           ? "Invoice downloaded successfully!"
           : `${invoicesToDownload.length} invoices downloaded successfully!`;
- 
+
       alert(successMessage);
-
-  } catch (error) {
-    console.error("Error during download process:", error);
-    alert(`Download failed: ${error.message}`);
-  } finally {
-    setIsDownloading(false);
-  }
-};
-
-
-
-
-// const downloadInvoices = async () => {
-//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-//     selectedInvoices.has(invoice.invoiceId || index)
-//   );
-
-//   if (invoicesToDownload.length === 0) {
-//     alert("Please select invoices to download");
-//     return;
-//   }
-
-//   try {
-//     setIsDownloading(true);
-
-//     for (let i = 0; i < invoicesToDownload.length; i++) {
-//       const invoice = invoicesToDownload[i];
-//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-
-//       if (!invoiceId) {
-//         console.warn(
-//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-//         );
-//         continue;
-//       }
-
-//       try {
-//         // First fetch invoice preview data
-//         const previewResponse = await fetch(
-//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-//             invoice.invoiceNumber
-//           )}`
-//         );
-
-//         if (!previewResponse.ok) {
-//           throw new Error(
-//             `Failed to fetch invoice preview: ${previewResponse.status}`
-//           );
-//         }
-
-//         const apiData = await previewResponse.json();
-
-//         // Transform data exactly like in handlePreview
-//         const transformedData = [
-//           {
-//             invoiceId: apiData.invoiceId || " ",
-//             invoiceDate: apiData.period || " ",
-//             currency: apiData.currency || " ",
-//             totalAmount: apiData.totalAmount || 0,
-
-//             lineItems: (apiData.lineItems || []).map((item, index) => ({
-//               poLine: item.poLine || " ",
-//               plc: item.plc || " ",
-//               vendor: item.vendor || " ",
-//               employee: item.employee || " ",
-//               hours: item.hours || 0,
-//               rate: item.rate || 0,
-//               amount: item.amount || 0,
-//               line_No: item.line_No || " ",
-//             })),
-
-//             billTo: apiData.billTo || " ",
-//             buyer: apiData.buyer || " ",
-//             purchaseOrderId: apiData.po_Number || " ",
-//             releaseNumber: apiData.po_rlse_Number || " ",
-//             poStartEndDate: apiData.po_Start_End_Date || " ",
-//             terms: apiData.terms || " ",
-//             amountDue: apiData.totalAmount || 0,
-//             period: apiData.period || " ",
-//             po_Number: apiData.po_Number || " ",
-//             po_rlse_Number: apiData.po_rlse_Number || " ",
-//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
-//           },
-//         ];
-
-//         // Create temporary container
-//         const tempContainer = document.createElement("div");
-//         tempContainer.style.position = "absolute";
-//         tempContainer.style.left = "-9999px";
-//         tempContainer.style.top = "0";
-//         tempContainer.style.width = "210mm";
-//         tempContainer.style.backgroundColor = "white";
-//         tempContainer.style.padding = "15mm";
-//         tempContainer.style.margin = "0";
-//         tempContainer.style.boxSizing = "border-box";
-//         tempContainer.style.fontFamily = "Arial, sans-serif";
-//         tempContainer.style.fontSize = "12px";
-//         tempContainer.style.lineHeight = "1.4";
-//         tempContainer.style.color = "#000000";
-//         document.body.appendChild(tempContainer);
-
-//         // Create temporary React root and render InvoiceViewer
-//         const ReactDOM = (await import("react-dom/client")).default;
-//         const React = (await import("react")).default;
-//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-//         const root = ReactDOM.createRoot(tempContainer);
-
-//         await new Promise((resolve) => {
-//           root.render(
-//             React.createElement(InvoiceViewer, {
-//               data: transformedData,
-//               setInvoiceModalVisible: () => {},
-//             })
-//           );
-//           setTimeout(resolve, 3000);
-//         });
-
-//         await new Promise(resolve => setTimeout(resolve, 1000));
-
-//         const input = tempContainer.querySelector(
-//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-//         ) || tempContainer.firstElementChild || tempContainer;
-
-//         if (!input) {
-//           throw new Error("Invoice content not found");
-//         }
-
-//         // Ensure content is visible
-//         input.style.display = "block";
-//         input.style.visibility = "visible";
-//         input.style.opacity = "1";
-
-//         // Initialize PDF
-//         const pdf = new jsPDF("p", "mm", "a4");
-//         const pdfWidth = pdf.internal.pageSize.getWidth();
-//         const pdfHeight = pdf.internal.pageSize.getHeight();
-//         const margin = 10;
-//         const usableWidth = pdfWidth - 2 * margin;
-//         const usableHeight = pdfHeight - 2 * margin;
-
-//         // Capture full content first
-//         const fullCanvas = await html2canvas(input, {
-//           scale: 1.5,
-//           useCORS: true,
-//           allowTaint: true,
-//           backgroundColor: '#ffffff',
-//           scrollX: 0,
-//           scrollY: 0,
-//           width: input.scrollWidth || input.clientWidth,
-//           height: input.scrollHeight || input.clientHeight,
-//           windowWidth: 1200,
-//           logging: false,
-//         });
-
-//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-//           throw new Error("Canvas has zero dimensions");
-//         }
-
-//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-        
-//         // Calculate scaling
-//         const imgProps = pdf.getImageProperties(fullImgData);
-//         const scale = usableWidth / imgProps.width;
-//         const scaledHeight = imgProps.height * scale;
-
-//         // Calculate pages needed
-//         const pageHeight = usableHeight;
-//         const totalPages = Math.ceil(scaledHeight / pageHeight);
-
-//         // Smart page breaking - detect table rows and avoid cutting them
-//         let currentY = 0;
-//         let pageNumber = 0;
-
-//         // Detect table rows by looking for horizontal patterns in the content
-//         const detectTableRows = () => {
-//           const rows = [];
-//           const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
-          
-//           if (tableElements.length > 0) {
-//             tableElements.forEach(row => {
-//               const rect = row.getBoundingClientRect();
-//               const inputRect = input.getBoundingClientRect();
-//               const relativeTop = rect.top - inputRect.top + input.scrollTop;
-//               const relativeBottom = relativeTop + rect.height;
-              
-//               rows.push({
-//                 top: relativeTop * scale,
-//                 bottom: relativeBottom * scale,
-//                 height: rect.height * scale
-//               });
-//             });
-//           }
-          
-//           return rows.sort((a, b) => a.top - b.top);
-//         };
-
-//         const tableRows = detectTableRows();
-
-//         while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
-//           if (pageNumber > 0) {
-//             pdf.addPage();
-//           }
-
-//           let nextY = currentY + pageHeight;
-          
-//           // Check if we would cut through a table row
-//           if (tableRows.length > 0) {
-//             for (const row of tableRows) {
-//               // If a row would be cut by the page break
-//               if (row.top < nextY && row.bottom > nextY) {
-//                 // If the row can fit on current page, adjust nextY to include it
-//                 if (row.bottom - currentY <= pageHeight) {
-//                   nextY = row.bottom;
-//                 } else {
-//                   // If row is too big for current page, move it to next page
-//                   nextY = row.top;
-//                 }
-//                 break;
-//               }
-//             }
-//           }
-
-//           // Ensure we don't go beyond content
-//           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
-          
-//           if (actualHeight > 0) {
-//             // Create canvas for this page section
-//             const pageCanvas = document.createElement('canvas');
-//             const pageCtx = pageCanvas.getContext('2d');
-            
-//             const sourceY = currentY / scale;
-//             const sourceHeight = actualHeight / scale;
-            
-//             pageCanvas.width = fullCanvas.width;
-//             pageCanvas.height = sourceHeight;
-            
-//             // Draw the section
-//             pageCtx.drawImage(
-//               fullCanvas,
-//               0, sourceY, fullCanvas.width, sourceHeight,
-//               0, 0, fullCanvas.width, sourceHeight
-//             );
-            
-//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
-            
-//             // Add to PDF
-//             pdf.addImage(
-//               pageImgData,
-//               "PNG",
-//               margin,
-//               margin,
-//               usableWidth,
-//               actualHeight
-//             );
-//           }
-
-//           currentY = nextY;
-//           pageNumber++;
-//         }
-
-//         // Fallback: if no pages were created, add the full image
-//         if (pageNumber === 0) {
-//           pdf.addImage(
-//             fullImgData,
-//             "PNG",
-//             margin,
-//             margin,
-//             usableWidth,
-//             Math.min(scaledHeight, pageHeight)
-//           );
-//         }
-
-//         // Clean up
-//         root.unmount();
-//         document.body.removeChild(tempContainer);
-
-//         // Save PDF
-//         const filename = `${
-//           invoice.invoiceNumber || `invoice_${invoiceId}`
-//         }.pdf`;
-//         pdf.save(filename);
-
-//         // Add delay between downloads
-//         if (i < invoicesToDownload.length - 1) {
-//           await new Promise((resolve) => setTimeout(resolve, 2000));
-//         }
-
-//       } catch (invoiceError) {
-//         console.error(
-//           `Error downloading invoice ${invoiceId}:`,
-//           invoiceError
-//         );
-//         alert(
-//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-//         );
-//       }
-//     }
-
-//     const successMessage =
-//       invoicesToDownload.length === 1
-//         ? "Invoice downloaded successfully!"
-//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-//     alert(successMessage);
-
-//   } catch (error) {
-//     console.error("Error during download process:", error);
-//     alert(`Download failed: ${error.message}`);
-//   } finally {
-//     setIsDownloading(false);
-//   }
-// };
-
-// const downloadInvoices = async () => {
-//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-//     selectedInvoices.has(invoice.invoiceId || index)
-//   );
-
-//   if (invoicesToDownload.length === 0) {
-//     alert("Please select invoices to download");
-//     return;
-//   }
-
-//   try {
-//     setIsDownloading(true);
-
-//     for (let i = 0; i < invoicesToDownload.length; i++) {
-//       const invoice = invoicesToDownload[i];
-//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-
-//       if (!invoiceId) {
-//         console.warn(
-//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-//         );
-//         continue;
-//       }
-
-//       try {
-//         // First fetch invoice preview data
-//         const previewResponse = await fetch(
-//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-//             invoice.invoiceNumber
-//           )}`
-//         );
-
-//         if (!previewResponse.ok) {
-//           throw new Error(
-//             `Failed to fetch invoice preview: ${previewResponse.status}`
-//           );
-//         }
-
-//         const apiData = await previewResponse.json();
-
-//         // Transform data exactly like in handlePreview
-//         const transformedData = [
-//           {
-//             invoiceId: apiData.invoiceId || " ",
-//             invoiceDate: apiData.period || " ",
-//             currency: apiData.currency || " ",
-//             totalAmount: apiData.totalAmount || 0,
-
-//             lineItems: (apiData.lineItems || []).map((item, index) => ({
-//               poLine: item.poLine || " ",
-//               plc: item.plc || " ",
-//               vendor: item.vendor || " ",
-//               employee: item.employee || " ",
-//               hours: item.hours || 0,
-//               rate: item.rate || 0,
-//               amount: item.amount || 0,
-//               line_No: item.line_No || " ",
-//             })),
-
-//             billTo: apiData.billTo || " ",
-//             buyer: apiData.buyer || " ",
-//             purchaseOrderId: apiData.po_Number || " ",
-//             releaseNumber: apiData.po_rlse_Number || " ",
-//             poStartEndDate: apiData.po_Start_End_Date || " ",
-//             terms: apiData.terms || " ",
-//             amountDue: apiData.totalAmount || 0,
-//             period: apiData.period || " ",
-//             po_Number: apiData.po_Number || " ",
-//             po_rlse_Number: apiData.po_rlse_Number || " ",
-//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
-//           },
-//         ];
-
-//         // Create temporary container with consistent styling
-//         const tempContainer = document.createElement("div");
-//         tempContainer.style.position = "absolute";
-//         tempContainer.style.left = "-9999px";
-//         tempContainer.style.top = "0";
-//         tempContainer.style.width = "210mm";
-//         tempContainer.style.backgroundColor = "white";
-//         tempContainer.style.padding = "15mm";
-//         tempContainer.style.margin = "0";
-//         tempContainer.style.boxSizing = "border-box";
-//         tempContainer.style.fontFamily = "Arial, sans-serif";
-//         tempContainer.style.fontSize = "12px";
-//         tempContainer.style.lineHeight = "1.4";
-//         tempContainer.style.color = "#000000";
-//         // Force consistent font rendering
-//         tempContainer.style.webkitFontSmoothing = "antialiased";
-//         tempContainer.style.mozOsxFontSmoothing = "grayscale";
-//         document.body.appendChild(tempContainer);
-
-//         // Create temporary React root and render InvoiceViewer
-//         const ReactDOM = (await import("react-dom/client")).default;
-//         const React = (await import("react")).default;
-//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-//         const root = ReactDOM.createRoot(tempContainer);
-
-//         await new Promise((resolve) => {
-//           root.render(
-//             React.createElement(InvoiceViewer, {
-//               data: transformedData,
-//               setInvoiceModalVisible: () => {},
-//             })
-//           );
-//           setTimeout(resolve, 3000);
-//         });
-
-//         await new Promise(resolve => setTimeout(resolve, 1000));
-
-//         // Find the complete invoice content (not just table)
-//         const input = tempContainer.querySelector(
-//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-//         ) || tempContainer.firstElementChild || tempContainer;
-
-//         if (!input) {
-//           throw new Error("Invoice content not found");
-//         }
-
-//         // Ensure all content is visible and properly styled
-//         input.style.display = "block";
-//         input.style.visibility = "visible";
-//         input.style.opacity = "1";
-        
-//         // Force consistent font sizes throughout
-//         const allElements = input.querySelectorAll('*');
-//         allElements.forEach(el => {
-//           if (el.style) {
-//             // Ensure consistent font sizes
-//             if (!el.style.fontSize || el.style.fontSize === '') {
-//               el.style.fontSize = '12px';
-//             }
-//             // Ensure visibility
-//             if (el.style.display === 'none') {
-//               el.style.display = 'block';
-//             }
-//             el.style.visibility = 'visible';
-//             el.style.opacity = '1';
-//           }
-//         });
-
-//         // Initialize PDF
-//         const pdf = new jsPDF("p", "mm", "a4");
-//         const pdfWidth = pdf.internal.pageSize.getWidth();
-//         const pdfHeight = pdf.internal.pageSize.getHeight();
-//         const margin = 10;
-//         const usableWidth = pdfWidth - 2 * margin;
-//         const usableHeight = pdfHeight - 2 * margin;
-
-//         // Capture the COMPLETE invoice content
-//         const fullCanvas = await html2canvas(input, {
-//           scale: 1.5,
-//           useCORS: true,
-//           allowTaint: true,
-//           backgroundColor: '#ffffff',
-//           scrollX: 0,
-//           scrollY: 0,
-//           width: input.scrollWidth || input.clientWidth,
-//           height: input.scrollHeight || input.clientHeight,
-//           windowWidth: 1200,
-//           windowHeight: input.scrollHeight || input.clientHeight,
-//           logging: false,
-//           onclone: (clonedDoc, element) => {
-//             // Ensure all elements maintain consistent styling in clone
-//             const allClonedElements = clonedDoc.querySelectorAll('*');
-//             allClonedElements.forEach(el => {
-//               if (el.style) {
-//                 el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
-//                 el.style.visibility = 'visible';
-//                 el.style.opacity = '1';
-//                 el.style.fontSize = el.style.fontSize || '12px';
-//                 el.style.fontFamily = 'Arial, sans-serif';
-//               }
-//             });
-//           }
-//         });
-
-//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-//           throw new Error("Canvas has zero dimensions");
-//         }
-
-//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-        
-//         // Calculate scaling to fit page width
-//         const imgProps = pdf.getImageProperties(fullImgData);
-//         const scale = usableWidth / imgProps.width;
-//         const scaledHeight = imgProps.height * scale;
-
-//         // Smart page breaking that respects content boundaries
-//         let currentY = 0;
-//         let pageNumber = 0;
-//         const rowHeight = 25 * scale; // Approximate row height in scaled units
-
-//         while (currentY < scaledHeight && pageNumber < 50) {
-//           if (pageNumber > 0) {
-//             pdf.addPage();
-//           }
-
-//           let nextY = currentY + usableHeight;
-          
-//           // If this isn't the last section, try to break at row boundary
-//           if (nextY < scaledHeight) {
-//             // Find a good break point near the end of the page
-//             const searchStart = Math.max(currentY + (usableHeight * 0.7), currentY);
-//             const searchEnd = nextY;
-            
-//             // Look for row boundaries in the last 30% of the page
-//             let bestBreak = nextY;
-//             for (let y = searchEnd; y >= searchStart; y -= rowHeight) {
-//               bestBreak = y;
-//               break; // Use the first row boundary we find
-//             }
-//             nextY = bestBreak;
-//           }
-
-//           const sectionHeight = Math.min(nextY - currentY, scaledHeight - currentY);
-          
-//           if (sectionHeight > 0) {
-//             // Create canvas for this page section
-//             const pageCanvas = document.createElement('canvas');
-//             const pageCtx = pageCanvas.getContext('2d');
-            
-//             const sourceY = currentY / scale;
-//             const sourceHeight = sectionHeight / scale;
-            
-//             pageCanvas.width = fullCanvas.width;
-//             pageCanvas.height = sourceHeight;
-            
-//             // Draw the section with proper scaling
-//             pageCtx.drawImage(
-//               fullCanvas,
-//               0, sourceY, fullCanvas.width, sourceHeight,
-//               0, 0, fullCanvas.width, sourceHeight
-//             );
-            
-//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
-            
-//             // Add to PDF with consistent scaling
-//             pdf.addImage(
-//               pageImgData,
-//               "PNG",
-//               margin,
-//               margin,
-//               usableWidth,
-//               sectionHeight
-//             );
-//           }
-
-//           currentY = nextY;
-//           pageNumber++;
-//         }
-
-//         // Fallback: if no pages were created, add the full image
-//         if (pageNumber === 0) {
-//           pdf.addImage(
-//             fullImgData,
-//             "PNG",
-//             margin,
-//             margin,
-//             usableWidth,
-//             Math.min(scaledHeight, usableHeight)
-//           );
-//         }
-
-//         // Clean up
-//         root.unmount();
-//         document.body.removeChild(tempContainer);
-
-//         // Save PDF
-//         const filename = `${
-//           invoice.invoiceNumber || `invoice_${invoiceId}`
-//         }.pdf`;
-//         pdf.save(filename);
-
-//         // Add delay between downloads
-//         if (i < invoicesToDownload.length - 1) {
-//           await new Promise((resolve) => setTimeout(resolve, 2000));
-//         }
-
-//       } catch (invoiceError) {
-//         console.error(
-//           `Error downloading invoice ${invoiceId}:`,
-//           invoiceError
-//         );
-//         alert(
-//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-//         );
-//       }
-//     }
-
-//     const successMessage =
-//       invoicesToDownload.length === 1
-//         ? "Invoice downloaded successfully!"
-//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-//     alert(successMessage);
-
-//   } catch (error) {
-//     console.error("Error during download process:", error);
-//     alert(`Download failed: ${error.message}`);
-//   } finally {
-//     setIsDownloading(false);
-//   }
-// };
-
-
-// const downloadInvoices = async () => {
-//   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-//     selectedInvoices.has(invoice.invoiceId || index)
-//   );
-
-//   if (invoicesToDownload.length === 0) {
-//     alert("Please select invoices to download");
-//     return;
-//   }
-
-//   try {
-//     setIsDownloading(true);
-
-//     for (let i = 0; i < invoicesToDownload.length; i++) {
-//       const invoice = invoicesToDownload[i];
-//       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-
-//       if (!invoiceId) {
-//         console.warn(
-//           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-//         );
-//         continue;
-//       }
-
-//       try {
-//         // First fetch invoice preview data
-//         const previewResponse = await fetch(
-//           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-//             invoice.invoiceNumber
-//           )}`
-//         );
-
-//         if (!previewResponse.ok) {
-//           throw new Error(
-//             `Failed to fetch invoice preview: ${previewResponse.status}`
-//           );
-//         }
-
-//         const apiData = await previewResponse.json();
-
-//         // Transform data exactly like in handlePreview
-//         const transformedData = [
-//           {
-//             invoiceId: apiData.invoiceId || " ",
-//             invoiceDate: apiData.period || " ",
-//             currency: apiData.currency || " ",
-//             totalAmount: apiData.totalAmount || 0,
-
-//             lineItems: (apiData.lineItems || []).map((item, index) => ({
-//               poLine: item.poLine || " ",
-//               plc: item.plc || " ",
-//               vendor: item.vendor || " ",
-//               employee: item.employee || " ",
-//               hours: item.hours || 0,
-//               rate: item.rate || 0,
-//               amount: item.amount || 0,
-//               line_No: item.line_No || " ",
-//             })),
-
-//             billTo: apiData.billTo || " ",
-//             buyer: apiData.buyer || " ",
-//             purchaseOrderId: apiData.po_Number || " ",
-//             releaseNumber: apiData.po_rlse_Number || " ",
-//             poStartEndDate: apiData.po_Start_End_Date || " ",
-//             terms: apiData.terms || " ",
-//             amountDue: apiData.totalAmount || 0,
-//             period: apiData.period || " ",
-//             po_Number: apiData.po_Number || " ",
-//             po_rlse_Number: apiData.po_rlse_Number || " ",
-//             po_Start_End_Date: apiData.po_Start_End_Date || " ",
-//           },
-//         ];
-
-//         // Create temporary container
-//         const tempContainer = document.createElement("div");
-//         tempContainer.style.position = "absolute";
-//         tempContainer.style.left = "-9999px";
-//         tempContainer.style.top = "0";
-//         tempContainer.style.width = "210mm";
-//         tempContainer.style.backgroundColor = "white";
-//         tempContainer.style.padding = "15mm";
-//         tempContainer.style.margin = "0";
-//         tempContainer.style.boxSizing = "border-box";
-//         tempContainer.style.fontFamily = "Arial, sans-serif";
-//         tempContainer.style.fontSize = "12px";
-//         tempContainer.style.lineHeight = "1.4";
-//         tempContainer.style.color = "#000000";
-//         document.body.appendChild(tempContainer);
-
-//         // Create temporary React root and render InvoiceViewer
-//         const ReactDOM = (await import("react-dom/client")).default;
-//         const React = (await import("react")).default;
-//         const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-//         const root = ReactDOM.createRoot(tempContainer);
-
-//         await new Promise((resolve) => {
-//           root.render(
-//             React.createElement(InvoiceViewer, {
-//               data: transformedData,
-//               setInvoiceModalVisible: () => {},
-//             })
-//           );
-//           setTimeout(resolve, 3000);
-//         });
-
-//         await new Promise(resolve => setTimeout(resolve, 1000));
-
-//         const input = tempContainer.querySelector(
-//           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-//         ) || tempContainer.firstElementChild || tempContainer;
-
-//         if (!input) {
-//           throw new Error("Invoice content not found");
-//         }
-
-//         input.style.display = "block";
-//         input.style.visibility = "visible";
-//         input.style.opacity = "1";
-
-//         // Initialize PDF
-//         const pdf = new jsPDF("p", "mm", "a4");
-//         const pdfWidth = pdf.internal.pageSize.getWidth();
-//         const pdfHeight = pdf.internal.pageSize.getHeight();
-//         const margin = 10;
-//         const usableWidth = pdfWidth - 2 * margin;
-//         const usableHeight = pdfHeight - 2 * margin;
-
-//         // Capture full content
-//         const fullCanvas = await html2canvas(input, {
-//           scale: 1.5,
-//           useCORS: true,
-//           allowTaint: true,
-//           backgroundColor: '#ffffff',
-//           scrollX: 0,
-//           scrollY: 0,
-//           width: input.scrollWidth || input.clientWidth,
-//           height: input.scrollHeight || input.clientHeight,
-//           windowWidth: 1200,
-//           logging: false,
-//         });
-
-//         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
-//           throw new Error("Canvas has zero dimensions");
-//         }
-
-//         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
-        
-//         // Calculate scaling
-//         const imgProps = pdf.getImageProperties(fullImgData);
-//         const scale = usableWidth / imgProps.width;
-//         const scaledHeight = imgProps.height * scale;
-
-//         // Get all table row elements and their positions
-//         const getRowBreakPoints = () => {
-//           const breakPoints = [0]; // Start with top of document
-          
-//           // Find all table rows, divs that look like rows, and elements with row-like content
-//           const rowSelectors = [
-//             'tr',
-//             'tbody tr', 
-//             '.table-row',
-//             '[class*="row"]',
-//             'div[style*="border"]',
-//             'div:has(table)',
-//             'div > div:nth-child(n+2)' // Multiple child divs that might be rows
-//           ];
-          
-//           const allRows = [];
-          
-//           rowSelectors.forEach(selector => {
-//             try {
-//               const elements = input.querySelectorAll(selector);
-//               elements.forEach(el => {
-//                 if (el.offsetHeight > 0) { // Only visible elements
-//                   allRows.push(el);
-//                 }
-//               });
-//             } catch (e) {
-//               // Skip invalid selectors
-//             }
-//           });
-
-//           // Get positions of all potential row elements
-//           allRows.forEach(row => {
-//             const rect = row.getBoundingClientRect();
-//             const inputRect = input.getBoundingClientRect();
-//             const relativeTop = (rect.top - inputRect.top + input.scrollTop) * scale;
-//             const relativeBottom = relativeTop + (rect.height * scale);
-            
-//             if (relativeTop > 0 && relativeTop < scaledHeight) {
-//               breakPoints.push(relativeTop);
-//               breakPoints.push(relativeBottom);
-//             }
-//           });
-
-//           // Remove duplicates and sort
-//           return [...new Set(breakPoints)].sort((a, b) => a - b);
-//         };
-
-//         const breakPoints = getRowBreakPoints();
-        
-//         let currentY = 0;
-//         let pageNumber = 0;
-
-//         while (currentY < scaledHeight && pageNumber < 50) {
-//           if (pageNumber > 0) {
-//             pdf.addPage();
-//           }
-
-//           let nextY = currentY + usableHeight;
-          
-//           // Find the best break point that doesn't cut content
-//           if (nextY < scaledHeight) { // Only adjust if we're not on the last section
-//             let bestBreakPoint = nextY;
-            
-//             // Look for a break point within 50 units before the natural break
-//             for (let i = breakPoints.length - 1; i >= 0; i--) {
-//               const breakPoint = breakPoints[i];
-//               if (breakPoint <= nextY && breakPoint >= currentY + (usableHeight * 0.3)) {
-//                 // Found a good break point that gives us at least 30% of page content
-//                 bestBreakPoint = breakPoint;
-//                 break;
-//               }
-//             }
-            
-//             nextY = bestBreakPoint;
-//           }
-
-//           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
-          
-//           if (actualHeight > 0) {
-//             // Create canvas for this page section
-//             const pageCanvas = document.createElement('canvas');
-//             const pageCtx = pageCanvas.getContext('2d');
-            
-//             const sourceY = currentY / scale;
-//             const sourceHeight = actualHeight / scale;
-            
-//             pageCanvas.width = fullCanvas.width;
-//             pageCanvas.height = sourceHeight;
-            
-//             // Draw the section
-//             pageCtx.drawImage(
-//               fullCanvas,
-//               0, sourceY, fullCanvas.width, sourceHeight,
-//               0, 0, fullCanvas.width, sourceHeight
-//             );
-            
-//             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
-            
-//             // Add to PDF
-//             pdf.addImage(
-//               pageImgData,
-//               "PNG",
-//               margin,
-//               margin,
-//               usableWidth,
-//               actualHeight
-//             );
-//           }
-
-//           currentY = nextY;
-//           pageNumber++;
-//         }
-
-//         // Fallback: if no pages were created, add the full image
-//         if (pageNumber === 0) {
-//           pdf.addImage(
-//             fullImgData,
-//             "PNG",
-//             margin,
-//             margin,
-//             usableWidth,
-//             Math.min(scaledHeight, usableHeight)
-//           );
-//         }
-
-//         // Clean up
-//         root.unmount();
-//         document.body.removeChild(tempContainer);
-
-//         // Save PDF
-//         const filename = `${
-//           invoice.invoiceNumber || `invoice_${invoiceId}`
-//         }.pdf`;
-//         pdf.save(filename);
-
-//         // Add delay between downloads
-//         if (i < invoicesToDownload.length - 1) {
-//           await new Promise((resolve) => setTimeout(resolve, 2000));
-//         }
-
-//       } catch (invoiceError) {
-//         console.error(
-//           `Error downloading invoice ${invoiceId}:`,
-//           invoiceError
-//         );
-//         alert(
-//           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-//         );
-//       }
-//     }
-
-//     const successMessage =
-//       invoicesToDownload.length === 1
-//         ? "Invoice downloaded successfully!"
-//         : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-//     alert(successMessage);
-
-//   } catch (error) {
-//     console.error("Error during download process:", error);
-//     alert(`Download failed: ${error.message}`);
-//   } finally {
-//     setIsDownloading(false);
-//   }
-// };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    } catch (error) {
+      console.error("Error during download process:", error);
+      alert(`Download failed: ${error.message}`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // const downloadInvoices = async () => {
+  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+  //     selectedInvoices.has(invoice.invoiceId || index)
+  //   );
+
+  //   if (invoicesToDownload.length === 0) {
+  //     alert("Please select invoices to download");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsDownloading(true);
+
+  //     for (let i = 0; i < invoicesToDownload.length; i++) {
+  //       const invoice = invoicesToDownload[i];
+  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+  //       if (!invoiceId) {
+  //         console.warn(
+  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+  //         );
+  //         continue;
+  //       }
+
+  //       try {
+  //         // First fetch invoice preview data
+  //         const previewResponse = await fetch(
+  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             invoice.invoiceNumber
+  //           )}`
+  //         );
+
+  //         if (!previewResponse.ok) {
+  //           throw new Error(
+  //             `Failed to fetch invoice preview: ${previewResponse.status}`
+  //           );
+  //         }
+
+  //         const apiData = await previewResponse.json();
+
+  //         // Transform data exactly like in handlePreview
+  //         const transformedData = [
+  //           {
+  //             invoiceId: apiData.invoiceId || " ",
+  //             invoiceDate: apiData.period || " ",
+  //             currency: apiData.currency || " ",
+  //             totalAmount: apiData.totalAmount || 0,
+
+  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //               poLine: item.poLine || " ",
+  //               plc: item.plc || " ",
+  //               vendor: item.vendor || " ",
+  //               employee: item.employee || " ",
+  //               hours: item.hours || 0,
+  //               rate: item.rate || 0,
+  //               amount: item.amount || 0,
+  //               line_No: item.line_No || " ",
+  //             })),
+
+  //             billTo: apiData.billTo || " ",
+  //             buyer: apiData.buyer || " ",
+  //             purchaseOrderId: apiData.po_Number || " ",
+  //             releaseNumber: apiData.po_rlse_Number || " ",
+  //             poStartEndDate: apiData.po_Start_End_Date || " ",
+  //             terms: apiData.terms || " ",
+  //             amountDue: apiData.totalAmount || 0,
+  //             period: apiData.period || " ",
+  //             po_Number: apiData.po_Number || " ",
+  //             po_rlse_Number: apiData.po_rlse_Number || " ",
+  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //           },
+  //         ];
+
+  //         // Create temporary container
+  //         const tempContainer = document.createElement("div");
+  //         tempContainer.style.position = "absolute";
+  //         tempContainer.style.left = "-9999px";
+  //         tempContainer.style.top = "0";
+  //         tempContainer.style.width = "210mm";
+  //         tempContainer.style.backgroundColor = "white";
+  //         tempContainer.style.padding = "15mm";
+  //         tempContainer.style.margin = "0";
+  //         tempContainer.style.boxSizing = "border-box";
+  //         tempContainer.style.fontFamily = "Arial, sans-serif";
+  //         tempContainer.style.fontSize = "12px";
+  //         tempContainer.style.lineHeight = "1.4";
+  //         tempContainer.style.color = "#000000";
+  //         document.body.appendChild(tempContainer);
+
+  //         // Create temporary React root and render InvoiceViewer
+  //         const ReactDOM = (await import("react-dom/client")).default;
+  //         const React = (await import("react")).default;
+  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+  //         const root = ReactDOM.createRoot(tempContainer);
+
+  //         await new Promise((resolve) => {
+  //           root.render(
+  //             React.createElement(InvoiceViewer, {
+  //               data: transformedData,
+  //               setInvoiceModalVisible: () => {},
+  //             })
+  //           );
+  //           setTimeout(resolve, 3000);
+  //         });
+
+  //         await new Promise(resolve => setTimeout(resolve, 1000));
+
+  //         const input = tempContainer.querySelector(
+  //           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+  //         ) || tempContainer.firstElementChild || tempContainer;
+
+  //         if (!input) {
+  //           throw new Error("Invoice content not found");
+  //         }
+
+  //         // Ensure content is visible
+  //         input.style.display = "block";
+  //         input.style.visibility = "visible";
+  //         input.style.opacity = "1";
+
+  //         // Initialize PDF
+  //         const pdf = new jsPDF("p", "mm", "a4");
+  //         const pdfWidth = pdf.internal.pageSize.getWidth();
+  //         const pdfHeight = pdf.internal.pageSize.getHeight();
+  //         const margin = 10;
+  //         const usableWidth = pdfWidth - 2 * margin;
+  //         const usableHeight = pdfHeight - 2 * margin;
+
+  //         // Capture full content first
+  //         const fullCanvas = await html2canvas(input, {
+  //           scale: 1.5,
+  //           useCORS: true,
+  //           allowTaint: true,
+  //           backgroundColor: '#ffffff',
+  //           scrollX: 0,
+  //           scrollY: 0,
+  //           width: input.scrollWidth || input.clientWidth,
+  //           height: input.scrollHeight || input.clientHeight,
+  //           windowWidth: 1200,
+  //           logging: false,
+  //         });
+
+  //         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+  //           throw new Error("Canvas has zero dimensions");
+  //         }
+
+  //         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+
+  //         // Calculate scaling
+  //         const imgProps = pdf.getImageProperties(fullImgData);
+  //         const scale = usableWidth / imgProps.width;
+  //         const scaledHeight = imgProps.height * scale;
+
+  //         // Calculate pages needed
+  //         const pageHeight = usableHeight;
+  //         const totalPages = Math.ceil(scaledHeight / pageHeight);
+
+  //         // Smart page breaking - detect table rows and avoid cutting them
+  //         let currentY = 0;
+  //         let pageNumber = 0;
+
+  //         // Detect table rows by looking for horizontal patterns in the content
+  //         const detectTableRows = () => {
+  //           const rows = [];
+  //           const tableElements = input.querySelectorAll('tr, .table-row, [class*="row"]');
+
+  //           if (tableElements.length > 0) {
+  //             tableElements.forEach(row => {
+  //               const rect = row.getBoundingClientRect();
+  //               const inputRect = input.getBoundingClientRect();
+  //               const relativeTop = rect.top - inputRect.top + input.scrollTop;
+  //               const relativeBottom = relativeTop + rect.height;
+
+  //               rows.push({
+  //                 top: relativeTop * scale,
+  //                 bottom: relativeBottom * scale,
+  //                 height: rect.height * scale
+  //               });
+  //             });
+  //           }
+
+  //           return rows.sort((a, b) => a.top - b.top);
+  //         };
+
+  //         const tableRows = detectTableRows();
+
+  //         while (currentY < scaledHeight && pageNumber < 50) { // Safety limit
+  //           if (pageNumber > 0) {
+  //             pdf.addPage();
+  //           }
+
+  //           let nextY = currentY + pageHeight;
+
+  //           // Check if we would cut through a table row
+  //           if (tableRows.length > 0) {
+  //             for (const row of tableRows) {
+  //               // If a row would be cut by the page break
+  //               if (row.top < nextY && row.bottom > nextY) {
+  //                 // If the row can fit on current page, adjust nextY to include it
+  //                 if (row.bottom - currentY <= pageHeight) {
+  //                   nextY = row.bottom;
+  //                 } else {
+  //                   // If row is too big for current page, move it to next page
+  //                   nextY = row.top;
+  //                 }
+  //                 break;
+  //               }
+  //             }
+  //           }
+
+  //           // Ensure we don't go beyond content
+  //           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+
+  //           if (actualHeight > 0) {
+  //             // Create canvas for this page section
+  //             const pageCanvas = document.createElement('canvas');
+  //             const pageCtx = pageCanvas.getContext('2d');
+
+  //             const sourceY = currentY / scale;
+  //             const sourceHeight = actualHeight / scale;
+
+  //             pageCanvas.width = fullCanvas.width;
+  //             pageCanvas.height = sourceHeight;
+
+  //             // Draw the section
+  //             pageCtx.drawImage(
+  //               fullCanvas,
+  //               0, sourceY, fullCanvas.width, sourceHeight,
+  //               0, 0, fullCanvas.width, sourceHeight
+  //             );
+
+  //             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+  //             // Add to PDF
+  //             pdf.addImage(
+  //               pageImgData,
+  //               "PNG",
+  //               margin,
+  //               margin,
+  //               usableWidth,
+  //               actualHeight
+  //             );
+  //           }
+
+  //           currentY = nextY;
+  //           pageNumber++;
+  //         }
+
+  //         // Fallback: if no pages were created, add the full image
+  //         if (pageNumber === 0) {
+  //           pdf.addImage(
+  //             fullImgData,
+  //             "PNG",
+  //             margin,
+  //             margin,
+  //             usableWidth,
+  //             Math.min(scaledHeight, pageHeight)
+  //           );
+  //         }
+
+  //         // Clean up
+  //         root.unmount();
+  //         document.body.removeChild(tempContainer);
+
+  //         // Save PDF
+  //         const filename = `${
+  //           invoice.invoiceNumber || `invoice_${invoiceId}`
+  //         }.pdf`;
+  //         pdf.save(filename);
+
+  //         // Add delay between downloads
+  //         if (i < invoicesToDownload.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 2000));
+  //         }
+
+  //       } catch (invoiceError) {
+  //         console.error(
+  //           `Error downloading invoice ${invoiceId}:`,
+  //           invoiceError
+  //         );
+  //         alert(
+  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+  //         );
+  //       }
+  //     }
+
+  //     const successMessage =
+  //       invoicesToDownload.length === 1
+  //         ? "Invoice downloaded successfully!"
+  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+  //     alert(successMessage);
+
+  //   } catch (error) {
+  //     console.error("Error during download process:", error);
+  //     alert(`Download failed: ${error.message}`);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
+
+  // const downloadInvoices = async () => {
+  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+  //     selectedInvoices.has(invoice.invoiceId || index)
+  //   );
+
+  //   if (invoicesToDownload.length === 0) {
+  //     alert("Please select invoices to download");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsDownloading(true);
+
+  //     for (let i = 0; i < invoicesToDownload.length; i++) {
+  //       const invoice = invoicesToDownload[i];
+  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+  //       if (!invoiceId) {
+  //         console.warn(
+  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+  //         );
+  //         continue;
+  //       }
+
+  //       try {
+  //         // First fetch invoice preview data
+  //         const previewResponse = await fetch(
+  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             invoice.invoiceNumber
+  //           )}`
+  //         );
+
+  //         if (!previewResponse.ok) {
+  //           throw new Error(
+  //             `Failed to fetch invoice preview: ${previewResponse.status}`
+  //           );
+  //         }
+
+  //         const apiData = await previewResponse.json();
+
+  //         // Transform data exactly like in handlePreview
+  //         const transformedData = [
+  //           {
+  //             invoiceId: apiData.invoiceId || " ",
+  //             invoiceDate: apiData.period || " ",
+  //             currency: apiData.currency || " ",
+  //             totalAmount: apiData.totalAmount || 0,
+
+  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //               poLine: item.poLine || " ",
+  //               plc: item.plc || " ",
+  //               vendor: item.vendor || " ",
+  //               employee: item.employee || " ",
+  //               hours: item.hours || 0,
+  //               rate: item.rate || 0,
+  //               amount: item.amount || 0,
+  //               line_No: item.line_No || " ",
+  //             })),
+
+  //             billTo: apiData.billTo || " ",
+  //             buyer: apiData.buyer || " ",
+  //             purchaseOrderId: apiData.po_Number || " ",
+  //             releaseNumber: apiData.po_rlse_Number || " ",
+  //             poStartEndDate: apiData.po_Start_End_Date || " ",
+  //             terms: apiData.terms || " ",
+  //             amountDue: apiData.totalAmount || 0,
+  //             period: apiData.period || " ",
+  //             po_Number: apiData.po_Number || " ",
+  //             po_rlse_Number: apiData.po_rlse_Number || " ",
+  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //           },
+  //         ];
+
+  //         // Create temporary container with consistent styling
+  //         const tempContainer = document.createElement("div");
+  //         tempContainer.style.position = "absolute";
+  //         tempContainer.style.left = "-9999px";
+  //         tempContainer.style.top = "0";
+  //         tempContainer.style.width = "210mm";
+  //         tempContainer.style.backgroundColor = "white";
+  //         tempContainer.style.padding = "15mm";
+  //         tempContainer.style.margin = "0";
+  //         tempContainer.style.boxSizing = "border-box";
+  //         tempContainer.style.fontFamily = "Arial, sans-serif";
+  //         tempContainer.style.fontSize = "12px";
+  //         tempContainer.style.lineHeight = "1.4";
+  //         tempContainer.style.color = "#000000";
+  //         // Force consistent font rendering
+  //         tempContainer.style.webkitFontSmoothing = "antialiased";
+  //         tempContainer.style.mozOsxFontSmoothing = "grayscale";
+  //         document.body.appendChild(tempContainer);
+
+  //         // Create temporary React root and render InvoiceViewer
+  //         const ReactDOM = (await import("react-dom/client")).default;
+  //         const React = (await import("react")).default;
+  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+  //         const root = ReactDOM.createRoot(tempContainer);
+
+  //         await new Promise((resolve) => {
+  //           root.render(
+  //             React.createElement(InvoiceViewer, {
+  //               data: transformedData,
+  //               setInvoiceModalVisible: () => {},
+  //             })
+  //           );
+  //           setTimeout(resolve, 3000);
+  //         });
+
+  //         await new Promise(resolve => setTimeout(resolve, 1000));
+
+  //         // Find the complete invoice content (not just table)
+  //         const input = tempContainer.querySelector(
+  //           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+  //         ) || tempContainer.firstElementChild || tempContainer;
+
+  //         if (!input) {
+  //           throw new Error("Invoice content not found");
+  //         }
+
+  //         // Ensure all content is visible and properly styled
+  //         input.style.display = "block";
+  //         input.style.visibility = "visible";
+  //         input.style.opacity = "1";
+
+  //         // Force consistent font sizes throughout
+  //         const allElements = input.querySelectorAll('*');
+  //         allElements.forEach(el => {
+  //           if (el.style) {
+  //             // Ensure consistent font sizes
+  //             if (!el.style.fontSize || el.style.fontSize === '') {
+  //               el.style.fontSize = '12px';
+  //             }
+  //             // Ensure visibility
+  //             if (el.style.display === 'none') {
+  //               el.style.display = 'block';
+  //             }
+  //             el.style.visibility = 'visible';
+  //             el.style.opacity = '1';
+  //           }
+  //         });
+
+  //         // Initialize PDF
+  //         const pdf = new jsPDF("p", "mm", "a4");
+  //         const pdfWidth = pdf.internal.pageSize.getWidth();
+  //         const pdfHeight = pdf.internal.pageSize.getHeight();
+  //         const margin = 10;
+  //         const usableWidth = pdfWidth - 2 * margin;
+  //         const usableHeight = pdfHeight - 2 * margin;
+
+  //         // Capture the COMPLETE invoice content
+  //         const fullCanvas = await html2canvas(input, {
+  //           scale: 1.5,
+  //           useCORS: true,
+  //           allowTaint: true,
+  //           backgroundColor: '#ffffff',
+  //           scrollX: 0,
+  //           scrollY: 0,
+  //           width: input.scrollWidth || input.clientWidth,
+  //           height: input.scrollHeight || input.clientHeight,
+  //           windowWidth: 1200,
+  //           windowHeight: input.scrollHeight || input.clientHeight,
+  //           logging: false,
+  //           onclone: (clonedDoc, element) => {
+  //             // Ensure all elements maintain consistent styling in clone
+  //             const allClonedElements = clonedDoc.querySelectorAll('*');
+  //             allClonedElements.forEach(el => {
+  //               if (el.style) {
+  //                 el.style.display = el.style.display === 'none' ? 'block' : el.style.display;
+  //                 el.style.visibility = 'visible';
+  //                 el.style.opacity = '1';
+  //                 el.style.fontSize = el.style.fontSize || '12px';
+  //                 el.style.fontFamily = 'Arial, sans-serif';
+  //               }
+  //             });
+  //           }
+  //         });
+
+  //         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+  //           throw new Error("Canvas has zero dimensions");
+  //         }
+
+  //         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+
+  //         // Calculate scaling to fit page width
+  //         const imgProps = pdf.getImageProperties(fullImgData);
+  //         const scale = usableWidth / imgProps.width;
+  //         const scaledHeight = imgProps.height * scale;
+
+  //         // Smart page breaking that respects content boundaries
+  //         let currentY = 0;
+  //         let pageNumber = 0;
+  //         const rowHeight = 25 * scale; // Approximate row height in scaled units
+
+  //         while (currentY < scaledHeight && pageNumber < 50) {
+  //           if (pageNumber > 0) {
+  //             pdf.addPage();
+  //           }
+
+  //           let nextY = currentY + usableHeight;
+
+  //           // If this isn't the last section, try to break at row boundary
+  //           if (nextY < scaledHeight) {
+  //             // Find a good break point near the end of the page
+  //             const searchStart = Math.max(currentY + (usableHeight * 0.7), currentY);
+  //             const searchEnd = nextY;
+
+  //             // Look for row boundaries in the last 30% of the page
+  //             let bestBreak = nextY;
+  //             for (let y = searchEnd; y >= searchStart; y -= rowHeight) {
+  //               bestBreak = y;
+  //               break; // Use the first row boundary we find
+  //             }
+  //             nextY = bestBreak;
+  //           }
+
+  //           const sectionHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+
+  //           if (sectionHeight > 0) {
+  //             // Create canvas for this page section
+  //             const pageCanvas = document.createElement('canvas');
+  //             const pageCtx = pageCanvas.getContext('2d');
+
+  //             const sourceY = currentY / scale;
+  //             const sourceHeight = sectionHeight / scale;
+
+  //             pageCanvas.width = fullCanvas.width;
+  //             pageCanvas.height = sourceHeight;
+
+  //             // Draw the section with proper scaling
+  //             pageCtx.drawImage(
+  //               fullCanvas,
+  //               0, sourceY, fullCanvas.width, sourceHeight,
+  //               0, 0, fullCanvas.width, sourceHeight
+  //             );
+
+  //             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+  //             // Add to PDF with consistent scaling
+  //             pdf.addImage(
+  //               pageImgData,
+  //               "PNG",
+  //               margin,
+  //               margin,
+  //               usableWidth,
+  //               sectionHeight
+  //             );
+  //           }
+
+  //           currentY = nextY;
+  //           pageNumber++;
+  //         }
+
+  //         // Fallback: if no pages were created, add the full image
+  //         if (pageNumber === 0) {
+  //           pdf.addImage(
+  //             fullImgData,
+  //             "PNG",
+  //             margin,
+  //             margin,
+  //             usableWidth,
+  //             Math.min(scaledHeight, usableHeight)
+  //           );
+  //         }
+
+  //         // Clean up
+  //         root.unmount();
+  //         document.body.removeChild(tempContainer);
+
+  //         // Save PDF
+  //         const filename = `${
+  //           invoice.invoiceNumber || `invoice_${invoiceId}`
+  //         }.pdf`;
+  //         pdf.save(filename);
+
+  //         // Add delay between downloads
+  //         if (i < invoicesToDownload.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 2000));
+  //         }
+
+  //       } catch (invoiceError) {
+  //         console.error(
+  //           `Error downloading invoice ${invoiceId}:`,
+  //           invoiceError
+  //         );
+  //         alert(
+  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+  //         );
+  //       }
+  //     }
+
+  //     const successMessage =
+  //       invoicesToDownload.length === 1
+  //         ? "Invoice downloaded successfully!"
+  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+  //     alert(successMessage);
+
+  //   } catch (error) {
+  //     console.error("Error during download process:", error);
+  //     alert(`Download failed: ${error.message}`);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
+
+  // const downloadInvoices = async () => {
+  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
+  //     selectedInvoices.has(invoice.invoiceId || index)
+  //   );
+
+  //   if (invoicesToDownload.length === 0) {
+  //     alert("Please select invoices to download");
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsDownloading(true);
+
+  //     for (let i = 0; i < invoicesToDownload.length; i++) {
+  //       const invoice = invoicesToDownload[i];
+  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
+
+  //       if (!invoiceId) {
+  //         console.warn(
+  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
+  //         );
+  //         continue;
+  //       }
+
+  //       try {
+  //         // First fetch invoice preview data
+  //         const previewResponse = await fetch(
+  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             invoice.invoiceNumber
+  //           )}`
+  //         );
+
+  //         if (!previewResponse.ok) {
+  //           throw new Error(
+  //             `Failed to fetch invoice preview: ${previewResponse.status}`
+  //           );
+  //         }
+
+  //         const apiData = await previewResponse.json();
+
+  //         // Transform data exactly like in handlePreview
+  //         const transformedData = [
+  //           {
+  //             invoiceId: apiData.invoiceId || " ",
+  //             invoiceDate: apiData.period || " ",
+  //             currency: apiData.currency || " ",
+  //             totalAmount: apiData.totalAmount || 0,
+
+  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
+  //               poLine: item.poLine || " ",
+  //               plc: item.plc || " ",
+  //               vendor: item.vendor || " ",
+  //               employee: item.employee || " ",
+  //               hours: item.hours || 0,
+  //               rate: item.rate || 0,
+  //               amount: item.amount || 0,
+  //               line_No: item.line_No || " ",
+  //             })),
+
+  //             billTo: apiData.billTo || " ",
+  //             buyer: apiData.buyer || " ",
+  //             purchaseOrderId: apiData.po_Number || " ",
+  //             releaseNumber: apiData.po_rlse_Number || " ",
+  //             poStartEndDate: apiData.po_Start_End_Date || " ",
+  //             terms: apiData.terms || " ",
+  //             amountDue: apiData.totalAmount || 0,
+  //             period: apiData.period || " ",
+  //             po_Number: apiData.po_Number || " ",
+  //             po_rlse_Number: apiData.po_rlse_Number || " ",
+  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
+  //           },
+  //         ];
+
+  //         // Create temporary container
+  //         const tempContainer = document.createElement("div");
+  //         tempContainer.style.position = "absolute";
+  //         tempContainer.style.left = "-9999px";
+  //         tempContainer.style.top = "0";
+  //         tempContainer.style.width = "210mm";
+  //         tempContainer.style.backgroundColor = "white";
+  //         tempContainer.style.padding = "15mm";
+  //         tempContainer.style.margin = "0";
+  //         tempContainer.style.boxSizing = "border-box";
+  //         tempContainer.style.fontFamily = "Arial, sans-serif";
+  //         tempContainer.style.fontSize = "12px";
+  //         tempContainer.style.lineHeight = "1.4";
+  //         tempContainer.style.color = "#000000";
+  //         document.body.appendChild(tempContainer);
+
+  //         // Create temporary React root and render InvoiceViewer
+  //         const ReactDOM = (await import("react-dom/client")).default;
+  //         const React = (await import("react")).default;
+  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
+
+  //         const root = ReactDOM.createRoot(tempContainer);
+
+  //         await new Promise((resolve) => {
+  //           root.render(
+  //             React.createElement(InvoiceViewer, {
+  //               data: transformedData,
+  //               setInvoiceModalVisible: () => {},
+  //             })
+  //           );
+  //           setTimeout(resolve, 3000);
+  //         });
+
+  //         await new Promise(resolve => setTimeout(resolve, 1000));
+
+  //         const input = tempContainer.querySelector(
+  //           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
+  //         ) || tempContainer.firstElementChild || tempContainer;
+
+  //         if (!input) {
+  //           throw new Error("Invoice content not found");
+  //         }
+
+  //         input.style.display = "block";
+  //         input.style.visibility = "visible";
+  //         input.style.opacity = "1";
+
+  //         // Initialize PDF
+  //         const pdf = new jsPDF("p", "mm", "a4");
+  //         const pdfWidth = pdf.internal.pageSize.getWidth();
+  //         const pdfHeight = pdf.internal.pageSize.getHeight();
+  //         const margin = 10;
+  //         const usableWidth = pdfWidth - 2 * margin;
+  //         const usableHeight = pdfHeight - 2 * margin;
+
+  //         // Capture full content
+  //         const fullCanvas = await html2canvas(input, {
+  //           scale: 1.5,
+  //           useCORS: true,
+  //           allowTaint: true,
+  //           backgroundColor: '#ffffff',
+  //           scrollX: 0,
+  //           scrollY: 0,
+  //           width: input.scrollWidth || input.clientWidth,
+  //           height: input.scrollHeight || input.clientHeight,
+  //           windowWidth: 1200,
+  //           logging: false,
+  //         });
+
+  //         if (fullCanvas.width === 0 || fullCanvas.height === 0) {
+  //           throw new Error("Canvas has zero dimensions");
+  //         }
+
+  //         const fullImgData = fullCanvas.toDataURL("image/png", 0.98);
+
+  //         // Calculate scaling
+  //         const imgProps = pdf.getImageProperties(fullImgData);
+  //         const scale = usableWidth / imgProps.width;
+  //         const scaledHeight = imgProps.height * scale;
+
+  //         // Get all table row elements and their positions
+  //         const getRowBreakPoints = () => {
+  //           const breakPoints = [0]; // Start with top of document
+
+  //           // Find all table rows, divs that look like rows, and elements with row-like content
+  //           const rowSelectors = [
+  //             'tr',
+  //             'tbody tr',
+  //             '.table-row',
+  //             '[class*="row"]',
+  //             'div[style*="border"]',
+  //             'div:has(table)',
+  //             'div > div:nth-child(n+2)' // Multiple child divs that might be rows
+  //           ];
+
+  //           const allRows = [];
+
+  //           rowSelectors.forEach(selector => {
+  //             try {
+  //               const elements = input.querySelectorAll(selector);
+  //               elements.forEach(el => {
+  //                 if (el.offsetHeight > 0) { // Only visible elements
+  //                   allRows.push(el);
+  //                 }
+  //               });
+  //             } catch (e) {
+  //               // Skip invalid selectors
+  //             }
+  //           });
+
+  //           // Get positions of all potential row elements
+  //           allRows.forEach(row => {
+  //             const rect = row.getBoundingClientRect();
+  //             const inputRect = input.getBoundingClientRect();
+  //             const relativeTop = (rect.top - inputRect.top + input.scrollTop) * scale;
+  //             const relativeBottom = relativeTop + (rect.height * scale);
+
+  //             if (relativeTop > 0 && relativeTop < scaledHeight) {
+  //               breakPoints.push(relativeTop);
+  //               breakPoints.push(relativeBottom);
+  //             }
+  //           });
+
+  //           // Remove duplicates and sort
+  //           return [...new Set(breakPoints)].sort((a, b) => a - b);
+  //         };
+
+  //         const breakPoints = getRowBreakPoints();
+
+  //         let currentY = 0;
+  //         let pageNumber = 0;
+
+  //         while (currentY < scaledHeight && pageNumber < 50) {
+  //           if (pageNumber > 0) {
+  //             pdf.addPage();
+  //           }
+
+  //           let nextY = currentY + usableHeight;
+
+  //           // Find the best break point that doesn't cut content
+  //           if (nextY < scaledHeight) { // Only adjust if we're not on the last section
+  //             let bestBreakPoint = nextY;
+
+  //             // Look for a break point within 50 units before the natural break
+  //             for (let i = breakPoints.length - 1; i >= 0; i--) {
+  //               const breakPoint = breakPoints[i];
+  //               if (breakPoint <= nextY && breakPoint >= currentY + (usableHeight * 0.3)) {
+  //                 // Found a good break point that gives us at least 30% of page content
+  //                 bestBreakPoint = breakPoint;
+  //                 break;
+  //               }
+  //             }
+
+  //             nextY = bestBreakPoint;
+  //           }
+
+  //           const actualHeight = Math.min(nextY - currentY, scaledHeight - currentY);
+
+  //           if (actualHeight > 0) {
+  //             // Create canvas for this page section
+  //             const pageCanvas = document.createElement('canvas');
+  //             const pageCtx = pageCanvas.getContext('2d');
+
+  //             const sourceY = currentY / scale;
+  //             const sourceHeight = actualHeight / scale;
+
+  //             pageCanvas.width = fullCanvas.width;
+  //             pageCanvas.height = sourceHeight;
+
+  //             // Draw the section
+  //             pageCtx.drawImage(
+  //               fullCanvas,
+  //               0, sourceY, fullCanvas.width, sourceHeight,
+  //               0, 0, fullCanvas.width, sourceHeight
+  //             );
+
+  //             const pageImgData = pageCanvas.toDataURL("image/png", 0.98);
+
+  //             // Add to PDF
+  //             pdf.addImage(
+  //               pageImgData,
+  //               "PNG",
+  //               margin,
+  //               margin,
+  //               usableWidth,
+  //               actualHeight
+  //             );
+  //           }
+
+  //           currentY = nextY;
+  //           pageNumber++;
+  //         }
+
+  //         // Fallback: if no pages were created, add the full image
+  //         if (pageNumber === 0) {
+  //           pdf.addImage(
+  //             fullImgData,
+  //             "PNG",
+  //             margin,
+  //             margin,
+  //             usableWidth,
+  //             Math.min(scaledHeight, usableHeight)
+  //           );
+  //         }
+
+  //         // Clean up
+  //         root.unmount();
+  //         document.body.removeChild(tempContainer);
+
+  //         // Save PDF
+  //         const filename = `${
+  //           invoice.invoiceNumber || `invoice_${invoiceId}`
+  //         }.pdf`;
+  //         pdf.save(filename);
+
+  //         // Add delay between downloads
+  //         if (i < invoicesToDownload.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 2000));
+  //         }
+
+  //       } catch (invoiceError) {
+  //         console.error(
+  //           `Error downloading invoice ${invoiceId}:`,
+  //           invoiceError
+  //         );
+  //         alert(
+  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
+  //         );
+  //       }
+  //     }
+
+  //     const successMessage =
+  //       invoicesToDownload.length === 1
+  //         ? "Invoice downloaded successfully!"
+  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
+
+  //     alert(successMessage);
+
+  //   } catch (error) {
+  //     console.error("Error during download process:", error);
+  //     alert(`Download failed: ${error.message}`);
+  //   } finally {
+  //     setIsDownloading(false);
+  //   }
+  // };
 
   // const downloadInvoices = async () => {
   //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
@@ -2788,7 +2771,7 @@ if (pageNumber === 0) {
   // };
 
   // Export to CSV function
-  
+
   const exportToCSV = async () => {
     const invoicesToExport = filteredInvoices.filter((invoice, index) =>
       selectedInvoices.has(invoice.invoiceId || index)
@@ -2971,8 +2954,8 @@ if (pageNumber === 0) {
       console.error("Error during export process:", error);
       alert(`Export failed: ${error.message}`);
     } finally {
-    setIsExporting(false); // ADD THIS LINE HERE
-  }
+      setIsExporting(false); // ADD THIS LINE HERE
+    }
   };
 
   if (loading) {
@@ -3017,7 +3000,7 @@ if (pageNumber === 0) {
               <h1 className="text-2xl font-bold text-gray-900">
                 Invoice Export
               </h1>
-              <p className="text-gray-600">Manage and export invoice data</p>
+              {/* <p className="text-gray-600">Manage and export invoice data</p> */}
             </div>
           </div>
 
@@ -3039,21 +3022,22 @@ if (pageNumber === 0) {
             </button>
 
             {/* Export Button */}
-           {/* Export Button */}
-<button
-  onClick={exportToCSV}
-  disabled={selectedInvoices.size === 0 || isExporting}
-  data-export-button
-  className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm text-sm ${
-    selectedInvoices.size === 0 || isExporting
-      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-green-600 text-white hover:bg-green-700'
-  }`}
->
-  <FileDown className="h-4 w-4 mr-2" />
-  {isExporting ? 'Exporting...' : `Export (${selectedInvoices.size})`}
-</button>
-
+            {/* Export Button */}
+            <button
+              onClick={exportToCSV}
+              disabled={selectedInvoices.size === 0 || isExporting}
+              data-export-button
+              className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm text-sm ${
+                selectedInvoices.size === 0 || isExporting
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              {isExporting
+                ? "Exporting..."
+                : `Export (${selectedInvoices.size})`}
+            </button>
           </div>
         </div>
 
@@ -3150,8 +3134,8 @@ if (pageNumber === 0) {
                 style={{
                   borderCollapse: "collapse",
                   fontSize: "11px",
-                  minWidth: `${minTableWidth}px`, // Force horizontal scroll
-                  width: "max-content",
+                  // minWidth: `${minTableWidth}px`, // Force horizontal scroll
+                  width: "100%",
                 }}
               >
                 <thead
@@ -3203,10 +3187,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "280px",
-                        width: "280px",
+                        // minWidth: "200px",
+                        // width: "180px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3219,10 +3203,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "280px",
-                        width: "280px",
+                        // minWidth: "280px",
+                        // width: "280px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3235,10 +3219,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "320px",
-                        width: "320px",
+                        // minWidth: "320px",
+                        // width: "320px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3251,10 +3235,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "180px",
-                        width: "180px",
+                        // minWidth: "180px",
+                        // width: "180px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3267,10 +3251,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "180px",
-                        width: "180px",
+                        // minWidth: "180px",
+                        // width: "180px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3283,10 +3267,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "120px",
-                        width: "120px",
+                        // minWidth: "120px",
+                        // width: "120px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3299,10 +3283,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "180px",
-                        width: "180px",
+                        // minWidth: "180px",
+                        // width: "180px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3315,10 +3299,10 @@ if (pageNumber === 0) {
                     <th
                       style={{
                         border: "1px solid #d1d5db",
-                        padding: "8px",
+                        padding: "12px",
                         fontSize: "12px",
-                        minWidth: "240px",
-                        width: "240px",
+                        // minWidth: "240px",
+                        // width: "240px",
                         fontWeight: "bold",
                         color: "#1e40af",
                         textAlign: "center",
@@ -3332,10 +3316,10 @@ if (pageNumber === 0) {
                       <th
                         style={{
                           border: "1px solid #d1d5db",
-                          padding: "8px",
+                          padding: "12px",
                           fontSize: "12px",
-                          minWidth: "240px",
-                          width: "240px",
+                          // minWidth: "240px",
+                          // width: "240px",
                           fontWeight: "bold",
                           color: "#1e40af",
                           textAlign: "center",
@@ -3404,10 +3388,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "280px",
-                            width: "280px",
+                            // minWidth: "280px",
+                            // width: "280px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3424,10 +3408,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "280px",
-                            width: "280px",
+                            // minWidth: "280px",
+                            // width: "280px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3444,10 +3428,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "320px",
-                            width: "320px",
+                            // minWidth: "320px",
+                            // width: "320px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3465,10 +3449,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "180px",
-                            width: "180px",
+                            // minWidth: "180px",
+                            // width: "180px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3478,10 +3462,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "180px",
-                            width: "180px",
+                            // minWidth: "180px",
+                            // width: "180px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3494,10 +3478,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "120px",
-                            width: "120px",
+                            // minWidth: "120px",
+                            // width: "120px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3518,10 +3502,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "180px",
-                            width: "180px",
+                            // minWidth: "180px",
+                            // width: "180px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3531,10 +3515,10 @@ if (pageNumber === 0) {
                         <td
                           style={{
                             border: "1px solid #e5e7eb",
-                            padding: "8px",
+                            padding: "12px",
                             fontSize: "11px",
-                            minWidth: "240px",
-                            width: "240px",
+                            // minWidth: "240px",
+                            // width: "240px",
                             whiteSpace: "nowrap",
                             textAlign: "center",
                           }}
@@ -3563,10 +3547,10 @@ if (pageNumber === 0) {
                           <td
                             style={{
                               border: "1px solid #e5e7eb",
-                              padding: "8px",
+                              padding: "12px",
                               fontSize: "11px",
-                              minWidth: "240px",
-                              width: "240px",
+                              // minWidth: "240px",
+                              // width: "240px",
                               whiteSpace: "nowrap",
                               textAlign: "center",
                             }}

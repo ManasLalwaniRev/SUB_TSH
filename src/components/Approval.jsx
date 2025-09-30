@@ -1328,21 +1328,22 @@ export default function Approval() {
               width: "calc(100vw - 220px)",
             }}
           >
-            <h1 className="text-lg font-semibold text-gray-700">
+            {/* <h1 className="text-lg font-semibold text-gray-700">
               Welcome: {currentUser?.fullName} - {currentUser?.username}
-            </h1>
-            <div className="flex gap-2">
-              {/* <button
-                onClick={handleLogout}
-                className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700 transition-colors"
-              >
-                Logout
-              </button> */}
+            </h1> */}
+            <div className="flex items-center">
+              <MessageSquare className="h-8 w-8 text-green-600 mr-3" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Enquiry / Approvals
+                </h1>
+                {/* <p className="text-gray-600">Manage and export invoice data</p> */}
+              </div>
             </div>
           </div>
 
           <fieldset
-            className="border border-gray-300 rounded-md p-4 mb-4"
+            className="border border-gray-300 rounded-md p-4 mb-2"
             style={{
               marginLeft: 24,
               marginRight: 24,
@@ -1500,7 +1501,7 @@ export default function Approval() {
               minWidth: "800px",
               padding: "0.5rem",
               overflow: "hidden",
-              marginBottom: "20px",
+              marginBottom: "5px",
               display: "flex",
               flexDirection: "column",
             }}
@@ -1581,8 +1582,8 @@ export default function Approval() {
               style={{
                 overflowX: "auto",
                 overflowY: "auto",
-                maxHeight: "calc(100vh - 400px)",
-                minHeight: "300px",
+                maxHeight: "calc(100vh - 500px)",
+                // minHeight: "300px",
                 width: "100%",
                 flex: 1,
                 border: "1px solid #e5e7eb",

@@ -1191,6 +1191,10 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
                         <div className="flex items-center gap-2"><ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />} disabled={isPeriodInvalid}>Add Line</ActionButton><ActionButton onClick={copyLines} icon={<CopyIcon />} disabled={isPeriodInvalid || selectedLines.size === 0}>Copy</ActionButton><ActionButton onClick={deleteLines} icon={<TrashIcon />} disabled={isPeriodInvalid || selectedLines.size === 0}>Delete</ActionButton></div>
                     </div>
                 </div>
+                {/* <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm"> */}
+                {/* <div className={`overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm relative ${lines.length >= 4 ? 'h-72 overflow-y-auto' : ''}`}> */}
+                {/* <div className="overflow-auto max-h-72 rounded-lg border border-gray-200/80 shadow-sm relative"> */}
+                {/* <div className="p-4 overflow-y-auto" style={{ maxHeight: '40vh' }}> */}
                 <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
                     <table className="w-full text-sm min-w-[1600px]">
                         <thead className="bg-slate-100/70 border-b border-gray-200/80"><tr>{['', 'Line', 'Work Order', 'Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...selectedPeriod.dates, 'Total'].map(header => <th key={header} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{header}</th>)}</tr></thead>
