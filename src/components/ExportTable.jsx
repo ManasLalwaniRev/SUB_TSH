@@ -481,8 +481,8 @@ export default function ExportTable() {
           // mappedRow["Rvsn Number"] =
           //   item.rvsnNumber || item.rvsnNum || item.revisionNumber || "";
           mappedRow["Rvsn Number"] = item.rvsnNumber;
-          mappedRow["Timesheet Date"] =
-            item.timesheet_Date || item.timesheet_date || "";
+          mappedRow["Timesheet Date"] = formatDate(
+            item.timesheet_Date || item.timesheet_date || "");
 
           return mappedRow;
         });
