@@ -2708,7 +2708,7 @@ export default function InvoiceExport() {
   //         let position = padding;
 
   //         pdf.addImage(
-  //           imgData,
+  //           imgData,i
   //           "PNG",
   //           padding,
   //           position,
@@ -2972,10 +2972,10 @@ export default function InvoiceExport() {
   if (error) {
     return (
       <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
-        <div className="text-center text-red-600">
+        <div className="text-center text-gray-600">
           <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium">Error</p>
-          <p className="text-sm">{error}</p>
+          <p className="text-lg font-medium">No Invoices</p>
+          {/* <p className="text-sm">{error}</p> */}
         </div>
       </div>
     );
@@ -2984,7 +2984,7 @@ export default function InvoiceExport() {
   return (
     <>
       {/* Main container matching ExportTable layout */}
-      <div className="min-h-screen bg-f9fafd flex flex-col pl-44 pr-4 overflow-auto">
+      <div className="min-h-screen bg-f9fafd flex flex-col  pr-4 mx-auto">
         {/* Header Section */}
         <div
           className="w-full flex justify-between items-center mb-4 mt-5"
