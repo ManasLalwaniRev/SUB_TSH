@@ -929,7 +929,7 @@ const PasswordModal = ({ user, type, onClose }) => {
 
 // --- Skeleton Loader for Profile Card ---
 const ProfileCardSkeleton = () => (
-    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
+    <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 ml-4">
         <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
                 <div className="p-8">
@@ -1068,7 +1068,7 @@ export default function UserTable() {
                 {isCreateModalOpen && <CreateUserModal onClose={() => setIsCreateModalOpen(false)} onUserCreated={() => setRefreshTrigger(t => t + 1)} />}
                 {isEditModalOpen && <EditUserModal user={selectedUser} onClose={() => setIsEditModalOpen(false)} onUserUpdated={() => setRefreshTrigger(t => t + 1)} />}
                 
-                <div className="min-h-screen bg-slate-50 flex flex-col pl-52 pr-8 py-8">
+                <div className="min-h-screen bg-slate-50 flex flex-col ml-4 pr-8 py-8">
                     <div className="flex-1 flex flex-col">
                         <div className="flex justify-between items-center mb-6 gap-4">
                             <h1 className="text-4xl font-bold text-gray-800">User Management</h1>
@@ -1166,14 +1166,14 @@ export default function UserTable() {
 
     // --- Non-Admin (User & PM) View ---
     if (loading) return <ProfileCardSkeleton />;
-    if (error) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p className="text-red-500">Error: {error}</p></div>;
-    if (users.length === 0) return <div className="min-h-screen bg-slate-50 pl-52 flex items-center justify-center"><p>Could not find user profile.</p></div>;
+    if (error) return <div className="min-h-screen bg-slate-50 ml-4 flex items-center justify-center"><p className="text-red-500">Error: {error}</p></div>;
+    if (users.length === 0) return <div className="min-h-screen bg-slate-50 ml-4 flex items-center justify-center"><p>Could not find user profile.</p></div>;
 
     const user = users[0];
     return (
         <>
             {isPasswordModalOpen && <PasswordModal user={selectedUser} type={modalType} onClose={() => setIsPasswordModalOpen(false)} />}
-            <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 pl-52">
+            <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 ml-4">
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                         <div className="p-8">

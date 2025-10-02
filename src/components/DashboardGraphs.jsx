@@ -660,7 +660,7 @@ const DashboardGraphs = () => {
     if (error) return <div className="ml-48 text-center p-8 text-red-500">Error: {error}</div>;
 
     return (
-        <div className="p-6 bg-gray-100 flex-1 overflow-y-auto ml-48">
+        <div className="p-6 bg-gray-100 flex-1 overflow-y-auto">
             {/* <h2 className="text-3xl font-bold text-gray-800 mb-6">Analysis Dashboard</h2> */}
             {/* <h2 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 
                bg-clip-text text-transparent mb-4">

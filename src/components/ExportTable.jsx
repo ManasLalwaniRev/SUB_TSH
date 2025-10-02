@@ -2003,7 +2003,7 @@ export default function ExportTable() {
 
   if (!userLoaded || !currentUser) {
     return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
+      <div className="min-h-screen bg-[#f9fafd] flex flex-col pr-4">
         <div className="flex-1 flex items-center justify-center">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -2016,7 +2016,7 @@ export default function ExportTable() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
+      <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4">
         <div className="flex-1 flex items-center justify-center">
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-8 py-6">
             <div className="text-center">
@@ -2050,7 +2050,7 @@ export default function ExportTable() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
+      <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
         <div className="text-center">
           <Download className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
           <p className="text-lg text-gray-600">Loading export data...</p>
@@ -2067,7 +2067,7 @@ export default function ExportTable() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
+    <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4 overflow-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
         <div className="w-full flex flex-col items-center">
           <div

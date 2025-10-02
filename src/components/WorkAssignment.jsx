@@ -1959,7 +1959,7 @@ const WorkAssignment = () => {
 
   if (!userLoaded || !currentUser) {
     return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-48 pr-4">
+      <div className="min-h-screen bg-[#f9fafd] flex flex-col pr-4">
         <div className="flex-1 flex items-center justify-center">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1972,7 +1972,7 @@ const WorkAssignment = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
+      <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
         <div className="text-center">
           <Package className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
           <p className="text-lg text-gray-600">Loading work orders...</p>
@@ -1987,7 +1987,7 @@ const WorkAssignment = () => {
   ).length;
 
   return (
-    <div className="h-screen bg-[#f9fafd] flex flex-col pl-48 pr-4 overflow-hidden">
+    <div className="h-screen bg-[#f9fafd] flex flex-col pr-4 overflow-hidden">
       <div className="flex-1 flex flex-col pt-6 pb-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6 px-4">

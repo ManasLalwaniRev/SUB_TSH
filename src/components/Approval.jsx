@@ -461,7 +461,8 @@ export default function Approval() {
       (status === "pending" ||
         status === "open" ||
         status === "un-notified" ||
-        status === "submitted") &&
+        status === "submitted" ||
+        status === "approved") &&
       !row.isRejected &&
       status !== "rejected"
     );
@@ -802,6 +803,19 @@ export default function Approval() {
     showToast("Logged out successfully", "info");
     navigate("/");
   };
+
+  useEffect(() => {
+    const actionableRows = filteredRows.filter(
+      (row) =>
+        (isRowActionable(row) || isApprovedRowRejectableOnly(row)) &&
+        row.status?.toLowerCase() !== "rejected"
+    );
+    // true if at least one eligible row and all eligible are selected
+    const allActionableSelected =
+      actionableRows.length > 0 && actionableRows.every((row) => row.selected);
+
+    setUnifiedSelectAll(allActionableSelected);
+  }, [selectedRows, filteredRows]);
 
   // Updated handleUnifiedSelectAll function
   const handleUnifiedSelectAll = (isSelected) => {
@@ -1278,7 +1292,7 @@ export default function Approval() {
 
   if (!userLoaded || !currentUser) {
     return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
+      <div className="min-h-screen bg-[#f9fafd] flex flex-col ">
         <div className="flex-1 flex items-center justify-center">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -1299,7 +1313,7 @@ export default function Approval() {
       //     </div>
       //   </div>
       // </div>
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
+      <div className="min-h-screen bg-f9fafd flex items-center justify-center ">
         <div className="text-center">
           <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
           <p className="text-lg text-gray-600">Loading data.....</p>
@@ -1309,7 +1323,7 @@ export default function Approval() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto">
+    <div className="min-h-screen bg-[#f9fafd] flex flex-col overflow-auto">
       <ReasonModal
         isOpen={showReasonModal}
         action={pendingAction}
@@ -1493,12 +1507,12 @@ export default function Approval() {
           </fieldset>
 
           <div
-            className="border border-gray-300 rounded bg-white shadow"
+            className="border border-gray-300 rounded bg-white shadow w-full"
             style={{
               marginLeft: 24,
               marginRight: 24,
               width: "calc(100vw - 220px)",
-              minWidth: "800px",
+              // minWidth: "800px",
               padding: "0.5rem",
               overflow: "hidden",
               marginBottom: "5px",

@@ -5572,8 +5572,11 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
 
         try {
           // Calculate total from ORIGINAL ungrouped line items
-          const totalAmount = invoice.originalLineItems 
-            ? invoice.originalLineItems.reduce((acc, line) => acc + line.amount, 0)
+          const totalAmount = invoice.originalLineItems
+            ? invoice.originalLineItems.reduce(
+                (acc, line) => acc + line.amount,
+                0
+              )
             : invoice.lineItems.reduce((acc, line) => acc + line.amount, 0);
 
           const invoicePayload = {
@@ -5591,7 +5594,9 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
             terms: invoice.terms,
             currency: invoice.currency,
             // Use ORIGINAL ungrouped line items for API call
-            invoiceTimesheetLines: (invoice.originalLineItems || invoice.lineItems).map((line) => ({
+            invoiceTimesheetLines: (
+              invoice.originalLineItems || invoice.lineItems
+            ).map((line) => ({
               poLineNumber: line.poLine,
               timesheetLineNo: line.line_No,
               mappedHours: line.hours,
@@ -5663,7 +5668,9 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
       if (onInvoiceSuccess && successfulInvoices.size > 0) {
         setTimeout(() => {
           onInvoiceSuccess(
-            originalInvoiceData.current.filter((_, index) => successfulInvoices.has(index))
+            originalInvoiceData.current.filter((_, index) =>
+              successfulInvoices.has(index)
+            )
           );
         }, 1000);
       }
@@ -6390,7 +6397,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
           disabled={isLoading}
           style={{
             ...buttonStyle,
-            backgroundColor: isLoading ? "#9ca3af" : "#3b82f6",
+            backgroundColor: isLoading ? "#9ca3af" : "#22c55e",
             color: "#fff",
             cursor: isLoading ? "not-allowed" : "pointer",
           }}

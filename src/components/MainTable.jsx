@@ -666,7 +666,7 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
     const existingDatesForUser = new Set(rows.map(row => row.Date));
 
     return (
-        <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4 overflow-auto ml-5">
+        <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4 overflow-auto ">
             {isModalOpen &&
                 <TimesheetLine
                     currentUser={currentUser}
@@ -682,7 +682,9 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
             }
             <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
                 <div className="w-full flex flex-col items-center">
-                    <div className="w-full flex justify-between items-center mb-4 px-6">
+                    {/* <div className="w-full flex justify-between items-center mb-4 px-6"> */}
+                    <div className="w-full flex justify-between items-center mb-4 max-w-[calc(100vw-220px)] mx-auto">
+ 
                         <h1 className="text-lg font-semibold text-gray-700">Welcome, {currentUser?.name}</h1>
                         {/* <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button> */}
                     </div>
