@@ -2424,15 +2424,10 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const [initialLines, setInitialLines] = useState([]);
     const [linesToDelete, setLinesToDelete] = useState([]);
     const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
-    const [weekDatesMap, setWeekDatesMap] = useState({}); // <<< MODIFICATION 1
     const nextId = useRef(0);
 
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    
-    // <<< MODIFICATION 2
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to the start of the day for accurate comparison
 
     useEffect(() => {
         if (timesheetData) {
@@ -2440,9 +2435,6 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
             setIsEditable(status === 'OPEN' || status === 'REJECTED');
 
             fetchTimesheetDetails();
-            
-            // <<< MODIFICATION 2 (continued)
-            setWeekDatesMap(getWeekDates(timesheetData.Date));
 
             const startDate = new Date(timesheetData.Date); const startDay = startDate.getUTCDay(); const monday = new Date(startDate); monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)); const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const newHeaderDates = daysOfWeek.map((day, index) => {
@@ -2486,13 +2478,17 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                 }
 
                 let fullWorkOrderString = '';
-                const poEntry = poDataArray.find(po => po.project?.includes(item.projId));
+                // Find the PO entry that matches both the description and the project ID at the same index.
+                const poEntry = poDataArray.find(po => {
+                    if (!po.project || !po.resourceDesc) return false;
+                    const descIndex = po.resourceDesc.indexOf(item.description);
+                    // Check if the description exists and the project at the same position matches.
+                    return descIndex > -1 && po.project[descIndex] === item.projId;
+                });
+
                 if (poEntry) {
-                    const projectIndex = poEntry.project.indexOf(item.projId);
-                    if (projectIndex > -1) {
-                        const correspondingDesc = poEntry.resourceDesc[projectIndex];
-                        fullWorkOrderString = `${poEntry.wa_Code} - ${correspondingDesc}`;
-                    }
+                    // Since we matched on item.description, we can use it directly.
+                    fullWorkOrderString = `${poEntry.wa_Code} - ${item.description}`;
                 }
 
                 return {
@@ -2516,22 +2512,41 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     };
 
     const handleSelectChange = (id, fieldName, value) => {
-        setLines(currentLines => currentLines.map(line => {
-            if (line.id === id) {
-                let updatedLine = { ...line, [fieldName]: value };
-                if (fieldName === 'workOrder') {
-                    if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                    if (selectedWorkOrderData) {
-                        updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
-                        if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; }
-                        else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
-                    } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
+
+    setLines(currentLines => currentLines.map(line => {
+        if (line.id === id) {
+            let updatedLine = { ...line, [fieldName]: value };
+            // if (fieldName === 'workOrder') {
+            //     if (!value) { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; } const [waCode, desc] = value.split(' - '); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+            //     if (selectedWorkOrderData) {
+            if (fieldName === 'workOrder') {
+                if (!value) {
+                    const emptyLine = createEmptyLine(id);
+                    return { ...emptyLine, id: line.id };
                 }
-                return updatedLine;
+                
+                // 1. Safely split the dropdown value.
+                const splitIndex = value.indexOf(' - ');
+                const waCode = splitIndex > -1 ? value.substring(0, splitIndex) : value;
+                const desc = splitIndex > -1 ? value.substring(splitIndex + 3) : '';
+
+                // 2. Find the PO data more accurately by matching both waCode and description.
+                const selectedWorkOrderData = purchaseOrderData.find(
+                    item => item.wa_Code === waCode && (item.resourceDesc || []).includes(desc)
+                );
+
+                if (selectedWorkOrderData) {
+                    //... existing logic continues here
+                    updatedLine.wa_Code = selectedWorkOrderData.wa_Code || ''; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+                    if (descIndex > -1) { updatedLine.description = desc || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; }
+                    else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; }
+                } else { const emptyLine = createEmptyLine(id); return { ...emptyLine, id: line.id }; }
             }
-            return line;
-        }));
-    };
+            return updatedLine;
+        }
+        return line;
+    }));
+};
 
     const handleHourChange = (id, day, value) => {
         const numValue = parseFloat(value);
@@ -2570,94 +2585,92 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
 
     const deleteLines = () => {
-        if (selectedLines.size === 0) {
-            showToast('Please select at least one line to delete.', 'warning');
-            return;
-        }
-        const originalStatus = timesheetData.Status?.toUpperCase();
-        if (originalStatus === 'REJECTED') {
-            showToast("For rejected timesheets, lines will have their hours zeroed out upon saving.", "info");
-            setLines(currentLines =>
-                currentLines.map(line => {
-                    if (selectedLines.has(line.id)) {
-                        return { ...line, hours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 } };
-                    }
-                    return line;
-                })
-            );
-        } else {
-            setLines(currentLines => {
-                const idsToDeleteFromServer = [];
-                for (const id of selectedLines) {
-                    if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
-                        idsToDeleteFromServer.push(id);
-                    }
-                }
-                if (idsToDeleteFromServer.length > 0) {
-                    setLinesToDelete(prev => [...new Set([...prev, ...idsToDeleteFromServer])]);
-                }
-                return currentLines.filter(line => !selectedLines.has(line.id));
-            });
-        }
-        setSelectedLines(new Set());
-    };
+        if (selectedLines.size === 0) {
+            showToast('Please select at least one line to delete.', 'warning');
+            return;
+        }
+        // The special logic for 'REJECTED' status is now removed.
+        setLines(currentLines => {
+            const idsToDeleteFromServer = [];
+            // Find lines that exist in the database (i.e., not new 'temp-' lines)
+            for (const id of selectedLines) {
+                if (typeof id === 'number' || (typeof id === 'string' && !id.startsWith('temp-'))) {
+                    idsToDeleteFromServer.push(id);
+                }
+            }
+            // Add these line IDs to a list to be deleted from the server on save
+            if (idsToDeleteFromServer.length > 0) {
+                setLinesToDelete(prev => [...new Set([...prev, ...idsToDeleteFromServer])]);
+            }
+            // Filter out the selected lines from the UI
+            return currentLines.filter(line => !selectedLines.has(line.id));
+        });
+        setSelectedLines(new Set());
+    };
 
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
 
-    const copyLines = () => {
-        if (selectedLines.size === 0) {
-            showToast('Please select at least one line to copy.', 'warning');
-            return;
-        }
+// --- MODIFICATION START ---
+const copyLines = () => {
+    if (selectedLines.size === 0) {
+        showToast('Please select at least one line to copy.', 'warning');
+        return;
+    }
 
-        const linesToCopy = lines.filter(line => selectedLines.has(line.id));
-        const dailyTotals = days.reduce((acc, day) => {
-            acc[day] = lines.reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
-            return acc;
-        }, {});
+    const linesToCopy = lines.filter(line => selectedLines.has(line.id));
+    const dailyTotals = days.reduce((acc, day) => {
+        acc[day] = lines.reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+        return acc;
+    }, {});
 
 
-        // First, run the validation to check if copying hours will exceed daily limits
-        const potentialTotals = { ...dailyTotals };
-        let validationFailed = false;
-        linesToCopy.forEach(lineToCopy => {
-            days.forEach(day => {
-                potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
-                if (potentialTotals[day] > 24) {
-                    validationFailed = true;
-                }
-            });
-        });
-
-        if (validationFailed) {
-            showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
-            return;
-        }
-
-        // If validation passes, proceed with copying
-        showToast("Line(s) copied successfully.", "success");
-
-        const newLines = linesToCopy.map(line => {
-            const newLine = {
-                ...line,
-                id: `temp-${nextId.current++}`,
-                hourIds: {}
-            };
-
-            if (line.workOrder) {
-                const [waCode] = line.workOrder.split(' - ');
-                const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
-                if (selectedWorkOrderData) {
-                    newLine.wa_Code = selectedWorkOrderData.wa_Code;
-                    newLine.pmUserID = selectedWorkOrderData.pmUserId;
-                }
+    // First, run the validation to check if copying hours will exceed daily limits
+    const potentialTotals = { ...dailyTotals };
+    let validationFailed = false;
+    linesToCopy.forEach(lineToCopy => {
+        days.forEach(day => {
+            potentialTotals[day] += parseFloat(lineToCopy.hours[day]) || 0;
+            if (potentialTotals[day] > 24) {
+                validationFailed = true;
             }
-            return newLine;
         });
+    });
 
-        setLines(currentLines => [...currentLines, ...newLines]);
-        setSelectedLines(new Set());
-    };
+    if (validationFailed) {
+        showToast("Cannot copy line(s) as it would cause a daily total to exceed 24 hours.", "error");
+        return;
+    }
+
+    // If validation passes, proceed with copying
+    showToast("Line(s) copied successfully.", "success");
+
+    const newLines = linesToCopy.map(line => {
+        // Create the new line object
+        const newLine = {
+            ...line, // Copy all data from the original line
+            id: `temp-${nextId.current++}`,
+            hourIds: {} // Reset database IDs for the new line
+        };
+
+        // **FIX:** The original line object might not have wa_Code and pmUserID populated
+        // if it was just loaded from the server. We derive them here to ensure they
+        // are passed when saving the new copied line.
+        if (line.workOrder) {
+            const [waCode] = line.workOrder.split(' - ');
+            const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code === waCode);
+            if (selectedWorkOrderData) {
+                newLine.wa_Code = selectedWorkOrderData.wa_Code;
+                newLine.pmUserID = selectedWorkOrderData.pmUserId;
+            }
+        }
+
+        return newLine;
+    });
+
+    setLines(currentLines => [...currentLines, ...newLines]);
+    setSelectedLines(new Set());
+};
+// --- MODIFICATION END ---
 
     const handleSave = async () => {
         setIsCurrentlySaving(true);
@@ -2671,11 +2684,11 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
         }
 
         const grandTotal = Object.values(finalTotals).reduce((sum, total) => sum + total, 0);
-        if (grandTotal === 0) {
-            showToast("Cannot save a timesheet with zero hours.", "warning");
-            setIsCurrentlySaving(false);
-            return;
-        }
+    if (grandTotal === 0) {
+        showToast("Cannot save a timesheet with zero hours.", "warning");
+        setIsCurrentlySaving(false);
+        return;
+    }
 
         const promises = [];
         const weekDates = getWeekDates(timesheetData.Date);
@@ -2761,14 +2774,10 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                     </div>
                 }
             </div>
-            {/* <div className="p-4 max-h-96 overflow-auto"> */}
-            <div className="p-4">
-                {/* <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm"> */}
-                <div className="overflow-auto h-72 rounded-lg border border-gray-200/80 shadow-sm relative">
-
+            <div className="p-4 max-h-96 overflow-auto">
+                <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
                     <table className="w-full text-sm min-w-[1600px]">
-                        {/* <thead className="bg-slate-100/70 border-b border-gray-200/80"> */}
-                        <thead className="bg-slate-100/100 border-b border-gray-200/80 sticky top-0 z-10">
+                        <thead className="bg-slate-100/70 border-b border-gray-200/80">
                             <tr>{['', 'Line', 'Work Order', 'Description', 'Project', 'PLC', 'Pay Type', 'PO Number', 'RLSE Number', 'PO Line Number', ...headerDates, 'Total'].map(header => <th key={header} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{header}</th>)}</tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200/80 bg-white/50">
@@ -2791,33 +2800,24 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                    
-                                    {/* --- MODIFICATION 3 --- */}
-                                    {days.map(day => {
-                                        const columnDate = new Date(weekDatesMap[day] + 'T00:00:00');
-                                        const isFutureDate = columnDate > today;
-
-                                        return (
-                                            <td key={day} className="p-2">
-                                                <input
-                                                    type="number"
-                                                    step="0.5"
-                                                    value={line.hours[day] === 0 ? '' : line.hours[day]}
-                                                    onChange={e => handleHourChange(line.id, day, e.target.value)}
-                                                    className="w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                                    disabled={!isEditable || isFutureDate}
-                                                />
-                                            </td>
-                                        );
-                                    })}
-                                    {/* --- END MODIFICATION --- */}
-
+                                    {days.map(day =>
+                                        <td key={day} className="p-2">
+                                            <input
+                                                type="number"
+                                                step="0.5"
+                                                value={line.hours[day] === 0 ? '' : line.hours[day]}
+                                                onChange={e => handleHourChange(line.id, day, e.target.value)}
+                                                className="w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+                                                disabled={!isEditable}
+                                            />
+                                        </td>
+                                    )}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>
                                 );
                             })}
                         </tbody>
-                        <tfoot className="bg-slate-100 sticky bottom-0">
+                        <tfoot className="bg-slate-100/70 sticky bottom-0">
                             <tr className="border-t-2 border-gray-300 font-semibold">
                                 <td colSpan="10" className="p-3 text-right">Total Hours</td>
                                 {days.map(day => (
