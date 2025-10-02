@@ -404,12 +404,16 @@ const DashboardGraphs = () => {
             try {
                 setLoading(true);
                 const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
-                if (!response.ok) {
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
-                const data = await response.json();
-                setInvoiceData(data);
-            } catch (error) {
+                if (response.status === 404) {
+                    setInvoiceData([]); // Treat 404 as "no data"
+                } else if (!response.ok) {
+                    // For all other errors, still throw
+                    throw new Error(`API request failed with status ${response.status}`);
+                } else {
+                    const data = await response.json();
+                    setInvoiceData(data);
+                }
+} catch (error) {
                 setError(error.message);
             } finally {
                 setLoading(false);
