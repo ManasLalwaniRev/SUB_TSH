@@ -1639,8 +1639,9 @@ export default function InvoiceExport() {
       const successMessage =
         invoicesToDownload.length === 1
           ? "Invoice downloaded successfully!"
-          : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
+          :
+           `${invoicesToDownload.length} invoices downloaded successfully!`;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       alert(successMessage);
     } catch (error) {
       console.error("Error during download process:", error);
@@ -2984,7 +2985,7 @@ export default function InvoiceExport() {
   return (
     <>
       {/* Main container matching ExportTable layout */}
-      <div className="min-h-screen bg-f9fafd flex flex-col  pr-4 mx-auto">
+      <div className="min-h-screen bg-f9fafd flex flex-col pl-44 pr-4 mx-auto">
         {/* Header Section */}
         <div
           className="w-full flex justify-between items-center mb-4 mt-5"
