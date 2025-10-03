@@ -2425,6 +2425,14 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     const [linesToDelete, setLinesToDelete] = useState([]);
     const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
     const nextId = useRef(0);
+    // --- ADD THIS CODE ---
+    const todayString = new Date().toISOString().split('T')[0]; // Gets today's date in YYYY-MM-DD format
+
+    // Calculate the specific dates for each day of the week being displayed
+    const weekDates = React.useMemo(() => {
+        if (!timesheetData?.Date) return {};
+        return getWeekDates(timesheetData.Date);
+    }, [timesheetData?.Date]);
 
     const dayKeyMapping = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -2836,7 +2844,10 @@ const copyLines = () => {
                                                 value={line.hours[day] === 0 ? '' : line.hours[day]}
                                                 onChange={e => handleHourChange(line.id, day, e.target.value)}
                                                 className="w-20 text-right bg-white p-1.5 border border-gray-200 rounded-md shadow-sm disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-                                                disabled={!isEditable}
+                                                // disabled={!isEditable}
+                                                    disabled={!isEditable || (weekDates[day] && weekDates[day] > todayString)}
+
+                                                
                                             />
                                         </td>
                                     )}
