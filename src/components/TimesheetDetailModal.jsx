@@ -2504,10 +2504,27 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
                     hours: hoursData,
                     hourIds: hourIdsData
                 };
-            });
-            setLines(mappedLines);
-            setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
-        } catch (error) { showToast(error.message, 'error'); }
+        //     });
+        //     setLines(mappedLines);
+        //     setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
+        // } catch (error) { showToast(error.message, 'error'); }
+        // --- NEW CODE ---
+            });
+
+            // Sort the lines before setting them to state
+            mappedLines.sort((a, b) => {
+                const poCompare = a.poNumber.localeCompare(b.poNumber);
+                if (poCompare !== 0) return poCompare;
+
+                const rlseCompare = a.rlseNumber.localeCompare(b.rlseNumber);
+                if (rlseCompare !== 0) return rlseCompare;
+
+                return Number(a.poLineNumber) - Number(b.poLineNumber);
+            });
+
+            setLines(mappedLines);
+            setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
+        } catch (error) { showToast(error.message, 'error'); }
         finally { setIsLoading(false); }
     };
 
