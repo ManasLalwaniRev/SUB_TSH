@@ -2674,6 +2674,17 @@ const copyLines = () => {
 
     const handleSave = async () => {
         setIsCurrentlySaving(true);
+         const invalidLine = lines.find(line => {
+            const totalHours = Object.values(line.hours).reduce((sum, h) => sum + (parseFloat(h) || 0), 0);
+            return totalHours > 0 && !line.workOrder;
+        });
+
+        // If an invalid line is found, show a toast and stop the save.
+        if (invalidLine) {
+            showToast('Please select a Work Order for all lines with hours.', 'warning');
+            setIsCurrentlySaving(false); // Reset the saving button
+            return; // Stop the function from proceeding
+        }
         const finalTotals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
         lines.forEach(line => { days.forEach(day => { finalTotals[day] += parseFloat(line.hours[day]) || 0; }); });
         const invalidDay = days.find(day => finalTotals[day] > 24);
