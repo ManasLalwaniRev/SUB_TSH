@@ -1353,51 +1353,7 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
     }, [resourceId]);
     useEffect(() => { if (isEditMode) { setIsPeriodInvalid(false); return; } const weekEndDate = getWeekEndDateFromPeriod(selectedPeriod); if (weekEndDate && existingTimesheetDates.includes(weekEndDate)) { setIsPeriodInvalid(true); } else { setIsPeriodInvalid(false); } }, [selectedPeriod, existingTimesheetDates, isEditMode]);
     const handleSelectChange = (id, fieldName, value) => { setLines(currentLines => currentLines.map(line => { if (line.id === id) { const updatedLine = { ...line, [fieldName]: value }; if (fieldName === 'workOrder') { if (!value) { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = ''; return updatedLine; } const separator = ' - '; const separatorIndex = value.indexOf(separator); const waCode = value.substring(0, separatorIndex).trim(); const desc = value.substring(separatorIndex + separator.length).trim(); const selectedWorkOrderData = purchaseOrderData.find(item => item.wa_Code.trim() === waCode); if (selectedWorkOrderData) { updatedLine.wa_Code = selectedWorkOrderData.wa_Code; updatedLine.pmUserID = selectedWorkOrderData.pmUserId || ''; const descIndex = selectedWorkOrderData.resourceDesc.map(d => d.trim()).indexOf(desc); if (descIndex > -1) { updatedLine.description = selectedWorkOrderData.resourceDesc[descIndex] || ''; updatedLine.project = selectedWorkOrderData.project[descIndex] || ''; updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || ''; updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || ''; updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || ''; updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || ''; } else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; } } else { updatedLine.description = ''; updatedLine.project = ''; updatedLine.plc = ''; updatedLine.poNumber = ''; updatedLine.rlseNumber = ''; updatedLine.poLineNumber = ''; updatedLine.wa_Code = ''; updatedLine.pmUserID = ''; } } return updatedLine; } return line; })); };
-//     const handleHourChange = (id, day, value) => { const numValue = parseFloat(value); if (value === '') { /* Allow empty */ } else if (isNaN(numValue) || numValue < 0 || numValue > 24) { showToast('Hours must be between 0 and 24.', 'warning'); return; } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) { showToast('Hours must be in 0.5 increments.', 'warning'); return; } const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0); const newColumnTotal = otherLinesTotal + (numValue || 0); if (newColumnTotal > 24) { showToast(`Total hours for this day cannot exceed 24.`, 'warning'); return; } setLines(currentLines => currentLines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } } : line)); }; 
-const handleHourChange = (id, day, value) => {
-    // If the user clears the input, update the state to an empty string.
-    if (value === '') {
-        setLines(currentLines => currentLines.map(line =>
-            line.id === id ? { ...line, hours: { ...line.hours, [day]: '' } } : line
-        ));
-        return;
-    }
-
-    const numValue = parseFloat(value);
-    let isValid = true;
-    let toastMessage = '';
-
-    // --- Validation Checks ---
-    if (isNaN(numValue) || numValue < 0 || numValue > 24) {
-        isValid = false;
-        toastMessage = 'Hours must be between 0 and 24.';
-    } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
-        isValid = false;
-        toastMessage = 'Hours must be in 0.5 increments.';
-    } else {
-        const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
-        const newColumnTotal = otherLinesTotal + numValue;
-        if (newColumnTotal > 24) {
-            isValid = false;
-            toastMessage = `Total hours for this day cannot exceed 24.`;
-        }
-    }
-
-    // --- State Update Logic ---
-    if (isValid) {
-        // If input is valid, update the state with the new number.
-        setLines(currentLines => currentLines.map(line =>
-            line.id === id ? { ...line, hours: { ...line.hours, [day]: numValue } } : line
-        ));
-    } else {
-        // If input is invalid, show a toast and CLEAR the value in the state.
-        showToast(toastMessage, 'warning');
-        setLines(currentLines => currentLines.map(line =>
-            line.id === id ? { ...line, hours: { ...line.hours, [day]: '' } } : line
-        ));
-    }
-};
-
+    const handleHourChange = (id, day, value) => { const numValue = parseFloat(value); if (value === '') { /* Allow empty */ } else if (isNaN(numValue) || numValue < 0 || numValue > 24) { showToast('Hours must be between 0 and 24.', 'warning'); return; } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) { showToast('Hours must be in 0.5 increments.', 'warning'); return; } const otherLinesTotal = lines.filter(line => line.id !== id).reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0); const newColumnTotal = otherLinesTotal + (numValue || 0); if (newColumnTotal > 24) { showToast(`Total hours for this day cannot exceed 24.`, 'warning'); return; } setLines(currentLines => currentLines.map(line => line.id === id ? { ...line, hours: { ...line.hours, [day]: value === '' ? 0 : numValue } } : line)); };
     const addLine = () => setLines(prev => [...prev, createEmptyLine(`temp-${Date.now()}`)]);
     const handleSelectLine = (id) => { const newSelection = new Set(selectedLines); newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id); setSelectedLines(newSelection); };
     const deleteLines = () => { if (selectedLines.size === 0) { showToast('Please select lines to delete.', 'warning'); return; } setLines(lines.filter(line => !selectedLines.has(line.id))); setSelectedLines(new Set()); };
