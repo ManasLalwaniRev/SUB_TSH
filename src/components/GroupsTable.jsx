@@ -187,8 +187,10 @@ export default function GroupsTable() {
       return 0;
     });
 
-  const handleLogout = () => {
+   const handleLogout = () => {
     localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setUserLoaded(false);
     navigate("/");
   };
 
@@ -339,19 +341,36 @@ export default function GroupsTable() {
     <div className="min-h-screen bg-grey-200 flex flex-col pr-4 mx-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8 px-6 py-4">
         <div className="w-full flex flex-col items-center">
-          <div className="w-full flex justify-between items-center mb-4 px-1">
+          {/* <div className="w-full flex justify-between items-center mb-4 px-1">
             <h1 className="text-2xl font-bold text-gray-900">
               Purchase Orders Information
             </h1>
             <div className="flex items-center gap-2">
-              <button
+              {/* <button
                 onClick={handleAddRecord}
                 className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700 font-semibold disabled:bg-blue-300 disabled:cursor-not-allowed"
                 disabled={editingRowId !== null}
               >
                 Add Record
+              </button> */}
+              {/* <button
+                onClick={handleLogout}
+                className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+              >
+                Logout
               </button>
             </div>
+          // </div> */} 
+          <div className="w-full flex justify-between items-center mb-4 px-1">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Purchase Orders Information
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+            >
+              Logout
+            </button>
           </div>
 
           <div className="flex gap-3 mb-3 items-center flex-wrap px-1 w-full">

@@ -482,7 +482,8 @@ export default function ExportTable() {
           //   item.rvsnNumber || item.rvsnNum || item.revisionNumber || "";
           mappedRow["Rvsn Number"] = item.rvsnNumber;
           mappedRow["Timesheet Date"] = formatDate(
-            item.timesheet_Date || item.timesheet_date || "");
+            item.timesheet_Date || item.timesheet_date || ""
+          );
 
           return mappedRow;
         });
@@ -2070,7 +2071,7 @@ export default function ExportTable() {
     <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4 overflow-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
         <div className="w-full flex flex-col items-center">
-          <div
+          {/* <div
             className="w-full flex justify-between items-center mb-4"
             style={{
               marginLeft: 24,
@@ -2084,10 +2085,38 @@ export default function ExportTable() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   Generate Invoice
                 </h1>
-                {/* <p className="text-gray-600">Manage and export invoice data</p> */}
+                <button
+                  onClick={handleLogout}
+                  className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+                >
+                  Logout
+                </button>
+                <p className="text-gray-600">Manage and export invoice data</p>
               </div>
             </div>
-          </div>
+          </div> */}
+           <div
+  className="w-full flex justify-between items-center mb-4"
+  style={{
+    marginLeft: 24,
+    marginRight: 24,
+    width: "calc(100vw - 220px)",
+  }}
+>
+  {/* Left side: Download icon + Generate Invoice text */}
+  <div className="flex items-center">
+    <Download className="h-8 w-8 text-green-600 mr-3" />
+    <h1 className="text-2xl font-bold text-gray-900">Generate Invoice</h1>
+  </div>
+ 
+  {/* Right side: Logout button */}
+  <button
+    onClick={handleLogout}
+    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+  >
+    Logout
+  </button>
+</div>
 
           {/* Basic Filters */}
           <div

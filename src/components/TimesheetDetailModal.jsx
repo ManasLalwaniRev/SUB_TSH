@@ -2364,6 +2364,8 @@
 // Deployed // Latest Version
 
 import React, { useState, useEffect, useRef } from 'react';
+import Select from 'react-select'; 
+
 
 // --- SVG Icons ---
 const PlusIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>;
@@ -2573,39 +2575,77 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     }));
 };
 
-    const handleHourChange = (id, day, value) => {
-        const numValue = parseFloat(value);
+    // const handleHourChange = (id, day, value) => {
+    //     const numValue = parseFloat(value);
 
+    //     if (value === '') {
+    //         // Allow the state update to handle setting the value to 0
+    //     } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+    //         showToast('Hours for a single entry must be between 0 and 24.', 'warning');
+    //         return;
+    //     } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
+    //         showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
+    //         return;
+    //     }
+
+    //     setLines(currentLines => {
+    //         const otherLinesTotal = currentLines
+    //             .filter(line => line.id !== id)
+    //             .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+
+    //         const newColumnTotal = otherLinesTotal + (numValue || 0);
+
+    //         if (newColumnTotal > 24) {
+    //             showToast(`Total hours for this day cannot exceed 24.`, 'warning');
+    //             return currentLines;
+    //         }
+
+    //         const indexToUpdate = currentLines.findIndex(line => line.id === id);
+    //         if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
+    //         const newLines = [...currentLines];
+    //         const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
+    //         newLines[indexToUpdate] = updatedLine;
+    //         return newLines;
+    //     });
+    // };
+    const handleHourChange = (id, day, value) => {
+    setLines(currentLines => {
+        // If the user clears the input, update its state to an empty string
         if (value === '') {
-            // Allow the state update to handle setting the value to 0
-        } else if (isNaN(numValue) || numValue < 0 || numValue > 24) {
-            showToast('Hours for a single entry must be between 0 and 24.', 'warning');
-            return;
-        } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
-            showToast('Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).', 'warning');
-            return;
+            return currentLines.map(l => l.id === id ? { ...l, hours: { ...l.hours, [day]: '' } } : l);
         }
 
-        setLines(currentLines => {
-            const otherLinesTotal = currentLines
-                .filter(line => line.id !== id)
-                .reduce((sum, line) => sum + (parseFloat(line.hours[day]) || 0), 0);
+        const numValue = parseFloat(value);
+        let error = null;
 
-            const newColumnTotal = otherLinesTotal + (numValue || 0);
+        // --- Validation Checks ---
+        if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+            error = 'Hours for a single entry must be between 0 and 24.';
+        } else if (numValue % 1 !== 0 && numValue % 1 !== 0.5) {
+            error = 'Please enter hours in increments of 0.5 (e.g., 7.0, 8.5).';
+        } else {
+            // Calculate the potential new total for the day
+            const newColumnTotal = currentLines.reduce((sum, line) => {
+                const hours = line.id === id ? numValue : (parseFloat(line.hours[day]) || 0);
+                return sum + hours;
+            }, 0);
 
             if (newColumnTotal > 24) {
-                showToast(`Total hours for this day cannot exceed 24.`, 'warning');
-                return currentLines;
+                error = `Total hours for this day cannot exceed 24.`;
             }
+        }
 
-            const indexToUpdate = currentLines.findIndex(line => line.id === id);
-            if (indexToUpdate === -1) { console.error("Could not find line with id:", id); return currentLines; }
-            const newLines = [...currentLines];
-            const updatedLine = { ...newLines[indexToUpdate], hours: { ...newLines[indexToUpdate].hours, [day]: value === '' ? 0 : numValue } };
-            newLines[indexToUpdate] = updatedLine;
-            return newLines;
-        });
-    };
+        // --- State Update Logic ---
+        if (error) {
+            showToast(error, 'warning');
+            // On any error, find the line being edited and clear its specific hour input.
+            return currentLines.map(l => l.id === id ? { ...l, hours: { ...l.hours, [day]: '' } } : l);
+        } else {
+            // If the input is valid, update the state with the new number.
+            return currentLines.map(l => l.id === id ? { ...l, hours: { ...l.hours, [day]: numValue } } : l);
+        }
+    });
+};
 
     const addLine = () => { const newId = `temp-${nextId.current++}`; setLines(prevLines => [...prevLines, createEmptyLine(newId)]); };
 
@@ -2823,7 +2863,34 @@ const copyLines = () => {
                                 <tr key={line.id} className="hover:bg-slate-50/50">
                                     <td className="p-2 text-center"><input type="checkbox" className="rounded border-gray-300" checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} /></td>
                                     <td className="p-3 text-center text-gray-500">{index + 1}</td>
-                                    <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} disabled={!isEditable} /></td>
+                                    {/* <td className="p-2 min-w-[150px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={e => handleSelectChange(line.id, 'workOrder', e.target.value)} disabled={!isEditable} /></td> */}
+                                    <td className="p-2 min-w-[300px]">
+    {/* <Select
+        options={workOrderOptions}
+        // Find the full option object that matches the current value
+        value={workOrderOptions.find(opt => opt.value === line.workOrder) || null}
+        // Pass the new value string from the selected option object
+        onChange={selectedOption => handleSelectChange(line.id, 'workOrder', selectedOption ? selectedOption.value : '')}
+        isDisabled={!isEditable}
+        placeholder="Select or type..."
+        isClearable
+    /> */}
+    <Select
+  options={workOrderOptions}
+  value={workOrderOptions.find(opt => opt.value === line.workOrder) || null}
+  onChange={selectedOption =>
+    handleSelectChange(line.id, 'workOrder', selectedOption ? selectedOption.value : '')
+  }
+  isDisabled={!isEditable}
+  placeholder="Select or type..."
+  isClearable
+  menuPortalTarget={document.body}
+  styles={{
+    menuPortal: base => ({ ...base, zIndex: 9999 })
+  }}
+/>
+
+</td>
                                     <td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly/></td>
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
@@ -2836,7 +2903,7 @@ const copyLines = () => {
                                     <td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
                                     <td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md" readOnly /></td>
-                                    {days.map(day =>
+                                    {/* {days.map(day =>
                                         <td key={day} className="p-2">
                                             <input
                                                 type="number"
@@ -2850,7 +2917,23 @@ const copyLines = () => {
                                                 
                                             />
                                         </td>
-                                    )}
+                                    )} */}
+                                    {/* This is the corrected code */}
+{days.map(day => {
+    const isWeekend = day === 'sat' || day === 'sun';
+    return (
+        <td key={day} className="p-2">
+            <input
+                type="number"
+                step="0.5"
+                value={line.hours[day] === 0 ? '' : line.hours[day]}
+                onChange={e => handleHourChange(line.id, day, e.target.value)}
+                className={`w-20 text-right p-1.5 border border-gray-200 rounded-md shadow-sm ${isWeekend ? 'bg-gray-100' : 'bg-white'} disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                disabled={!isEditable || (weekDates[day] && weekDates[day] > todayString)}
+            />
+        </td>
+    );
+})}
                                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
                                 </tr>
                                 );

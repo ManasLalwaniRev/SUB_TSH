@@ -639,10 +639,12 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('currentUser');
-        navigate("/");
-    };
+     const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setUserLoaded(false);
+    navigate("/");
+  };
 
     const handleCreateClick = () => {
         setTimesheetToEdit(null);
@@ -655,6 +657,9 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
         if (key === 'Status') {
     const status = row[key] || '';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+   
+
+
     return <span className={getStatusStyle(status)}>{formattedStatus}</span>;
 }
         if (key === 'Hours') {
@@ -683,11 +688,29 @@ if (!allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())) {
             <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
                 <div className="w-full flex flex-col items-center">
                     {/* <div className="w-full flex justify-between items-center mb-4 px-6"> */}
-                    <div className="w-full flex justify-between items-center mb-4 max-w-[calc(100vw-220px)] mx-auto">
+                    {/* <div className="w-full flex justify-between items-center mb-4 max-w-[calc(100vw-220px)] mx-auto">
  
                         <h1 className="text-lg font-semibold text-gray-700">Welcome, {currentUser?.name}</h1>
-                        {/* <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button> */}
-                    </div>
+                        <button
+                onClick={handleLogout}
+                className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+              >
+                Logout
+              </button>
+
+                        <button onClick={handleLogout} className="bg-gray-600 text-white px-3 py-1.5 rounded text-xs hover:bg-gray-700">Logout</button>
+                    </div> */}
+                    <div className="w-full flex justify-between items-center mb-4 max-w-[calc(100vw-220px)] mx-auto relative">
+            <h1 className="text-lg font-semibold text-gray-700">
+              Welcome, {currentUser?.name}
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+            >
+              Logout
+            </button>
+          </div>
 
                     {/* Filters */}
                     <fieldset className="border border-gray-300 rounded-md p-4 mb-4 w-full max-w-[calc(100vw-220px)] mx-auto">

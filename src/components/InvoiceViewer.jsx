@@ -708,6 +708,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         <table style={tableStyle}>
           <thead>
             <tr>
+              <th style={thStyle}>PO LINE</th>
               <th
                 style={{
                   border: "1px solid #d1d5db",
@@ -731,25 +732,24 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
           <tbody>
             {Object.entries(groupedByPoLine).map(([poLine, items]) => (
               <React.Fragment key={poLine}>
-                <tr>
-                  <td
-                    colSpan={8}
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "12px",
-                      paddingBottom: "10px",
-                    }}
-                  >
-                    PO LINE {poLine}
-                  </td>{" "}
-                </tr>
                 {items.map((item, index) => (
                   <tr key={index}>
                     {/* <td style={tdStyle}>{item.plc || ""}</td>
                       <td style={tdStyle}>
                         {[item.vendor, item.employee].filter(Boolean).join("\n")}
                       </td> */}
-
+                    <td
+                      // colSpan={8}
+                      style={{
+                        border: "1px solid #d1d5db",
+                        padding: "4px",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        paddingBottom: "10px",
+                      }}
+                    >
+                      {poLine}
+                    </td>{" "}
                     <td
                       style={{
                         border: "1px solid #d1d5db",
@@ -770,7 +770,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
                         }}
                       >
                         <div>{item.employee}</div>
-                        <div>{item.vendor}</div>
+                        {/* <div>{item.vendor}</div> */}
                       </div>
                     </td>
                     <td style={tdRightStyle}>{item.hours.toFixed(2)}</td>

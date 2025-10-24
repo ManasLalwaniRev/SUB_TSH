@@ -1990,18 +1990,39 @@ const WorkAssignment = () => {
     <div className="h-screen bg-[#f9fafd] flex flex-col pr-4 overflow-hidden">
       <div className="flex-1 flex flex-col pt-6 pb-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 px-4">
+        {/* <div className="flex justify-between items-center mb-6 px-4">
           <div className="flex items-center">
             <Package className="h-8 w-8 text-green-600 mr-3" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 Work Order
               </h1>
+              <button
+                onClick={handleLogout}
+                className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+              >
+                Logout
+              </button>
               {/* <p className="text-gray-600">Manage and export invoice data</p> */}
-            </div>
+            {/* </div> */}
+          {/* </div> */}
+         {/* </div> */} 
+         <div className="flex justify-between items-center mb-6 px-4">
+          {/* Left side: icon + heading */}
+          <div className="flex items-center">
+            <Package className="h-8 w-8 text-green-600 mr-3" />
+            <h1 className="text-2xl font-bold text-gray-900">Work Order</h1>
           </div>
+ 
+          {/* Right side: Logout button */}
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+          >
+            Logout
+          </button>
         </div>
-
+        
         {/* Filters - Added PO Line Key filter */}
         <div className="flex gap-3 mb-4 px-4">
           <input

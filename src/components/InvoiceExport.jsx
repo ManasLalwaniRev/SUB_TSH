@@ -1403,6 +1403,14 @@ export default function InvoiceExport() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser");
+    setCurrentUser(null);
+    setUserLoaded(false);
+    showToast("Logged out successfully", "info");
+    navigate("/");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
@@ -1431,7 +1439,7 @@ export default function InvoiceExport() {
       {/* Main container matching ExportTable layout */}
       <div className="min-h-screen bg-f9fafd flex flex-col pr-4 mx-auto">
         {/* Header Section */}
-        <div
+        {/* <div
           className="w-full flex justify-between items-center mb-4 mt-5"
           style={{
             marginLeft: 24,
@@ -1445,10 +1453,70 @@ export default function InvoiceExport() {
               <h1 className="text-2xl font-bold text-gray-900">
                 Invoice Export
               </h1>
-              {/* <p className="text-gray-600">Manage and export invoice data</p> */}
+              <p className="text-gray-600">Manage and export invoice data</p>
+              <button
+                onClick={handleLogout}
+                className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+              >
+                Logout
+              </button>
             </div>
           </div>
+        </div> */}
+        <div
+          className="w-full flex justify-between items-center mb-4 mt-5"
+          style={{
+            marginLeft: 24,
+            marginRight: 24,
+            width: "calc(100vw - 220px)",
+          }}
+        >
+          {/* Left side: Receipt icon + Invoice Export heading */}
+          <div className="flex items-center">
+            <Receipt className="h-8 w-8 text-green-600 mr-3" />
+            <h1 className="text-2xl font-bold text-gray-900">Invoice Export</h1>
+          </div>
+ 
+          {/* Right side: Logout button */}
+          <button
+            onClick={handleLogout}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+          >
+            Logout
+          </button>
+        </div>
 
+        {/* Filters Section */}
+        <div
+          className="w-full flex justify-between items-center mb-4"
+          style={{
+            marginLeft: 24,
+            marginRight: 24,
+            width: "calc(100vw - 220px)",
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Filter by Invoice Number"
+                value={filterInvoiceNumber}
+                onChange={(e) => setFilterInvoiceNumber(e.target.value)}
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                style={{ minWidth: "300px" }}
+              />
+            </div>
+
+            {filterInvoiceNumber && (
+              <button
+                onClick={() => setFilterInvoiceNumber("")}
+                className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+              >
+                Clear
+              </button>
+            )}
+          </div>
           <div className="flex items-center space-x-3">
             {/* Download Invoice Button */}
             <button
@@ -1483,39 +1551,6 @@ export default function InvoiceExport() {
                 ? "Exporting..."
                 : `Export (${selectedInvoices.size})`}
             </button>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        <div
-          className="w-full flex justify-between items-center mb-4"
-          style={{
-            marginLeft: 24,
-            marginRight: 24,
-            width: "calc(100vw - 220px)",
-          }}
-        >
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Filter by Invoice Number"
-                value={filterInvoiceNumber}
-                onChange={(e) => setFilterInvoiceNumber(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                style={{ minWidth: "300px" }}
-              />
-            </div>
-
-            {filterInvoiceNumber && (
-              <button
-                onClick={() => setFilterInvoiceNumber("")}
-                className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors text-sm"
-              >
-                Clear
-              </button>
-            )}
           </div>
         </div>
 
