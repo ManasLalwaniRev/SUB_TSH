@@ -1280,7 +1280,20 @@ const timePeriods = [ { label: 'Mon 7/21 - Sun 7/27', dates: ['Mon 07/21', 'Tue 
   dates: ['Mon 09/29', 'Tue 09/30', 'Wed 10/01', 'Thu 10/02', 'Fri 10/03', 'Sat 10/04', 'Sun 10/05'] 
 
 },
-  { label: 'Mon 10/06 - Sun 10/12', dates: ['Mon 10/06', 'Tue 10/07', 'Wed 10/08', 'Thu 10/09', 'Fri 10/10', 'Sat 10/11', 'Sun 10/12'] }
+  { label: 'Mon 10/06 - Sun 10/12', dates: ['Mon 10/06', 'Tue 10/07', 'Wed 10/08', 'Thu 10/09', 'Fri 10/10', 'Sat 10/11', 'Sun 10/12'] },
+  
+   { 
+    label: 'Mon 10/13 - Sun 10/19', 
+    dates: ['Mon 10/13', 'Tue 10/14', 'Wed 10/15', 'Thu 10/16', 'Fri 10/17', 'Sat 10/18', 'Sun 10/19'] 
+  },
+  { 
+    label: 'Mon 10/20 - Sun 10/26', 
+    dates: ['Mon 10/20', 'Tue 10/21', 'Wed 10/22', 'Thu 10/23', 'Fri 10/24', 'Sat 10/25', 'Sun 10/26'] 
+  },
+  { 
+    label: 'Mon 10/27 - Sun 11/02', 
+    dates: ['Mon 10/27', 'Tue 10/28', 'Wed 10/29', 'Thu 10/30', 'Fri 10/31', 'Sat 11/01', 'Sun 11/02'] 
+  }
 
 ];
 const getWeekEndDateFromPeriod = (period) => { if (!period?.dates?.length) return null; const lastDayString = period.dates[period.dates.length - 1]; const datePart = lastDayString.split(' ')[1]; const [month, day] = datePart.split('/'); const date = new Date(Date.UTC(2025, parseInt(month, 10) - 1, parseInt(day, 10))); return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC' }).format(date); };
