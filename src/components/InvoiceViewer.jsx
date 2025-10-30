@@ -645,7 +645,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
         <div style={headerContainerStyle}>
           <img src={logoImg} alt="Company Logo" style={logoStyle} />
 
-          <h1 style={companyTitleStyle}>REVOLVE SOLUTIONS</h1>
+          <h1 style={companyTitleStyle}>REVOLVE FINTECH</h1>
           <div style={spacerStyle}></div>
         </div>
         {/* <h1 style={titleStyle} className="font-bold">REVOLVE</h1> */}
@@ -661,7 +661,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
             <div style={{ ...addressBlockStyle, marginTop: "16px" }}>
               <span style={boldTextStyle}>Bill To: {"\n"}</span>
               {invoice.billT ||
-                `Revolve Solutions
+                `Revolve Fintech
               
               Ashburn, VA 20147 `}
             </div>

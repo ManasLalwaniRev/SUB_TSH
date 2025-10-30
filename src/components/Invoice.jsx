@@ -726,7 +726,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
               </div>
               <div>ID: {invoice.invoiceId || "N/A"}</div>
             </div>
-            <h1 style={companyTitleStyle}>REVOLVE SOLUTIONS</h1>
+            <h1 style={companyTitleStyle}>REVOLVE FINTECH</h1>
             <div style={spacerStyle}></div>
           </div>
 
@@ -742,7 +742,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
               <div style={{ ...addressBlockStyle, marginTop: "16px" }}>
                 <span style={boldTextStyle}>Bill To: {"\n"}</span>
                 {invoice.billT ||
-                  `Revolve Solutions
+                  `Revolve Fintech
                 
                 Ashburn, VA 20147 `}
               </div>
