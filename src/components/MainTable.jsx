@@ -1569,7 +1569,7 @@ export default function MainTable() {
             setRows(Array.from(timesheetMap.values()));
         } catch (error) {
             console.error("Failed to fetch data:", error);
-            showToast('No Timesheet Found', "error");
+            // showToast('No Timesheet Found', "error");
             setRows([]);
         } finally {
             setLoading(false);
