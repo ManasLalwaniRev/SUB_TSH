@@ -398,7 +398,6 @@
 //   );
 // }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // import React, { useState, useEffect } from "react";
@@ -637,8 +636,10 @@ import {
   ClipboardCheck,
   LogOut,
   LayoutDashboard,
+  SettingsIcon,
+  CheckCircle,
 } from "lucide-react";
- 
+
 // Individual Sidebar Item Component for cleaner code
 const SidebarItem = ({
   icon,
@@ -670,12 +671,12 @@ const SidebarItem = ({
     </span>
   </Link>
 );
- 
+
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
- 
+
   useEffect(() => {
     const userInfo = localStorage.getItem("currentUser");
     if (userInfo) {
@@ -688,20 +689,20 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
       }
     }
   }, []);
- 
+
   const handleLinkClick = (pagePath) => {
     navigate(pagePath);
   };
- 
+
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     navigate("/");
   };
- 
+
   const isAdmin = currentUser?.role === "admin";
   const isUser = currentUser?.role === "user";
   const isPM = currentUser?.role === "pm";
- 
+
   return (
     <div
       className={`fixed inset-y-0 left-0 bg-green-50 text-gray-800 shadow-lg z-40 flex flex-col border-r border-green-200 transition-all duration-300 ${
@@ -724,7 +725,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             Menu
           </span>
         </div>
- 
+
         <div className="flex-grow">
           {isAdmin && (
             <SidebarItem
@@ -736,7 +737,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               isCollapsed={!sidebarOpen}
             />
           )}
- 
+
           {(isAdmin || isUser || isPM) && (
             <SidebarItem
               icon={<Clock className="h-5 w-5" />}
@@ -747,7 +748,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               isCollapsed={!sidebarOpen}
             />
           )}
- 
+
           {(isAdmin || isPM) && (
             <SidebarItem
               icon={
@@ -762,7 +763,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               isCollapsed={!sidebarOpen}
             />
           )}
- 
+
           {isAdmin && (
             <>
               <SidebarItem
@@ -797,9 +798,25 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 handleLinkClick={handleLinkClick}
                 isCollapsed={!sidebarOpen}
               />
+              <SidebarItem
+                icon={<CheckCircle className="h-5 w-5" />}
+                text="PO Status"
+                to="/dashboard/postatus"
+                selectedPage={pathname}
+                handleLinkClick={handleLinkClick}
+                isCollapsed={!sidebarOpen}
+              />
+              <SidebarItem
+                icon={<SettingsIcon className="h-5 w-5" />}
+                text="Settings"
+                to="/dashboard/settings"
+                selectedPage={pathname}
+                handleLinkClick={handleLinkClick}
+                isCollapsed={!sidebarOpen}
+              />
             </>
           )}
- 
+
           {(isAdmin || isPM || isUser) && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
@@ -811,7 +828,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             />
           )}
         </div>
- 
+
         <div className="pt-2 mt-auto border-t border-green-200">
           {/* <div
             onClick={handleLogout}
@@ -826,7 +843,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
               Logout
             </span>
           </div> */}
- 
+
           {/* <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="w-full flex items-center justify-center p-3 rounded-lg hover:bg-green-100 transition-colors duration-200 group"

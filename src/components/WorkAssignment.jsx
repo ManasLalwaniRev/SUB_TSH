@@ -64,7 +64,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('${backendUrl}/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -448,7 +448,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('${backendUrl}/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -580,7 +580,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('${backendUrl}/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -839,7 +839,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('${backendUrl}/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -969,7 +969,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('${backendUrl}/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -1201,8 +1201,8 @@
 //   const [filterPurchaseOrderRelease, setFilterPurchaseOrderRelease] = useState('');
 //   const [filterWACode, setFilterWACode] = useState('');
 
-//   // Updated column configuration with WA Code
-//   const columns = ['Select', 'WA Code', 'Purchase Order', 'Purchase Order Release', 'PO Line Key'];
+//   // Updated column configuration with WO Code
+//   const columns = ['Select', 'WO Code', 'Purchase Order', 'Purchase Order Release', 'PO Line Key'];
 //   const colWidth = 120;
 //   const selectColWidth = 80;
 
@@ -1232,7 +1232,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('${backendUrl}/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -1243,7 +1243,7 @@
 //       const mappedData = Array.isArray(apiData) ? apiData.map((item, index) => ({
 //         id: item.id || `work-${index}`,
 //         waId: item.waId || 0,
-//         "WA Code": item.wa_Code || "",
+//         "WO Code": item.wa_Code || "",
 //         "Purchase Order": item.purchaseOrder || "",
 //         "Purchase Order Release": item.purchaseOrderRelease || "",
 //         "PO Line Key": item.poLnKey || "",
@@ -1281,7 +1281,7 @@
 
 //     if (filterWACode.trim()) {
 //       filtered = filtered.filter(row =>
-//         (row["WA Code"] || "").toLowerCase().includes(filterWACode.toLowerCase())
+//         (row["WO Code"] || "").toLowerCase().includes(filterWACode.toLowerCase())
 //       );
 //     }
 
@@ -1395,7 +1395,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('${backendUrl}/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -1474,7 +1474,7 @@
 //             type="text"
 //             value={filterWACode}
 //             onChange={e => setFilterWACode(e.target.value)}
-//             placeholder="Filter WA Code"
+//             placeholder="Filter WO Code"
 //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
 //           />
 //           <input
@@ -1583,7 +1583,7 @@
 //                                   disabled={isDisabled}
 //                                   title={
 //                                     isApproved ? "Already approved" :
-//                                     hasWACode ? "Has WA Code - cannot approve" : ""
+//                                     hasWACode ? "Has WO Code - cannot approve" : ""
 //                                   }
 //                                 />
 //                               ) : (
@@ -1628,6 +1628,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { backendUrl } from "./config";
 
 // Toast notification utility
 const showToast = (message, type = "info") => {
@@ -1673,10 +1674,10 @@ const WorkAssignment = () => {
   const [filterWACode, setFilterWACode] = useState("");
   const [filterPOLineKey, setFilterPOLineKey] = useState("");
 
-  // Updated column configuration with WA Code
+  // Updated column configuration with W0 Code
   const columns = [
     "Select",
-    "WA Code",
+    "WO Code",
     "Purchase Order",
     "Purchase Order Release",
     // "PO Line Key",
@@ -1711,7 +1712,7 @@ const WorkAssignment = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments",
+        `${backendUrl}/api/PurchaseOrders/GetAllWorkAssignments`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -1726,7 +1727,7 @@ const WorkAssignment = () => {
         ? apiData.map((item, index) => ({
             id: item.id || `work-${index}`,
             waId: item.waId || 0,
-            "WA Code": item.wa_Code || "",
+            "WO Code": item.wa_Code || "",
             "Purchase Order": item.purchaseOrder || "",
             "Purchase Order Release": item.purchaseOrderRelease || "",
             "PO Line Key": item.poLnKey || "",
@@ -1772,7 +1773,7 @@ const WorkAssignment = () => {
 
     if (filterWACode.trim()) {
       filtered = filtered.filter((row) =>
-        (row["WA Code"] || "")
+        (row["WO Code"] || "")
           .toLowerCase()
           .includes(filterWACode.toLowerCase())
       );
@@ -1915,14 +1916,11 @@ const WorkAssignment = () => {
           poLnKey: row["PO Line Key"],
         };
 
-        const response = await fetch(
-          "https://timesheet-subk.onrender.com/api/WorkAssignments",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody),
-          }
-        );
+        const response = await fetch(`${backendUrl}/api/WorkAssignments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -2004,16 +2002,16 @@ const WorkAssignment = () => {
                 Logout
               </button>
               {/* <p className="text-gray-600">Manage and export invoice data</p> */}
-            {/* </div> */}
-          {/* </div> */}
-         {/* </div> */} 
-         <div className="flex justify-between items-center mb-6 px-4">
+        {/* </div> */}
+        {/* </div> */}
+        {/* </div> */}
+        <div className="flex justify-between items-center mb-6 px-4">
           {/* Left side: icon + heading */}
           <div className="flex items-center">
             <Package className="h-8 w-8 text-green-600 mr-3" />
             <h1 className="text-2xl font-bold text-gray-900">Work Order</h1>
           </div>
- 
+
           {/* Right side: Logout button */}
           <button
             onClick={handleLogout}
@@ -2022,14 +2020,14 @@ const WorkAssignment = () => {
             Logout
           </button>
         </div>
-        
+
         {/* Filters - Added PO Line Key filter */}
         <div className="flex gap-3 mb-4 px-4">
           <input
             type="text"
             value={filterWACode}
             onChange={(e) => setFilterWACode(e.target.value)}
-            placeholder="Filter WA Code"
+            placeholder="Filter WO Code"
             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <input
@@ -2058,7 +2056,7 @@ const WorkAssignment = () => {
 
         {/* Data Table Container */}
         <div className="px-4 pb-4" style={{ height: "calc(100vh - 150px)" }}>
-          <div className="h-full border border-gray-300 rounded bg-white shadow flex flex-col">
+          <div className="h-full border border-gray-300 rounded-2xl bg-white shadow flex flex-col">
             {/* Sticky Action Button */}
             <div className="flex-shrink-0 bg-white border-b border-gray-200 p-4">
               <button
@@ -2163,7 +2161,7 @@ const WorkAssignment = () => {
                                     isApproved
                                       ? "Already approved"
                                       : hasWACode
-                                      ? "Has WA Code - cannot approve"
+                                      ? "Has WO Code - cannot approve"
                                       : ""
                                   }
                                 />
