@@ -64,7 +64,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('https://timesheet-subk-latest.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -448,7 +448,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('https://timesheet-subk-latest.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -580,7 +580,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('https://timesheet-subk-latest.onrender.com/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -839,7 +839,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('https://timesheet-subk-latest.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -969,7 +969,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('https://timesheet-subk-latest.onrender.com/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -1232,7 +1232,7 @@
 //   const fetchWorkAssignments = async () => {
 //     try {
 //       setLoading(true);
-//       const response = await fetch('https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
+//       const response = await fetch('https://timesheet-subk-latest.onrender.com/api/PurchaseOrders/GetAllWorkAssignments', {
 //         method: 'GET',
 //         headers: { 'Content-Type': 'application/json' }
 //       });
@@ -1395,7 +1395,7 @@
 //           poLnKey: row["PO Line Key"]
 //         };
 
-//         const response = await fetch('https://timesheet-subk.onrender.com/api/WorkAssignments', {
+//         const response = await fetch('https://timesheet-subk-latest.onrender.com/api/WorkAssignments', {
 //           method: 'POST',
 //           headers: { 'Content-Type': 'application/json' },
 //           body: JSON.stringify(requestBody)
@@ -1711,7 +1711,7 @@ const WorkAssignment = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/PurchaseOrders/GetAllWorkAssignments",
+        "https://timesheet-subk-latest.onrender.com/api/PurchaseOrders/GetAllWorkAssignments",
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -1916,7 +1916,7 @@ const WorkAssignment = () => {
         };
 
         const response = await fetch(
-          "https://timesheet-subk.onrender.com/api/WorkAssignments",
+          "https://timesheet-subk-latest.onrender.com/api/WorkAssignments",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

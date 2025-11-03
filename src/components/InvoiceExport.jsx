@@ -65,7 +65,7 @@ export default function InvoiceExport() {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://timesheet-subk.onrender.com/api/Invoices"
+          "https://timesheet-subk-latest.onrender.com/api/Invoices"
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -214,7 +214,7 @@ export default function InvoiceExport() {
 
       // API call to update the invoice using the correct endpoint
       const response = await fetch(
-        `https://timesheet-subk.onrender.com/api/Invoices/${
+        `https://timesheet-subk-latest.onrender.com/api/Invoices/${
           invoice.invoiceId || invoice.id
         }`,
         {
@@ -272,7 +272,7 @@ export default function InvoiceExport() {
   //     setPreviewData(null);
 
   //     const response = await fetch(
-  //       `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //       `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //         invoice.invoiceNumber
   //       )}`
   //     );
@@ -325,7 +325,7 @@ export default function InvoiceExport() {
       setPreviewData(null);
 
       const response = await fetch(
-        `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+        `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
           invoice.invoiceNumber
         )}`
       );
@@ -464,7 +464,7 @@ export default function InvoiceExport() {
   //       try {
   //         // First fetch invoice preview data (same as preview functionality)
   //         const previewResponse = await fetch(
-  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //           `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //             invoice.invoiceNumber
   //           )}`
   //         );
@@ -651,7 +651,7 @@ export default function InvoiceExport() {
   //       try {
   //         // First fetch invoice preview data
   //         const previewResponse = await fetch(
-  //           `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //           `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //             invoice.invoiceNumber
   //           )}`
   //         );
@@ -865,7 +865,7 @@ export default function InvoiceExport() {
         try {
           // First fetch invoice preview data
           const previewResponse = await fetch(
-            `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+            `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
               invoice.invoiceNumber
             )}`
           );
@@ -1249,7 +1249,7 @@ export default function InvoiceExport() {
       try {
         // Send the array directly as the request body (not wrapped in an object)
         const response = await fetch(
-          "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-invoices",
+          "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-invoices",
           {
             method: "POST",
             headers: {
@@ -1318,7 +1318,7 @@ export default function InvoiceExport() {
         for (const invoice of invoicesToExport) {
           try {
             const updateResponse = await fetch(
-              `https://timesheet-subk.onrender.com/api/Invoices/${invoice.invoiceId}`,
+              `https://timesheet-subk-latest.onrender.com/api/Invoices/${invoice.invoiceId}`,
               {
                 method: "PUT",
                 headers: {

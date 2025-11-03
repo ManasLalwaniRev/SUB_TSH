@@ -644,7 +644,7 @@
 
 //       // Use existing resourceId from currentUser.username
 //       const resourceId = currentUser.username;
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+//       const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 //       console.log("Fetching from:", apiUrl);
 
 //       const response = await fetch(apiUrl, {
@@ -918,7 +918,7 @@
 //         requestData: `Notification for timesheet ${row.id}`,
 //       }));
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkNotify",
+//         "https://timesheet-subk-latest.onrender.com/api/Approval/BulkNotify",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1022,7 +1022,7 @@
 
 //     try {
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
+//         "https://timesheet-subk-latest.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1128,7 +1128,7 @@
 //       console.log("Bulk Approve Payload:", requestBody);
 
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+//         "https://timesheet-subk-latest.onrender.com/api/Approval/BulkApprove",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1200,7 +1200,7 @@
 //       console.log("Bulk Reject Payload:", requestBody);
 
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+//         "https://timesheet-subk-latest.onrender.com/api/Approval/BulkReject",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -2511,7 +2511,7 @@ export default function Approval() {
 
       // Use existing resourceId from currentUser.username
       const resourceId = currentUser.username;
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+      const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
       console.log("Fetching from:", apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -2789,7 +2789,7 @@ export default function Approval() {
         requestData: `Notification for timesheet ${row.id}`,
       }));
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkNotify",
+        "https://timesheet-subk-latest.onrender.com/api/Approval/BulkNotify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2893,7 +2893,7 @@ export default function Approval() {
 
     try {
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
+        "https://timesheet-subk-latest.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2999,7 +2999,7 @@ export default function Approval() {
       console.log("Bulk Approve Payload:", requestBody);
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+        "https://timesheet-subk-latest.onrender.com/api/Approval/BulkApprove",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -3071,7 +3071,7 @@ export default function Approval() {
       console.log("Bulk Reject Payload:", requestBody);
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+        "https://timesheet-subk-latest.onrender.com/api/Approval/BulkReject",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
