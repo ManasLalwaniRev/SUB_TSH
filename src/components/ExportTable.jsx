@@ -12,6 +12,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { backendUrl } from "./config";
 
 // Add these icon components after your imports
 const CrossIcon = () => (
@@ -399,7 +400,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -525,7 +526,7 @@ export default function ExportTable() {
   //       return;
   //     }
 
-  //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
+  //     const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
 
   //     const response = await fetch(apiUrl, {
   //       method: 'GET',
@@ -939,7 +940,7 @@ export default function ExportTable() {
   //     };
 
   //     // Send POST request with selected data (keep original export API)
-  //     const response = await fetch('https://timesheet-subk.onrender.com/api/SubkTimesheet/export-csv', {
+  //     const response = await fetch('${backendUrl}/api/SubkTimesheet/export-csv', {
   //       method: 'POST',
   //       headers: {
   //         'Content-Type': 'application/json',
@@ -1081,7 +1082,7 @@ export default function ExportTable() {
 
       // Send POST request with selected data
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-csv",
+        `${backendUrl}/api/SubkTimesheet/export-csv`,
         {
           method: "POST",
           headers: {
@@ -1215,7 +1216,7 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "${backendUrl}/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1264,7 +1265,7 @@ export default function ExportTable() {
   //         try {
   //           // First fetch invoice preview data (same as preview functionality)
   //           const previewResponse = await fetch(
-  //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             `${backendUrl}/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //               invoice.invoiceNumber
   //             )}`
   //           );
@@ -1510,7 +1511,7 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "${backendUrl}/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1662,7 +1663,7 @@ export default function ExportTable() {
       });
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+        `${backendUrl}/api/SubkTimesheet/GenerateInvoice`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1816,7 +1817,7 @@ export default function ExportTable() {
   //       });
 
   //       const response = await fetch(
-  //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //         "${backendUrl}/api/SubkTimesheet/GenerateInvoice",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1903,7 +1904,7 @@ export default function ExportTable() {
 
   //     // Send POST request with selected data
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "${backendUrl}/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "PUT",
   //         headers: {
@@ -2095,28 +2096,30 @@ export default function ExportTable() {
               </div>
             </div>
           </div> */}
-           <div
-  className="w-full flex justify-between items-center mb-4"
-  style={{
-    marginLeft: 24,
-    marginRight: 24,
-    width: "calc(100vw - 220px)",
-  }}
->
-  {/* Left side: Download icon + Generate Invoice text */}
-  <div className="flex items-center">
-    <Download className="h-8 w-8 text-green-600 mr-3" />
-    <h1 className="text-2xl font-bold text-gray-900">Generate Invoice</h1>
-  </div>
- 
-  {/* Right side: Logout button */}
-  <button
-    onClick={handleLogout}
-    className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
-  >
-    Logout
-  </button>
-</div>
+          <div
+            className="w-full flex justify-between items-center mb-4"
+            style={{
+              marginLeft: 24,
+              marginRight: 24,
+              width: "calc(100vw - 220px)",
+            }}
+          >
+            {/* Left side: Download icon + Generate Invoice text */}
+            <div className="flex items-center">
+              <Download className="h-8 w-8 text-green-600 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">
+                Generate Invoice
+              </h1>
+            </div>
+
+            {/* Right side: Logout button */}
+            <button
+              onClick={handleLogout}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
+            >
+              Logout
+            </button>
+          </div>
 
           {/* Basic Filters */}
           <div

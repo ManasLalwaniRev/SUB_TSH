@@ -3,10 +3,10 @@
 
 // // Simple toast function without container (No changes made here)
 // const showToast = (message, type = 'info') => {
-//   const bgColor = type === 'success' ? '#4ade80' : 
-//                   type === 'error' ? '#ef4444' : 
+//   const bgColor = type === 'success' ? '#4ade80' :
+//                   type === 'error' ? '#ef4444' :
 //                   type === 'warning' ? '#f59e0b' : '#3b82f6';
-  
+
 //   const toast = document.createElement('div');
 //   toast.textContent = message;
 //   toast.style.cssText = `
@@ -15,7 +15,7 @@
 //     border-radius: 6px; font-size: 14px; max-width: 300px;
 //     box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;
 //   `;
-  
+
 //   document.body.appendChild(toast);
 //   setTimeout(() => {
 //     toast.style.opacity = '0';
@@ -44,7 +44,7 @@
 
 //   // All your existing functions and logic remain unchanged.
 //   // ... (useEffect, handleSubmit, handleUsernameChange, etc.)
-  
+
 //   // Effect to set username from URL parameter
 //   useEffect(() => {
 //     const useridFromUrl = urlParams.get('userid');
@@ -55,7 +55,7 @@
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-    
+
 //     if (!user || !pass) {
 //       showToast("Please enter username and password", "error");
 //       return;
@@ -64,7 +64,7 @@
 //     setIsLoading(true);
 
 //     try {
-//       const loginResponse = await fetch('https://timesheet-subk.onrender.com/api/User/login', {
+//       const loginResponse = await fetch('${backendUrl}/api/User/login', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username: user, password: pass })
@@ -72,7 +72,7 @@
 
 //       if (loginResponse.ok) {
 //         const loginData = await loginResponse.json();
-        
+
 //         const userInfo = {
 //           id: loginData.id || user.toLowerCase().replace(/[^a-zA-Z0-9]/g, ''),
 //           name: loginData.fullName || loginData.name || user,
@@ -84,9 +84,9 @@
 
 //         console.log('Storing user info:', userInfo);
 //         localStorage.setItem('currentUser', JSON.stringify(userInfo));
-        
+
 //         showToast(`Welcome ${userInfo.name || 'User'}! Redirecting...`, "success");
-        
+
 //         setTimeout(() => {
 //           navigate("/dashboard/timesheet");
 //         }, 1000);
@@ -144,7 +144,6 @@
 //       setShowSuggestions(false);
 //     }
 //   };
-
 
 //   // ====================================================================
 //   // ===== ✨ IMPROVISED LIGHT DESIGN STARTS HERE ✨ ====================
@@ -241,9 +240,9 @@
 //   );
 // }
 
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { backendUrl } from "../components/config";
 
 // Simple toast function without container (No changes made here)
 const showToast = (message, type = "info") => {
@@ -313,14 +312,11 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const loginResponse = await fetch(
-        "https://timesheet-subk.onrender.com/api/User/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: user, password: pass }),
-        }
-      );
+      const loginResponse = await fetch(`${backendUrl}/api/User/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: user, password: pass }),
+      });
 
       if (loginResponse.ok) {
         const loginData = await loginResponse.json();
@@ -452,11 +448,11 @@ export default function Login() {
             </svg>
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-            Welcome Back!
+            Welcome !
           </h2>
-          <p className="text-md text-gray-600">
+          {/* <p className="text-md text-gray-600">
             Sign in to access your Subcontractor Timesheet
-          </p>
+          </p> */}
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">
           {/* Username Input */}

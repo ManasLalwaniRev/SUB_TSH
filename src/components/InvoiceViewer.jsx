@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { backendUrl } from "./config";
 
 const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   const [isLoading, setIsLoading] = useState(false);

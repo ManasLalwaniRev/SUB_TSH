@@ -187,7 +187,7 @@ export default function GroupsTable() {
       return 0;
     });
 
-   const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
     setUserLoaded(false);
@@ -353,14 +353,14 @@ export default function GroupsTable() {
               >
                 Add Record
               </button> */}
-              {/* <button
+          {/* <button
                 onClick={handleLogout}
                 className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
               >
                 Logout
               </button>
             </div>
-          // </div> */} 
+          // </div> */}
           <div className="w-full flex justify-between items-center mb-4 px-1">
             <h1 className="text-2xl font-bold text-gray-900">
               Purchase Orders Information

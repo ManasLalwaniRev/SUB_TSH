@@ -4,6 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { backendUrl } from "./config";
 
 const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +96,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   //         );
 
   //         const response = await fetch(
-  //           "https://timesheet-subk.onrender.com/api/Invoices",
+  //           "${backendUrl}/api/Invoices",
   //           {
   //             method: "POST",
   //             headers: { "Content-Type": "application/json" },
@@ -216,7 +217,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
           );
 
           const response = await fetch(
-            "https://timesheet-subk.onrender.com/api/Invoices",
+            `${backendUrl}/api/Invoices`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

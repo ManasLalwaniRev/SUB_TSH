@@ -30,7 +30,7 @@
 //         const fetchData = async () => {
 //             try {
 //                 setLoading(true);
-//                 const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
+//                 const response = await fetch(`${backendUrl}/api/Invoices`);
 //                 if (!response.ok) {
 //                     throw new Error(`API request failed with status ${response.status}`);
 //                 }
@@ -376,6 +376,7 @@ import Chart from 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 import { enUS } from 'date-fns/locale';
 import { Filter, X } from 'lucide-react';
+import { backendUrl } from './config';
 
 const DashboardGraphs = () => {
     const pieChartRef = useRef(null);
@@ -403,7 +404,7 @@ const DashboardGraphs = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('https://timesheet-subk.onrender.com/api/Invoices');
+                const response = await fetch(`${backendUrl}/api/Invoices`);
                 if (response.status === 404) {
                     setInvoiceData([]); // Treat 404 as "no data"
                 } else if (!response.ok) {

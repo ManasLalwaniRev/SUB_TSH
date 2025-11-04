@@ -644,7 +644,7 @@
 
 //       // Use existing resourceId from currentUser.username
 //       const resourceId = currentUser.username;
-//       const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+//       const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
 //       console.log("Fetching from:", apiUrl);
 
 //       const response = await fetch(apiUrl, {
@@ -918,7 +918,7 @@
 //         requestData: `Notification for timesheet ${row.id}`,
 //       }));
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkNotify",
+//         "${backendUrl}/api/Approval/BulkNotify",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1022,7 +1022,7 @@
 
 //     try {
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
+//         "${backendUrl}/api/Approval/BulkUpdateStatus?status=Correction",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1128,7 +1128,7 @@
 //       console.log("Bulk Approve Payload:", requestBody);
 
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+//         "${backendUrl}/api/Approval/BulkApprove",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1200,7 +1200,7 @@
 //       console.log("Bulk Reject Payload:", requestBody);
 
 //       const response = await fetch(
-//         "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+//         "${backendUrl}/api/Approval/BulkReject",
 //         {
 //           method: "POST",
 //           headers: { "Content-Type": "application/json" },
@@ -1320,7 +1320,6 @@
 //       </div>
 //     );
 //   }
-  
 
 //   return (
 //     <div className="min-h-screen bg-[#f9fafd] flex flex-col overflow-auto">
@@ -1357,7 +1356,7 @@
 //               >
 //                 Logout
 //               </button>
- 
+
 //                 <p className="text-gray-600">Manage and export invoice data</p>
 //               </div>
 //             </div>
@@ -1379,7 +1378,7 @@
 //                 </h1>
 //               </div>
 //             </div>
- 
+
 //             {/* Right Side: Logout Button */}
 //             <button
 //               onClick={handleLogout}
@@ -1861,8 +1860,6 @@
 //   );
 // }
 
-
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -1877,6 +1874,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import TimesheetApprovalModal from "./TimesheetApprovalModal";
+import { backendUrl } from "./config";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -2511,7 +2509,7 @@ export default function Approval() {
 
       // Use existing resourceId from currentUser.username
       const resourceId = currentUser.username;
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
       console.log("Fetching from:", apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -2789,7 +2787,7 @@ export default function Approval() {
         requestData: `Notification for timesheet ${row.id}`,
       }));
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkNotify",
+        `${backendUrl}/api/Approval/BulkNotify`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2893,7 +2891,7 @@ export default function Approval() {
 
     try {
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkUpdateStatus?status=Correction",
+        `${backendUrl}/api/Approval/BulkUpdateStatus?status=Correction`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2999,7 +2997,7 @@ export default function Approval() {
       console.log("Bulk Approve Payload:", requestBody);
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkApprove",
+        `${backendUrl}/api/Approval/BulkApprove`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -3071,7 +3069,7 @@ export default function Approval() {
       console.log("Bulk Reject Payload:", requestBody);
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/Approval/BulkReject",
+        `${backendUrl}/api/Approval/BulkReject`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
