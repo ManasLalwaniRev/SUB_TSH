@@ -399,7 +399,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
+      const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -525,7 +525,7 @@ export default function ExportTable() {
   //       return;
   //     }
 
-  //     const apiUrl = `https://timesheet-subk.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
+  //     const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
 
   //     const response = await fetch(apiUrl, {
   //       method: 'GET',
@@ -939,7 +939,7 @@ export default function ExportTable() {
   //     };
 
   //     // Send POST request with selected data (keep original export API)
-  //     const response = await fetch('https://timesheet-subk.onrender.com/api/SubkTimesheet/export-csv', {
+  //     const response = await fetch('https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-csv', {
   //       method: 'POST',
   //       headers: {
   //         'Content-Type': 'application/json',
@@ -1081,7 +1081,7 @@ export default function ExportTable() {
 
       // Send POST request with selected data
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/SubkTimesheet/export-csv",
+        "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-csv",
         {
           method: "POST",
           headers: {
@@ -1215,7 +1215,7 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1264,7 +1264,7 @@ export default function ExportTable() {
   //         try {
   //           // First fetch invoice preview data (same as preview functionality)
   //           const previewResponse = await fetch(
-  //             `https://timesheet-subk.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //               invoice.invoiceNumber
   //             )}`
   //           );
@@ -1510,7 +1510,7 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1662,7 +1662,7 @@ export default function ExportTable() {
       });
 
       const response = await fetch(
-        "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+        "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1816,7 +1816,7 @@ export default function ExportTable() {
   //       });
 
   //       const response = await fetch(
-  //         "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //         "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
   //         {
   //           method: "POST",
   //           headers: { "Content-Type": "application/json" },
@@ -1903,7 +1903,7 @@ export default function ExportTable() {
 
   //     // Send POST request with selected data
   //     const response = await fetch(
-  //       "https://timesheet-subk.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "PUT",
   //         headers: {

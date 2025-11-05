@@ -95,7 +95,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   //         );
 
   //         const response = await fetch(
-  //           "https://timesheet-subk.onrender.com/api/Invoices",
+  //           "https://timesheet-subk-latest.onrender.com/api/Invoices",
   //           {
   //             method: "POST",
   //             headers: { "Content-Type": "application/json" },
@@ -216,7 +216,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
           );
 
           const response = await fetch(
-            "https://timesheet-subk.onrender.com/api/Invoices",
+            "https://timesheet-subk-latest.onrender.com/api/Invoices",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },

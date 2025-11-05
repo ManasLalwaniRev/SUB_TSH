@@ -64,7 +64,7 @@
 //     setIsLoading(true);
 
 //     try {
-//       const loginResponse = await fetch('https://timesheet-subk.onrender.com/api/User/login', {
+//       const loginResponse = await fetch('https://timesheet-subk-latest.onrender.com/api/User/login', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
 //         body: JSON.stringify({ username: user, password: pass })
@@ -314,7 +314,7 @@ export default function Login() {
 
     try {
       const loginResponse = await fetch(
-        "https://timesheet-subk.onrender.com/api/User/login",
+        "https://timesheet-subk-latest.onrender.com/api/User/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -452,10 +452,10 @@ export default function Login() {
             </svg>
           </div>
           <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-            Welcome Back!
+            Welcome!
           </h2>
           <p className="text-md text-gray-600">
-            Sign in to access your Subcontractor Timesheet
+            
           </p>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">

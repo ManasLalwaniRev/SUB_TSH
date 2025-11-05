@@ -47,7 +47,7 @@
 //         setError('');
 
 //         try {
-//             const response = await fetch('https://timesheet-subk.onrender.com/api/User', {
+//             const response = await fetch('https://timesheet-subk-latest.onrender.com/api/User', {
 //                 method: 'POST',
 //                 headers: { 'Content-Type': 'application/json' },
 //                 body: JSON.stringify(formData),
@@ -145,7 +145,7 @@
 //         setError('');
 
 //         try {
-//             const response = await fetch(`https://timesheet-subk.onrender.com/api/User/${user.userId}`, {
+//             const response = await fetch(`https://timesheet-subk-latest.onrender.com/api/User/${user.userId}`, {
 //                 method: 'PUT',
 //                 headers: { 'Content-Type': 'application/json' },
 //                 body: JSON.stringify(formData),
@@ -236,7 +236,7 @@
 //         setError('');
 
 //         const isReset = type === 'reset';
-//         const url = `https://timesheet-subk.onrender.com/api/User/${user.userId}/${isReset ? 'reset-password' : 'update-password'}`;
+//         const url = `https://timesheet-subk-latest.onrender.com/api/User/${user.userId}/${isReset ? 'reset-password' : 'update-password'}`;
 //         const body = isReset ? { newPassword } : { currentPassword: oldPassword, newPassword };
 
 //         try {
@@ -368,7 +368,7 @@
 //         const fetchUsers = async () => {
 //             if (!currentUser) return;
 
-//             const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
+//             const baseApiUrl = 'https://timesheet-subk-latest.onrender.com/api/User';
 //             let apiUrl;
 
 //             if (isAdmin) {
@@ -665,7 +665,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
             setIsLoading(true);
             setServerError('');
             try {
-                const response = await fetch('https://timesheet-subk.onrender.com/api/User', {
+                const response = await fetch('https://timesheet-subk-latest.onrender.com/api/User', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData),
@@ -773,7 +773,7 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
         setError('');
 
         try {
-            const response = await fetch(`https://timesheet-subk.onrender.com/api/User/${user.userId}`, {
+            const response = await fetch(`https://timesheet-subk-latest.onrender.com/api/User/${user.userId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -864,7 +864,7 @@ const PasswordModal = ({ user, type, onClose }) => {
         setError('');
 
         const isReset = type === 'reset';
-        const url = `https://timesheet-subk.onrender.com/api/User/${user.userId}/${isReset ? 'reset-password' : 'update-password'}`;
+        const url = `https://timesheet-subk-latest.onrender.com/api/User/${user.userId}/${isReset ? 'reset-password' : 'update-password'}`;
         const body = isReset ? { newPassword } : { currentPassword: oldPassword, newPassword };
 
         try {
@@ -997,7 +997,7 @@ export default function UserTable() {
         const fetchUsers = async () => {
             if (!currentUser) return;
 
-            const baseApiUrl = 'https://timesheet-subk.onrender.com/api/User';
+            const baseApiUrl = 'https://timesheet-subk-latest.onrender.com/api/User';
             let apiUrl;
 
             if (isAdmin) {
