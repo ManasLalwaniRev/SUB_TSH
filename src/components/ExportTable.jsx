@@ -12,6 +12,8 @@ import {
   Package,
   Users,
 } from "lucide-react";
+import { backendUrl } from './config.jsx';
+
 
 // Add these icon components after your imports
 const CrossIcon = () => (
@@ -399,7 +401,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -525,7 +527,8 @@ export default function ExportTable() {
   //       return;
   //     }
 
-  //     const apiUrl = `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
+  //     const apiUrl = `${backendUrl}
+//api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=Approved&resourceId=${resourceId}`;
 
   //     const response = await fetch(apiUrl, {
   //       method: 'GET',
@@ -939,7 +942,8 @@ export default function ExportTable() {
   //     };
 
   //     // Send POST request with selected data (keep original export API)
-  //     const response = await fetch('https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-csv', {
+  //     const response = await fetch('${backendUrl}
+//api/SubkTimesheet/export-csv', {
   //       method: 'POST',
   //       headers: {
   //         'Content-Type': 'application/json',
@@ -1081,7 +1085,7 @@ export default function ExportTable() {
 
       // Send POST request with selected data
       const response = await fetch(
-        "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-csv",
+        `${backendUrl}/api/SubkTimesheet/export-csv`,
         {
           method: "POST",
           headers: {
@@ -1215,7 +1219,8 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "${backendUrl}
+//api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1264,7 +1269,8 @@ export default function ExportTable() {
   //         try {
   //           // First fetch invoice preview data (same as preview functionality)
   //           const previewResponse = await fetch(
-  //             `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+  //             `${backendUrl}
+//api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
   //               invoice.invoiceNumber
   //             )}`
   //           );
@@ -1510,7 +1516,8 @@ export default function ExportTable() {
   //     });
 
   //     const response = await fetch(
-  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
+  //       "${backendUrl}
+//api/SubkTimesheet/GenerateInvoice",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
@@ -1662,7 +1669,7 @@ export default function ExportTable() {
       });
 
       const response = await fetch(
-        "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
+        `${backendUrl}/api/SubkTimesheet/GenerateInvoice`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1773,234 +1780,7 @@ export default function ExportTable() {
     }
   };
 
-  //   const handleGenerateInvoice = async (e) => {
-  //     e.preventDefault();
-  //     e.stopPropagation();
-  //     if (actionLoading) return;
-
-  //     if (selectedRows.size === 0) {
-  //       showToast("Please select at least one timesheet to export", "warning");
-  //       return;
-  //     }
-
-  //     try {
-  //       setActionLoading(true);
-
-  //       const selectedData = filteredRows.filter((row) =>
-  //         selectedRows.has(row.id)
-  //       );
-
-  //       if (selectedData.length === 0) {
-  //         showToast("No selected data to export", "warning");
-  //         setActionLoading(false);
-  //         return;
-  //       }
-
-  //       const payload = selectedData.map((row) => {
-  //         const originalItem = row.originalItem;
-  //         return {
-  //           ...originalItem,
-  //           CreatedBy:
-  //             originalItem.CreatedBy ||
-  //             currentUser?.username ||
-  //             currentUser?.id ||
-  //             "admin",
-  //           UpdatedBy:
-  //             originalItem.UpdatedBy ||
-  //             currentUser?.username ||
-  //             currentUser?.id ||
-  //             "admin",
-  //           CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
-  //           UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
-  //         };
-  //       });
-
-  //       const response = await fetch(
-  //         "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
-  //         {
-  //           method: "POST",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify(payload),
-  //         }
-  //       );
-
-  //       if (!response.ok) {
-  //         throw new Error(`HTTP error! status: ${response.status}`);
-  //       }
-
-  //       const invoiceData = await response.json();
-
-  //       // Group duplicate items with same plc, vendor, employee
-  // const groupedInvoiceData = groupInvoiceData(invoiceData);
-  // console.log("Grouped invoice data:", groupedInvoiceData);
-
-  //       // Debug log the invoice data received from API
-  //       console.log("Invoice data received:", invoiceData);
-
-  //       // Set to state for InvoiceViewer
-  //       setShowInvoice(invoiceData);
-
-  //       showToast(
-  //         `Invoice preview for ${selectedData.length} timesheets`,
-  //         "success"
-  //       );
-  //       setInvoiceModalVisible(true);
-  //     } catch (error) {
-  //       console.error("Generate Invoice error:", error);
-  //       showToast(error.message || "Invoice generation failed", "error");
-  //     } finally {
-  //       setActionLoading(false);
-  //     }
-  //   };
-
-  // const handleGenrateInvoice = async (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   if (actionLoading) return;
-
-  //   if (selectedRows.size === 0) {
-  //     showToast("Please select at least one timesheet to export", "warning");
-  //     return;
-  //   }
-
-  //   try {
-  //     setActionLoading(true);
-
-  //     // Get selected row data
-  //     const selectedData = filteredRows.filter((row) =>
-  //       selectedRows.has(row.id)
-  //     );
-
-  //     if (selectedData.length === 0) {
-  //       showToast("No selected data to export", "warning");
-  //       return;
-  //     }
-
-  //     // Prepare payload with selected row data - ADD CREATEDBY FIELD
-  //     const payload = selectedData.map((row) => {
-  //       const originalItem = row.originalItem;
-
-  //       // Ensure CreatedBy field is included
-  //       return {
-  //         ...originalItem,
-  //         CreatedBy:
-  //           originalItem.CreatedBy ||
-  //           currentUser?.username ||
-  //           currentUser?.id ||
-  //           "admin",
-  //         // Add other potentially missing required fields
-  //         UpdatedBy:
-  //           originalItem.UpdatedBy ||
-  //           currentUser?.username ||
-  //           currentUser?.id ||
-  //           "admin",
-  //         CreatedAt: originalItem.CreatedAt || new Date().toISOString(),
-  //         UpdatedAt: originalItem.UpdatedAt || new Date().toISOString(),
-  //       };
-  //     });
-
-  //     console.log("Export payload:", payload); // Debug log to verify CreatedBy field
-
-  //     // Send POST request with selected data
-  //     const response = await fetch(
-  //       "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/GenerateInvoice",
-  //       {
-  //         method: "PUT",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(payload), // Send the enhanced payload with CreatedBy
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       const contentType = response.headers.get("content-type");
-  //       if (contentType && contentType.includes("text/csv")) {
-  //         const csvData = await response.text();
-  //         const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
-  //         const url = window.URL.createObjectURL(blob);
-  //         const a = document.createElement("a");
-  //         a.href = url;
-  //         a.download = `exported_selected_timesheets_${
-  //           new Date().toISOString().split("T")[0]
-  //         }.csv`;
-  //         document.body.appendChild(a);
-  //         a.click();
-  //         a.remove();
-  //         window.URL.revokeObjectURL(url);
-  //         showToast(
-  //           `Exported ${selectedData.length} selected timesheets successfully`,
-  //           "success"
-  //         );
-  //       } else {
-  //         // Fallback CSV generation
-  //         const csvHeaders = dynamicColumns.join(",");
-  //         const csvRows = selectedData.map((row) =>
-  //           dynamicColumns
-  //             .map((col) => {
-  //               const value = row[col] || "";
-  //               return `"${String(value).replace(/"/g, '""')}"`;
-  //             })
-  //             .join(",")
-  //         );
-  //         const csvContent = [csvHeaders, ...csvRows].join("\n");
-  //         const blob = new Blob([csvContent], {
-  //           type: "text/csv;charset=utf-8;",
-  //         });
-  //         const url = window.URL.createObjectURL(blob);
-  //         const a = document.createElement("a");
-  //         a.href = url;
-  //         a.download = `exported_selected_timesheets_${
-  //           new Date().toISOString().split("T")[0]
-  //         }.csv`;
-  //         document.body.appendChild(a);
-  //         a.click();
-  //         a.remove();
-  //         window.URL.revokeObjectURL(url);
-  //         showToast(
-  //           `Exported ${selectedData.length} selected timesheets successfully`,
-  //           "success"
-  //         );
-  //       }
-  //     } else {
-  //       // Enhanced error handling
-  //       let errorMessage = "Export failed. Please try again.";
-  //       try {
-  //         const contentType = response.headers.get("content-type");
-  //         if (contentType && contentType.includes("application/json")) {
-  //           const errorData = await response.json();
-  //           if (errorData.errors) {
-  //             // Handle validation errors
-  //             const validationErrors = Object.entries(errorData.errors)
-  //               .map(
-  //                 ([field, messages]) =>
-  //                   `${field}: ${
-  //                     Array.isArray(messages) ? messages.join(", ") : messages
-  //                   }`
-  //               )
-  //               .join("; ");
-  //             errorMessage = `Validation Error: ${validationErrors}`;
-  //           } else if (errorData.title) {
-  //             errorMessage = errorData.title;
-  //           } else if (errorData.message) {
-  //             errorMessage = errorData.message;
-  //           }
-  //         } else {
-  //           errorMessage = (await response.text()) || errorMessage;
-  //         }
-  //       } catch (parseError) {
-  //         console.error("Error parsing response:", parseError);
-  //         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-  //       }
-  //       throw new Error(errorMessage);
-  //     }
-  //   } catch (error) {
-  //     console.error("Export error:", error);
-  //     showToast(error.message || "Export failed. Please try again.", "error");
-  //   } finally {
-  //     setActionLoading(false);
-  //   }
-  // };
+  
 
   if (!userLoaded || !currentUser) {
     return (
@@ -2034,20 +1814,7 @@ export default function ExportTable() {
     );
   }
 
-  // if (loading) {
-  //   return (
-  //     <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
-  //       <div className="flex-1 flex items-center justify-center">
-  //         <div className="flex items-center">
-  //           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  //           <span className="ml-2">Loading export data...</span>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  // Add this before your return statement
+  
 
   if (loading) {
     return (
@@ -2071,30 +1838,7 @@ export default function ExportTable() {
     <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4 overflow-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8">
         <div className="w-full flex flex-col items-center">
-          {/* <div
-            className="w-full flex justify-between items-center mb-4"
-            style={{
-              marginLeft: 24,
-              marginRight: 24,
-              width: "calc(100vw - 220px)",
-            }}
-          >
-            <div className="flex items-center">
-              <Download className="h-8 w-8 text-green-600 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Generate Invoice
-                </h1>
-                <button
-                  onClick={handleLogout}
-                  className="absolute top-6 right-8 bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
-                >
-                  Logout
-                </button>
-                <p className="text-gray-600">Manage and export invoice data</p>
-              </div>
-            </div>
-          </div> */}
+         
            <div
   className="w-full flex justify-between items-center mb-4"
   style={{
