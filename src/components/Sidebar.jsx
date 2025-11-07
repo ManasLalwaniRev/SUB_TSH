@@ -638,6 +638,8 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
+import { backendUrl } from './config.jsx';
+
  
 // Individual Sidebar Item Component for cleaner code
 const SidebarItem = ({

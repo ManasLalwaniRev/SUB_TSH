@@ -6,6 +6,8 @@ import InvoiceViewer from "./InvoiceViewer";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import logoImg from "../assets/image.png";
+import { backendUrl } from './config.jsx';
+
 
 export default function InvoiceExport() {
   const [invoices, setInvoices] = useState([]);
@@ -65,7 +67,7 @@ export default function InvoiceExport() {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://timesheet-subk-latest.onrender.com/api/Invoices"
+          `${backendUrl}/api/Invoices`
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -214,7 +216,8 @@ export default function InvoiceExport() {
 
       // API call to update the invoice using the correct endpoint
       const response = await fetch(
-        `https://timesheet-subk-latest.onrender.com/api/Invoices/${
+        `${backendUrl}
+/api/Invoices/${
           invoice.invoiceId || invoice.id
         }`,
         {
@@ -265,59 +268,7 @@ export default function InvoiceExport() {
     }
   };
 
-  // Handle preview click
-  // const handlePreview = async (invoice) => {
-  //   try {
-  //     setPreviewModalVisible(true);
-  //     setPreviewData(null);
-
-  //     const response = await fetch(
-  //       `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-  //         invoice.invoiceNumber
-  //       )}`
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error(`Failed to fetch invoice preview: ${response.status}`);
-  //     }
-
-  //     const apiData = await response.json();
-
-  //     const transformedData = [
-  //       {
-  //         invoiceId: apiData.invoiceId || " ",
-  //         invoiceDate: formatDate(apiData.invoiceDate) || " ",
-  //         period: apiData.period || " ",
-  //         currency: apiData.currency || " ",
-  //         totalAmount: apiData.totalAmount || 0,
-
-  //         lineItems: (apiData.lineItems || []).map((item, index) => ({
-  //           poLine: item.poLine || " ",
-  //           plc: item.plc || " ",
-  //           vendor: item.vendor || " ",
-  //           employee: item.employee || " ",
-  //           hours: item.hours || 0,
-  //           rate: item.rate || 0,
-  //           amount: item.amount || 0,
-  //           line_No: item.line_No || " ",
-  //         })),
-
-  //         billTo: apiData.billTo || " ",
-  //         buyer: apiData.buyer || " ",
-  //         po_Number: apiData.po_Number || " ",
-  //         po_rlse_Number: apiData.po_rlse_Number || " ",
-  //         po_Start_End_Date: apiData.po_Start_End_Date || " ",
-  //         terms: apiData.terms || " ",
-  //         amountDue: apiData.totalAmount || 0,
-  //       },
-  //     ];
-
-  //     setPreviewData(transformedData);
-  //   } catch (error) {
-  //     console.error("Error fetching invoice preview:", error);
-  //     alert(`Failed to load invoice preview: ${error.message}`);
-  //   }
-  // };
+  
 
   const handlePreview = async (invoice) => {
     try {
@@ -325,7 +276,8 @@ export default function InvoiceExport() {
       setPreviewData(null);
 
       const response = await fetch(
-        `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+        `${backendUrl}
+/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
           invoice.invoiceNumber
         )}`
       );
@@ -436,407 +388,7 @@ export default function InvoiceExport() {
     }
   };
 
-  // Download invoices function
-  // const downloadInvoices = async () => {
-  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-  //     selectedInvoices.has(invoice.invoiceId || index)
-  //   );
-
-  //   if (invoicesToDownload.length === 0) {
-  //     alert("Please select invoices to download");
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsDownloading(true);
-
-  //     for (let i = 0; i < invoicesToDownload.length; i++) {
-  //       const invoice = invoicesToDownload[i];
-  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-
-  //       if (!invoiceId) {
-  //         console.warn(
-  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-  //         );
-  //         continue;
-  //       }
-
-  //       try {
-  //         // First fetch invoice preview data (same as preview functionality)
-  //         const previewResponse = await fetch(
-  //           `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-  //             invoice.invoiceNumber
-  //           )}`
-  //         );
-
-  //         if (!previewResponse.ok) {
-  //           throw new Error(
-  //             `Failed to fetch invoice preview: ${previewResponse.status}`
-  //           );
-  //         }
-
-  //         const apiData = await previewResponse.json();
-
-  //         // Transform data exactly like in handlePreview
-  //         const transformedData = [
-  //           {
-  //             invoiceId: apiData.invoiceId || " ",
-  //             invoiceDate: apiData.period || " ",
-  //             currency: apiData.currency || " ",
-  //             totalAmount: apiData.totalAmount || 0,
-  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
-  //               poLine: item.poLine || " ",
-  //               plc: item.plc || " ",
-  //               vendor: item.vendor || " ",
-  //               employee: item.employee || " ",
-  //               hours: item.hours || 0,
-  //               rate: item.rate || 0,
-  //               amount: item.amount || 0,
-  //               line_No: item.line_No || " ",
-  //             })),
-  //             billTo: apiData.billTo || " ",
-  //             buyer: apiData.buyer || " ",
-  //             terms: apiData.terms || " ",
-  //             amountDue: apiData.totalAmount || 0,
-  //             po_Number: apiData.po_Number || "",
-  //             po_rlse_Number: apiData.po_rlse_Number || " ",
-  //             po_Start_End_Date: apiData.Po_Start_End_Date || " ",
-  //           },
-  //         ];
-
-  //         // Create temporary container to render InvoiceViewer component
-  //         const tempContainer = document.createElement("div");
-  //         tempContainer.style.position = "absolute";
-  //         tempContainer.style.left = "-9999px";
-  //         tempContainer.style.width = "800px";
-  //         tempContainer.style.backgroundColor = "white";
-  //         document.body.appendChild(tempContainer);
-
-  //         // Create temporary React root and render InvoiceViewer
-  //         const ReactDOM = (await import("react-dom/client")).default;
-  //         const React = (await import("react")).default;
-
-  //         // Import InvoiceViewer component
-  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-  //         const root = ReactDOM.createRoot(tempContainer);
-
-  //         // Render InvoiceViewer component
-  //         await new Promise((resolve) => {
-  //           root.render(
-  //             React.createElement(InvoiceViewer, {
-  //               data: transformedData,
-  //               setInvoiceModalVisible: () => {},
-  //             })
-  //           );
-
-  //           // Wait for component to render
-  //           setTimeout(resolve, 500);
-  //         });
-
-  //         // Find the invoice content div (the one with ref)
-  //         const input = tempContainer.querySelector(
-  //           'div[style*="max-width: 768px"]'
-  //         );
-
-  //         if (!input) {
-  //           throw new Error("Invoice content not found");
-  //         }
-
-  //         // Use exact same PDF generation logic as handleDownloadPdf
-  //         const pdf = new jsPDF("p", "mm", "a4");
-  //         const padding = 10;
-  //         const canvas = await html2canvas(input, { scale: 2, useCORS: true });
-  //         const imgData = canvas.toDataURL("image/png");
-
-  //         const pdfWidth = pdf.internal.pageSize.getWidth();
-  //         const pdfHeight = pdf.internal.pageSize.getHeight();
-
-  //         const usableWidth = pdfWidth - 2 * padding;
-  //         const usableHeight = pdfHeight - 2 * padding;
-
-  //         const imgProps = pdf.getImageProperties(imgData);
-  //         const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
-
-  //         let heightLeft = pdfImgHeight;
-  //         let position = padding;
-
-  //         pdf.addImage(
-  //           imgData,
-  //           "PNG",
-  //           padding,
-  //           position,
-  //           usableWidth,
-  //           pdfImgHeight
-  //         );
-  //         heightLeft -= usableHeight;
-
-  //         while (heightLeft > 0) {
-  //           pdf.addPage();
-  //           position = padding - heightLeft;
-  //           pdf.addImage(
-  //             imgData,
-  //             "PNG",
-  //             padding,
-  //             position,
-  //             usableWidth,
-  //             pdfImgHeight
-  //           );
-  //           heightLeft -= usableHeight;
-  //         }
-
-  //         // Clean up
-  //         root.unmount();
-  //         document.body.removeChild(tempContainer);
-
-  //         // Save PDF with invoice number as filename
-  //         const filename = `${
-  //           invoice.invoiceNumber || `invoice_${invoiceId}`
-  //         }.pdf`;
-  //         pdf.save(filename);
-
-  //         // Add delay between downloads
-  //         if (i < invoicesToDownload.length - 1) {
-  //           await new Promise((resolve) => setTimeout(resolve, 1000));
-  //         }
-  //       } catch (invoiceError) {
-  //         console.error(
-  //           `Error downloading invoice ${invoiceId}:`,
-  //           invoiceError
-  //         );
-  //         alert(
-  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-  //         );
-  //       }
-  //     }
-
-  //     const successMessage =
-  //       invoicesToDownload.length === 1
-  //         ? "Invoice downloaded successfully!"
-  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-  //     alert(successMessage);
-  //   } catch (error) {
-  //     console.error("Error during download process:", error);
-  //     alert(`Download failed: ${error.message}`);
-  //   } finally {
-  //     setIsDownloading(false);
-  //   }
-  // };
-
-  //   const downloadInvoices = async () => {
-  //   const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
-  //     selectedInvoices.has(invoice.invoiceId || index)
-  //   );
-
-  //   if (invoicesToDownload.length === 0) {
-  //     alert("Please select invoices to download");
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsDownloading(true);
-
-  //     for (let i = 0; i < invoicesToDownload.length; i++) {
-  //       const invoice = invoicesToDownload[i];
-  //       const invoiceId = invoice.invoiceId || invoice.invoiceNumber;
-
-  //       if (!invoiceId) {
-  //         console.warn(
-  //           `Skipping invoice without ID: ${JSON.stringify(invoice)}`
-  //         );
-  //         continue;
-  //       }
-
-  //       try {
-  //         // First fetch invoice preview data
-  //         const previewResponse = await fetch(
-  //           `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
-  //             invoice.invoiceNumber
-  //           )}`
-  //         );
-
-  //         if (!previewResponse.ok) {
-  //           throw new Error(
-  //             `Failed to fetch invoice preview: ${previewResponse.status}`
-  //           );
-  //         }
-
-  //         const apiData = await previewResponse.json();
-
-  //         // Transform data exactly like in handlePreview
-  //         const transformedData = [
-  //           {
-  //             invoiceId: apiData.invoiceId || " ",
-  //             invoiceDate: apiData.period || " ",
-  //             currency: apiData.currency || " ",
-  //             totalAmount: apiData.totalAmount || 0,
-
-  //             lineItems: (apiData.lineItems || []).map((item, index) => ({
-  //               poLine: item.poLine || " ",
-  //               plc: item.plc || " ",
-  //               vendor: item.vendor || " ",
-  //               employee: item.employee || " ",
-  //               hours: item.hours || 0,
-  //               rate: item.rate || 0,
-  //               amount: item.amount || 0,
-  //               line_No: item.line_No || " ",
-  //             })),
-
-  //             billTo: apiData.billTo || " ",
-  //             buyer: apiData.buyer || " ",
-  //             purchaseOrderId: apiData.po_Number || " ",
-  //             releaseNumber: apiData.po_rlse_Number || " ",
-  //             poStartEndDate: apiData.po_Start_End_Date || " ",
-  //             terms: apiData.terms || " ",
-  //             amountDue: apiData.totalAmount || 0,
-  //             period: apiData.period || " ",
-  //             po_Number: apiData.po_Number || " ",
-  //             po_rlse_Number: apiData.po_rlse_Number || " ",
-  //             po_Start_End_Date: apiData.po_Start_End_Date || " ",
-  //           },
-  //         ];
-
-  //         // Create temporary container with proper sizing for large invoices
-  //         const tempContainer = document.createElement("div");
-  //         tempContainer.style.position = "absolute";
-  //         tempContainer.style.left = "-9999px";
-  //         tempContainer.style.width = "210mm"; // A4 width
-  //         tempContainer.style.minHeight = "297mm"; // A4 height
-  //         tempContainer.style.backgroundColor = "white";
-  //         tempContainer.style.padding = "0";
-  //         tempContainer.style.margin = "0";
-  //         tempContainer.style.overflow = "visible";
-  //         document.body.appendChild(tempContainer);
-
-  //         // Create temporary React root and render InvoiceViewer
-  //         const ReactDOM = (await import("react-dom/client")).default;
-  //         const React = (await import("react")).default;
-
-  //         // Import InvoiceViewer component
-  //         const { default: InvoiceViewer } = await import("./InvoiceViewer");
-
-  //         const root = ReactDOM.createRoot(tempContainer);
-
-  //         // Render InvoiceViewer component
-  //         await new Promise((resolve) => {
-  //           root.render(
-  //             React.createElement(InvoiceViewer, {
-  //               data: transformedData,
-  //               setInvoiceModalVisible: () => {},
-  //             })
-  //           );
-
-  //           // Wait longer for component to render completely with all line items
-  //           setTimeout(resolve, 1500);
-  //         });
-
-  //         // Find the invoice content div
-  //         const input = tempContainer.querySelector(
-  //           'div[style*="max-width: 768px"], .invoice-content, .invoice-viewer'
-  //         ) || tempContainer.firstElementChild;
-
-  //         if (!input) {
-  //           throw new Error("Invoice content not found");
-  //         }
-
-  //         // Enhanced PDF generation for large invoices
-  //         const pdf = new jsPDF("p", "mm", "a4");
-
-  //         // Improved html2canvas options for better quality and large content handling
-  //         const canvas = await html2canvas(input, {
-  //           scale: 1.5, // Reduced scale for better performance with large content
-  //           useCORS: true,
-  //           allowTaint: true,
-  //           backgroundColor: '#ffffff',
-  //           scrollX: 0,
-  //           scrollY: 0,
-  //           width: input.scrollWidth,
-  //           height: input.scrollHeight,
-  //           windowWidth: input.scrollWidth,
-  //           windowHeight: input.scrollHeight
-  //         });
-
-  //         const imgData = canvas.toDataURL("image/png", 0.95); // Slightly compressed for smaller file size
-
-  //         const pdfWidth = pdf.internal.pageSize.getWidth();
-  //         const pdfHeight = pdf.internal.pageSize.getHeight();
-  //         const padding = 5; // Reduced padding for more content space
-
-  //         const usableWidth = pdfWidth - 2 * padding;
-  //         const usableHeight = pdfHeight - 2 * padding;
-
-  //         const imgProps = pdf.getImageProperties(imgData);
-  //         const aspectRatio = imgProps.height / imgProps.width;
-  //         const pdfImgHeight = usableWidth * aspectRatio;
-
-  //         let heightLeft = pdfImgHeight;
-  //         let position = padding;
-
-  //         // Add first page
-  //         pdf.addImage(
-  //           imgData,
-  //           "PNG",
-  //           padding,
-  //           position,
-  //           usableWidth,
-  //           pdfImgHeight
-  //         );
-  //         heightLeft -= usableHeight;
-
-  //         // Add additional pages for large invoices
-  //         while (heightLeft > 0) {
-  //           pdf.addPage();
-  //           position = -(pdfImgHeight - heightLeft) + padding;
-  //           pdf.addImage(
-  //             imgData,
-  //             "PNG",
-  //             padding,
-  //             position,
-  //             usableWidth,
-  //             pdfImgHeight
-  //           );
-  //           heightLeft -= usableHeight;
-  //         }
-
-  //         // Clean up
-  //         root.unmount();
-  //         document.body.removeChild(tempContainer);
-
-  //         // Save PDF with invoice number as filename
-  //         const filename = `${
-  //           invoice.invoiceNumber || `invoice_${invoiceId}`
-  //         }.pdf`;
-  //         pdf.save(filename);
-
-  //         // Add delay between downloads to prevent browser blocking
-  //         if (i < invoicesToDownload.length - 1) {
-  //           await new Promise((resolve) => setTimeout(resolve, 2000));
-  //         }
-  //       } catch (invoiceError) {
-  //         console.error(
-  //           `Error downloading invoice ${invoiceId}:`,
-  //           invoiceError
-  //         );
-  //         alert(
-  //           `Failed to download invoice ${invoiceId}: ${invoiceError.message}`
-  //         );
-  //       }
-  //     }
-
-  //     const successMessage =
-  //       invoicesToDownload.length === 1
-  //         ? "Invoice downloaded successfully!"
-  //         : `${invoicesToDownload.length} invoices downloaded successfully!`;
-
-  //     alert(successMessage);
-  //   } catch (error) {
-  //     console.error("Error during download process:", error);
-  //     alert(`Download failed: ${error.message}`);
-  //   } finally {
-  //     setIsDownloading(false);
-  //   }
-  // };
+ 
 
   const downloadInvoices = async () => {
     const invoicesToDownload = filteredInvoices.filter((invoice, index) =>
@@ -865,7 +417,8 @@ export default function InvoiceExport() {
         try {
           // First fetch invoice preview data
           const previewResponse = await fetch(
-            `https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
+            `${backendUrl}
+/api/SubkTimesheet/PreviewInvoice?Invoice_Number=${encodeURIComponent(
               invoice.invoiceNumber
             )}`
           );
@@ -1249,7 +802,7 @@ export default function InvoiceExport() {
       try {
         // Send the array directly as the request body (not wrapped in an object)
         const response = await fetch(
-          "https://timesheet-subk-latest.onrender.com/api/SubkTimesheet/export-invoices",
+          `${backendUrl}/api/SubkTimesheet/export-invoices`,
           {
             method: "POST",
             headers: {
@@ -1318,7 +871,8 @@ export default function InvoiceExport() {
         for (const invoice of invoicesToExport) {
           try {
             const updateResponse = await fetch(
-              `https://timesheet-subk-latest.onrender.com/api/Invoices/${invoice.invoiceId}`,
+              `${backendUrl}
+/api/Invoices/${invoice.invoiceId}`,
               {
                 method: "PUT",
                 headers: {
