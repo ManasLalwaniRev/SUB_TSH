@@ -4,8 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { backendUrl } from './config.jsx';
-
+import { backendUrl } from "./config";
 
 const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -20,6 +19,145 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
     return <div>No invoice data available</div>;
   }
 
+  // Handle API calls only (no download) when clicking "Confirm"
+  // const handleConfirmInvoices = async () => {
+  //   setIsLoading(true);
+
+  //   try {
+  //     const successfulInvoices = new Set();
+
+  //     // Process each invoice separately with API calls
+  //     for (let i = 0; i < data.length; i++) {
+  //       const invoice = data[i];
+
+  //       try {
+  //         const totalAmount = invoice.lineItems.reduce(
+  //           (acc, line) => acc + line.amount,
+  //           0
+  //         );
+
+  //         // const invoicePayload = {
+  //         //   invoiceNumber: invoice.invoiceId,
+
+  //         //   invoiceAmount: totalAmount,
+  //         //   createdBy: "Test",
+  //         //   updatedBy: "Test",
+  //         //   billTo: invoice.billTo,
+  //         //   remitTo: invoice.remitTo,
+  //         //   po_Number: invoice.po_Number,
+  //         //   currency: invoice.currency,
+  //         //   invoiceTimesheetLines: invoice.lineItems.map((line) => ({
+  //         //     poLineNumber: line.poLine,
+  //         //     timesheetLineNo: line.line_No,
+  //         //     mappedHours: line.hours,
+  //         //     mappedAmount: line.amount,
+  //         //     rate: line.rate,
+  //         //     employee: line.employee,
+  //         //     vendor: line.vendor,
+  //         //     plc: line.plc,
+  //         //     hours_Date: line.hours_Date,
+  //         //     createdBy: "Test",
+  //         //     updatedBy: "Test",
+  //         //   })),
+  //         // };
+
+  //         const invoicePayload = {
+  //           invoiceNumber: invoice.invoiceId,
+  //           invoiceDate: new Date(invoice.period).toISOString(),
+  //           invoiceAmount: invoice.totalAmount,
+  //           createdBy: "Test",
+  //           updatedBy: "Test",
+  //           billTo: invoice.billTo,
+  //           remitTo: invoice.remitTo,
+  //           po_Number: invoice.po_Number,
+  //           po_rlse_Number: invoice.po_rlse_Number,
+  //           po_Start_End_Date: invoice.po_Start_End_Date,
+  //           buyer: invoice.buyer,
+  //           terms: invoice.terms,
+  //           currency: invoice.currency,
+  //           invoiceTimesheetLines: invoice.lineItems.map((line) => ({
+  //             poLineNumber: line.poLine,
+  //             timesheetLineNo: line.line_No,
+  //             mappedHours: line.hours,
+  //             mappedAmount: line.amount,
+  //             rate: line.rate,
+  //             employee: line.employee,
+  //             vendor: line.vendor,
+  //             plc: line.plc,
+  //             hours_Date: line.hours_Date,
+  //             createdBy: "Test",
+  //             updatedBy: "Test",
+  //           })),
+  //         };
+
+  //         console.log(
+  //           `Creating invoice ${i + 1}/${data.length}:`,
+  //           invoicePayload
+  //         );
+
+  //         const response = await fetch(
+  //           "${backendUrl}/api/Invoices",
+  //           {
+  //             method: "POST",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify(invoicePayload),
+  //           }
+  //         );
+
+  //         if (!response.ok) {
+  //           throw new Error(
+  //             `Failed to create invoice ${invoice.invoiceId}: ${response.status}`
+  //           );
+  //         }
+
+  //         const responseData = await response.json();
+  //         console.log(`Invoice ${i + 1} created successfully:`, responseData);
+
+  //         successfulInvoices.add(i);
+  //         toast.success(
+  //           `Invoice ${i + 1} (${invoice.invoiceId}) created successfully`
+  //         );
+
+  //         // Small delay between API calls to prevent overwhelming the server
+  //         if (i < data.length - 1) {
+  //           await new Promise((resolve) => setTimeout(resolve, 500));
+  //         }
+  //       } catch (error) {
+  //         console.error(`Error creating invoice ${i + 1}:`, error);
+  //         toast.error(`Failed to create invoice ${i + 1}: ${error.message}`);
+  //       }
+  //     }
+
+  //     setInvoicesCreated(successfulInvoices);
+
+  //     if (successfulInvoices.size === data.length) {
+  //       toast.success(
+  //         `All ${data.length} invoices created successfully! You can now download them individually.`
+  //       );
+  //     } else if (successfulInvoices.size > 0) {
+  //       toast.warning(
+  //         `${successfulInvoices.size}/${data.length} invoices created successfully. Some failed - check individual statuses.`
+  //       );
+  //     } else {
+  //       toast.error("Failed to create any invoices. Please try again.");
+  //     }
+
+  //     setInvoiceModalVisible(false);
+  //     // Call success callback
+  //     if (onInvoiceSuccess && successfulInvoices.size > 0) {
+  //       setTimeout(() => {
+  //         onInvoiceSuccess(
+  //           data.filter((_, index) => successfulInvoices.has(index))
+  //         );
+  //       }, 1000);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error in invoice confirmation process:", error);
+  //     toast.error("Error processing invoices");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Handle API calls only (no download) when clicking "Confirm"
   const handleConfirmInvoices = async () => {

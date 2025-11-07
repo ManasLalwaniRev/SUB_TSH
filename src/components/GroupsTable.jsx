@@ -4,8 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
-import { backendUrl } from './config.jsx';
-
+import { backendUrl } from "./config";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -434,7 +433,10 @@ export default function GroupsTable() {
   };
 
   useEffect(() => {
-    if (processedRows.length > 0 && selectedRows.length === processedRows.length) {
+    if (
+      processedRows.length > 0 &&
+      selectedRows.length === processedRows.length
+    ) {
       setSelectAll(true);
     } else {
       setSelectAll(false);
@@ -533,7 +535,9 @@ export default function GroupsTable() {
                           key={col}
                           className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-blue-50 cursor-pointer select-none"
                           onClick={() =>
-                            col !== "Actions" && col !== "All" && handleSort(col)
+                            col !== "Actions" &&
+                            col !== "All" &&
+                            handleSort(col)
                           }
                         >
                           {col === "All" ? (
@@ -583,7 +587,9 @@ export default function GroupsTable() {
                                   <input
                                     type="checkbox"
                                     checked={selectedRows.includes(row.id)}
-                                    onChange={() => handleCheckboxChange(row.id)}
+                                    onChange={() =>
+                                      handleCheckboxChange(row.id)
+                                    }
                                     className="cursor-pointer w-4 h-4"
                                   />
                                 </td>

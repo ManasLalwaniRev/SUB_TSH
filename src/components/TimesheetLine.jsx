@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { backendUrl } from './config.jsx';
+import { backendUrl } from './config';
+
 
 
 

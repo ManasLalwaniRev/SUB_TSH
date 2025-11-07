@@ -1,7 +1,5 @@
 // components/WorkflowLevelsTable.jsx
 import React from "react";
-import { backendUrl } from './config.jsx';
-
 
 const workflowRows = [
   { levelNo: 1, levelName: "Project Manager" },
