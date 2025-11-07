@@ -32,7 +32,6 @@ const showToast = (message, type = "info") => {
 };
 
 const groupColumns = [
-  "All",
   "Purchase Order",
   "Release Number",
   "PO Line Number",
@@ -80,9 +79,6 @@ export default function GroupsTable() {
 
   const [editingRowId, setEditingRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState(null);
-
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
 
   const poInfoFileInputRef = useRef(null);
   const vendorMasterFileInputRef = useRef(null);
@@ -342,26 +338,6 @@ export default function GroupsTable() {
     }
   };
 
-  const handleCheckboxChange = (rowId) => {
-    setSelectedRows((prevSelected) => {
-      if (prevSelected.includes(rowId)) {
-        return prevSelected.filter((id) => id !== rowId);
-      } else {
-        return [...prevSelected, rowId];
-      }
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRows([]);
-      setSelectAll(false);
-    } else {
-      setSelectedRows(processedRows.map((row) => row.id));
-      setSelectAll(true);
-    }
-  };
-
   const handleImportPOInfo = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -385,8 +361,6 @@ export default function GroupsTable() {
       }
 
       showToast("PO Info imported successfully!", "success");
-      setSelectedRows([]);
-      setSelectAll(false);
       fetchData();
     } catch (error) {
       console.error("Import PO Info Error:", error);
@@ -420,8 +394,6 @@ export default function GroupsTable() {
       }
 
       showToast("Vendor Master imported successfully!", "success");
-      setSelectedRows([]);
-      setSelectAll(false);
       fetchData();
     } catch (error) {
       console.error("Import Vendor Master Error:", error);
@@ -431,17 +403,6 @@ export default function GroupsTable() {
       event.target.value = "";
     }
   };
-
-  useEffect(() => {
-    if (
-      processedRows.length > 0 &&
-      selectedRows.length === processedRows.length
-    ) {
-      setSelectAll(true);
-    } else {
-      setSelectAll(false);
-    }
-  }, [selectedRows, processedRows]);
 
   return (
     <div className="min-h-screen bg-grey-200 flex flex-col pr-4 mx-auto">
@@ -495,14 +456,9 @@ export default function GroupsTable() {
               />
               <button
                 onClick={() => poInfoFileInputRef.current.click()}
-                disabled={selectedRows.length === 0}
-                className={`px-3 py-1.5 rounded text-xs font-normal shadow transition ${
-                  selectedRows.length === 0
-                    ? "bg-gray-400  text-black cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
               >
-                Import-PO-Info ({selectedRows.length})
+                Import-PO-Info
               </button>
 
               <input
@@ -514,14 +470,9 @@ export default function GroupsTable() {
               />
               <button
                 onClick={() => vendorMasterFileInputRef.current.click()}
-                disabled={selectedRows.length === 0}
-                className={`px-3 py-1.5 rounded text-xs font-normal shadow transition ${
-                  selectedRows.length === 0
-                    ? "bg-gray-400 text-black cursor-not-allowed"
-                    : "bg-purple-600 hover:bg-purple-700 text-white"
-                }`}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
               >
-                Import-Vendor-Master ({selectedRows.length})
+                Import-Vendor-Master
               </button>
             </div>
 
@@ -540,19 +491,10 @@ export default function GroupsTable() {
                             handleSort(col)
                           }
                         >
-                          {col === "All" ? (
-                            <input
-                              type="checkbox"
-                              checked={selectAll}
-                              onChange={handleSelectAll}
-                              className="cursor-pointer w-4 h-4"
-                            />
-                          ) : (
-                            <span>
-                              {col}
-                              {col !== "Actions" && getSortIcon(col)}
-                            </span>
-                          )}
+                          <span>
+                            {col}
+                            {col !== "Actions" && getSortIcon(col)}
+                          </span>
                         </th>
                       ))}
                     </tr>
@@ -578,23 +520,6 @@ export default function GroupsTable() {
                           }
                         >
                           {groupColumns.map((col) => {
-                            if (col === "All") {
-                              return (
-                                <td
-                                  key={col}
-                                  className="border p-1 text-center whitespace-nowrap"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedRows.includes(row.id)}
-                                    onChange={() =>
-                                      handleCheckboxChange(row.id)
-                                    }
-                                    className="cursor-pointer w-4 h-4"
-                                  />
-                                </td>
-                              );
-                            }
                             if (col === "Actions") {
                               return (
                                 <td
