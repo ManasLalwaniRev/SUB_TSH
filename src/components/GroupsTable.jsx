@@ -33,7 +33,6 @@ const showToast = (message, type = "info") => {
 };
 
 const groupColumns = [
-  "All",
   "Purchase Order",
   "Release Number",
   "PO Line Number",
@@ -82,9 +81,7 @@ export default function GroupsTable() {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState(null);
 
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
-
+  
   const poInfoFileInputRef = useRef(null);
   const vendorMasterFileInputRef = useRef(null);
 
@@ -343,103 +340,77 @@ export default function GroupsTable() {
     }
   };
 
-  const handleCheckboxChange = (rowId) => {
-    setSelectedRows((prevSelected) => {
-      if (prevSelected.includes(rowId)) {
-        return prevSelected.filter((id) => id !== rowId);
-      } else {
-        return [...prevSelected, rowId];
-      }
-    });
-  };
 
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedRows([]);
-      setSelectAll(false);
-    } else {
-      setSelectedRows(processedRows.map((row) => row.id));
-      setSelectAll(true);
-    }
-  };
 
   const handleImportPOInfo = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const response = await fetch(
-        `${backendUrl}/api/PurchaseOrders/import-excel`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Import PO Info failed");
+  try {
+    const response = await fetch(
+      `${backendUrl}/api/PurchaseOrders/import-excel`,
+      {
+        method: "POST",
+        body: formData,
       }
+    );
 
-      showToast("PO Info imported successfully!", "success");
-      setSelectedRows([]);
-      setSelectAll(false);
-      fetchData();
-    } catch (error) {
-      console.error("Import PO Info Error:", error);
-      showToast("Failed to import PO Info.", "error");
-    } finally {
-      setLoading(false);
-      event.target.value = "";
+    if (!response.ok) {
+      throw new Error("Import PO Info failed");
     }
-  };
 
-  const handleImportVendorMaster = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    showToast("PO Info imported successfully!", "success");
+    fetchData();
+  } catch (error) {
+    console.error("Import PO Info Error:", error);
+    showToast("Failed to import PO Info.", "error");
+  } finally {
+    setLoading(false);
+    event.target.value = "";
+  }
+};
 
-    const formData = new FormData();
-    formData.append("file", file);
 
-    setLoading(true);
+ const handleImportVendorMaster = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-    try {
-      const response = await fetch(
-        `${backendUrl}/api/PurchaseOrders/import-venor-master`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+  const formData = new FormData();
+  formData.append("file", file);
 
-      if (!response.ok) {
-        throw new Error("Import Vendor Master failed");
+  setLoading(true);
+
+  try {
+    const response = await fetch(
+      `${backendUrl}/api/PurchaseOrders/import-venor-master`,
+      {
+        method: "POST",
+        body: formData,
       }
+    );
 
-      showToast("Vendor Master imported successfully!", "success");
-      setSelectedRows([]);
-      setSelectAll(false);
-      fetchData();
-    } catch (error) {
-      console.error("Import Vendor Master Error:", error);
-      showToast("Failed to import Vendor Master.", "error");
-    } finally {
-      setLoading(false);
-      event.target.value = "";
+    if (!response.ok) {
+      throw new Error("Import Vendor Master failed");
     }
-  };
 
-  useEffect(() => {
-    if (processedRows.length > 0 && selectedRows.length === processedRows.length) {
-      setSelectAll(true);
-    } else {
-      setSelectAll(false);
-    }
-  }, [selectedRows, processedRows]);
+    showToast("Vendor Master imported successfully!", "success");
+    fetchData();
+  } catch (error) {
+    console.error("Import Vendor Master Error:", error);
+    showToast("Failed to import Vendor Master.", "error");
+  } finally {
+    setLoading(false);
+    event.target.value = "";
+  }
+};
+
+
+
 
   return (
     <div className="min-h-screen bg-grey-200 flex flex-col pr-4 mx-auto">
@@ -483,45 +454,36 @@ export default function GroupsTable() {
 
           <div className="border border-gray-300 rounded bg-white shadow-md p-2 w-full max-w-[calc(100vw-220px)] mx-auto">
             {/* Import Buttons with Dynamic Count */}
-            <div className="flex justify-end items-center gap-2 mb-2">
-              <input
-                type="file"
-                ref={poInfoFileInputRef}
-                onChange={handleImportPOInfo}
-                accept=".xlsx,.xls"
-                style={{ display: "none" }}
-              />
-              <button
-                onClick={() => poInfoFileInputRef.current.click()}
-                disabled={selectedRows.length === 0}
-                className={`px-3 py-1.5 rounded text-xs font-normal shadow transition ${
-                  selectedRows.length === 0
-                    ? "bg-gray-400  text-black cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
-              >
-                Import-PO-Info ({selectedRows.length})
-              </button>
+           <div className="flex justify-end items-center gap-2 mb-2">
+  <input
+    type="file"
+    ref={poInfoFileInputRef}
+    onChange={handleImportPOInfo}
+    accept=".xlsx,.xls"
+    style={{ display: "none" }}
+  />
+  <button
+    onClick={() => poInfoFileInputRef.current.click()}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
+  >
+    Import-PO-Info
+  </button>
 
-              <input
-                type="file"
-                ref={vendorMasterFileInputRef}
-                onChange={handleImportVendorMaster}
-                accept=".xlsx,.xls"
-                style={{ display: "none" }}
-              />
-              <button
-                onClick={() => vendorMasterFileInputRef.current.click()}
-                disabled={selectedRows.length === 0}
-                className={`px-3 py-1.5 rounded text-xs font-normal shadow transition ${
-                  selectedRows.length === 0
-                    ? "bg-gray-400 text-black cursor-not-allowed"
-                    : "bg-purple-600 hover:bg-purple-700 text-white"
-                }`}
-              >
-                Import-Vendor-Master ({selectedRows.length})
-              </button>
-            </div>
+  <input
+    type="file"
+    ref={vendorMasterFileInputRef}
+    onChange={handleImportVendorMaster}
+    accept=".xlsx,.xls"
+    style={{ display: "none" }}
+  />
+  <button
+    onClick={() => vendorMasterFileInputRef.current.click()}
+    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
+  >
+    Import-Vendor-Master
+  </button>
+</div>
+
 
             <div className="relative">
               <div className="overflow-x-auto max-h-[75vh] mt-1">
@@ -536,19 +498,10 @@ export default function GroupsTable() {
                             col !== "Actions" && col !== "All" && handleSort(col)
                           }
                         >
-                          {col === "All" ? (
-                            <input
-                              type="checkbox"
-                              checked={selectAll}
-                              onChange={handleSelectAll}
-                              className="cursor-pointer w-4 h-4"
-                            />
-                          ) : (
-                            <span>
-                              {col}
-                              {col !== "Actions" && getSortIcon(col)}
-                            </span>
-                          )}
+                           <span>
+    {col}
+    {col !== "Actions" && getSortIcon(col)}
+  </span>
                         </th>
                       ))}
                     </tr>
@@ -574,21 +527,7 @@ export default function GroupsTable() {
                           }
                         >
                           {groupColumns.map((col) => {
-                            if (col === "All") {
-                              return (
-                                <td
-                                  key={col}
-                                  className="border p-1 text-center whitespace-nowrap"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedRows.includes(row.id)}
-                                    onChange={() => handleCheckboxChange(row.id)}
-                                    className="cursor-pointer w-4 h-4"
-                                  />
-                                </td>
-                              );
-                            }
+                            
                             if (col === "Actions") {
                               return (
                                 <td
