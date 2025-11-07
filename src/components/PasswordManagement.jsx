@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { backendUrl } from './config.jsx';
-
 
 const showToast = (message, type = 'info') => {
   const bgColor = type === 'success' ? '#4ade80'

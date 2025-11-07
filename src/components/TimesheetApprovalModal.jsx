@@ -1,13 +1,44 @@
 import React, { useState, useEffect } from "react";
-import { backendUrl } from './config.jsx';
-
+import { backendUrl } from "./config";
 
 // --- SVG Icons ---
-const EyeIcon = ({ className = "h-4 w-4" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>;
+const EyeIcon = ({ className = "h-4 w-4" }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+);
 const XIcon = ({ className = "h-4 w-4" }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
 );
 
 // --- Helper Functions ---
@@ -70,17 +101,16 @@ export default function TimesheetApprovalView({
   const [headerDates, setHeaderDates] = useState([]);
   const [hiddenColumns, setHiddenColumns] = useState({
     "Work Order": false,
-    "Description": false,
-    "Project": false,
-    "PLC": false,
+    Description: false,
+    Project: false,
+    PLC: false,
     "Pay Type": false,
     "Po Id": false,
-    "Release": false,
+    Release: false,
     "PO LN No": false,
   });
 
   const [timesheetDetails, setTimesheetDetails] = useState(null);
-
 
   const dayKeyMapping = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -115,7 +145,6 @@ export default function TimesheetApprovalView({
       });
 
       if (filteredData.length > 0) {
-
         setTimesheetDetails(filteredData[0]);
         const firstDate = filteredData[0].timesheet_Date;
         const startDate = new Date(firstDate);
@@ -271,14 +300,32 @@ export default function TimesheetApprovalView({
           {/* <h3 className="text-lg font-semibold text-gray-900">
             Timesheet Details
           </h3> */}
-           {timesheetDetails && (
+          {timesheetDetails && (
             <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                <div><span className="font-medium">Status:</span> {timesheetDetails.status || 'N/A'}</div>
-                <div><span className="font-medium">Date:</span> {timesheetDetails.timesheet_Date ? formatDate(timesheetDetails.timesheet_Date) : 'N/A'}</div>
-                <div><span className="font-medium">Approved By:</span> {timesheetDetails.approvedBy || timesheetDetails.pm_User_Id || 'N/A'}</div>
-                <div><span className="font-medium">Approve Date:</span> {timesheetDetails.approveDate ? formatDate(timesheetDetails.approveDate) : 'N/A'}</div>
+              <div>
+                <span className="font-medium">Status:</span>{" "}
+                {timesheetDetails.status || "N/A"}
+              </div>
+              <div>
+                <span className="font-medium">Date:</span>{" "}
+                {timesheetDetails.timesheet_Date
+                  ? formatDate(timesheetDetails.timesheet_Date)
+                  : "N/A"}
+              </div>
+              <div>
+                <span className="font-medium">Approved By:</span>{" "}
+                {timesheetDetails.approvedBy ||
+                  timesheetDetails.pm_User_Id ||
+                  "N/A"}
+              </div>
+              <div>
+                <span className="font-medium">Approve Date:</span>{" "}
+                {timesheetDetails.approveDate
+                  ? formatDate(timesheetDetails.approveDate)
+                  : "N/A"}
+              </div>
             </div>
-        )}
+          )}
         </div>
         <button
           onClick={onClose}
@@ -356,40 +403,44 @@ export default function TimesheetApprovalView({
                 </tr>
               </thead> */}
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-    <tr>
-        {tableHeaders.map((header, index) => {
-            if (isColumnHidden(header) && hideableColumns.includes(header)) {
-                return null;
-            }
-            const columnKey = getColumnKey(header);
-            const isHideable = columnKey && hideableColumns.includes(columnKey);
-            
-            return (
-                <th
-                    key={`header-${index}-${header}`}
-                    className="p-3 text-center font-semibold text-gray-700 whitespace-nowrap border-r border-gray-200 last:border-r-0"
-                >
-                    <div className="flex items-center justify-between gap-2">
-                        <span className="flex-1">{header}</span>
-                        {isHideable && (
+                <tr>
+                  {tableHeaders.map((header, index) => {
+                    if (
+                      isColumnHidden(header) &&
+                      hideableColumns.includes(header)
+                    ) {
+                      return null;
+                    }
+                    const columnKey = getColumnKey(header);
+                    const isHideable =
+                      columnKey && hideableColumns.includes(columnKey);
+
+                    return (
+                      <th
+                        key={`header-${index}-${header}`}
+                        className="p-3 text-center font-semibold text-gray-700 whitespace-nowrap border-r border-gray-200 last:border-r-0"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="flex-1">{header}</span>
+                          {isHideable && (
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleColumnVisibility(columnKey);
-                                }}
-                                className="p-1 hover:bg-red-100 rounded-full transition-colors"
-                                title="Hide column"
-                                type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleColumnVisibility(columnKey);
+                              }}
+                              className="p-1 hover:bg-red-100 rounded-full transition-colors"
+                              title="Hide column"
+                              type="button"
                             >
-                                <XIcon className="h-3.5 w-3.5 text-red-600" />
+                              <XIcon className="h-3.5 w-3.5 text-red-600" />
                             </button>
-                        )}
-                    </div>
-                </th>
-            );
-        })}
-    </tr>
-</thead>
+                          )}
+                        </div>
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
 
               <tbody className="divide-y divide-gray-200">
                 {lines.map((line, index) => {

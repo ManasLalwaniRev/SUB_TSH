@@ -1,11 +1,382 @@
+// import React, { useEffect, useRef, useState, useMemo } from 'react';
+// import Chart from 'chart.js/auto';
+// import 'chartjs-adapter-date-fns';
+// import { enUS } from 'date-fns/locale';
+// import { Filter, X } from 'lucide-react';
+
+// const DashboardGraphs = () => {
+//     const pieChartRef = useRef(null);
+//     const lineChartRef = useRef(null);
+//     const barChartRef = useRef(null);
+//     const [invoiceData, setInvoiceData] = useState([]);
+
+//     // Filter states
+//     const [selectedVendor, setSelectedVendor] = useState('');
+//     const [selectedEmployee, setSelectedEmployee] = useState('');
+//     const [selectedPoNumber, setSelectedPoNumber] = useState('');
+//     const [selectedPlc, setSelectedPlc] = useState('');
+//     const [startDate, setStartDate] = useState('');
+//     const [endDate, setEndDate] = useState('');
+//     const [dateRangeOption, setDateRangeOption] = useState('all_time');
+//     const [selectedMonth, setSelectedMonth] = useState('');
+
+//     const [loading, setLoading] = useState(true);
+//     const [error, setError] = useState(null);
+
+//     const chartInstances = useRef({});
+
+//     // Fetch and process data
+//     useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 setLoading(true);
+//                 const response = await fetch(`${backendUrl}/api/Invoices`);
+//                 if (!response.ok) {
+//                     throw new Error(`API request failed with status ${response.status}`);
+//                 }
+//                 const data = await response.json();
+//                 setInvoiceData(data);
+//             } catch (error) {
+//                 setError(error.message);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+//         fetchData();
+//     }, []);
+
+//     // Handle date range changes
+//     useEffect(() => {
+//         const today = new Date();
+//         let newStartDate = '';
+//         let newEndDate = new Date().toISOString().split('T')[0];
+
+//         switch (dateRangeOption) {
+//             case 'last_7_days':
+//                 const last7 = new Date();
+//                 last7.setDate(today.getDate() - 7);
+//                 newStartDate = last7.toISOString().split('T')[0];
+//                 break;
+//             case 'last_30_days':
+//                 const last30 = new Date();
+//                 last30.setDate(today.getDate() - 30);
+//                 newStartDate = last30.toISOString().split('T')[0];
+//                 break;
+//             case 'month_to_date':
+//                 if (selectedMonth) {
+//                     const [year, month] = selectedMonth.split('-');
+//                     newStartDate = new Date(year, parseInt(month) - 1, 1).toISOString().split('T')[0];
+//                 } else {
+//                     newStartDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+//                 }
+//                 break;
+//             case 'all_time':
+//                 newStartDate = '';
+//                 newEndDate = '';
+//                 break;
+//             case 'custom':
+//                 return; 
+//         }
+//         setStartDate(newStartDate);
+//         setEndDate(newEndDate);
+//     }, [dateRangeOption, selectedMonth]);
+
+//     // Memoized, co-related filter options
+//     const { vendorOptions, employeeOptions, poNumberOptions, plcOptions, filteredData } = useMemo(() => {
+//         let filteredInvoices = invoiceData;
+
+//         if (startDate) {
+//             filteredInvoices = filteredInvoices.filter(inv => new Date(inv.invoiceDate) >= new Date(startDate));
+//         }
+//         if (endDate) {
+//             filteredInvoices = filteredInvoices.filter(inv => new Date(inv.invoiceDate) <= new Date(endDate));
+//         }
+        
+//         const newVendorOptions = [...new Set(filteredInvoices.flatMap(inv => inv.invoiceTimesheetLines.map(line => line.vendor)))].sort();
+        
+//         if (selectedVendor) {
+//             filteredInvoices = filteredInvoices.filter(inv => inv.invoiceTimesheetLines.some(line => line.vendor === selectedVendor));
+//         }
+        
+//         const newEmployeeOptions = [...new Set(filteredInvoices.flatMap(inv => inv.invoiceTimesheetLines.map(line => line.employee)))].sort();
+
+//         if (selectedEmployee) {
+//             filteredInvoices = filteredInvoices.filter(inv => inv.invoiceTimesheetLines.some(line => line.employee === selectedEmployee));
+//         }
+
+//         const newPoNumberOptions = [...new Set(filteredInvoices.map(inv => inv.po_Number))].sort();
+
+//         if (selectedPoNumber) {
+//             filteredInvoices = filteredInvoices.filter(inv => inv.po_Number === selectedPoNumber);
+//         }
+        
+//         const newPlcOptions = [...new Set(filteredInvoices.flatMap(inv => inv.invoiceTimesheetLines.map(line => line.plc)))].sort();
+
+//         if (selectedPlc) {
+//             filteredInvoices = filteredInvoices.filter(inv => inv.invoiceTimesheetLines.some(line => line.plc === selectedPlc));
+//         }
+
+//         return {
+//             vendorOptions: newVendorOptions,
+//             employeeOptions: newEmployeeOptions,
+//             poNumberOptions: newPoNumberOptions,
+//             plcOptions: newPlcOptions,
+//             filteredData: filteredInvoices
+//         };
+//     }, [startDate, endDate, selectedVendor, selectedEmployee, selectedPoNumber, selectedPlc, invoiceData]);
+    
+//     // Update charts when filtered data changes
+//     useEffect(() => {
+//         if (loading) return;
+        
+//         Object.values(chartInstances.current).forEach(chart => {
+//             if (chart) chart.destroy();
+//         });
+
+//         if (!filteredData.length) return;
+
+//         // --- Pie Chart: Invoice Status ---
+//         const invoicedCount = filteredData.filter(inv => inv.isExported).length;
+//         const notInvoicedCount = filteredData.length - invoicedCount;
+
+//         const pieCtx = pieChartRef.current.getContext('2d');
+//         chartInstances.current.pie = new Chart(pieCtx, {
+//             type: 'pie',
+//             data: {
+//                 labels: ['Invoiced', 'Not Invoiced'],
+//                 datasets: [{
+//                     label: 'Invoice Status',
+//                     data: [invoicedCount, notInvoicedCount],
+//                     backgroundColor: ['rgba(75, 192, 192, 0.7)', 'rgba(255, 99, 132, 0.7)'],
+//                     borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+//                     borderWidth: 1.5,
+//                 }],
+//             },
+//             options: {
+//                 responsive: true,
+//                 maintainAspectRatio: false,
+//                 plugins: {
+//                     legend: { position: 'top' },
+//                     title: { display: true, text: 'Invoice Status' },
+//                 },
+//             },
+//         });
+
+//         // --- Line Chart: Invoice Amount Over Time ---
+//         const monthlyData = filteredData.reduce((acc, inv) => {
+//             const month = inv.invoiceDate.substring(0, 7);
+//             acc[month] = (acc[month] || 0) + inv.invoiceAmount;
+//             return acc;
+//         }, {});
+
+//         const sortedMonths = Object.keys(monthlyData).sort();
+//         const lineChartData = sortedMonths.map(month => monthlyData[month]);
+
+//         const lineCtx = lineChartRef.current.getContext('2d');
+//         chartInstances.current.line = new Chart(lineCtx, {
+//             type: 'line',
+//             data: {
+//                 labels: sortedMonths,
+//                 datasets: [{
+//                     label: 'Total Invoice Amount per Month',
+//                     data: lineChartData,
+//                     fill: true,
+//                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
+//                     borderColor: 'rgb(54, 162, 235)',
+//                     tension: 0.1,
+//                 }],
+//             },
+//             options: {
+//                 responsive: true,
+//                 maintainAspectRatio: false,
+//                 plugins: {
+//                     legend: { position: 'top' },
+//                     title: { display: true, text: 'Monthly Invoice Totals' },
+//                 },
+//                 scales: {
+//                     x: {
+//                         type: 'time',
+//                         time: { unit: 'month', parser: 'yyyy-MM', tooltipFormat: 'MMM yyyy' },
+//                         title: { display: true, text: 'Month' },
+//                         adapters: { date: { locale: enUS } },
+//                     },
+//                     y: {
+//                         beginAtZero: true,
+//                         title: { display: true, text: 'Invoice Amount (USD)' },
+//                     },
+//                 },
+//             },
+//         });
+        
+//         // --- Bar Chart: Vendor Invoice Totals ---
+//         const vendorData = filteredData.reduce((acc, inv) => {
+//             inv.invoiceTimesheetLines.forEach(line => {
+//                 acc[line.vendor] = (acc[line.vendor] || 0) + line.mappedAmount;
+//             });
+//             return acc;
+//         }, {});
+        
+//         const sortedVendors = Object.entries(vendorData).sort(([, a], [, b]) => b - a);
+//         const barLabels = sortedVendors.map(([vendor]) => vendor);
+//         const barData = sortedVendors.map(([, amount]) => amount);
+
+//         const barCtx = barChartRef.current.getContext('2d');
+//         chartInstances.current.bar = new Chart(barCtx, {
+//             type: 'bar',
+//             data: {
+//                 labels: barLabels,
+//                 datasets: [{
+//                     label: 'Total Invoiced Amount',
+//                     data: barData,
+//                     backgroundColor: 'rgba(153, 102, 255, 0.6)',
+//                     borderColor: 'rgba(153, 102, 255, 1)',
+//                     borderWidth: 1,
+//                 }],
+//             },
+//             options: {
+//                 responsive: true,
+//                 plugins: {
+//                     legend: { display: false },
+//                     title: { display: true, text: 'Total Invoiced by Vendor' },
+//                 },
+//                 scales: {
+//                     x: {
+//                         beginAtZero: true,
+//                         title: { display: true, text: 'Amount (USD)'}
+//                     }
+//                 }
+//             },
+//         });
+
+//         return () => {
+//             Object.values(chartInstances.current).forEach(chart => {
+//                 if(chart) chart.destroy()
+//             });
+//         };
+//     }, [filteredData, loading]);
+
+//     const handleResetFilters = () => {
+//         setSelectedVendor('');
+//         setSelectedEmployee('');
+//         setSelectedPoNumber('');
+//         setSelectedPlc('');
+//         setDateRangeOption('all_time');
+//         setStartDate('');
+//         setEndDate('');
+//         setSelectedMonth('');
+//     };
+
+//     if (loading) return <div className="ml-48 text-center p-8">Loading dashboard...</div>;
+//     if (error) return <div className="ml-48 text-center p-8 text-red-500">Error: {error}</div>;
+
+//     return (
+//         <div className="p-6 bg-gray-50 flex-1 overflow-y-auto ml-48">
+//             <div className="bg-white p-5 rounded-xl shadow-md border border-gray-200 mb-6">
+//                 <div className="flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
+//                     <div className="flex items-center gap-3">
+//                         <Filter className="text-gray-500" size={24} />
+//                         <h3 className="text-xl font-bold text-gray-800">Filter Options</h3>
+//                     </div>
+//                     <button onClick={handleResetFilters} className="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-red-500 transition-colors">
+//                         <X size={16} />
+//                         Reset All
+//                     </button>
+//                 </div>
+
+//                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//                     <div>
+//                         <label className="block text-sm font-semibold text-gray-600 mb-2">Date Range</label>
+//                         <select value={dateRangeOption} onChange={e => setDateRangeOption(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+//                             <option value="all_time">All Time</option>
+//                             <option value="last_7_days">Last 7 Days</option>
+//                             <option value="last_30_days">Last Month</option>
+//                             <option value="month_to_date">Month to Date</option>
+//                             <option value="custom">Custom Range</option>
+//                         </select>
+//                     </div>
+
+//                     {dateRangeOption === 'month_to_date' && (
+//                         <div>
+//                             <label className="block text-sm font-semibold text-gray-600 mb-2">Select Month</label>
+//                             <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm"/>
+//                         </div>
+//                     )}
+                    
+//                     {dateRangeOption === 'custom' && (
+//                         <>
+//                             <div>
+//                                 <label className="block text-sm font-semibold text-gray-600 mb-2">Start Date</label>
+//                                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm"/>
+//                             </div>
+//                             <div>
+//                                 <label className="block text-sm font-semibold text-gray-600 mb-2">End Date</label>
+//                                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm"/>
+//                             </div>
+//                         </>
+//                     )}
+                    
+//                     <div>
+//                         <label className="block text-sm font-semibold text-gray-600 mb-2">Vendor</label>
+//                         <select value={selectedVendor} onChange={e => setSelectedVendor(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+//                             <option value="">All Vendors</option>
+//                             {vendorOptions.map(v => <option key={v} value={v}>{v}</option>)}
+//                         </select>
+//                     </div>
+//                     <div>
+//                         <label className="block text-sm font-semibold text-gray-600 mb-2">Employee</label>
+//                         <select value={selectedEmployee} onChange={e => setSelectedEmployee(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+//                             <option value="">All Employees</option>
+//                             {employeeOptions.map(e => <option key={e} value={e}>{e}</option>)}
+//                         </select>
+//                     </div>
+//                     <div>
+//                         <label className="block text-sm font-semibold text-gray-600 mb-2">PO Number</label>
+//                         <select value={selectedPoNumber} onChange={e => setSelectedPoNumber(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+//                             <option value="">All PO Numbers</option>
+//                             {poNumberOptions.map(p => <option key={p} value={p}>{p}</option>)}
+//                         </select>
+//                     </div>
+//                     <div>
+//                         <label className="block text-sm font-semibold text-gray-600 mb-2">PLC</label>
+//                         <select value={selectedPlc} onChange={e => setSelectedPlc(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-indigo-500 transition shadow-sm">
+//                             <option value="">All PLCs</option>
+//                             {plcOptions.map(p => <option key={p} value={p}>{p}</option>)}
+//                         </select>
+//                     </div>
+//                 </div>
+//             </div>
+
+//             {filteredData.length > 0 ? (
+//                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//                     <div className="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-gray-200" style={{height: '400px'}}>
+//                         <canvas ref={pieChartRef}></canvas>
+//                     </div>
+//                     <div className="lg:col-span-1 bg-white p-4 rounded-xl shadow-lg border border-gray-200" style={{height: '400px'}}>
+//                         <canvas ref={lineChartRef}></canvas>
+//                     </div>
+//                     <div className="lg:col-span-2 bg-white p-4 rounded-xl shadow-lg border border-gray-200">
+//                         <canvas ref={barChartRef}></canvas>
+//                     </div>
+//                 </div>
+//             ) : (
+//                 <div className="text-center p-12 bg-white rounded-xl shadow-lg border border-gray-200">
+//                     <h3 className="text-lg font-semibold text-gray-700">No Data Found</h3>
+//                     <p className="text-gray-500 mt-2">There is no invoice data available for the selected filters. Please adjust your criteria or reset the filters.</p>
+//                 </div>
+//             )}
+//         </div>
+//     );
+// };
+
+// export default DashboardGraphs;
+
+
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Chart from 'chart.js/auto';
 import 'chartjs-adapter-date-fns';
 import { enUS } from 'date-fns/locale';
 import { Filter, X } from 'lucide-react';
 import { backendUrl } from './config';
-
-
 
 const DashboardGraphs = () => {
     const pieChartRef = useRef(null);

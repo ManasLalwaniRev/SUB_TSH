@@ -4,8 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import logoImg from "../assets/image.png";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { backendUrl } from './config.jsx';
-
+import { backendUrl } from "./config";
 
 const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,7 +24,109 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible }) => {
     return groups;
   }, {});
 
-  
+  // const handleDownloadPdf = async () => {
+  //   if (!invoiceRef.current) return;
+  //   const input = invoiceRef.current;
+  //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //   const imgData = canvas.toDataURL("image/png");
+  //   const pdf = new jsPDF({
+  //     orientation: "portrait",
+  //     unit: "mm",
+  //     format: "a4",
+  //   });
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //   pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+  //   pdf.save("invoice.pdf");
+  // };
+
+  // const handleDownloadPdf = async () => {
+  //   setIsLoading(true);
+  //   if (!invoiceRef.current || !invoice) {
+  //     console.warn("Invoice content or data is missing.");
+  //     return;
+  //   }
+  //   const input = invoiceRef.current;
+  //   const totalAmount = invoice.lineItems.reduce(
+  //     (acc, line) => acc + line.amount,
+  //     0
+  //   );
+  //   // const invoicePayload = {
+  //   //   invoiceNumber: invoice.invoiceId,
+  //   //   invoiceDate: new Date(invoice.period).toISOString(),
+  //   //   invoiceAmount: totalAmount,
+  //   //   createdBy: "Test",
+  //   //   updatedBy: "Test",
+  //   //   invoiceTimesheetLines: invoice.lineItems.map((line, idx) => ({
+  //   //     // timesheetLineNo: line.poLine,
+  //   //     timesheetLineNo: line.line_No,
+  //   //     mappedHours: line.hours,
+  //   //     mappedAmount: line.amount,
+  //   //     createdBy: "Test",
+  //   //     updatedBy: "Test",
+  //   //   })),
+  //   // };
+
+  //   // try {
+  //   //   const response = await fetch(
+  //   //     "https://timesheet-subk.onrender.com/api/Invoices",
+  //   //     {
+  //   //       method: "POST",
+  //   //       headers: { "Content-Type": "application/json" },
+  //   //       body: JSON.stringify(invoicePayload),
+  //   //     }
+  //   //   );
+  //   //   if (!response.ok)
+  //   //     throw new Error(`Failed to create invoice: ${response.status}`);
+
+  //   const pdf = new jsPDF("p", "mm", "a4");
+  //   const padding = 10;
+  //   const canvas = await html2canvas(input, { scale: 2, useCORS: true });
+  //   const imgData = canvas.toDataURL("image/png");
+
+  //   const pdfWidth = pdf.internal.pageSize.getWidth();
+  //   const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  //   const usableWidth = pdfWidth - 2 * padding;
+  //   const usableHeight = pdfHeight - 2 * padding;
+
+  //   const imgProps = pdf.getImageProperties(imgData);
+  //   // const pdfImgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  //   const pdfImgHeight = (imgProps.height * usableWidth) / imgProps.width;
+
+  //   let heightLeft = pdfImgHeight;
+  //   // let position = 0;
+  //   let position = padding;
+
+  //   // pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //   // heightLeft -= pdfHeight;
+  //   pdf.addImage(imgData, "PNG", padding, position, usableWidth, pdfImgHeight);
+  //   heightLeft -= usableHeight;
+
+  //   // while (heightLeft > 0) {
+  //   //   position = heightLeft - pdfImgHeight;
+  //   //   pdf.addPage();
+  //   //   pdf.addImage(imgData, "PNG", 0, position, pdfWidth, pdfImgHeight);
+  //   //   heightLeft -= pdfHeight;
+  //   // }
+  //   while (heightLeft > 0) {
+  //     pdf.addPage();
+  //     position = padding - heightLeft;
+  //     pdf.addImage(
+  //       imgData,
+  //       "PNG",
+  //       padding,
+  //       position,
+  //       usableWidth,
+  //       pdfImgHeight
+  //     );
+  //     heightLeft -= usableHeight;
+  //   }
+
+  //   pdf.save("invoice.pdf");
+  //   setIsLoading(false);
+  //   setInvoiceModalVisible(false);
+  // };
 
   const handleDownloadPdf = async () => {
     setIsLoading(true);
