@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
+import { CheckSquare } from "lucide-react";
 import { backendUrl } from "./config";
 
 const showToast = (message, type = "info") => {
@@ -72,13 +73,15 @@ export default function GroupsTable() {
   const [currentUser, setCurrentUser] = useState(null);
   const [userLoaded, setUserLoaded] = useState(false);
 
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [searchPO, setSearchPO] = useState("");
   const [searchResourceId, setSearchResourceId] = useState("");
   const [searchResourceName, setSearchResourceName] = useState("");
 
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editedRowData, setEditedRowData] = useState(null);
+  //import
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [importLoading, setImportLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+  const [selectedUserFile, setSelectedUserFile] = useState(null);
 
   const poInfoFileInputRef = useRef(null);
   const vendorMasterFileInputRef = useRef(null);
@@ -100,10 +103,8 @@ export default function GroupsTable() {
   }, [navigate]);
 
   useEffect(() => {
-    if (userLoaded && !editingRowId) {
-      fetchData();
-    }
-  }, [userLoaded, editingRowId]);
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -114,7 +115,7 @@ export default function GroupsTable() {
 
       const mappedData = Array.isArray(apiData)
         ? apiData.map((item) => ({
-            id: `${item.purchaseOrderNumber}-${item.poLineNumber}-${item.resourceId}-${item.purchaseOrderRelease}`,
+            id: item.id,
             "Purchase Order": item.purchaseOrderNumber || "",
             "Release Number": item.purchaseOrderRelease || "",
             "PO Line Number": item.poLineNumber || "",
@@ -144,52 +145,6 @@ export default function GroupsTable() {
     }
   };
 
-  const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return " ⇅";
-    return sortConfig.direction === "asc" ? " ↑" : " ↓";
-  };
-
-  const processedRows = [...rows]
-    .filter((row) => {
-      const poMatch =
-        !searchPO ||
-        row["Purchase Order"]?.toLowerCase().includes(searchPO.toLowerCase());
-      const idMatch =
-        !searchResourceId ||
-        row["Resource ID"]
-          ?.toLowerCase()
-          .includes(searchResourceId.toLowerCase());
-      const nameMatch =
-        !searchResourceName ||
-        row["Resource Name"]
-          ?.toLowerCase()
-          .includes(searchResourceName.toLowerCase());
-      return poMatch && idMatch && nameMatch;
-    })
-    .sort((a, b) => {
-      if (!sortConfig.key) return 0;
-      const aVal = a[sortConfig.key];
-      const bVal = b[sortConfig.key];
-      if (sortConfig.key === "Hourly Rate") {
-        const numA = parseFloat(String(aVal).replace(/[^0-9.-]+/g, ""));
-        const numB = parseFloat(String(bVal).replace(/[^0-9.-]+/g, ""));
-        if (numA < numB) return sortConfig.direction === "asc" ? -1 : 1;
-        if (numA > numB) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      }
-      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-      return 0;
-    });
-
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
     setCurrentUser(null);
@@ -197,221 +152,237 @@ export default function GroupsTable() {
     navigate("/");
   };
 
-  const handleAddRecord = () => {
-    const tempId = `new-record-${Date.now()}`;
-    const newRecord = {
-      id: tempId,
-      ...groupColumns.reduce((acc, col) => ({ ...acc, [col]: "" }), {}),
-    };
-    setEditedRowData(newRecord);
-    setEditingRowId(tempId);
-    setRows((prevRows) => [newRecord, ...prevRows]);
-  };
-
-  const handleEditChange = (e) => {
-    let { name, value } = e.target;
-    const noNegativeFields = [
-      "Release Number",
-      "PO Line Number",
-      "Resource ID",
-      "PM USER_ID",
-      "Hourly Rate",
-    ];
-
-    if (noNegativeFields.includes(name)) {
-      if (value === "" || /^[0-9]*$/.test(value)) {
-        if (value !== "" && parseFloat(value) < 0) {
-          return;
-        }
-      } else {
-        return;
-      }
-    }
-
-    if (noNegativeFields.includes(e.target.name)) {
-      if (e.key === "-" || e.key === "e" || e.key === "+") {
-        e.preventDefault();
-      }
-    }
-
-    setEditedRowData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleCancelAdd = () => {
-    setRows((prevRows) => prevRows.filter((row) => row.id !== editingRowId));
-    setEditingRowId(null);
-    setEditedRowData(null);
-  };
-
-  const handleSaveRecord = async () => {
-    const mandatoryColumns = groupColumns.filter(
-      (col) => !["PLC CD", "PLC Desc", "Actions", "All"].includes(col)
+  const processedRows = rows.filter((row) => {
+    return (
+      (row["Purchase Order"] || "")
+        .toLowerCase()
+        .includes(searchPO.trim().toLowerCase()) &&
+      (row["Resource ID"] || "")
+        .toLowerCase()
+        .includes(searchResourceId.trim().toLowerCase()) &&
+      (row["Resource Name"] || "")
+        .toLowerCase()
+        .includes(searchResourceName.trim().toLowerCase())
     );
+  });
 
-    for (const col of mandatoryColumns) {
-      if (!editedRowData[col] || String(editedRowData[col]).trim() === "") {
-        showToast(`Error: "${col}" is a required field.`, "error");
-        return;
-      }
+  const handleImportPOInfo = async (e) => {
+    e.preventDefault();
+
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
+      showToast("No file selected", "error");
+      return;
     }
 
-    const apiPayload = {
-      companyId: "1",
-      purchaseOrderNumber: String(editedRowData["Purchase Order"]),
-      poLineNumber: Number(editedRowData["PO Line Number"]),
-      resourceId: String(editedRowData["Resource ID"]),
-      purchaseOrderRelease: String(editedRowData["Release Number"]),
-      resourceName: String(editedRowData["Resource Name"]),
-      plcCd: String(editedRowData["PLC CD"]),
-      emailId: String(editedRowData["Email ID"]),
-      project: String(editedRowData["Project"]),
-      pmUserId: String(editedRowData["PM USER_ID"]),
-      pmName: String(editedRowData["PM NAME"]),
-      plcDesc: String(editedRowData["PLC Desc"]),
-      vendorId: String(editedRowData["Vendor ID"]),
-      vendorName: String(editedRowData["Vendor Name"]),
-      hourlyRate:
-        parseFloat(
-          String(editedRowData["Hourly Rate"]).replace(/[^0-9.-]+/g, "")
-        ) || 0,
-      poLnStartDate: new Date(editedRowData["Start date"]).toISOString(),
-      poLnEndDate: new Date(editedRowData["End date"]).toISOString(),
-      poLnKey: String(editedRowData["PO Line Number"]),
-      roleCd: "PM",
-      organization: "1.01.03.01",
-      accountId: "51-000-000",
-      projectDesc: "USAF LABOR",
-      pmEmailId: "",
-      organizationName: "SAS",
-      glcCd: "",
-      glcDesc: "",
-      resourceLine: null,
-      resourceDesc: `${editedRowData["Resource Name"]} (${editedRowData["PLC CD"]} ${editedRowData["PLC Desc"]})`,
-      noOfResources: 1,
-      totalHours: 0,
-      extendedCost: null,
-      accountName: "Sub Labor Exp-Onsite",
-      managerIdVendor: "",
-      managerNameVendor: "",
-      managerEmailId: null,
-    };
+    // Validate file extension
+    const allowedExtensions = [".csv", ".xls", ".xlsx", ".xlsm", ".xlsb"];
+    const fileName = selectedFile.name.toLowerCase();
 
-    setLoading(true);
+    if (!allowedExtensions.some((ext) => fileName.endsWith(ext))) {
+      showToast("Please select a CSV or Excel file", "error");
+      return;
+    }
+
+    setImportLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(apiPayload),
-      });
+      // Fetch presigned URL for upload
+      const presignResp = await fetch(
+        `${backendUrl}/api/PurchaseOrders/GetPresignedUrl/${encodeURIComponent(
+          selectedFile.name
+        )}`
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-          message: "Failed to save record. The server responded with an error.",
-        }));
+      if (!presignResp.ok) {
         throw new Error(
-          errorData.message || `HTTP error! Status: ${response.status}`
+          `Failed to get presigned URL (status: ${presignResp.status})`
         );
       }
 
-      showToast("Record saved successfully!", "success");
-    } catch (error) {
-      console.error("API Save Error:", error);
-      showToast(error.message, "error");
-    } finally {
-      setEditingRowId(null);
-      setEditedRowData(null);
-      setLoading(false);
-    }
-  };
+      const presignedUrl = await presignResp.text();
 
-  const handleKeyDown = (e) => {
-    if (["+", "e", "E"].includes(e.key)) {
-      e.preventDefault();
-    }
-    if (e.key === "-") {
-      e.preventDefault();
-      toast.error("Negative values are not allowed", {
-        position: "top-right",
-        autoClose: 3000,
+      // Upload file via PUT to presigned S3 URL
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedFile.type || "application/octet-stream",
+        },
+        body: selectedFile,
       });
-    }
-  };
 
-  const handleImportPOInfo = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    setLoading(true);
-
-    try {
-      const response = await fetch(
-        `${backendUrl}/api/PurchaseOrders/import-excel`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Import PO Info failed");
+      if (!uploadResponse.ok) {
+        throw new Error(
+          `Upload to S3 failed: ${uploadResponse.status} ${uploadResponse.statusText}`
+        );
       }
 
-      showToast("PO Info imported successfully!", "success");
-      fetchData();
+      // Call backend import API that processes the uploaded file
+      setLoading(true);
+      try {
+        const importResponse = await fetch(
+          `${backendUrl}/api/PurchaseOrders/import-excel-s3?filename=${encodeURIComponent(
+            selectedFile.name
+          )}&Username=${encodeURIComponent(currentUser?.name || "")}`,
+          { method: "POST" }
+        );
+
+        if (!importResponse.ok) {
+          throw new Error(
+            `Import API call failed: ${importResponse.status} ${importResponse.statusText}`
+          );
+        }
+
+        const contentType = importResponse.headers.get("content-type") || "";
+
+        if (
+          contentType.includes("text/csv") ||
+          contentType.includes("text/plain")
+        ) {
+          const csvText = await importResponse.text();
+          const downloadedFileName = `imported_${selectedFile.name.replace(
+            /\.(csv|xls|xlsx|xlsm|xlsb)$/i,
+            ""
+          )}_${Date.now()}.csv`;
+          downloadCSV(csvText, downloadedFileName);
+          showToast("Import skipped with CSV output", "error");
+        } else {
+          showToast("Import successful", "success");
+        }
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
-      console.error("Import PO Info Error:", error);
-      showToast("Failed to import PO Info.", "error");
+      console.error("Upload/import error:", error);
+      showToast("Upload or import failed: " + error.message, "error");
     } finally {
-      setLoading(false);
-      event.target.value = "";
+      setImportLoading(false);
+      setSelectedFile(null);
+      if (poInfoFileInputRef.current) poInfoFileInputRef.current.value = "";
     }
   };
 
-  const handleImportVendorMaster = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const handleImportVendorMaster = async (e) => {
+    e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
+      showToast("No file selected", "error");
+      return;
+    }
 
-    setLoading(true);
+    // Validate file extension
+    const allowedExtensions = [".csv", ".xls", ".xlsx", ".xlsm", ".xlsb"];
+    const fileName = selectedFile.name.toLowerCase();
+
+    if (!allowedExtensions.some((ext) => fileName.endsWith(ext))) {
+      showToast("Please select a CSV or Excel file", "error");
+      return;
+    }
+
+    setUserLoading(true);
 
     try {
-      const response = await fetch(
-        `${backendUrl}/api/PurchaseOrders/import-venor-master`,
-        {
-          method: "POST",
-          body: formData,
-        }
+      // Fetch presigned URL for upload
+      const presignResp = await fetch(
+        `${backendUrl}/api/PurchaseOrders/GetPresignedUrl/${encodeURIComponent(
+          selectedFile.name
+        )}`
       );
 
-      if (!response.ok) {
-        throw new Error("Import Vendor Master failed");
+      if (!presignResp.ok) {
+        throw new Error(
+          `Failed to get presigned URL (status: ${presignResp.status})`
+        );
       }
 
-      showToast("Vendor Master imported successfully!", "success");
-      fetchData();
+      const presignedUrl = await presignResp.text();
+
+      // Upload file via PUT to presigned S3 URL
+      const uploadResponse = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": selectedFile.type || "application/octet-stream",
+        },
+        body: selectedFile,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(
+          `Upload to S3 failed: ${uploadResponse.status} ${uploadResponse.statusText}`
+        );
+      }
+
+      // Call backend import API that processes the uploaded file
+      setLoading(true);
+      try {
+        const importResponse = await fetch(
+          `${backendUrl}/api/PurchaseOrders/import-venor-master-s3?filename=${encodeURIComponent(
+            selectedFile.name
+          )}&Username=${encodeURIComponent(currentUser?.name || "")}`,
+          { method: "POST" }
+        );
+
+        if (!importResponse.ok) {
+          throw new Error(
+            `Import API call failed: ${importResponse.status} ${importResponse.statusText}`
+          );
+        }
+
+        const contentType = importResponse.headers.get("content-type") || "";
+
+        if (
+          contentType.includes("text/csv") ||
+          contentType.includes("text/plain")
+        ) {
+          const csvText = await importResponse.text();
+          const downloadedFileName = `imported_${selectedFile.name.replace(
+            /\.(csv|xls|xlsx|xlsm|xlsb)$/i,
+            ""
+          )}_${Date.now()}.csv`;
+          downloadCSV(csvText, downloadedFileName);
+          showToast("Import skipped with CSV output", "error");
+        } else {
+          showToast("Import successful", "success");
+        }
+      } finally {
+        setLoading(false);
+      }
     } catch (error) {
-      console.error("Import Vendor Master Error:", error);
-      showToast("Failed to import Vendor Master.", "error");
+      console.error("Upload/import error:", error);
+      showToast("Upload or import failed: " + error.message, "error");
     } finally {
-      setLoading(false);
-      event.target.value = "";
+      setUserLoading(false);
+      setSelectedFile(null);
+      if (vendorMasterFileInputRef.current)
+        vendorMasterFileInputRef.current.value = "";
     }
   };
+
+  function downloadCSV(csvContent, filename) {
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <div className="min-h-screen bg-grey-200 flex flex-col pr-4 mx-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8 px-6 py-4">
         <div className="w-full flex flex-col items-center">
           <div className="w-full flex justify-between items-center mb-4 px-1">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Purchase Orders Information
-            </h1>
+            <div className="flex items-center">
+              <CheckSquare className="h-8 w-8 text-green-600 mr-3" />
+              <h1 className="text-2xl font-bold text-gray-900">
+                Purchase Orders Information
+              </h1>
+            </div>
             <button
               onClick={handleLogout}
               className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
@@ -453,12 +424,14 @@ export default function GroupsTable() {
                 onChange={handleImportPOInfo}
                 accept=".xlsx,.xls"
                 style={{ display: "none" }}
+                disabled={importLoading}
               />
               <button
                 onClick={() => poInfoFileInputRef.current.click()}
+                disabled={importLoading}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
               >
-                Import-PO-Info
+                {importLoading ? "Processing..." : "Import-PO-Info"}
               </button>
 
               <input
@@ -467,12 +440,14 @@ export default function GroupsTable() {
                 onChange={handleImportVendorMaster}
                 accept=".xlsx,.xls"
                 style={{ display: "none" }}
+                disabled={userLoading}
               />
               <button
                 onClick={() => vendorMasterFileInputRef.current.click()}
+                disabled={userLoading}
                 className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs font-normal shadow transition"
               >
-                Import-Vendor-Master
+                {userLoading ? "Processing..." : "Import-Vendor-Master"}
               </button>
             </div>
 
@@ -485,22 +460,15 @@ export default function GroupsTable() {
                         <th
                           key={col}
                           className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-blue-50 cursor-pointer select-none"
-                          onClick={() =>
-                            col !== "Actions" &&
-                            col !== "All" &&
-                            handleSort(col)
-                          }
                         >
-                          <span>
-                            {col}
-                            {col !== "Actions" && getSortIcon(col)}
-                          </span>
+                          <span>{col}</span>
                         </th>
                       ))}
                     </tr>
                   </thead>
+
                   <tbody>
-                    {loading && !editingRowId ? (
+                    {loading ? (
                       <tr>
                         <td
                           colSpan={groupColumns.length}
@@ -511,107 +479,26 @@ export default function GroupsTable() {
                       </tr>
                     ) : processedRows.length > 0 ? (
                       processedRows.map((row) => (
-                        <tr
-                          key={row.id}
-                          className={
-                            editingRowId === row.id
-                              ? "bg-blue-50"
-                              : "bg-white hover:bg-gray-50"
-                          }
-                        >
-                          {groupColumns.map((col) => {
-                            if (col === "Actions") {
-                              return (
-                                <td
-                                  key={col}
-                                  className="border p-1 text-center whitespace-nowrap"
-                                >
-                                  {editingRowId === row.id && (
-                                    <div className="flex gap-2 justify-center">
-                                      <button
-                                        onClick={handleSaveRecord}
-                                        className="font-semibold text-green-600 hover:text-green-800"
-                                      >
-                                        Save
-                                      </button>
-                                      <button
-                                        onClick={handleCancelAdd}
-                                        className="font-semibold text-red-600 hover:text-red-800"
-                                      >
-                                        Cancel
-                                      </button>
-                                    </div>
-                                  )}
-                                </td>
-                              );
-                            }
-                            return (
-                              <td
-                                key={col}
-                                className="border p-1 text-center whitespace-nowrap"
-                              >
-                                {editingRowId === row.id ? (
-                                  <input
-                                    type={
-                                      col === "Email ID"
-                                        ? "email"
-                                        : col === "Hourly Rate" ||
-                                          col.includes("Number") ||
-                                          col.includes("ID")
-                                        ? "number"
-                                        : col.includes("date")
-                                        ? "date"
-                                        : "text"
-                                    }
-                                    name={col}
-                                    value={editedRowData[col] || ""}
-                                    onChange={handleEditChange}
-                                    className="w-full p-1.5 text-xs border rounded bg-white"
-                                    placeholder={col}
-                                    step={col === "Hourly Rate" ? "0.01" : "1"}
-                                    min={
-                                      [
-                                        "Release Number",
-                                        "PO Line Number",
-                                        "Resource ID",
-                                        "PM USER_ID",
-                                        "Hourly Rate",
-                                      ].includes(col)
-                                        ? "0"
-                                        : undefined
-                                    }
-                                    onKeyDown={
-                                      [
-                                        "Release Number",
-                                        "PO Line Number",
-                                        "Resource ID",
-                                        "PM USER_ID",
-                                        "Hourly Rate",
-                                      ].includes(col)
-                                        ? handleKeyDown
-                                        : undefined
-                                    }
-                                  />
-                                ) : (
-                                  row[col]
-                                )}
-                              </td>
-                            );
-                          })}
+                        <tr key={row.id} className="bg-white hover:bg-gray-50">
+                          {groupColumns.map((col) => (
+                            <td
+                              key={col}
+                              className="border p-1 text-center whitespace-nowrap"
+                            >
+                              {row[col]}
+                            </td>
+                          ))}
                         </tr>
                       ))
                     ) : (
-                      !loading &&
-                      !editingRowId && (
-                        <tr>
-                          <td
-                            colSpan={groupColumns.length}
-                            className="text-center p-5 italic text-gray-500"
-                          >
-                            No data available
-                          </td>
-                        </tr>
-                      )
+                      <tr>
+                        <td
+                          colSpan={groupColumns.length}
+                          className="text-center p-5 italic text-gray-500"
+                        >
+                          No data available
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>

@@ -538,13 +538,13 @@ const POStatusTable = () => {
 
           {/* Filters */}
           <div className="flex gap-3 mb-3 items-center flex-wrap px-1 w-full">
-            <input
+            {/* <input
               type="text"
               placeholder="Filter Work Order"
               className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={filterWACode}
               onChange={(e) => setFilterWACode(e.target.value)}
-            />
+            /> */}
             <input
               type="text"
               placeholder="Filter PO Number"
