@@ -325,7 +325,9 @@ export default function TimesheetLine({ onClose, resourceId, existingTimesheetDa
             
             showToast(`Timesheet ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
             setModifiedHours(new Set());
-            onClose();
+             onClose();
+//             const savedDate = getWeekEndDateFromPeriod(selectedPeriod);
+// onClose(savedDate);
         } catch (error) {
             showToast(error.message, 'error');
             setIsSubmitting(false);
