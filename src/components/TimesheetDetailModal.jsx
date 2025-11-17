@@ -734,7 +734,7 @@ export default function TimesheetDetailModal({ timesheetData, onClose, onSave, i
     useEffect(() => {
         if (timesheetData) {
             const status = timesheetData.Status?.toUpperCase();
-            setIsEditable(status === 'OPEN' || status === 'REJECTED' || status === 'SUBMITTED');
+            setIsEditable(status === 'OPEN' || status === 'REJECTED');
             fetchTimesheetDetails();
             const startDate = new Date(timesheetData.Date); const startDay = startDate.getUTCDay(); const monday = new Date(startDate); monday.setUTCDate(startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)); const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const newHeaderDates = daysOfWeek.map((day, index) => {
