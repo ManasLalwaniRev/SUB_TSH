@@ -1934,7 +1934,7 @@ export default function UserTable() {
             <div className="border border-gray-300 rounded-2xl bg-white shadow-md p-2 w-full max-w-[calc(100vw-220px)] mx-auto">
               <div
                 className="overflow-x-auto overflow-y-auto w-full"
-                style={{ maxHeight: "60vh" }}
+                style={{ maxHeight: "75vh" }}
               >
                 <table className="border-collapse table-auto min-w-[650px] w-full">
                   <thead className="sticky top-0 bg-gray-50 z-10 border-b-2 border-gray-200">
