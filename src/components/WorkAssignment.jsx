@@ -1677,7 +1677,7 @@ const WorkAssignment = () => {
   // Updated column configuration with W0 Code
   const columns = [
     "Select",
-    "WO Code",
+    "WA Code",
     "Purchase Order",
     "Purchase Order Release",
     // "PO Line Key",
@@ -1727,7 +1727,7 @@ const WorkAssignment = () => {
         ? apiData.map((item, index) => ({
             id: item.id || `work-${index}`,
             waId: item.waId || 0,
-            "WO Code": item.wa_Code || "",
+            "WA Code": item.wa_Code || "",
             "Purchase Order": item.purchaseOrder || "",
             "Purchase Order Release": item.purchaseOrderRelease || "",
             "PO Line Key": item.poLnKey || "",
@@ -1773,7 +1773,7 @@ const WorkAssignment = () => {
 
     if (filterWACode.trim()) {
       filtered = filtered.filter((row) =>
-        (row["WO Code"] || "")
+        (row["WA Code"] || "")
           .toLowerCase()
           .includes(filterWACode.toLowerCase())
       );
@@ -2027,7 +2027,7 @@ const WorkAssignment = () => {
             type="text"
             value={filterWACode}
             onChange={(e) => setFilterWACode(e.target.value)}
-            placeholder="Filter WO Code"
+            placeholder="Filter WA Code"
             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <input
@@ -2161,7 +2161,7 @@ const WorkAssignment = () => {
                                     isApproved
                                       ? "Already approved"
                                       : hasWACode
-                                      ? "Has WO Code - cannot approve"
+                                      ? "Has WA Code - cannot approve"
                                       : ""
                                   }
                                 />
