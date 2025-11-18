@@ -2501,13 +2501,107 @@ export default function Approval() {
     return result;
   };
 
+  // const fetchData = async () => {
+  //   if (!userLoaded || !currentUser || !currentUser.username) return;
+
+  //   try {
+  //     setLoading(true);
+
+  //     // Use existing resourceId from currentUser.username
+  //     const resourceId = currentUser.username;
+  //     const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+  //     console.log("Fetching from:", apiUrl);
+
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const apiData = await response.json();
+  //     console.log("Raw API Response:", apiData);
+
+  //     // Transform the nested structure into flat rows
+  //     const flattenedData = [];
+
+  //     if (Array.isArray(apiData)) {
+  //       apiData.forEach((timesheetEntry, entryIndex) => {
+  //         console.log(
+  //           `Processing timesheet entry ${entryIndex}:`,
+  //           timesheetEntry
+  //         );
+
+  //         if (
+  //           timesheetEntry.timesheetHours &&
+  //           Array.isArray(timesheetEntry.timesheetHours)
+  //         ) {
+  //           timesheetEntry.timesheetHours.forEach((dailyHour, hourIndex) => {
+  //             console.log(`Processing daily hour ${hourIndex}:`, dailyHour);
+
+  //             // Create row for each daily entry
+  //             const row = {
+  //               id: dailyHour.id,
+  //               requestId: timesheetEntry.requestId,
+  //               levelNo: timesheetEntry.levelNo || 1,
+  //               lineNo: timesheetEntry.lineNo,
+  //               selected: false,
+  //               notifySelected: false,
+  //               isApproved: timesheetEntry.status?.toLowerCase() === "approved",
+  //               isRejected: timesheetEntry.status?.toLowerCase() === "rejected",
+  //               isNotified: timesheetEntry.status?.toLowerCase() === "notified",
+
+  //               // Display fields matching your existing structure
+  //               status: timesheetEntry.status?.toLowerCase(),
+  //               Status: timesheetEntry.status,
+  //               "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
+  //               "Employee ID": timesheetEntry.resource_Id,
+  //               Name:
+  //                 timesheetEntry.resource_Name || timesheetEntry.displayedName,
+  //               "Work Order":
+  //                 timesheetEntry.workOrder || timesheetEntry.work_Order || "", // Add Work Order field
+  //               Hours: formatHours(dailyHour.hours),
+  //               "Approver ID":
+  //                 timesheetEntry.pm_User_Id || timesheetEntry.pm_User_Id || "",
+  //               "Approver Name":
+  //                 timesheetEntry.pm_Name || timesheetEntry.pmName || "",
+  //               // Additional fields for operations
+  //               originalDate: timesheetEntry.timesheet_Date,
+  //               approverUserId: timesheetEntry.approverUserId,
+  //               Comment: timesheetEntry.comment || "",
+  //             };
+
+  //             flattenedData.push(row);
+  //             console.log(`Added flattened row:`, row);
+  //           });
+  //         }
+  //       });
+  //     }
+
+  //     console.log("All flattened data before grouping:", flattenedData);
+
+  //     // Apply grouping to combine duplicate Employee ID + Date entries
+  //     const groupedData = groupDuplicateTimesheets(flattenedData);
+  //     console.log("Final grouped data:", groupedData);
+
+  //     setRows(groupedData);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error);
+  //     showToast(`Error fetching data: ${error.message}`, "error");
+  //     setRows([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchData = async () => {
     if (!userLoaded || !currentUser || !currentUser.username) return;
 
     try {
       setLoading(true);
 
-      // Use existing resourceId from currentUser.username
       const resourceId = currentUser.username;
       const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
       console.log("Fetching from:", apiUrl);
@@ -2534,49 +2628,57 @@ export default function Approval() {
             timesheetEntry
           );
 
+          // Calculate total hours from all daily hours for this timesheet entry
+          let totalHours = 0;
           if (
             timesheetEntry.timesheetHours &&
             Array.isArray(timesheetEntry.timesheetHours)
           ) {
-            timesheetEntry.timesheetHours.forEach((dailyHour, hourIndex) => {
-              console.log(`Processing daily hour ${hourIndex}:`, dailyHour);
-
-              // Create row for each daily entry
-              const row = {
-                id: dailyHour.id,
-                requestId: timesheetEntry.requestId,
-                levelNo: timesheetEntry.levelNo || 1,
-                lineNo: timesheetEntry.lineNo,
-                selected: false,
-                notifySelected: false,
-                isApproved: timesheetEntry.status?.toLowerCase() === "approved",
-                isRejected: timesheetEntry.status?.toLowerCase() === "rejected",
-                isNotified: timesheetEntry.status?.toLowerCase() === "notified",
-
-                // Display fields matching your existing structure
-                status: timesheetEntry.status?.toLowerCase(),
-                Status: timesheetEntry.status,
-                "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
-                "Employee ID": timesheetEntry.resource_Id,
-                Name:
-                  timesheetEntry.resource_Name || timesheetEntry.displayedName,
-                "Work Order":
-                  timesheetEntry.workOrder || timesheetEntry.work_Order || "", // Add Work Order field
-                Hours: formatHours(dailyHour.hours),
-                "Approver ID":
-                  timesheetEntry.pm_User_Id || timesheetEntry.pm_User_Id || "",
-                "Approver Name":
-                  timesheetEntry.pm_Name || timesheetEntry.pmName || "",
-                // Additional fields for operations
-                originalDate: timesheetEntry.timesheet_Date,
-                approverUserId: timesheetEntry.approverUserId,
-                Comment: timesheetEntry.comment || "",
-              };
-
-              flattenedData.push(row);
-              console.log(`Added flattened row:`, row);
-            });
+            totalHours = timesheetEntry.timesheetHours.reduce(
+              (sum, dailyHour) => sum + (parseFloat(dailyHour.hours) || 0),
+              0
+            );
           }
+
+          // Create a single row per timesheet entry (not per daily hour)
+          const row = {
+            id: timesheetEntry.lineNo, // Use lineNo as the unique identifier
+            requestId: timesheetEntry.requestId,
+            levelNo: timesheetEntry.levelNo || 1,
+            lineNo: timesheetEntry.lineNo,
+            selected: false,
+            notifySelected: false,
+            isApproved: timesheetEntry.status?.toLowerCase() === "approved",
+            isRejected: timesheetEntry.status?.toLowerCase() === "rejected",
+            isNotified: timesheetEntry.status?.toLowerCase() === "notified",
+
+            // Display fields
+            status: timesheetEntry.status?.toLowerCase(),
+            Status: timesheetEntry.status,
+            "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
+            "Employee ID": timesheetEntry.resource_Id,
+            Name: timesheetEntry.resource_Name || timesheetEntry.displayedName,
+            "Work Order":
+              timesheetEntry.workOrder || timesheetEntry.work_Order || "",
+            Hours: formatHours(totalHours), // Use calculated total hours
+            "Approver ID": timesheetEntry.pm_User_Id || "",
+            "Approver Name":
+              timesheetEntry.pm_Name || timesheetEntry.pmName || "",
+
+            // Additional fields for operations
+            originalDate: timesheetEntry.timesheet_Date,
+            approverUserId: timesheetEntry.approverUserId,
+            Comment: timesheetEntry.comment || "",
+
+            // Store the raw hours array for grouping operations
+            rawHoursData: timesheetEntry.timesheetHours || [],
+          };
+
+          flattenedData.push(row);
+          console.log(
+            `Added flattened row with total hours ${totalHours}:`,
+            row
+          );
         });
       }
 
@@ -2786,14 +2888,11 @@ export default function Approval() {
         ProjectId: row["Project ID"],
         requestData: `Notification for timesheet ${row.id}`,
       }));
-      const response = await fetch(
-        `${backendUrl}/api/Approval/BulkNotify`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch(`${backendUrl}/api/Approval/BulkNotify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
       if (response.ok) {
         showToast(
           `Notifications sent for ${selectedNotifyRows.length} timesheets successfully!`,
@@ -2996,14 +3095,11 @@ export default function Approval() {
 
       console.log("Bulk Approve Payload:", requestBody);
 
-      const response = await fetch(
-        `${backendUrl}/api/Approval/BulkApprove`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch(`${backendUrl}/api/Approval/BulkApprove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
 
       if (response.ok) {
         const totalProcessed = requestBody.length;
@@ -3068,14 +3164,11 @@ export default function Approval() {
 
       console.log("Bulk Reject Payload:", requestBody);
 
-      const response = await fetch(
-        `${backendUrl}/api/Approval/BulkReject`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch(`${backendUrl}/api/Approval/BulkReject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
 
       if (response.ok) {
         const totalProcessed = requestBody.length;

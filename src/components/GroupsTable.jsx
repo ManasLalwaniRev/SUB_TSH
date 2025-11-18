@@ -233,6 +233,24 @@ export default function GroupsTable() {
           );
         }
 
+        // if (!importResponse.ok) {
+        //   let backendError =
+        //     "Import API call failed: " + refreshedResp.statusText;
+        //   try {
+        //     const errJson = await refreshedResp.json();
+        //     // Show message if present, otherwise error stringified
+        //     backendError =
+        //       errJson.message ||
+        //       errJson.error ||
+        //       JSON.stringify(errJson) ||
+        //       backendError;
+        //   } catch {
+        //     // fallback: try to get plain text error if not json
+        //     backendError = await refreshedResp.text().catch(() => backendError);
+        //   }
+        //   throw new Error(backendError);
+        // }
+
         const contentType = importResponse.headers.get("content-type") || "";
 
         if (
@@ -328,6 +346,24 @@ export default function GroupsTable() {
             `Import API call failed: ${importResponse.status} ${importResponse.statusText}`
           );
         }
+
+        // if (!importResponse.ok) {
+        //   let backendError =
+        //     "Import API call failed: " + refreshedResp.statusText;
+        //   try {
+        //     const errJson = await refreshedResp.json();
+        //     // Show message if present, otherwise error stringified
+        //     backendError =
+        //       errJson.message ||
+        //       errJson.error ||
+        //       JSON.stringify(errJson) ||
+        //       backendError;
+        //   } catch {
+        //     // fallback: try to get plain text error if not json
+        //     backendError = await refreshedResp.text().catch(() => backendError);
+        //   }
+        //   throw new Error(backendError);
+        // }
 
         const contentType = importResponse.headers.get("content-type") || "";
 

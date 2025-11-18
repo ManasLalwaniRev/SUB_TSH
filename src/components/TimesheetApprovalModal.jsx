@@ -122,6 +122,105 @@ export default function TimesheetApprovalView({
     }
   }, [resourceId, timesheetDate]);
 
+  // const fetchTimesheetData = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `${backendUrl}/api/SubkTimesheet/ByResource/${resourceId}`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to fetch timesheet data");
+  //     const data = await response.json();
+
+  //     console.log("Timesheet data received from API:", data);
+
+  //     const dataArray = Array.isArray(data) ? data : [];
+
+  //     // Filter by the selected timesheet date
+  //     const filteredData = dataArray.filter((item) => {
+  //       if (!timesheetDate) return true; // Show all if no date specified
+
+  //       const itemDate = new Date(item.timesheet_Date);
+  //       const selectedDate = new Date(timesheetDate);
+  //       return itemDate.toDateString() === selectedDate.toDateString();
+  //     });
+
+  //     if (filteredData.length > 0) {
+  //       setTimesheetDetails(filteredData[0]);
+  //       const firstDate = filteredData[0].timesheet_Date;
+  //       const startDate = new Date(firstDate);
+  //       const startDay = startDate.getUTCDay();
+  //       const monday = new Date(startDate);
+  //       monday.setUTCDate(
+  //         startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)
+  //       );
+
+  //       const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  //       const newHeaderDates = daysOfWeek.map((day, index) => {
+  //         const currentDate = new Date(monday);
+  //         currentDate.setUTCDate(monday.getUTCDate() + index);
+  //         const month = String(currentDate.getUTCMonth() + 1).padStart(2, "0");
+  //         const dt = String(currentDate.getUTCDate()).padStart(2, "0");
+  //         return `${day} ${month}/${dt}`;
+  //       });
+  //       setHeaderDates(newHeaderDates);
+  //     }
+
+  //     // Map filteredData with sequential line numbers and work order
+  //     const mappedLines = filteredData.map((item, index) => {
+  //       const hoursData = {
+  //         mon: 0,
+  //         tue: 0,
+  //         wed: 0,
+  //         thu: 0,
+  //         fri: 0,
+  //         sat: 0,
+  //         sun: 0,
+  //       };
+  //       const hourIdsData = {};
+
+  //       if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
+  //         item.timesheetHours.forEach((hourEntry) => {
+  //           const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+  //           if (!isNaN(date.getTime())) {
+  //             const dayKey = dayKeyMapping[date.getUTCDay()];
+  //             if (dayKey) {
+  //               hoursData[dayKey] = hourEntry.hours;
+  //               hourIdsData[dayKey] = hourEntry.id;
+  //             }
+  //           }
+  //         });
+  //       }
+  //       return {
+  //         id: item.lineNo || index + 1,
+  //         lineNumber: index + 1,
+  //         workOrder:
+  //           item.workOrder || item.work_order || item.workOrderNumber || "",
+  //         description: item.description || "",
+  //         project: item.projId || "",
+  //         plc: item.plc || "",
+  //         payType: item.payType || "SR",
+  //         poNumber: item.poNumber || "",
+  //         rlseNumber: item.rlseNumber || "",
+  //         poLineNumber: item.poLineNumber || "",
+  //         hours: hoursData,
+  //         hourIds: hourIdsData,
+  //         totalHours: item.hours || 0,
+  //         resourceId: item.resource_Id,
+  //       };
+  //     });
+
+  //     setLines(mappedLines);
+  //   } catch (error) {
+  //     showToast(error.message, "error");
+  //     console.error("Error fetching timesheet data:", error);
+  //     setLines([]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // Day wise total
+
   const fetchTimesheetData = async () => {
     setIsLoading(true);
     try {
@@ -135,14 +234,24 @@ export default function TimesheetApprovalView({
 
       const dataArray = Array.isArray(data) ? data : [];
 
-      // Filter by the selected timesheet date
+      // Filter to show ONLY timesheets matching the exact date
+      // This ensures we show the same data that's in the approval list
       const filteredData = dataArray.filter((item) => {
-        if (!timesheetDate) return true; // Show all if no date specified
+        if (!timesheetDate) return true;
 
         const itemDate = new Date(item.timesheet_Date);
         const selectedDate = new Date(timesheetDate);
-        return itemDate.toDateString() === selectedDate.toDateString();
+
+        // Exact date match - year, month, and day
+        return (
+          itemDate.getFullYear() === selectedDate.getFullYear() &&
+          itemDate.getMonth() === selectedDate.getMonth() &&
+          itemDate.getDate() === selectedDate.getDate()
+        );
       });
+
+      console.log("Filtered data count:", filteredData.length);
+      console.log("Filtered data:", filteredData);
 
       if (filteredData.length > 0) {
         setTimesheetDetails(filteredData[0]);
@@ -165,7 +274,7 @@ export default function TimesheetApprovalView({
         setHeaderDates(newHeaderDates);
       }
 
-      // Map filteredData with sequential line numbers and work order
+      // Map filteredData - each entry from API becomes one line in the modal
       const mappedLines = filteredData.map((item, index) => {
         const hoursData = {
           mon: 0,
@@ -190,6 +299,16 @@ export default function TimesheetApprovalView({
             }
           });
         }
+
+        // Calculate total from hoursData - this should match the approval list
+        const calculatedTotal = Object.values(hoursData).reduce(
+          (sum, hours) => sum + (parseFloat(hours) || 0),
+          0
+        );
+
+        console.log(`Line ${index + 1} hours breakdown:`, hoursData);
+        console.log(`Line ${index + 1} total:`, calculatedTotal);
+
         return {
           id: item.lineNo || index + 1,
           lineNumber: index + 1,
@@ -204,10 +323,20 @@ export default function TimesheetApprovalView({
           poLineNumber: item.poLineNumber || "",
           hours: hoursData,
           hourIds: hourIdsData,
-          totalHours: item.hours || 0,
+          totalHours: calculatedTotal,
           resourceId: item.resource_Id,
         };
       });
+
+      const grandTotal = mappedLines.reduce(
+        (sum, line) => sum + line.totalHours,
+        0
+      );
+      console.log("Mapped lines:", mappedLines);
+      console.log(
+        "Grand total (should match approval list):",
+        grandTotal.toFixed(2)
+      );
 
       setLines(mappedLines);
     } catch (error) {
@@ -219,7 +348,104 @@ export default function TimesheetApprovalView({
     }
   };
 
-  // Day wise total
+  //  const fetchTimesheetData = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     const response = await fetch(
+  //       `${backendUrl}/api/SubkTimesheet/ByResource/${resourceId}`
+  //     );
+  //     if (!response.ok) throw new Error("Failed to fetch timesheet data");
+  //     const data = await response.json();
+
+  //     console.log("Timesheet data received from API:", data);
+
+  //     const dataArray = Array.isArray(data) ? data : [];
+
+  //     // Filter by the selected timesheet date
+  //     const filteredData = dataArray.filter((item) => {
+  //       if (!timesheetDate) return true; // Show all if no date specified
+
+  //       const itemDate = new Date(item.timesheet_Date);
+  //       const selectedDate = new Date(timesheetDate);
+  //       return itemDate.toDateString() === selectedDate.toDateString();
+  //     });
+
+  //     if (filteredData.length > 0) {
+
+  //       setTimesheetDetails(filteredData[0]);
+  //       const firstDate = filteredData[0].timesheet_Date;
+  //       const startDate = new Date(firstDate);
+  //       const startDay = startDate.getUTCDay();
+  //       const monday = new Date(startDate);
+  //       monday.setUTCDate(
+  //         startDate.getUTCDate() - startDay + (startDay === 0 ? -6 : 1)
+  //       );
+
+  //       const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  //       const newHeaderDates = daysOfWeek.map((day, index) => {
+  //         const currentDate = new Date(monday);
+  //         currentDate.setUTCDate(monday.getUTCDate() + index);
+  //         const month = String(currentDate.getUTCMonth() + 1).padStart(2, "0");
+  //         const dt = String(currentDate.getUTCDate()).padStart(2, "0");
+  //         return `${day} ${month}/${dt}`;
+  //       });
+  //       setHeaderDates(newHeaderDates);
+  //     }
+
+  //     // Map filteredData with sequential line numbers and work order
+  //     const mappedLines = filteredData.map((item, index) => {
+  //       const hoursData = {
+  //         mon: 0,
+  //         tue: 0,
+  //         wed: 0,
+  //         thu: 0,
+  //         fri: 0,
+  //         sat: 0,
+  //         sun: 0,
+  //       };
+  //       const hourIdsData = {};
+
+  //       if (item.timesheetHours && Array.isArray(item.timesheetHours)) {
+  //         item.timesheetHours.forEach((hourEntry) => {
+  //           const date = new Date(`${hourEntry.ts_Date}T00:00:00Z`);
+  //           if (!isNaN(date.getTime())) {
+  //             const dayKey = dayKeyMapping[date.getUTCDay()];
+  //             if (dayKey) {
+  //               hoursData[dayKey] = hourEntry.hours;
+  //               hourIdsData[dayKey] = hourEntry.id;
+  //             }
+  //           }
+  //         });
+  //       }
+  //       return {
+  //         id: item.lineNo || index + 1,
+  //         lineNumber: index + 1,
+  //         workOrder:
+  //           item.workOrder || item.work_order || item.workOrderNumber || "",
+  //         description: item.description || "",
+  //         project: item.projId || "",
+  //         plc: item.plc || "",
+  //         payType: item.payType || "SR",
+  //         poNumber: item.poNumber || "",
+  //         rlseNumber: item.rlseNumber || "",
+  //         poLineNumber: item.poLineNumber || "",
+  //         hours: hoursData,
+  //         hourIds: hourIdsData,
+  //         totalHours: item.hours || 0,
+  //         resourceId: item.resource_Id,
+  //       };
+  //     });
+
+  //     setLines(mappedLines);
+  //   } catch (error) {
+  //     showToast(error.message, "error");
+  //     console.error("Error fetching timesheet data:", error);
+  //     setLines([]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const dailyTotals = React.useMemo(() => {
     const totals = { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 };
     lines.forEach((line) => {
