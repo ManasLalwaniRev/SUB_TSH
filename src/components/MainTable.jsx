@@ -1135,6 +1135,44 @@ export default function MainTable() {
     setIsModalOpen(true);
   };
 
+  function formatDateToMMDDYYYY(dateInput) {
+    if (!dateInput) return "";
+
+    let dateObj;
+
+    if (dateInput instanceof Date) {
+      dateObj = dateInput;
+    } else if (typeof dateInput === "string") {
+      // Try parsing string formats like "7/8/2025", "2025-07-08"
+      // First attempt Date constructor; fallback to manual parsing if needed
+      dateObj = new Date(dateInput);
+      if (isNaN(dateObj.getTime())) {
+        // Manual parse for formats "M/D/YYYY" or "MM/DD/YYYY"
+        const parts = dateInput.split(/[\/\-]/);
+        if (parts.length === 3) {
+          let month = parseInt(parts[0], 10);
+          let day = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          if (!isNaN(month) && !isNaN(day) && !isNaN(year)) {
+            dateObj = new Date(year, month - 1, day);
+          } else {
+            return dateInput; // fallback plain string if invalid
+          }
+        } else {
+          return dateInput; // fallback plain string if invalid
+        }
+      }
+    } else {
+      return "";
+    }
+
+    // Format padded MM/DD/YYYY
+    const pad = (n) => n.toString().padStart(2, "0");
+    return `${pad(dateObj.getMonth() + 1)}/${pad(
+      dateObj.getDate()
+    )}/${dateObj.getFullYear()}`;
+  }
+
   const renderTableCell = (row, col) => {
     const key = col === "Timesheet End Date" ? "Date" : col;
     if (key === "Status") {
@@ -1154,6 +1192,13 @@ export default function MainTable() {
     }
     if (key === "Created Date") {
       return row[key] || "N/A";
+    }
+    if (
+      key === "Approver Date" ||
+      key === "Created Date" ||
+      key === "Date" // Include "Date" if you want uniform formatting on timesheet date
+    ) {
+      return row[key] ? formatDateToMMDDYYYY(row[key]) : "N/A";
     }
     return row[key];
   };

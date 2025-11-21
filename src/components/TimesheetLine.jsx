@@ -2149,7 +2149,9 @@ export default function TimesheetLine({
             parseInt(month, 10) - 1,
             parseInt(day, 10)
           )
-        ).toISOString();
+        )
+          .toISOString()
+          .split("T")[0];
 
         const timesheetHours = DAYS_OF_WEEK.map((day, index) => {
           const dateParts = selectedPeriod.dates[index]
