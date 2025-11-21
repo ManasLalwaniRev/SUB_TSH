@@ -3346,6 +3346,215 @@ export default function TimesheetDetailModal({
   //     }
   //   };
 
+  //   const handleSave = async () => {
+  //     setIsCurrentlySaving(true);
+
+  //     const finalTotals = {
+  //       mon: 0,
+  //       tue: 0,
+  //       wed: 0,
+  //       thu: 0,
+  //       fri: 0,
+  //       sat: 0,
+  //       sun: 0,
+  //     };
+  //     lines.forEach((line) => {
+  //       days.forEach((day) => {
+  //         finalTotals[day] += parseFloat(line.hours[day]) || 0;
+  //       });
+  //     });
+
+  //     const invalidDay = days.find((day) => finalTotals[day] > 24);
+  //     if (invalidDay) {
+  //       showToast(
+  //         `Save failed: Total hours for one or more days exceed 24.`,
+  //         "error"
+  //       );
+  //       setIsCurrentlySaving(false);
+  //       return;
+  //     }
+
+  //     const promises = [];
+  //     const weekDates = getWeekDates(timesheetData.Date);
+  //     const API_BASE_URL = backendUrl;
+
+  //     const isOnlyDeletion = lines.length === 0 || linesToDelete.length > 0;
+  //     const grandTotalForSave = Object.values(finalTotals).reduce(
+  //       (sum, total) => sum + total,
+  //       0
+  //     );
+
+  //     if (!isOnlyDeletion && grandTotalForSave === 0) {
+  //       showToast("Cannot save a timesheet with zero hours.", "warning");
+  //       setIsCurrentlySaving(false);
+  //       return;
+  //     }
+
+  //     const now = new Date().toISOString();
+  //     const resourceId = timesheetData["Employee ID"];
+
+  //     linesToDelete.forEach((id) => {
+  //       if (typeof id === "number" || !id.startsWith("temp-")) {
+  //         promises.push(
+  //           fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: "DELETE" })
+  //         );
+  //       }
+  //     });
+
+  //     lines.forEach((currentLine) => {
+  //       const initialLine = initialLines.find((l) => l.id === currentLine.id);
+
+  //       if (!initialLine) {
+  //         const totalHours = Object.values(currentLine.hours).reduce(
+  //           (s, h) => s + (parseFloat(h) || 0),
+  //           0
+  //         );
+  //         if (totalHours > 0) {
+  //           const payload = {
+  //             Description: currentLine.description || "New Timesheet Line",
+  //             ProjId: currentLine.project || "",
+  //             Plc: currentLine.plc || "",
+  //             PayType: currentLine.payType || "SR",
+  //             PoNumber: currentLine.poNumber || "",
+  //             RlseNumber: currentLine.rlseNumber || "0",
+  //             Resource_Id: String(resourceId),
+  //             PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+  //             Timesheet_Date: new Date(timesheetData.Date).toISOString(),
+  //             CreatedBy: String(resourceId),
+  //             UpdatedAt: now,
+  //             UpdatedBy: String(resourceId),
+  //             TimesheetHours: days.map((day) => {
+  //               let hourValue = parseFloat(currentLine.hours[day]);
+  //               if (isNaN(hourValue)) hourValue = 0;
+  //               return {
+  //                 Ts_Date: weekDates[day],
+  //                 Hours: hourValue,
+  //               };
+  //             }),
+  //           };
+  //           promises.push(
+  //             fetch(`${API_BASE_URL}/api/SubkTimesheet`, {
+  //               method: "POST",
+  //               headers: { "Content-Type": "application/json" },
+  //               body: JSON.stringify(payload),
+  //             })
+  //           );
+  //         }
+  //         return;
+  //       }
+
+  //       const isLineChanged =
+  //         currentLine.payType !== initialLine.payType ||
+  //         currentLine.workOrder !== initialLine.workOrder ||
+  //         currentLine.wa_Code !== initialLine.wa_Code ||
+  //         currentLine.description !== initialLine.description;
+
+  //       if (isLineChanged) {
+  //         const updatePayload = {
+  //           lineNo: currentLine.id,
+  //           description: currentLine.description,
+  //           projId: currentLine.project,
+  //           plc: currentLine.plc,
+  //           payType: currentLine.payType,
+  //           poNumber: currentLine.poNumber,
+  //           rlseNumber: currentLine.rlseNumber,
+  //           resource_Id: String(resourceId),
+  //           pm_User_Id: currentLine.pmUserID,
+  //           poLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+  //           rvsnNumber: 0,
+  //           timesheet_Date: new Date(timesheetData.Date)
+  //             .toISOString()
+  //             .split("T")[0],
+  //           workOrder: currentLine.wa_Code,
+  //           updatedAt: now,
+  //           updatedBy: String(resourceId),
+
+  //           // FIX: Added createdBy because API requires it even on Update
+  //           createdBy: String(resourceId),
+
+  //           // FIX: Added createdAt (using existing line date if available, or now as fallback)
+  //           createdAt: timesheetDetails?.createdAt || now,
+
+  //           hours: 0,
+  //           status: timesheetData.Status || "OPEN",
+  //         };
+
+  //         promises.push(
+  //           fetch(`${API_BASE_URL}/api/SubkTimesheet/${currentLine.id}`, {
+  //             method: "PUT",
+  //             headers: { "Content-Type": "application/json" },
+  //             body: JSON.stringify(updatePayload),
+  //           })
+  //         );
+  //       }
+
+  //       // B2. Check if Hours Changed
+  //       days.forEach((day) => {
+  //         const initialHour = initialLine.hours[day];
+  //         const currentHour = currentLine.hours[day];
+
+  //         if (initialHour !== currentHour) {
+  //           const hourId = currentLine.hourIds[day];
+
+  //           let hourValue = currentHour;
+  //           if (
+  //             hourValue === "" ||
+  //             hourValue === null ||
+  //             hourValue === undefined
+  //           ) {
+  //             hourValue = 0;
+  //           } else {
+  //             hourValue = parseFloat(hourValue);
+  //             if (isNaN(hourValue)) {
+  //               hourValue = 0;
+  //             }
+  //           }
+
+  //           const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
+  //           const payload = {
+  //             id: hourId || 0,
+  //             ts_Date: weekDates[day],
+  //             hours: hourValue,
+  //             lineNo: currentLine.id,
+  //           };
+
+  //           promises.push(
+  //             fetch(url, {
+  //               method: "POST",
+  //               headers: { "Content-Type": "application/json" },
+  //               body: JSON.stringify(payload),
+  //             })
+  //           );
+  //         }
+  //       });
+  //     });
+
+  //     if (promises.length === 0) {
+  //       showToast("No changes to save.", "info");
+  //       setIsCurrentlySaving(false);
+  //       return;
+  //     }
+
+  //     try {
+  //       const responses = await Promise.all(promises);
+  //       for (const response of responses) {
+  //         if (!response.ok) {
+  //           const errorText = await response.text();
+  //           throw new Error(`Failed to save changes: ${errorText}`);
+  //         }
+  //       }
+  //       showToast("Timesheet saved successfully!", "success");
+  //       onSave();
+  //       setTimeout(() => {
+  //         window.location.reload();
+  //       }, 1000);
+  //     } catch (error) {
+  //       showToast(error.message, "error");
+  //       console.error("Save error:", error);
+  //       setIsCurrentlySaving(false);
+  //     }
+  //   };
+
   const handleSave = async () => {
     setIsCurrentlySaving(true);
 
@@ -3410,6 +3619,30 @@ export default function TimesheetDetailModal({
           0
         );
         if (totalHours > 0) {
+          //   const payload = {
+          //     Description: currentLine.description || "New Timesheet Line",
+          //     ProjId: currentLine.project || "",
+          //     Plc: currentLine.plc || "",
+          //     PayType: currentLine.payType || "SR",
+          //     PoNumber: currentLine.poNumber || "",
+          //     RlseNumber: currentLine.rlseNumber || "0",
+          //     Resource_Id: String(resourceId),
+          //     PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+          //     Timesheet_Date: new Date(timesheetData.Date)
+          //       .toISOString()
+          //       .split("T")[0],
+          //     CreatedBy: String(resourceId),
+          //     UpdatedAt: now,
+          //     UpdatedBy: String(resourceId),
+          //     TimesheetHours: days.map((day) => {
+          //       let hourValue = parseFloat(currentLine.hours[day]);
+          //       if (isNaN(hourValue)) hourValue = 0;
+          //       return {
+          //         Ts_Date: weekDates[day],
+          //         Hours: hourValue,
+          //       };
+          //     }),
+          //   };
           const payload = {
             Description: currentLine.description || "New Timesheet Line",
             ProjId: currentLine.project || "",
@@ -3418,6 +3651,7 @@ export default function TimesheetDetailModal({
             PoNumber: currentLine.poNumber || "",
             RlseNumber: currentLine.rlseNumber || "0",
             Resource_Id: String(resourceId),
+            Pm_User_Id: currentLine.pmUserID || "",
             PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
             Timesheet_Date: new Date(timesheetData.Date)
               .toISOString()
