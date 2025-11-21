@@ -3451,7 +3451,7 @@ export default function Approval() {
                     Submitted
                   </label>
 
-                  {/* <label className="flex items-center gap-1 text-xs font-semibold text-gray-600">
+                  <label className="flex items-center gap-1 text-xs font-semibold text-gray-600">
                     <input
                       type="checkbox"
                       checked={searchStatus.includes("correction")}
@@ -3460,7 +3460,7 @@ export default function Approval() {
                       className="cursor-pointer"
                     />
                     Correction
-                  </label> */}
+                  </label>
                 </div>
               </div>
               <button
@@ -3540,7 +3540,7 @@ export default function Approval() {
 
                           {/* Correction button */}
 
-                          {/* <button
+                          <button
                             onClick={handleBulkCorrectionClick}
                             disabled={
                               correctionLoading || correctionEligibleCount === 0
@@ -3549,7 +3549,7 @@ export default function Approval() {
                           >
                             {correctionLoading ? "Processing..." : "Correct"} (
                             {correctionEligibleCount})
-                          </button> */}
+                          </button>
                         </>
                       );
                     })()}
