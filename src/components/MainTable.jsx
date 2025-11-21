@@ -794,7 +794,7 @@ export default function MainTable() {
     "Hours",
     "Approver",
     "Approver Date",
-    "Created At",
+    "Created Date",
   ];
 
   const formatHours = (hours) => {
@@ -921,7 +921,7 @@ export default function MainTable() {
             "Approver Date": item.approvedDate
               ? formatDate(item.approvedDate)
               : " ",
-            "Created At": item.createdAt ? formatDate(item.createdAt) : " ",
+            "Created Date": item.createdAt ? formatDate(item.createdAt) : " ",
             allTimesheets: [item],
           });
         }
@@ -1152,7 +1152,7 @@ export default function MainTable() {
     if (key === "Approver Date") {
       return row[key] || "N/A";
     }
-    if (key === "Created At") {
+    if (key === "Created Date") {
       return row[key] || "N/A";
     }
     return row[key];
