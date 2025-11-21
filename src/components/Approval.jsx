@@ -2062,6 +2062,11 @@ export default function Approval() {
     setSearchDate(formattedDateForState);
   }, []);
 
+  function convertDate(dateStr) {
+    const [year, month, day] = dateStr.split("-");
+    return `${month}/${day}/${year}`;
+  }
+
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "pm";
   const columns = columnsAdmin;
   const colWidth = 150;
@@ -2655,7 +2660,7 @@ export default function Approval() {
             // Display fields
             status: timesheetEntry.status?.toLowerCase(),
             Status: timesheetEntry.status,
-            "Timesheet Date": formatDate(timesheetEntry.timesheet_Date),
+            "Timesheet Date": convertDate(timesheetEntry.timesheet_Date),
             "Employee ID": timesheetEntry.resource_Id,
             Name: timesheetEntry.resource_Name || timesheetEntry.displayedName,
             "Work Order":
