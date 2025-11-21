@@ -3419,7 +3419,9 @@ export default function TimesheetDetailModal({
             RlseNumber: currentLine.rlseNumber || "0",
             Resource_Id: String(resourceId),
             PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
-            Timesheet_Date: new Date(timesheetData.Date).toISOString(),
+            Timesheet_Date: new Date(timesheetData.Date)
+              .toISOString()
+              .split("T")[0],
             CreatedBy: String(resourceId),
             UpdatedAt: now,
             UpdatedBy: String(resourceId),
