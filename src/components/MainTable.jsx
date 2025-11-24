@@ -799,7 +799,7 @@ export default function MainTable() {
     "Timesheet End Date",
     "Hours",
     "Approver",
-    "Approver Date",
+    "Approved Date",
     "Created Date",
   ];
 
@@ -936,7 +936,7 @@ export default function MainTable() {
             "Project ID": item.projId || "",
             Status: item.status || "OPEN",
             Approver: item.pm_User_Id || "N/A",
-            "Approver Date": item.approvedDate
+            "Approved Date": item.approvedDate
               ? formatDate(item.approvedDate)
               : " ",
             "Created Date": item.createdAt ? formatDate(item.createdAt) : " ",
@@ -1310,14 +1310,14 @@ export default function MainTable() {
     if (key === "Approver") {
       return row[key] || "N/A";
     }
-    if (key === "Approver Date") {
+    if (key === "Approved Date") {
       return row[key] || "N/A";
     }
     if (key === "Created Date") {
       return row[key] || "N/A";
     }
     if (
-      key === "Approver Date" ||
+      key === "Approved Date" ||
       key === "Created Date" ||
       key === "Date" // Include "Date" if you want uniform formatting on timesheet date
     ) {
