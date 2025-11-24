@@ -871,6 +871,22 @@ export default function MainTable() {
     setFilterMonth(m);
   }, [searchDate]);
 
+  useEffect(() => {
+    if (currentSelectedRowId) {
+      const timer = setTimeout(() => {
+        const rowElement = document.getElementById(
+          `timesheet-row-${currentSelectedRowId}`
+        );
+
+        if (rowElement) {
+          rowElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentSelectedRowId, rows]);
+
   const fetchData = async () => {
     if (!currentUser) return;
     setLoading(true);
@@ -945,11 +961,16 @@ export default function MainTable() {
         }
       });
 
-      setRows(Array.from(timesheetMap.values()));
+      // setRows(Array.from(timesheetMap.values()));
+      const finalRows = Array.from(timesheetMap.values());
+      setRows(finalRows);
+
+      return finalRows;
     } catch (error) {
       console.error("Failed to fetch data:", error);
       // showToast('No Timesheet Found', "error");
       setRows([]);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -1199,47 +1220,67 @@ export default function MainTable() {
     setCurrentSelectedRowId(null);
   };
 
-  const handleSaveDetails = async (updatedLines) => {
-    if (!updatedLines || updatedLines.length === 0) {
-      showToast("No data to save.", "error");
-      return;
-    }
-    setIsSaving(true);
-    try {
-      const savePromises = updatedLines.map((line) => {
-        if (typeof line.id === "string" && line.id.startsWith("temp-")) {
-          // POST for new lines could be added here
-        } else {
-          // existing line -> PUT
-          return fetch(`${backendUrl}/api/SubkTimesheet/${line.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(line),
-          });
-        }
-      });
+  // const handleSaveDetails = async (updatedLines) => {
+  //   if (!updatedLines || updatedLines.length === 0) {
+  //     showToast("No data to save.", "error");
+  //     return;
+  //   }
+  //   setIsSaving(true);
+  //   try {
+  //     const savePromises = updatedLines.map((line) => {
+  //       if (typeof line.id === "string" && line.id.startsWith("temp-")) {
+  //         // POST for new lines could be added here
+  //       } else {
+  //         // existing line -> PUT
+  //         return fetch(`${backendUrl}/api/SubkTimesheet/${line.id}`, {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify(line),
+  //         });
+  //       }
+  //     });
 
-      const responses = await Promise.all(savePromises.filter((p) => p));
-      let allOk = true;
-      for (const response of responses) {
-        if (!response.ok) {
-          allOk = false;
-          const errorText = await response.text();
-          showToast(`Failed to save a line: ${errorText}`, "error");
-          break;
-        }
-      }
-      if (allOk) {
-        showToast("Timesheet updated successfully!", "success");
+  //     const responses = await Promise.all(savePromises.filter((p) => p));
+  //     let allOk = true;
+  //     for (const response of responses) {
+  //       if (!response.ok) {
+  //         allOk = false;
+  //         const errorText = await response.text();
+  //         showToast(`Failed to save a line: ${errorText}`, "error");
+  //         break;
+  //       }
+  //     }
+  //     if (allOk) {
+  //       showToast("Timesheet updated successfully!", "success");
+  //       handleCloseDetail();
+  //       fetchData();
+  //     }
+  //   } catch (error) {
+  //     console.error("Save error:", error);
+  //     showToast(error.message, "error");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
+
+  const handleSaveDetails = async () => {
+    const currentId = currentSelectedRowId;
+
+    const newRows = await fetchData();
+
+    if (currentId && newRows && newRows.length > 0) {
+      const updatedRow = newRows.find((row) => row.id === currentId);
+
+      if (updatedRow) {
+        setSelectedTimesheetData(updatedRow);
+      } else {
         handleCloseDetail();
-        fetchData();
       }
-    } catch (error) {
-      console.error("Save error:", error);
-      showToast(error.message, "error");
-    } finally {
-      setIsSaving(false);
+    } else {
+      handleCloseDetail();
     }
+
+    setIsSaving(false);
   };
 
   const handleLogout = () => {
@@ -1482,6 +1523,7 @@ export default function MainTable() {
                       else if (isHovered) bgColorClass = "bg-gray-50";
                       return (
                         <tr
+                          id={`timesheet-row-${row.id}`}
                           key={row.id}
                           className={`${bgColorClass} cursor-pointer`}
                           onClick={() => handleRowClick(row)}

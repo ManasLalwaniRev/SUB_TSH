@@ -2613,9 +2613,10 @@ export default function TimesheetDetailModal({
       }
       showToast("Timesheet saved successfully!", "success");
       onSave();
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1000);
+      setIsCurrentlySaving(false);
     } catch (error) {
       showToast(error.message, "error");
       console.error("Save error:", error);
