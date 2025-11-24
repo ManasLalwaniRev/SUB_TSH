@@ -888,7 +888,7 @@ export default function MainTable() {
   }, [currentSelectedRowId, rows]);
 
   const fetchData = async () => {
-    if (!currentUser) return;
+    if (!currentUser) return [];
     setLoading(true);
     try {
       const apiUrl = `${backendUrl}/api/SubkTimesheet/ByResourceV1/${currentUser.username}?month=${filterMonth}&year=${filterYear}`;
@@ -899,7 +899,7 @@ export default function MainTable() {
       const apiData = await response.json();
       if (!Array.isArray(apiData) || apiData.length === 0) {
         setRows([]);
-        return;
+        return [];
       }
 
       const uniqueResourceIds = [
@@ -986,13 +986,13 @@ export default function MainTable() {
       setShowSubmitDisclaimer(false);
       return;
     }
-    const allowedStatuses = ["OPEN", "REJECTED"];
+    const allowedStatuses = ["OPEN", "REJECTED", "CORRECTION"];
     if (
       !allowedStatuses.includes(selectedTimesheetData.Status?.toUpperCase())
     ) {
       // showToast('Only timesheets with "OPEN", "REJECTED", or "SUBMITTED" status can be submitted.', 'warning');
       showToast(
-        'Only timesheets with "OPEN" or "REJECTED" status can be submitted.',
+        'Only timesheets with "OPEN", "REJECTED" or "CORRECTION" status can be submitted.',
         "warning"
       );
 
@@ -1475,7 +1475,7 @@ export default function MainTable() {
                     className="bg-orange-600 text-white px-4 py-1.5 rounded text-xs disabled:bg-gray-400"
                     disabled={
                       !selectedTimesheetData ||
-                      !["OPEN", "REJECTED"].includes(
+                      !["OPEN", "REJECTED", "CORRECTION"].includes(
                         selectedTimesheetData.Status?.toUpperCase()
                       ) ||
                       isNotifying
@@ -1562,10 +1562,28 @@ export default function MainTable() {
           <div className="w-full max-w-[calc(100vw-220px)] mx-auto mt-6">
             <TimesheetLine
               currentUser={currentUser}
-              onClose={() => {
+              // onClose={() => {
+              //   setIsModalOpen(false);
+              //   setTimesheetToEdit(null);
+              //   fetchData();
+              // }}
+              onClose={async (createdDateISO) => {
                 setIsModalOpen(false);
                 setTimesheetToEdit(null);
-                fetchData();
+
+                const newRows = await fetchData();
+
+                if (createdDateISO && newRows && newRows.length > 0) {
+                  const targetDate = formatDate(createdDateISO);
+
+                  const newRow = newRows.find((r) => r.Date === targetDate);
+
+                  if (newRow) {
+                    setSelectedTimesheetData(newRow);
+
+                    setCurrentSelectedRowId(newRow.id);
+                  }
+                }
               }}
               resourceId={currentUser?.username}
               existingTimesheetDates={[...existingDatesForUser]}

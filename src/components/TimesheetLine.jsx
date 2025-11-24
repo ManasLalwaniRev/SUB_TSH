@@ -2102,6 +2102,131 @@ export default function TimesheetLine({
     setHiddenColumns(allVisible);
   };
 
+  // const handleSubmit = async () => {
+  //   if (isPeriodInvalid) {
+  //     showToast("The selected period already has a timesheet.", "warning");
+  //     return;
+  //   }
+
+  //   if (grandTotal === 0) {
+  //     showToast("Cannot submit a timesheet with zero hours.", "warning");
+  //     return;
+  //   }
+
+  //   if (isSubmitting) return;
+
+  //   setIsSubmitting(true);
+
+  //   for (const line of lines) {
+  //     if (!line.project || !line.poLineNumber) {
+  //       showToast(`Please complete the Work Order for all lines.`, "warning");
+  //       setIsSubmitting(false);
+  //       return;
+  //     }
+  //   }
+
+  //   try {
+  //     const API_URL = `${backendUrl}/api/SubkTimesheet`;
+
+  //     for (const line of lines) {
+  //       const lineHoursTotal = parseFloat(
+  //         Object.values(line.hours)
+  //           .reduce((s, h) => s + (parseFloat(h) || 0), 0)
+  //           .toFixed(2)
+  //       );
+
+  //       if (!isEditMode && lineHoursTotal === 0) continue;
+
+  //       const method = isEditMode ? "PUT" : "POST";
+  //       const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
+  //       const now = new Date().toISOString();
+
+  //       const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
+  //       const [month, day, year] = weekEndDateString.split("/");
+  //       const weekEndDateAsISO = new Date(
+  //         Date.UTC(
+  //           parseInt(year, 10) || 2025,
+  //           parseInt(month, 10) - 1,
+  //           parseInt(day, 10)
+  //         )
+  //       )
+  //         .toISOString()
+  //         .split("T")[0];
+
+  //       const timesheetHours = DAYS_OF_WEEK.map((day, index) => {
+  //         const dateParts = selectedPeriod.dates[index]
+  //           .split(" ")[1]
+  //           .split("/");
+  //         const dateForApi = `2025-${dateParts[0].padStart(
+  //           2,
+  //           "0"
+  //         )}-${dateParts[1].padStart(2, "0")}`;
+  //         return {
+  //           Id: isEditMode ? line.hourIds[day] || 0 : 0,
+  //           Ts_Date: dateForApi,
+  //           Hours: line.hours[day] || 0,
+  //           day: day,
+  //         };
+  //       })
+  //         .filter((hourEntry) => {
+  //           if (isEditMode) {
+  //             return modifiedHours.has(`${line.id}-${hourEntry.day}`);
+  //           }
+  //           return hourEntry.Hours > 0;
+  //         })
+  //         .map(({ day, ...rest }) => rest);
+
+  //       const payload = {
+  //         Id: isEditMode ? line.id : 0,
+  //         Description: line.description,
+  //         ProjId: line.project,
+  //         Plc: line.plc,
+  //         WorkOrder: line.wa_Code,
+  //         pm_User_Id: line.pmUserID,
+  //         PayType: line.payType,
+  //         PoNumber: line.poNumber,
+  //         RlseNumber: line.rlseNumber || "0",
+  //         Resource_Id: String(resourceId),
+  //         PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
+  //         Timesheet_Date: weekEndDateAsISO,
+  //         UpdatedAt: now,
+  //         UpdatedBy: String(resourceId),
+  //         TimesheetHours: timesheetHours,
+  //         Hours: lineHoursTotal,
+  //         Status: "OPEN",
+  //         ApprovalStatus: "PENDING",
+  //       };
+
+  //       if (!isEditMode) {
+  //         payload.CreatedAt = now;
+  //         payload.CreatedBy = String(resourceId);
+  //       }
+
+  //       const response = await fetch(url, {
+  //         method: method,
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify(payload),
+  //       });
+
+  //       if (!response.ok) {
+  //         const errorText = await response.text();
+  //         throw new Error(`Submission failed: ${errorText}`);
+  //       }
+  //     }
+
+  //     showToast(
+  //       `Timesheet ${isEditMode ? "updated" : "created"} successfully!`,
+  //       "success"
+  //     );
+  //     setModifiedHours(new Set());
+  //     // onClose();
+  //     onClose(weekEndDateAsISO);
+  //   } catch (error) {
+  //     showToast(error.message, "error");
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     if (isPeriodInvalid) {
       showToast("The selected period already has a timesheet.", "warning");
@@ -2127,6 +2252,21 @@ export default function TimesheetLine({
 
     try {
       const API_URL = `${backendUrl}/api/SubkTimesheet`;
+      const now = new Date().toISOString();
+
+      // --- MOVED THIS LOGIC UP HERE (So it is available for onClose) ---
+      const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
+      const [month, day, year] = weekEndDateString.split("/");
+      const weekEndDateAsISO = new Date(
+        Date.UTC(
+          parseInt(year, 10) || 2025,
+          parseInt(month, 10) - 1,
+          parseInt(day, 10)
+        )
+      )
+        .toISOString()
+        .split("T")[0];
+      // -----------------------------------------------------------------
 
       for (const line of lines) {
         const lineHoursTotal = parseFloat(
@@ -2139,19 +2279,6 @@ export default function TimesheetLine({
 
         const method = isEditMode ? "PUT" : "POST";
         const url = isEditMode ? `${API_URL}/${line.id}` : API_URL;
-        const now = new Date().toISOString();
-
-        const weekEndDateString = getWeekEndDateFromPeriod(selectedPeriod);
-        const [month, day, year] = weekEndDateString.split("/");
-        const weekEndDateAsISO = new Date(
-          Date.UTC(
-            parseInt(year, 10) || 2025,
-            parseInt(month, 10) - 1,
-            parseInt(day, 10)
-          )
-        )
-          .toISOString()
-          .split("T")[0];
 
         const timesheetHours = DAYS_OF_WEEK.map((day, index) => {
           const dateParts = selectedPeriod.dates[index]
@@ -2188,7 +2315,7 @@ export default function TimesheetLine({
           RlseNumber: line.rlseNumber || "0",
           Resource_Id: String(resourceId),
           PoLineNumber: parseInt(line.poLineNumber, 10) || 0,
-          Timesheet_Date: weekEndDateAsISO,
+          Timesheet_Date: weekEndDateAsISO, // Uses the variable defined at top
           UpdatedAt: now,
           UpdatedBy: String(resourceId),
           TimesheetHours: timesheetHours,
@@ -2219,7 +2346,9 @@ export default function TimesheetLine({
         "success"
       );
       setModifiedHours(new Set());
-      onClose();
+
+      // Now this variable is defined and accessible!
+      onClose(weekEndDateAsISO);
     } catch (error) {
       showToast(error.message, "error");
       setIsSubmitting(false);
