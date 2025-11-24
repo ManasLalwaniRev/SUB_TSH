@@ -2048,8 +2048,6 @@ export default function Approval() {
   const now = new Date();
   const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
   const currentYear = String(now.getFullYear());
-  const startYear = 2022;
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [filterMonth, setFilterMonth] = useState(currentMonth);
   const [filterYear, setFilterYear] = useState(currentYear);
 
@@ -2066,7 +2064,6 @@ export default function Approval() {
     const finalMonth = String(todayUTC.getUTCMonth() + 1).padStart(2, "0");
     const finalDay = String(todayUTC.getUTCDate()).padStart(2, "0");
     const formattedDateForState = `${finalYear}-${finalMonth}-${finalDay}`;
-    setSearchDate(formattedDateForState);
   }, []);
 
   function convertDate(dateStr) {
