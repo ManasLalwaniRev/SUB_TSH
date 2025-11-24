@@ -2045,6 +2045,13 @@ export default function Approval() {
   // const [searchStatus, setSearchStatus] = useState("");
   const [searchStatus, setSearchStatus] = useState([]);
   const [correctionLoading, setCorrectionLoading] = useState(false);
+  const now = new Date();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+  const currentYear = String(now.getFullYear());
+  const startYear = 2022;
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [filterMonth, setFilterMonth] = useState(currentMonth);
+  const [filterYear, setFilterYear] = useState(currentYear);
 
   useEffect(() => {
     const today = new Date();
@@ -2422,9 +2429,22 @@ export default function Approval() {
     setSearchStatus(""); // Reset status filter
   }, []);
 
+  // useEffect(() => {
+  //   if (userLoaded && currentUser && currentUser.username) fetchData();
+  // }, [userLoaded, currentUser]);
+
   useEffect(() => {
-    if (userLoaded && currentUser && currentUser.username) fetchData();
-  }, [userLoaded, currentUser]);
+    if (userLoaded && currentUser && currentUser.username) {
+      fetchData();
+    }
+  }, [userLoaded, currentUser, filterMonth, filterYear]);
+
+  useEffect(() => {
+    if (!searchDate) return;
+    const [y, m] = searchDate.split("-");
+    setFilterYear(y);
+    setFilterMonth(m);
+  }, [searchDate]);
 
   const groupDuplicateTimesheets = (timesheets) => {
     console.log("Input timesheets for grouping:", timesheets);
@@ -2608,7 +2628,9 @@ export default function Approval() {
       setLoading(true);
 
       const resourceId = currentUser.username;
-      const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResource/${resourceId}`;
+      const role = currentUser.role.toUpperCase();
+      // &month=${filterMonth}&year=${filterYear}
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/pending-approvals/ByResourceV1/${resourceId}?role=${role}&month=${filterMonth}&year=${filterYear}`;
       console.log("Fetching from:", apiUrl);
 
       const response = await fetch(apiUrl, {
@@ -2703,15 +2725,35 @@ export default function Approval() {
     }
   };
 
+  useEffect(() => {
+    // Sync searchDate as first day of filter month/year
+    if (filterMonth && filterYear) {
+      setSearchDate(`${filterYear}-${filterMonth}-01`);
+    }
+  }, [filterMonth, filterYear]);
+
   const getFilteredRows = () => {
     let filtered = rows;
     if (!Array.isArray(filtered)) return [];
 
+    // if (searchDate) {
+    //   const searchDateFormatted = formatDateFromInput(searchDate);
+    //   filtered = filtered.filter((row) => {
+    //     const rowDate = row["Timesheet Date"];
+    //     return rowDate === searchDateFormatted;
+    //   });
+    // }
+
     if (searchDate) {
-      const searchDateFormatted = formatDateFromInput(searchDate);
+      // Here you might want to filter by month/year only, not exact date
+      const filterYear = searchDate.split("-")[0];
+      const filterMonth = searchDate.split("-")[1];
       filtered = filtered.filter((row) => {
-        const rowDate = row["Timesheet Date"];
-        return rowDate === searchDateFormatted;
+        const rowDate = new Date(row.originalDate || row["Timesheet Date"]);
+        return (
+          rowDate.getFullYear() === Number(filterYear) &&
+          rowDate.getMonth() + 1 === Number(filterMonth)
+        );
       });
     }
 
@@ -3341,6 +3383,43 @@ export default function Approval() {
             <div className="flex items-center gap-6 flex-wrap">
               <div className="flex items-center">
                 <label
+                  htmlFor="filterMonthYear"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
+                  Month/Year
+                </label>
+                <DatePicker
+                  id="filterMonthYear"
+                  selected={
+                    filterMonth && filterYear
+                      ? new Date(`${filterYear}-${filterMonth}-01T00:00:00`)
+                      : null
+                  }
+                  onChange={(date) => {
+                    if (date) {
+                      const newMonth = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const newYear = String(date.getFullYear());
+                      setFilterMonth(newMonth);
+                      setFilterYear(newYear);
+                    } else {
+                      setFilterMonth("");
+                      setFilterYear("");
+                    }
+                  }}
+                  showMonthYearPicker
+                  dateFormat="MM/yyyy"
+                  placeholderText="MM/YYYY"
+                  className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  showPopperArrow={false}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* <div className="flex items-center">
+                <label
                   htmlFor="filterDate"
                   className="mr-2 text-xs font-semibold text-gray-600"
                 >
@@ -3368,7 +3447,13 @@ export default function Approval() {
                   showPopperArrow={false}
                   autoComplete="off"
                 />
-              </div>
+              </div> */}
+              {/* <button
+  onClick={fetchData}
+  className="bg-blue-600 text-white px-3 py-1.5 rounded text-xs hover:bg-blue-700 transition-colors"
+>
+  Apply Filters
+</button> */}
 
               <div className="flex items-center">
                 <label

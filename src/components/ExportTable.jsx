@@ -400,7 +400,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=ALL&resourceId=${resourceId}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=APPROVED&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
