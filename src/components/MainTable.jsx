@@ -767,6 +767,12 @@ export default function MainTable() {
   const [showSubmitDisclaimer, setShowSubmitDisclaimer] = useState(false);
   const [userDetailsMap, setUserDetailsMap] = useState({});
 
+  const now = new Date();
+  const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+  const currentYear = String(now.getFullYear());
+  const [filterMonth, setFilterMonth] = useState(currentMonth);
+  const [filterYear, setFilterYear] = useState(currentYear);
+
   const userRole = currentUser?.role?.toLowerCase();
   const canNotify = !!currentUser;
 
@@ -831,33 +837,45 @@ export default function MainTable() {
     setUserLoaded(true);
   }, [navigate]);
 
-  useEffect(() => {
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysToAdd = (7 - dayOfWeek) % 7;
-    const targetSunday = new Date(today);
-    targetSunday.setDate(today.getDate() + daysToAdd);
-    const searchDateUTC = new Date(
-      Date.UTC(
-        targetSunday.getFullYear(),
-        targetSunday.getMonth(),
-        targetSunday.getDate()
-      )
-    );
-    setSearchDate(searchDateUTC);
-  }, []);
+  // useEffect(() => {
+  //   const today = new Date();
+  //   const dayOfWeek = today.getDay();
+  //   const daysToAdd = (7 - dayOfWeek) % 7;
+  //   const targetSunday = new Date(today);
+  //   targetSunday.setDate(today.getDate() + daysToAdd);
+  //   const searchDateUTC = new Date(
+  //     Date.UTC(
+  //       targetSunday.getFullYear(),
+  //       targetSunday.getMonth(),
+  //       targetSunday.getDate()
+  //     )
+  //   );
+  //   setSearchDate(searchDateUTC);
+  // }, []);
 
+  // useEffect(() => {
+  //   if (userLoaded && currentUser) {
+  //     fetchData();
+  //   }
+  // }, [userLoaded, currentUser]);
   useEffect(() => {
-    if (userLoaded && currentUser) {
+    if (userLoaded && currentUser && currentUser.username) {
       fetchData();
     }
-  }, [userLoaded, currentUser]);
+  }, [userLoaded, currentUser, filterMonth, filterYear]);
+
+  useEffect(() => {
+    if (!searchDate) return;
+    const [y, m] = searchDate.split("-");
+    setFilterYear(y);
+    setFilterMonth(m);
+  }, [searchDate]);
 
   const fetchData = async () => {
     if (!currentUser) return;
     setLoading(true);
     try {
-      const apiUrl = `${backendUrl}/api/SubkTimesheet/ByResource/${currentUser.username}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/ByResourceV1/${currentUser.username}?month=${filterMonth}&year=${filterYear}`;
       const response = await fetch(apiUrl);
       if (!response.ok)
         throw new Error("Network response failed while fetching timesheets.");
@@ -1033,6 +1051,30 @@ export default function MainTable() {
     setSortConfig({ key, direction });
   };
 
+  function parseMonthYear(dateStr) {
+    if (!dateStr) return [null, null];
+    // MM/DD/YYYY format
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+      const [mm, , yyyy] = dateStr.split("/");
+      return [Number(mm), Number(yyyy)];
+    }
+    // YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [yyyy, mm] = dateStr.split("-");
+      return [Number(mm), Number(yyyy)];
+    }
+    // Fallback: try Date object
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return [null, null];
+    return [d.getMonth() + 1, d.getFullYear()];
+  }
+
+  useEffect(() => {
+    if (filterMonth && filterYear) {
+      setSearchDate(`${filterYear}-${filterMonth}-01`);
+    }
+  }, [filterMonth, filterYear]);
+
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return " ⇅";
     return sortConfig.direction === "asc" ? " ↑" : " ↓";
@@ -1047,9 +1089,51 @@ export default function MainTable() {
     setCurrentSelectedRowId(rowData.id);
   };
 
+  // const sortedAndFilteredRows = [...rows]
+  //   .filter((row) => {
+  //     // return !searchDate || row.Date === formatDate(searchDate);
+  //     if (!searchDate) return true;
+
+  //     const filterYear = new Date(searchDate).getFullYear();
+  //     const filterMonth = new Date(searchDate).getMonth(); // zero-based
+
+  //     const rowDate = new Date(row.Date);
+  //     return (
+  //       rowDate.getFullYear() === filterYear &&
+  //       rowDate.getMonth() === filterMonth
+  //     );
+  //   })
+  //   .sort((a, b) => {
+  //     if (!sortConfig.key) return 0;
+  //     const key =
+  //       sortConfig.key === "Timesheet End Date" ? "Date" : sortConfig.key;
+  //     const aVal = a[key];
+  //     const bVal = b[key];
+
+  //     if (key === "Date") {
+  //       const dateA = new Date(aVal);
+  //       const dateB = new Date(bVal);
+  //       if (dateA < dateB) return sortConfig.direction === "asc" ? -1 : 1;
+  //       if (dateA > dateB) return sortConfig.direction === "asc" ? 1 : -1;
+  //       return 0;
+  //     }
+
+  //     if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+  //     if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+  //     return 0;
+  //   });
+
+  console.log("Rows from API:", rows);
+
   const sortedAndFilteredRows = [...rows]
     .filter((row) => {
-      return !searchDate || row.Date === formatDate(searchDate);
+      if (!filterMonth || !filterYear) return true; // Show all if no filter selected
+
+      const [rowMonth, rowYear] = parseMonthYear(row.Date);
+      const filterMonthNum = Number(filterMonth);
+      const filterYearNum = Number(filterYear);
+
+      return rowMonth === filterMonthNum && rowYear === filterYearNum;
     })
     .sort((a, b) => {
       if (!sortConfig.key) return 0;
@@ -1057,19 +1141,58 @@ export default function MainTable() {
         sortConfig.key === "Timesheet End Date" ? "Date" : sortConfig.key;
       const aVal = a[key];
       const bVal = b[key];
-
       if (key === "Date") {
-        const dateA = new Date(aVal);
-        const dateB = new Date(bVal);
+        const dateA = new Date(aVal),
+          dateB = new Date(bVal);
         if (dateA < dateB) return sortConfig.direction === "asc" ? -1 : 1;
         if (dateA > dateB) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
       }
-
       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
+
+  // const sortedAndFilteredRows = [...rows]
+  //   .filter((row) => {
+  //     if (!searchDate) return true;
+
+  //     // Parse year and month from searchDate
+  //     const filterYear = new Date(searchDate).getFullYear();
+  //     const filterMonth = new Date(searchDate).getMonth(); // zero-based
+
+  //     const rowDate = new Date(
+  //       row.Date || row["Timesheet Date"] || row.originalDate
+  //     );
+
+  //     // Defensive check for invalid date
+  //     if (isNaN(rowDate.getTime())) return false;
+
+  //     return (
+  //       rowDate.getFullYear() === filterYear &&
+  //       rowDate.getMonth() === filterMonth
+  //     );
+  //   })
+  //   .sort((a, b) => {
+  //     if (!sortConfig.key) return 0;
+  //     const key =
+  //       sortConfig.key === "Timesheet End Date" ? "Date" : sortConfig.key;
+  //     const aVal = a[key];
+  //     const bVal = b[key];
+
+  //     if (key === "Date") {
+  //       const dateA = new Date(aVal);
+  //       const dateB = new Date(bVal);
+  //       if (dateA < dateB) return sortConfig.direction === "asc" ? -1 : 1;
+  //       if (dateA > dateB) return sortConfig.direction === "asc" ? 1 : -1;
+  //       return 0;
+  //     }
+
+  //     if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+  //     if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+
+  //     return 0;
+  //   });
 
   const handleCloseDetail = () => {
     setSelectedTimesheetData(null);
@@ -1228,7 +1351,7 @@ export default function MainTable() {
             </legend>
             <div className="flex items-center gap-6 flex-wrap">
               <div className="flex items-center">
-                <label
+                {/* <label
                   htmlFor="filterDate"
                   className="mr-2 text-xs font-semibold text-gray-600"
                 >
@@ -1241,7 +1364,43 @@ export default function MainTable() {
                   onChange={handleDateChange}
                   className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
+              </div> */}
+                <label
+                  htmlFor="filterMonthYear"
+                  className="mr-2 text-xs font-semibold text-gray-600"
+                >
+                  Month/Year
+                </label>
+                <DatePicker
+                  id="filterMonthYear"
+                  selected={
+                    filterMonth && filterYear
+                      ? new Date(`${filterYear}-${filterMonth}-01T00:00:00`)
+                      : null
+                  }
+                  onChange={(date) => {
+                    if (date) {
+                      const newMonth = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0"
+                      );
+                      const newYear = String(date.getFullYear());
+                      setFilterMonth(newMonth);
+                      setFilterYear(newYear);
+                    } else {
+                      setFilterMonth("");
+                      setFilterYear("");
+                    }
+                  }}
+                  showMonthYearPicker
+                  dateFormat="MM/yyyy"
+                  placeholderText="MM/YYYY"
+                  className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  showPopperArrow={false}
+                  autoComplete="off"
+                />
               </div>
+
               <div className="flex items-center">
                 <label
                   htmlFor="employeeId"
