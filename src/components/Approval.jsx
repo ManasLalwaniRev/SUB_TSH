@@ -3292,6 +3292,8 @@ export default function Approval() {
     setSearchEmployeeId("");
     setSearchEmployeeName("");
     setSearchStatus("");
+    setFilterMonth("");
+                      setFilterYear("");
     // Optional: reset other filter states if used
   };
 
