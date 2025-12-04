@@ -224,7 +224,12 @@ export default function InvoiceExport() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(requestBody),
+          body: JSON.stringify({
+                  ...invoice,
+                  isExported: true,
+                  updatedAt: new Date().toISOString(),
+                  updatedBy: "admin",
+                }),
         }
       );
 

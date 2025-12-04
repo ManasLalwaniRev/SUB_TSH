@@ -876,7 +876,7 @@ const InvoiceViewer = ({ data, setInvoiceModalVisible, onInvoiceSuccess }) => {
         >
           {isLoading
             ? "Creating Invoices..."
-            : `Confirm All ${data.length} Invoice${data.length > 1 ? "s" : ""}`}
+            : `Confirm `}
         </button>
 
         <button
