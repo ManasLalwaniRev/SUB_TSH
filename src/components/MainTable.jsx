@@ -822,118 +822,47 @@ export default function MainTable() {
   //   if (s === "Submitted") return `${baseStyle} bg-purple-100 text-purple-800`;
   //   if (s === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
   //   if (s === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
+  //   if(s === "Processed") return `${baseStyle} bg-indigo-100 text-indigo-800`;
+  //   if(s === "CORRECTION") return `${baseStyle} bg-orange-100 text-orange-800`;
   //   return `${baseStyle} bg-gray-100 text-gray-800`;
   // };
 
-  const getStatusStyle = (status) => {
-    const statusProper =
-      status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() ||
-      "Pending";
+const getStatusStyle = (status) => {
+  const baseStyle =
+    "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
 
-    switch (status?.toUpperCase()) {
-      case "OPEN":
-        return {
-          backgroundColor: "#dbeafe",
-          color: "#2563eb",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "APPROVED":
-        return {
-          backgroundColor: "#dcfce7",
-          color: "#16a34a",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "REJECTED":
-        return {
-          backgroundColor: "#fce7f3",
-          color: "#ec4899",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "PENDING":
-        return {
-          backgroundColor: "#fef9c3",
-          color: "#ca8a04",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "SUBMITTED":
-        return {
-          backgroundColor: "#e0e7ff",
-          color: "#4338ca",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "PROCESSED":
-        return {
-          backgroundColor: "#dacbf8ff",
-          color: "rgba(153, 110, 192, 1)",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "NOTIFIED":
-        return {
-          backgroundColor: "#dbeafe",
-          color: "#2563eb",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "UN-NOTIFIED":
-      case "UNNOTIFIED":
-        return {
-          backgroundColor: "#dcfce7",
-          color: "#16a34a",
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      case "CORRECTION":
-        return {
-          backgroundColor: "#FFE0B2", // soft light orange
-          color: "#784421", // dark orange/brown
-          fontWeight: "600",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-      default:
-        return {
-          backgroundColor: "#f3f4f6",
-          color: "#6b7280",
-          fontWeight: "500",
-          padding: "4px 8px",
-          fontSize: "11px",
-          display: "inline-block",
-          borderRadius: "9999px",
-        };
-    }
-  };
+  if (!status) return `${baseStyle} bg-gray-100 text-gray-800`;
+
+  const s = status.toString().toUpperCase().trim();
+
+  switch (s) {
+    case "OPEN":
+      return `${baseStyle} bg-blue-100 text-blue-800`;
+    case "APPROVED":
+      return `${baseStyle} bg-green-100 text-green-800`;
+    case "REJECTED":
+      return `${baseStyle} bg-pink-100 text-pink-700`;
+    case "PENDING":
+      return `${baseStyle} bg-yellow-100 text-yellow-800`;
+    case "SUBMITTED":
+      return `${baseStyle} bg-indigo-100 text-indigo-800`;
+    case "PROCESSED":
+      return `${baseStyle} bg-violet-100 text-violet-800`;
+    case "NOTIFIED":
+      return `${baseStyle} bg-blue-100 text-blue-800`;
+    case "UN-NOTIFIED":
+    case "UNNOTIFIED":
+      return `${baseStyle} bg-green-100 text-green-800`;
+    case "CORRECTION":
+      return `${baseStyle} bg-orange-100 text-orange-800`;
+    case "INVOICED":
+      return `${baseStyle} bg-amber-100 text-amber-800`;
+    case "EXPORTED":
+      return `${baseStyle} bg-sky-100 text-sky-800`;
+    default:
+      return `${baseStyle} bg-gray-100 text-gray-800`;
+  }
+};
 
   useEffect(() => {
     const userInfo = localStorage.getItem("currentUser");
