@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { backendUrl } from "./config.jsx";
 
 
-
 // --- SVG Icons ---
 
 const PlusIcon = ({ className = "h-4 w-4" }) => (
@@ -69,7 +68,6 @@ const MinusCircleIcon = ({ className = "h-4 w-4" }) => (
 );
 
 
-
 // --- ActionButton Component ---
 
 const ActionButton = ({ children, onClick, variant = "secondary", icon, className = "", disabled = false }) => {
@@ -99,7 +97,6 @@ const ActionButton = ({ children, onClick, variant = "secondary", icon, classNam
 };
 
 
-
 // --- Toast Notification (Updated Duration) ---
 
 const showToast = (message, type = "info", duration = 3000) => {
@@ -119,7 +116,6 @@ const showToast = (message, type = "info", duration = 3000) => {
 };
 
 
-
 const createEmptyLine = (id, periodLength) => {
 
   const emptyHours = {};
@@ -137,7 +133,6 @@ const createEmptyLine = (id, periodLength) => {
 };
 
 
-
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => (
 
   <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}>
@@ -149,7 +144,6 @@ const CascadingSelect = ({ label, options, value, onChange, disabled = false }) 
   </select>
 
 );
-
 
 
 const formatDate = (dateInput) => {
@@ -185,81 +179,73 @@ const formatDate = (dateInput) => {
 };
 
 
-
 const getPeriodData = (endDateStr, frequency) => {
 
-    const end = new Date(endDateStr);
+  const end = new Date(endDateStr);
 
-    const dates = [];
+  const dates = [];
 
-    const freq = frequency ? frequency.toLowerCase() : 'weekly';
-
-   
-
-    const numOpt = { month: '2-digit', day: '2-digit', timeZone: 'UTC' };
-
-    const txtOpt = { month: 'short', day: '2-digit', timeZone: 'UTC' };
-
-   
-
-    const getFmt = (d) => {
-
-        if (freq === 'monthly' || freq === 'semi-monthly') return new Intl.DateTimeFormat('en-US', txtOpt).format(d);
-
-        return new Intl.DateTimeFormat('en-US', numOpt).format(d);
-
-    };
-
-    const getApiFmt = (d) => d.toISOString().split('T')[0];
+  const freq = frequency ? frequency.toLowerCase() : 'weekly';
 
 
+  const numOpt = { month: '2-digit', day: '2-digit', timeZone: 'UTC' };
 
-    let start = new Date(end);
+  const txtOpt = { month: 'short', day: '2-digit', timeZone: 'UTC' };
 
-   
 
-    if (freq === 'weekly') {
+  const getFmt = (d) => {
 
-        start.setDate(end.getDate() - 6);
+    if (freq === 'monthly' || freq === 'semi-monthly') return new Intl.DateTimeFormat('en-US', txtOpt).format(d);
 
-    } else if (freq === 'bi-weekly') {
+    return new Intl.DateTimeFormat('en-US', numOpt).format(d);
 
-        start.setDate(end.getDate() - 13);
+  };
 
-    } else if (freq === 'monthly') {
+  const getApiFmt = (d) => d.toISOString().split('T')[0];
 
-        start = new Date(end.getFullYear(), end.getMonth(), 1);
 
-    } else if (freq === 'semi-monthly') {
+  let start = new Date(end);
 
-        if (end.getDate() <= 15) {
 
-            start = new Date(end.getFullYear(), end.getMonth(), 1);
+  if (freq === 'weekly') {
 
-        } else {
+    start.setDate(end.getDate() - 6);
 
-            start = new Date(end.getFullYear(), end.getMonth(), 16);
+  } else if (freq === 'bi-weekly') {
 
-        }
+    start.setDate(end.getDate() - 13);
+
+  } else if (freq === 'monthly') {
+
+    start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+  } else if (freq === 'semi-monthly') {
+
+    if (end.getDate() <= 15) {
+
+      start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+    } else {
+
+      start = new Date(end.getFullYear(), end.getMonth(), 16);
 
     }
 
+  }
 
 
-    for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+  for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
 
-        const currentDay = new Date(d);
+    const currentDay = new Date(d);
 
-        dates.push({ display: getFmt(currentDay), apiDate: getApiFmt(currentDay), obj: currentDay });
+    dates.push({ display: getFmt(currentDay), apiDate: getApiFmt(currentDay), obj: currentDay });
 
-    }
+  }
 
-   
 
-    return dates;
+  return dates;
 
 };
-
 
 
 const hideableColumns = [
@@ -269,7 +255,6 @@ const hideableColumns = [
   "PO Number", "RLSE Number", "PO Line Number", "PO Remaining Hours",
 
 ];
-
 
 
 export default function TimesheetDetailModal({
@@ -296,7 +281,6 @@ export default function TimesheetDetailModal({
 
   const [isEditable, setIsEditable] = useState(false);
 
- 
 
   const [initialLines, setInitialLines] = useState([]);
 
@@ -315,7 +299,6 @@ export default function TimesheetDetailModal({
   });
 
 
-
   // Config States
 
   const [periodType, setPeriodType] = useState("Weekly");
@@ -329,17 +312,15 @@ export default function TimesheetDetailModal({
   const [hardEdit, setHardEdit] = useState(false);
 
 
-
   // Dynamic Dates
 
   const periodDates = useMemo(() => {
 
-      if(!timesheetData?.Date) return [];
+    if(!timesheetData?.Date) return [];
 
-      return getPeriodData(timesheetData.Date, periodType);
+    return getPeriodData(timesheetData.Date, periodType);
 
   }, [timesheetData, periodType]);
-
 
 
   const [remainingPoHours, setRemainingPoHours] = useState({});
@@ -347,23 +328,18 @@ export default function TimesheetDetailModal({
   const [isLoadingRemainingHours, setIsLoadingRemainingHours] = useState(false);
 
 
-
   const nextId = useRef(0);
 
- 
 
   // Global 'today' variable for future date check, set to midnight UTC
-
+  // We keep this as UTC midnight for correct date part comparison.
   const today = useMemo(() => {
 
-      const d = new Date();
+    const d = new Date();
 
-      return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 
   }, []);
-
-
-
 
 
   // 1. Fetch Config (Updated)
@@ -372,74 +348,68 @@ export default function TimesheetDetailModal({
 
     const fetchConfig = async () => {
 
-        try {
+      try {
 
-            const response = await fetch("https://timesheet-subk-wa-approval-latest.onrender.com/api/ConfigValues");
+        const response = await fetch("https://timesheet-subk-wa-approval-latest.onrender.com/api/ConfigValues");
 
-            if (!response.ok) throw new Error("Failed to fetch config");
+        if (!response.ok) throw new Error("Failed to fetch config");
 
-            const data = await response.json();
-
-           
-
-            const getConfigValue = (name) => data.find(item => item.name?.toLowerCase() === name)?.value;
+        const data = await response.json();
 
 
-
-            const periodConfig = getConfigValue("timesheet_period");
-
-            const weekendConfig = getConfigValue("weekend");
-
-            const colorConfig = getConfigValue("weekend_highlight_color");
-
-           
-
-            const maxDailyHoursConfig = getConfigValue("max_daily_hours");
-
-            const hardEditConfig = getConfigValue("hard_edit");
+        const getConfigValue = (name) => data.find(item => item.name?.toLowerCase() === name)?.value;
 
 
+        const periodConfig = getConfigValue("timesheet_period");
 
-            if (periodConfig) setPeriodType(periodConfig);
+        const weekendConfig = getConfigValue("weekend");
 
-            if (weekendConfig) {
+        const colorConfig = getConfigValue("weekend_highlight_color");
 
-                const days = weekendConfig.split(',').map(d => d.trim().toLowerCase());
 
-                setConfigWeekends(days);
+        const maxDailyHoursConfig = getConfigValue("max_daily_hours");
 
-            }
+        const hardEditConfig = getConfigValue("hard_edit");
 
-            if (colorConfig) setConfigHighlightColor(colorConfig);
 
-           
+        if (periodConfig) setPeriodType(periodConfig);
 
-            if (maxDailyHoursConfig) setMaxDailyHours(parseFloat(maxDailyHoursConfig) || 24);
+        if (weekendConfig) {
 
-            if (hardEditConfig) setHardEdit(hardEditConfig.toLowerCase() === 'true');
+          const days = weekendConfig.split(',').map(d => d.trim().toLowerCase());
 
-        } catch (error) {
-
-            console.error("Config fetch error:", error);
-
-            setPeriodType("Weekly"); // Fallback
-
-            setConfigWeekends(["saturday", "sunday"]); // Fallback
-
-            setConfigHighlightColor("#e5e7eb"); // Fallback
-
-            setMaxDailyHours(24); // Fallback
-
-            setHardEdit(false); // Fallback
+          setConfigWeekends(days);
 
         }
+
+        if (colorConfig) setConfigHighlightColor(colorConfig);
+
+
+        if (maxDailyHoursConfig) setMaxDailyHours(parseFloat(maxDailyHoursConfig) || 24);
+
+        if (hardEditConfig) setHardEdit(hardEditConfig.toLowerCase() === 'true');
+
+      } catch (error) {
+
+        console.error("Config fetch error:", error);
+
+        setPeriodType("Weekly"); // Fallback
+
+        setConfigWeekends(["saturday", "sunday"]); // Fallback
+
+        setConfigHighlightColor("#e5e7eb"); // Fallback
+
+        setMaxDailyHours(24); // Fallback
+
+        setHardEdit(false); // Fallback
+
+      }
 
     };
 
     fetchConfig();
 
   }, []);
-
 
 
   // 2. Check Editability
@@ -459,7 +429,6 @@ export default function TimesheetDetailModal({
     }
 
   }, [timesheetData]);
-
 
 
   // 3. Fetch PO Remaining Hours
@@ -507,7 +476,6 @@ export default function TimesheetDetailModal({
   }, [timesheetData]);
 
 
-
   // 4. Fetch Details & Map to Dynamic Period
 
   useEffect(() => {
@@ -519,7 +487,6 @@ export default function TimesheetDetailModal({
     fetchTimesheetDetails();
 
   }, [periodDates]);
-
 
 
   const fetchTimesheetDetails = async () => {
@@ -535,7 +502,6 @@ export default function TimesheetDetailModal({
       const data = await response.json();
 
 
-
       const poResponse = await fetch(`${backendUrl}/api/PurchaseOrders/ByResourceDetails/${timesheetData["Employee ID"]}`);
 
       if (!poResponse.ok) throw new Error("Failed to fetch purchase order details");
@@ -547,11 +513,9 @@ export default function TimesheetDetailModal({
       setPurchaseOrderData(poDataArray);
 
 
-
       const dataArray = Array.isArray(data) ? data : [];
 
       const filteredData = dataArray.filter((item) => formatDate(item.timesheet_Date) === timesheetData.Date);
-
 
 
       if (filteredData.length > 0) {
@@ -561,21 +525,17 @@ export default function TimesheetDetailModal({
       }
 
 
-
       const mappedLines = filteredData.map((item) => {
 
         const hoursData = {};
 
         const hourIdsData = {};
 
-       
 
         periodDates.forEach((_, index) => { hoursData[index] = 0; });
 
 
-
         let isLineInvoiced = false;
-
 
 
         if (item.timesheetHours) {
@@ -585,11 +545,9 @@ export default function TimesheetDetailModal({
             if (hourEntry.invoiceGenerated === true) isLineInvoiced = true;
 
 
-
             const entryDateStr = hourEntry.ts_Date.split("T")[0];
 
             const dateIndex = periodDates.findIndex(d => d.apiDate === entryDateStr);
-
 
 
             if (dateIndex !== -1) {
@@ -603,7 +561,6 @@ export default function TimesheetDetailModal({
           });
 
         }
-
 
 
         let fullWorkOrderString = "";
@@ -621,7 +578,6 @@ export default function TimesheetDetailModal({
           }
 
         }
-
 
 
         return {
@@ -643,7 +599,6 @@ export default function TimesheetDetailModal({
       });
 
 
-
       setLines(mappedLines);
 
       setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
@@ -659,7 +614,6 @@ export default function TimesheetDetailModal({
     }
 
   };
-
 
 
   const handleSelectChange = (id, fieldName, value) => {
@@ -689,7 +643,6 @@ export default function TimesheetDetailModal({
             const desc = splitIndex > -1 ? value.substring(splitIndex + 3) : "";
 
             const selectedWorkOrderData = purchaseOrderData.find((item) => item.wa_Code === waCode && (item.resourceDesc || []).includes(desc));
-
 
 
             if (selectedWorkOrderData) {
@@ -739,7 +692,6 @@ export default function TimesheetDetailModal({
   };
 
 
-
   // --- UPDATED handleHourChange ---
 
   const handleHourChange = (id, dayIndex, value) => {
@@ -755,7 +707,6 @@ export default function TimesheetDetailModal({
     }
 
 
-
     const numValue = parseFloat(value);
 
     let isValid = true;
@@ -767,8 +718,6 @@ export default function TimesheetDetailModal({
     let isPOExceeded = false;
 
     let isMaxDailyExceeded = false;
-
-   
 
 
 
@@ -788,109 +737,100 @@ export default function TimesheetDetailModal({
 
     }
 
-   
 
     if (isValid) {
 
-        // VALIDATION 2: Max Daily Hours (Configurable)
+      // VALIDATION 2: Max Daily Hours (Configurable)
 
-        const otherLinesTotal = lines
+      const otherLinesTotal = lines
 
-          .filter((line) => line.id !== id)
+        .filter((line) => line.id !== id)
 
-          .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+        .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
 
-       
 
-        if (otherLinesTotal + numValue > maxDailyHours) {
+      if (otherLinesTotal + numValue > maxDailyHours) {
 
-          isMaxDailyExceeded = true;
+        isMaxDailyExceeded = true;
 
-          toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+        toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
 
-        }
+      }
 
     }
 
 
-
     if (isValid) {
 
-        // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
+      // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
 
-        const currentLine = lines.find((line) => line.id === id);
+      const currentLine = lines.find((line) => line.id === id);
 
-        if (currentLine && currentLine.poLineNumber) {
+      if (currentLine && currentLine.poLineNumber) {
 
-          const poLineNumber = String(currentLine.poLineNumber).trim();
+        const poLineNumber = String(currentLine.poLineNumber).trim();
 
-          const remainingHours = remainingPoHours[poLineNumber];
-
-
-
-          if (remainingHours !== undefined) {
-
-            // Calculate the NEW hours being *added* across ALL lines for this PO
-
-           
-
-            // Create a temporary view of the lines with the new value applied
-
-            const tempLines = lines.map(line =>
-
-              line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
-
-            );
+        const remainingHours = remainingPoHours[poLineNumber];
 
 
+        if (remainingHours !== undefined) {
 
-            const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
-
-
-
-            const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
-
-               const initialLine = initialLines.find((init) => init.id === l.id);
-
-               const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
-
-               const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
-
-               return sum + (currentUITotal - initialTotal);
-
-            }, 0);
+          // Calculate the NEW hours being *added* across ALL lines for this PO
 
 
+          // Create a temporary view of the lines with the new value applied
 
-            if (totalNewHoursForPO > remainingHours) {
+          const tempLines = lines.map(line =>
 
-              isPOExceeded = true;
+            line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
 
-             
+          );
 
-              if (!hardEdit) { // HARD STOP
 
-                isValid = false;
+          const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
 
-                toastType = "error";
 
-                toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+          const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
 
-              } else { // SOFT WARNING
+            const initialLine = initialLines.find((init) => init.id === l.id);
 
-                if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
+            const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
 
-                  toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+            const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
 
-                } else {
+            return sum + (currentUITotal - initialTotal);
 
-                  toastMessage += ` Also, PO hours exceeded.`;
+          }, 0);
 
-                }
 
-                toastType = "warning";
+          if (totalNewHoursForPO > remainingHours) {
+
+            isPOExceeded = true;
+
+
+            if (!hardEdit) { // HARD STOP
+
+              isValid = false;
+
+              toastType = "error";
+
+              toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+
+            } else { // SOFT WARNING
+
+              if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
+
+                toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+
+              } else {
+
+                toastMessage += ` Also, PO hours exceeded.`;
 
               }
+
+              toastType = "warning";
+
+            }
 
           }
 
@@ -900,14 +840,10 @@ export default function TimesheetDetailModal({
 
     }
 
-   
 
     // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
 
     const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
-
-
-
 
 
     if (isValid) {
@@ -916,7 +852,7 @@ export default function TimesheetDetailModal({
 
       if (isMaxDailyExceeded || isPOExceeded) {
 
-          showToast(toastMessage, toastType, toastDuration);
+        showToast(toastMessage, toastType, toastDuration);
 
       }
 
@@ -924,12 +860,10 @@ export default function TimesheetDetailModal({
 
       showToast(toastMessage, toastType, toastDuration);
 
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
-
+      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
     }
 
   };
-
 
 
   const getRemainingHoursForLine = (line) => {
@@ -941,7 +875,6 @@ export default function TimesheetDetailModal({
     const remaining = remainingPoHours[poLineNumStr];
 
     if (remaining === undefined) return null;
-
 
 
     const allLinesWithSamePO = lines.filter((l) => String(l.poLineNumber).trim() === poLineNumStr);
@@ -959,16 +892,13 @@ export default function TimesheetDetailModal({
     }, 0);
 
 
-
     return (remaining - totalNewHoursForPO).toFixed(2);
 
   };
 
 
-
   const addLine = () => setLines((prev) => [...prev, createEmptyLine(`temp-${Date.now()}`, periodDates.length)]);
 
- 
 
   const handleSelectLine = (id) => {
 
@@ -979,7 +909,6 @@ export default function TimesheetDetailModal({
     setSelectedLines(newSelection);
 
   };
-
 
 
   const deleteLines = () => {
@@ -1019,7 +948,6 @@ export default function TimesheetDetailModal({
   };
 
 
-
   // Correct Dynamic Totals
 
   const dailyTotals = useMemo(() => {
@@ -1043,7 +971,6 @@ export default function TimesheetDetailModal({
     return totals;
 
   }, [lines, periodDates]);
-
 
 
   const copyLines = () => {
@@ -1085,19 +1012,16 @@ export default function TimesheetDetailModal({
   };
 
 
-
   const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
-
 
 
   const toggleColumnVisibility = (columnName) => { setHiddenColumns((prev) => ({ ...prev, [columnName]: !prev[columnName] })); };
 
   const showAllHiddenColumns = () => {
 
-      const allVisible = {}; Object.keys(hiddenColumns).forEach((col) => { allVisible[col] = false; }); setHiddenColumns(allVisible);
+    const allVisible = {}; Object.keys(hiddenColumns).forEach((col) => { allVisible[col] = false; }); setHiddenColumns(allVisible);
 
   };
-
 
 
   const handleSave = async () => {
@@ -1109,23 +1033,19 @@ export default function TimesheetDetailModal({
     if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); setIsCurrentlySaving(false); return; }
 
 
-
     const promises = [];
 
     const API_BASE_URL = backendUrl;
 
     const isOnlyDeletion = lines.length === 0 || linesToDelete.length > 0;
 
-   
 
     if (!isOnlyDeletion && grandTotal === 0) { showToast("Cannot save a timesheet with zero hours.", "warning"); setIsCurrentlySaving(false); return; }
-
 
 
     const now = new Date().toISOString();
 
     const resourceId = timesheetData["Employee ID"];
-
 
 
     linesToDelete.forEach((id) => {
@@ -1139,13 +1059,11 @@ export default function TimesheetDetailModal({
     });
 
 
-
     lines.forEach((currentLine) => {
 
       const initialLine = initialLines.find((l) => l.id === currentLine.id);
 
       const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
-
 
 
       if (!initialLine) {
@@ -1203,7 +1121,6 @@ export default function TimesheetDetailModal({
       }
 
 
-
       const isLineChanged =
 
         currentLine.payType !== initialLine.payType ||
@@ -1213,7 +1130,6 @@ export default function TimesheetDetailModal({
         currentLine.wa_Code !== initialLine.wa_Code ||
 
         currentLine.description !== initialLine.description;
-
 
 
       if (isLineChanged) {
@@ -1265,7 +1181,6 @@ export default function TimesheetDetailModal({
       }
 
 
-
       Object.keys(currentLine.hours).forEach((idx) => {
 
         const initialHour = initialLine.hours[idx];
@@ -1279,7 +1194,6 @@ export default function TimesheetDetailModal({
           let hourValue = parseFloat(currentHour);
 
           if (isNaN(hourValue)) hourValue = 0;
-
 
 
           const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
@@ -1305,9 +1219,7 @@ export default function TimesheetDetailModal({
     });
 
 
-
     if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
-
 
 
     try {
@@ -1345,7 +1257,6 @@ export default function TimesheetDetailModal({
   };
 
 
-
   const isLineDisabled = (line) => {
 
     if (!isEditable) return true;
@@ -1357,9 +1268,7 @@ export default function TimesheetDetailModal({
   };
 
 
-
   if (isLoading) return <div className="text-center p-8">Loading...</div>;
-
 
 
   const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap((item) => (item.resourceDesc || []).map((desc) => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
@@ -1369,7 +1278,6 @@ export default function TimesheetDetailModal({
   const hiddenCount = Object.entries(hiddenColumns).filter(([key, val]) => val && (key === "PO Remaining Hours" ? isAdmin : true)).length;
 
   const hiddenColumnsList = Object.entries(hiddenColumns).filter(([col, isHidden]) => isHidden && (col === "PO Remaining Hours" ? isAdmin : true)).map(([col]) => col);
-
 
 
   return (
@@ -1384,7 +1292,7 @@ export default function TimesheetDetailModal({
 
             <div className="flex gap-4 mt-2 text-sm text-gray-600">
 
-              <div><span className="font-medium">Status:</span>   {timesheetData.Status
+              <div><span className="font-medium">Status:</span>   {timesheetData.Status
 
        ? timesheetData.Status.charAt(0).toUpperCase() +
 
@@ -1421,7 +1329,6 @@ export default function TimesheetDetailModal({
       </div>
 
 
-
       {hiddenCount > 0 && (
 
         <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
@@ -1445,7 +1352,6 @@ export default function TimesheetDetailModal({
       )}
 
 
-
       <div className="p-4 max-h-[65vh] overflow-auto">
 
         <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
@@ -1462,21 +1368,21 @@ export default function TimesheetDetailModal({
 
                 {availableHideableColumns.map((col) => !hiddenColumns[col] && (
 
-                    <th key={col} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">
+                  <th key={col} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">
 
-                      <div className="flex items-center justify-between gap-2 group">
+                    <div className="flex items-center justify-between gap-2 group">
 
-                        <span>{col}</span>
+                      <span>{col}</span>
 
-                        <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col); }} className="p-1 hover:bg-gray-200 rounded-full transition-colors opacity-0 group-hover:opacity-100" title="Hide column" type="button">
+                      <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col); }} className="p-1 hover:bg-gray-200 rounded-full transition-colors opacity-0 group-hover:opacity-100" title="Hide column" type="button">
 
-                          <MinusCircleIcon className="h-4 w-4 text-gray-500 hover:text-gray-800" />
+                        <MinusCircleIcon className="h-4 w-4 text-gray-500 hover:text-gray-800" />
 
-                        </button>
+                      </button>
 
-                      </div>
+                    </div>
 
-                    </th>
+                  </th>
 
                 ))}
 
@@ -1520,7 +1426,7 @@ export default function TimesheetDetailModal({
 
                     {!hiddenColumns["PLC"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
 
-                    {!hiddenColumns["Pay Type"] && (<td className="p-2 min-w-[120px]"><select value={line.payType} onChange={(e) => handleSelectChange(line.id, "payType", e.target.value)} className={`w-full p-1.5 border border-gray-200 rounded-md ${isDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white text-gray-900"}`} disabled={isDisabled}><option value="SR">  Regular</option><option value="SO">Overtime</option></select></td>)}
+                    {!hiddenColumns["Pay Type"] && (<td className="p-2 min-w-[120px]"><select value={line.payType} onChange={(e) => handleSelectChange(line.id, "payType", e.target.value)} className={`w-full p-1.5 border border-gray-200 rounded-md ${isDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white text-gray-900"}`} disabled={isDisabled}><option value="SR">  Regular</option><option value="SO">Overtime</option></select></td>)}
 
                     {!hiddenColumns["PO Number"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
 
@@ -1530,7 +1436,6 @@ export default function TimesheetDetailModal({
 
                     {isAdmin && !hiddenColumns["PO Remaining Hours"] && (<td className="p-2 min-w-[120px]">{line.poLineNumber && remainingPoHours[String(line.poLineNumber).trim()] !== undefined ? (<div className="text-xs font-medium text-center"><span className={`font-semibold ${parseFloat(getRemainingHoursForLine(line)) < 0 ? "text-red-600" : "text-green-600"}`}>{getRemainingHoursForLine(line)} hrs</span></div>) : ( <div className="text-xs font-medium text-center text-gray-400">-</div> )}</td>)}
 
-                   
 
                     {/* --- DAILY HOURS COLUMN (with Future Date Check) --- */}
 
@@ -1540,98 +1445,58 @@ export default function TimesheetDetailModal({
 
                       const isWeekend = configWeekends.includes(dayName);
 
-                     
 
-                      // FUTURE DATE LOGIC
-
-                      const isFutureDate = dateInfo.obj.getTime() > today.getTime();
-
-                     
+                      // FUTURE DATE LOGIC (MODIFIED): Compare UTC date parts to avoid millisecond/timezone issues.
+                      // Date is "future" if the year, or (same year AND future month), or (same year/month AND future day)
+                      const isFutureDate = 
+                          dateInfo.obj.getUTCFullYear() > today.getUTCFullYear() ||
+                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() > today.getUTCMonth()) ||
+                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() === today.getUTCMonth() && dateInfo.obj.getUTCDate() > today.getUTCDate());
 
                       // COMBINED DISABILITY
-
                       const finalDisabled = isDisabled || isFutureDate;
 
-                     
 
                       // MAX DAILY HOURS HIGHLIGHT
-
                       const dayTotal = dailyTotals[dayIndex] || 0;
-
                       const exceededMax = dayTotal > maxDailyHours;
 
-
-
                       // Conditional styling based on status/config
-
                       let inputClasses = `w-20 text-right p-1.5 border rounded-md shadow-sm `;
-
                       let inputStyle = {};
 
-                     
-
                       if (exceededMax) {
-
                         inputClasses += 'bg-red-200 border-red-500 text-red-800';
-
                       } else if (finalDisabled) {
-
                         inputClasses += 'bg-gray-100 text-gray-500';
-
                       } else if (isWeekend && configHighlightColor) {
-
                         inputStyle.backgroundColor = configHighlightColor;
-
                         inputClasses += 'text-gray-900';
-
                       } else if (isWeekend && !configHighlightColor) {
-
                         inputClasses += 'bg-gray-100 text-gray-900';
-
                       } else {
-
                         inputClasses += 'bg-white text-gray-900';
-
                       }
-
-
 
                       if (finalDisabled) {
-
                         inputClasses += ' cursor-not-allowed';
-
                       }
 
-                     
 
                       return (
-
                         <td key={dateInfo.apiDate} className="p-2">
-
                           <input
-
                             type="number"
-
                             step="0.5"
-
                             // FIX: Conditionally show value if input is disabled and the value is not empty
-
                             value={line.hours[dayIndex] === 0 || line.hours[dayIndex] === "" ? "" : line.hours[dayIndex]}
-
                             onChange={(e) => handleHourChange(line.id, dayIndex, e.target.value)}
-
                             className={inputClasses}
-
                             style={inputStyle}
-
                             disabled={finalDisabled}
-
                           />
-
                         </td>
-
                       );
-
                     })}
 
                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
@@ -1639,9 +1504,7 @@ export default function TimesheetDetailModal({
                   </tr>
 
                 );
-
               })}
-
             </tbody>
 
             <tfoot className="bg-slate-200/80 font-semibold sticky bottom-0">
@@ -1674,7 +1537,6 @@ export default function TimesheetDetailModal({
 
         </div>
 
-       
 
       </div>
 

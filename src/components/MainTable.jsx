@@ -810,19 +810,129 @@ export default function MainTable() {
     return isNaN(num) ? "0.00" : num.toFixed(2);
   };
 
+  // const getStatusStyle = (status) => {
+  //   const baseStyle =
+  //     "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
+  //   const s = status;
+  //   if (s === "Open") return `${baseStyle} bg-blue-100 text-blue-800`;
+  //   if (s === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
+  //   if (s?.toLowerCase() === "rejected")
+  //     return `${baseStyle} bg-red-100 text-red-800`;
+  //   if (s === "Pending") return `${baseStyle} bg-yellow-100 text-yellow-800`;
+  //   if (s === "Submitted") return `${baseStyle} bg-purple-100 text-purple-800`;
+  //   if (s === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
+  //   if (s === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
+  //   return `${baseStyle} bg-gray-100 text-gray-800`;
+  // };
+
   const getStatusStyle = (status) => {
-    const baseStyle =
-      "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
-    const s = status;
-    if (s === "Open") return `${baseStyle} bg-blue-100 text-blue-800`;
-    if (s === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
-    if (s?.toLowerCase() === "rejected")
-      return `${baseStyle} bg-red-100 text-red-800`;
-    if (s === "Pending") return `${baseStyle} bg-yellow-100 text-yellow-800`;
-    if (s === "Submitted") return `${baseStyle} bg-purple-100 text-purple-800`;
-    if (s === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
-    if (s === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
-    return `${baseStyle} bg-gray-100 text-gray-800`;
+    const statusProper =
+      status?.charAt(0).toUpperCase() + status?.slice(1).toLowerCase() ||
+      "Pending";
+
+    switch (status?.toUpperCase()) {
+      case "OPEN":
+        return {
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "APPROVED":
+        return {
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "REJECTED":
+        return {
+          backgroundColor: "#fce7f3",
+          color: "#ec4899",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "PENDING":
+        return {
+          backgroundColor: "#fef9c3",
+          color: "#ca8a04",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "SUBMITTED":
+        return {
+          backgroundColor: "#e0e7ff",
+          color: "#4338ca",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "PROCESSED":
+        return {
+          backgroundColor: "#dacbf8ff",
+          color: "rgba(153, 110, 192, 1)",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "NOTIFIED":
+        return {
+          backgroundColor: "#dbeafe",
+          color: "#2563eb",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "UN-NOTIFIED":
+      case "UNNOTIFIED":
+        return {
+          backgroundColor: "#dcfce7",
+          color: "#16a34a",
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      case "CORRECTION":
+        return {
+          backgroundColor: "#FFE0B2", // soft light orange
+          color: "#784421", // dark orange/brown
+          fontWeight: "600",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+      default:
+        return {
+          backgroundColor: "#f3f4f6",
+          color: "#6b7280",
+          fontWeight: "500",
+          padding: "4px 8px",
+          fontSize: "11px",
+          display: "inline-block",
+          borderRadius: "9999px",
+        };
+    }
   };
 
   useEffect(() => {
