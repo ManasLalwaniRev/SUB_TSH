@@ -9,6 +9,7 @@ import {
   Users,
   Settings as SettingsIcon,
   Save,
+  Edit2, Trash2, X
 } from "lucide-react";
 import { backendUrl } from "./config";
 
@@ -73,14 +74,27 @@ const Settings = () => {
   const [allowEmailNotification, setAllowEmailNotification] = useState(false);
   const [allowEmailNotificationId, setAllowEmailNotificationId] = useState(0);
   const [notificaionEmailToId, setNotificaionEmailToId] = useState(0);
+  const [rows, setRows] = useState([]);
+  const [configLoading, setConfigLoading] = useState(false);
+  const [editIdx, setEditIdx] = useState(null);
+const [prevRow, setPrevRow] = useState(null);
+const [loadingWorkflow, setLoadingWorkflow] = useState(false);
+const [timesheetPeriod, setTimesheetPeriod] = useState("");
+const [weekendDays, setWeekendDays] = useState([]); // e.g. ["SAT","SUN"]
+const [maxHoursPerDay, setMaxHoursPerDay] = useState("8");
+const [hardEdit, setHardEdit] = useState(false);
+const [weekendHighlightColor, setWeekendHighlightColor] = useState("#ef4444");
 
-  // Original values for change detection
-  // const [originalValues, setOriginalValues] = useState({
-  //   woPrefix: "",
-  //   woSuffixLength: "",
-  //   workflowPM: false,
-  //   workflowSupervisor: false,
-  // });
+const WEEK_DAYS = [
+  { value: "monday", label: "Mon" },
+  { value: "tuesday", label: "Tue" },
+  { value: "wednesday", label: "Wed" },
+  { value: "thursday", label: "Thu" },
+  { value: "friday", label: "Fri" },
+  { value: "saturday", label: "Sat" },
+  { value: "sunday", label: "Sun" },
+];
+
   const [originalValues, setOriginalValues] = useState({
     woPrefix: "",
     woSuffixLength: "",
@@ -89,6 +103,11 @@ const Settings = () => {
     allowEmailRedirect: false,
     redirectEmailTo: "",
     allowEmailNotification: false,
+     timesheetPeriod: "",
+      weekendDays: [],
+      maxHoursPerDay: "8",
+  hardEdit: false,
+  weekendHighlightColor: "#ef4444",
   });
 
   useEffect(() => {
@@ -113,69 +132,6 @@ const Settings = () => {
       loadConfigValues();
     }
   }, [userLoaded, currentUser]);
-
-  // Load config values from API
-  // const loadConfigValues = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const response = await fetch(`${backendUrl}/api/ConfigValues`);
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to fetch config values");
-  //     }
-
-  //     const data = await response.json();
-  //     setConfigValues(data);
-
-  //     // Set work order values
-  //     const prefixConfig = data.find((config) => config.name === "WO_Prefix");
-  //     const suffixConfig = data.find(
-  //       (config) => config.name === "WO_SuffixLength"
-  //     );
-
-  //     let loadedWoPrefix = "";
-  //     let loadedWoSuffixLength = "";
-
-  //     if (prefixConfig) {
-  //       loadedWoPrefix = prefixConfig.value;
-  //       setWoPrefix(prefixConfig.value);
-  //     }
-
-  //     if (suffixConfig) {
-  //       loadedWoSuffixLength = suffixConfig.value;
-  //       setWoSuffixLength(suffixConfig.value);
-  //     }
-
-  //     // Set workflow values
-  //     let loadedWorkflowPM = false;
-  //     let loadedWorkflowSupervisor = false;
-
-  //     const workflowConfig = data.find((config) => config.name === "Workflow");
-  //     if (workflowConfig && workflowConfig.value) {
-  //       const workflowValues = workflowConfig.value
-  //         .split(",")
-  //         .map((v) => v.trim());
-  //       loadedWorkflowPM = workflowValues.includes("PM");
-  //       loadedWorkflowSupervisor = workflowValues.includes("Supervisor");
-  //       setWorkflowPM(loadedWorkflowPM);
-  //       setWorkflowSupervisor(loadedWorkflowSupervisor);
-  //     }
-
-  //     // Store original values for change detection
-  //     setOriginalValues({
-  //       woPrefix: loadedWoPrefix,
-  //       woSuffixLength: loadedWoSuffixLength,
-  //       workflowPM: loadedWorkflowPM,
-  //       workflowSupervisor: loadedWorkflowSupervisor,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error loading config values:", error);
-  //     showToast("Failed to load configuration values", "error");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const loadConfigValues = async () => {
     try {
@@ -248,13 +204,51 @@ const Settings = () => {
         setAllowEmailNotificationId(emailNotification.id);
       }
 
-      // Store original values for change detection
-      // setOriginalValues({
-      //   woPrefix: loadedWoPrefix,
-      //   woSuffixLength: loadedWoSuffixLength,
-      //   workflowPM: loadedWorkflowPM,
-      //   workflowSupervisor: loadedWorkflowSupervisor,
-      // });
+      const timesheetPeriodConfig = data.find(
+  (config) => config.name === "timesheet_period"
+);
+let loadedTimesheetPeriod = "";
+if (timesheetPeriodConfig) {
+  loadedTimesheetPeriod = timesheetPeriodConfig.value;
+  setTimesheetPeriod(timesheetPeriodConfig.value);
+}
+
+const weekendConfig = data.find(
+  (config) => config.name === "weekend"
+);
+let loadedWeekendDays = [];
+if (weekendConfig && weekendConfig.value) {
+  loadedWeekendDays = weekendConfig.value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  setWeekendDays(loadedWeekendDays);
+}
+
+const maxHoursConfig = data.find((config) => config.name === "max_daily_hours");
+const hardEditConfig = data.find((config) => config.name === "hard_edit");
+
+let loadedMaxHours = "8";
+let loadedHardEdit = false;
+
+if (maxHoursConfig) {
+  loadedMaxHours = maxHoursConfig.value;
+  setMaxHoursPerDay(maxHoursConfig.value);
+}
+if (hardEditConfig) {
+  loadedHardEdit = hardEditConfig.value === "true";
+  setHardEdit(loadedHardEdit);
+}
+
+const weekendColorConfig = data.find(
+  (config) => config.name === "weekend_highlight_color"
+);
+let loadedWeekendColor = "#ef4444";
+if (weekendColorConfig) {
+  loadedWeekendColor = weekendColorConfig.value;
+  setWeekendHighlightColor(weekendColorConfig.value);
+}
+   
       setOriginalValues({
         woPrefix: loadedWoPrefix,
         woSuffixLength: loadedWoSuffixLength,
@@ -267,6 +261,11 @@ const Settings = () => {
         allowEmailNotification: emailNotification
           ? emailNotification.value === "true"
           : false,
+          timesheetPeriod: loadedTimesheetPeriod,
+          weekendDays: loadedWeekendDays,
+           maxHoursPerDay: loadedMaxHours,
+  hardEdit: loadedHardEdit,
+  weekendHighlightColor: loadedWeekendColor,
       });
     } catch (error) {
       console.error("Error loading config values:", error);
@@ -276,137 +275,183 @@ const Settings = () => {
     }
   };
 
-  // Handle saving only changed config values
-  // const handleSaveConfig = async () => {
-  //   // Validate work order fields
-  //   if (!woPrefix.trim()) {
-  //     showToast("Please enter a work order prefix", "warning");
-  //     return;
-  //   }
+    useEffect(() => {
+    fetch(`${backendUrl}/api/ApprovalWorkflow`)
+      .then((res) => res.json())
+      .then((data) => {
+        // Map API data to rows with keys level and name
+        const mapped = data.map((item) => ({
+          workflowId: item.workflowId,
+          level: item.levelNo,
+          name: item.approverRole,
+          isMandetory: item.isMandetory,
+          requestType: item.requestType,
+        }));
+        setRows(mapped);
+      })
+      .catch((err) => {
+        console.error("Failed to load workflow data", err);
+      })
+      .finally(() => {
+        setConfigLoading(false); // Stop loading regardless of success or failure
+      });
+  }, []);
 
-  //   if (
-  //     !woSuffixLength.trim() ||
-  //     isNaN(woSuffixLength) ||
-  //     parseInt(woSuffixLength) <= 0
-  //   ) {
-  //     showToast(
-  //       "Please enter a valid suffix length (positive number)",
-  //       "warning"
-  //     );
-  //     return;
-  //   }
+  // Add a blank row
+  const handleInputChange = (idx, field, value) => {
+    const updated = [...rows];
+    updated[idx][field] = value;
+    setRows(updated);
+  };
 
-  //   try {
-  //     setLoading(true);
+  const addRow = () => {
+    setRows([
+      ...rows,
+      {
+        workflowId: 0,
+        level: "",
+        name: "",
+        isMandetory: false,
+        requestType: "TIMESHEET",
+      },
+    ]);
+  };
 
-  //     // Prepare workflow value
-  //     const selectedWorkflows = [];
-  //     if (workflowPM) selectedWorkflows.push("PM");
-  //     if (workflowSupervisor) selectedWorkflows.push("Supervisor");
-  //     const workflowValue = selectedWorkflows.join(",");
+  const cancelRow = (index) => {
+    setRows((prevRows) => prevRows.filter((_, idx) => idx !== index));
+  };
 
-  //     const originalWorkflowValue = [];
-  //     if (originalValues.workflowPM) originalWorkflowValue.push("PM");
-  //     if (originalValues.workflowSupervisor)
-  //       originalWorkflowValue.push("Supervisor");
-  //     const originalWorkflow = originalWorkflowValue.join(",");
+  const handleCancel = (idx) => {
+    if (!rows[idx].workflowId || rows[idx].workflowId === 0) {
+      cancelRow(idx); // Safe to remove new rows
+    } else {
+      const updatedRows = [...rows];
+      updatedRows[idx] = prevRow; // Restore previous data
+      setRows(updatedRows);
+      setEditIdx(null);
+      setPrevRow(null);
+    }
+  };
 
-  //     // Only include changed values in the payload
-  //     let updatedConfigs = [];
+  const handleEdit = (idx) => {
+    setEditIdx(idx);
+    setPrevRow({ ...rows[idx] }); // store a copy
+  };
 
-  //     // Check if WO_Prefix changed
-  //     if (woPrefix.trim() !== originalValues.woPrefix) {
-  //       const prefixConfig = configValues.find((c) => c.name === "WO_Prefix");
-  //       if (prefixConfig) {
-  //         updatedConfigs.push({
-  //           ...prefixConfig,
-  //           value: woPrefix.trim(),
-  //           createdAt: new Date().toISOString(),
-  //         });
-  //       } else {
-  //         updatedConfigs.push({
-  //           name: "WO_Prefix",
-  //           value: woPrefix.trim(),
-  //           createdAt: new Date().toISOString(),
-  //           id: 0,
-  //         });
-  //       }
-  //     }
-
-  //     // Check if WO_SuffixLength changed
-  //     if (woSuffixLength.trim() !== originalValues.woSuffixLength) {
-  //       const suffixConfig = configValues.find(
-  //         (c) => c.name === "WO_SuffixLength"
-  //       );
-  //       if (suffixConfig) {
-  //         updatedConfigs.push({
-  //           ...suffixConfig,
-  //           value: woSuffixLength.trim(),
-  //           createdAt: new Date().toISOString(),
-  //         });
-  //       } else {
-  //         updatedConfigs.push({
-  //           name: "WO_SuffixLength",
-  //           value: woSuffixLength.trim(),
-  //           createdAt: new Date().toISOString(),
-  //           id: 0,
-  //         });
-  //       }
-  //     }
-
-  //     // Check if Workflow changed
-  //     if (workflowValue !== originalWorkflow) {
-  //       const workflowConfig = configValues.find((c) => c.name === "Workflow");
-  //       if (workflowConfig) {
-  //         updatedConfigs.push({
-  //           ...workflowConfig,
-  //           value: workflowValue,
-  //           createdAt: new Date().toISOString(),
-  //         });
-  //       } else {
-  //         updatedConfigs.push({
-  //           name: "Workflow",
-  //           value: workflowValue,
-  //           createdAt: new Date().toISOString(),
-  //           id: 0,
-  //         });
-  //       }
-  //     }
-
-  //     // Only make API call if there are changes
-  //     if (updatedConfigs.length === 0) {
-  //       showToast("No changes detected", "info");
-  //       return;
-  //     }
-
-  //     console.log("Sending only changed configs:", updatedConfigs);
-
-  //     const response = await fetch(`${backendUrl}/api/ConfigValues`, {
-  //       method: "PUT",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(updatedConfigs),
+  // const handleDeleteRow = async (idx) => {
+  //   const row = rows[idx];
+  //   if (row.workflowId) {
+  //     // Replace DELETE call with actual API as needed
+  //     await fetch(`${backendUrl}/api/ApprovalWorkflow/${row.workflowId}`, {
+  //       method: "DELETE",
   //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to save configuration values");
-  //     }
-
-  //     showToast(
-  //       `${updatedConfigs.length} configuration(s) saved successfully`,
-  //       "success"
-  //     );
-
-  //     // Reload config values to get updated data
-  //     await loadConfigValues();
-  //   } catch (error) {
-  //     console.error("Error saving config values:", error);
-  //     showToast("Failed to save configuration", "error");
-  //   } finally {
-  //     setLoading(false);
   //   }
+  //   setRows(rows.filter((_, i) => i !== idx));
   // };
+
+  const handleDeleteRow = async (idx) => {
+    const row = rows[idx];
+
+    // showToast("Deleting...", "info"); // show info toast on start
+
+    try {
+      if (row.workflowId) {
+        // Replace DELETE call with actual API as needed
+        await fetch(`${backendUrl}/api/ApprovalWorkflow/${row.workflowId}`, {
+          method: "DELETE",
+        });
+      }
+
+      setRows(rows.filter((_, i) => i !== idx));
+      showToast(" deleted successfully.", "success"); // success toast on completion
+    } catch (error) {
+      console.error("Delete error:", error);
+      showToast("Failed to delete row", "error"); // error toast on failure
+    }
+  };
+
+  const handleSaveWorkflow = (idx) => {
+    setLoadingWorkflow(true);
+    // showToast("Saving...", "info");
+    const row = rows[idx];
+
+    // Determine if it is a new row (no ID or 0), then POST, else call update
+    if (!row.workflowId || row.workflowId === 0) {
+      // Create new workflow entry
+      fetch(`${backendUrl}/api/ApprovalWorkflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestType: row.requestType || "TIMESHEET", // default to TIMESHEET or your value
+          levelNo: Number(row.level),
+          approverRole: row.name,
+          isMandetory: Boolean(row.isMandetory),
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Save failed");
+          return res.json();
+        })
+        .then((savedItem) => {
+          showToast("Workflow saved successfully.");
+          // Update local row with returned workflowId if needed
+          const updatedRows = [...rows];
+          updatedRows[idx] = {
+            ...updatedRows[idx],
+            workflowId: savedItem.workflowId, // assuming API returns this
+          };
+          setRows(updatedRows);
+        })
+        .catch((err) => {
+          console.error("Error saving workflow:", err);
+          showToast("Failed to save workflow.");
+        })
+        .finally(() => setLoadingWorkflow(false));
+    } else {
+      // Update existing workflow
+      handleUpdate(idx);
+    }
+  };
+
+  const handleUpdate = (idx) => {
+    setLoadingWorkflow(true);
+    // showToast("Saving...", "info");
+    const row = rows[idx];
+
+    if (!row.workflowId || row.workflowId === 0) {
+      alert("Cannot update a new unsaved row. Please save as new.");
+      setLoadingWorkflow(false);
+      return;
+    }
+
+    fetch(`${backendUrl}/api/ApprovalWorkflow/${row.workflowId}`, {
+      method: "PUT", // or PATCH if your API supports partial updates
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        workflowId: row.workflowId,
+        requestType: row.requestType || "TIMESHEET",
+        levelNo: Number(row.level),
+        approverRole: row.name,
+        isMandetory: Boolean(row.isMandetory),
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Update failed");
+        // If API does not return JSON, skip res.json()
+        if (res.status === 204) return null;
+        return res.json();
+      })
+      .then(() => {
+        showToast("Workflow updated successfully.");
+        setEditIdx(null);
+        // Optionally refresh your data here (fetchWorkflowData())
+      })
+      .catch((err) => {
+        console.error("Error updating workflow:", err);
+        showToast("Failed to update workflow.");
+      })
+      .finally(() => setLoadingWorkflow(false));
+  };
 
   const handleSaveConfig = async () => {
     // Validation
@@ -571,6 +616,105 @@ const Settings = () => {
         }
       }
 
+      //timesheet period
+      if (timesheetPeriod !== originalValues.timesheetPeriod) {
+  const tsConfig = configValues.find((c) => c.name === "timesheet_period");
+  if (tsConfig) {
+    updatedConfigs.push({
+      ...tsConfig,
+      value: timesheetPeriod,
+      createdAt: nowISOString,
+    });
+  } else {
+    updatedConfigs.push({
+      id: 0,
+      name: "timesheet_period",
+      value: timesheetPeriod,
+      createdAt: nowISOString,
+    });
+  }
+}
+
+const weekendValue = weekendDays.join(",");
+
+if (weekendValue !== (originalValues.weekendDays || []).join(",")) {
+  const weekendConfig = configValues.find(
+    (c) => c.name === "weekend"
+  );
+  if (weekendConfig) {
+    updatedConfigs.push({
+      ...weekendConfig,
+      value: weekendValue,
+      createdAt: nowISOString,
+    });
+  } else {
+    updatedConfigs.push({
+      id: 0,
+      name: "weekend",
+      value: weekendValue,
+      createdAt: nowISOString,
+    });
+  }
+}
+
+// Max Hours
+if (maxHoursPerDay !== originalValues.maxHoursPerDay) {
+  const maxHoursConfig = configValues.find((c) => c.name === "max_daily_hours");
+  if (maxHoursConfig) {
+    updatedConfigs.push({
+      ...maxHoursConfig,
+      value: maxHoursPerDay,
+      createdAt: nowISOString,
+    });
+  } else {
+    updatedConfigs.push({
+      id: 0,
+      name: "max_daily_hours",
+      value: maxHoursPerDay,
+      createdAt: nowISOString,
+    });
+  }
+}
+
+// Hard Edit
+if (hardEdit !== originalValues.hardEdit) {
+  const hardEditConfig = configValues.find((c) => c.name === "hard_edit");
+  if (hardEditConfig) {
+    updatedConfigs.push({
+      ...hardEditConfig,
+      value: hardEdit.toString(),
+      createdAt: nowISOString,
+    });
+  } else {
+    updatedConfigs.push({
+      id: 0,
+      name: "hard_edit",
+      value: hardEdit.toString(),
+      createdAt: nowISOString,
+    });
+  }
+}
+
+if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
+  const colorConfig = configValues.find(
+    (c) => c.name === "weekend_highlight_color"
+  );
+  if (colorConfig) {
+    updatedConfigs.push({
+      ...colorConfig,
+      value: weekendHighlightColor,
+      createdAt: nowISOString,
+    });
+  } else {
+    updatedConfigs.push({
+      id: 0,
+      name: "weekend_highlight_color",
+      value: weekendHighlightColor,
+      createdAt: nowISOString,
+    });
+  }
+}
+
       // If nothing changed
       if (updatedConfigs.length === 0) {
         showToast("No changes detected", "info");
@@ -614,58 +758,13 @@ const Settings = () => {
     navigate("/");
   };
 
-  const handleSave = () => {
-    setLoading(true);
-    const nowISOString = new Date().toISOString();
-    // Build payload with current config values.
-    // id is not sent because it may be auto-generated by backend or keep as 0
-    // Replace id with real id if needed by your backend.
-    const payload = [
-      {
-        name: "ALLOW_EMAIL_REDIRECT",
-        value: allowEmailRedirect.toString(),
-        createdAt: nowISOString,
-        id: allowEmailRedirectId || 0,
-      },
-      {
-        name: "REDIRECT_EMAIL_TO",
-        value: redirectEmailTo,
-        createdAt: nowISOString,
-        id: redirectEmailToId || 0,
-      },
-      {
-        name: "EMAIL_NOTIFICATION",
-        value: allowEmailNotification.toString(),
-        createdAt: nowISOString,
-        id: allowEmailNotificationId || 0,
-      },
-    ];
-
-    fetch(`${backendUrl}/api/ConfigValues`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then(() => {
-        showToast("Settings saved successfully");
-        setLoading(false);
-      })
-      .catch((err) => {
-        // console.error("Save error:", err);
-        showToast("Failed to save settings");
-        setLoading(false);
-      });
-  };
-
-  if (!userLoaded || !currentUser) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#f9fafd] flex flex-col pr-4">
         <div className="flex-1 flex items-center justify-center">
           <div className="flex items-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2">Loading user session...</span>
+            <span className="ml-2">Loading Setting...</span>
           </div>
         </div>
       </div>
@@ -922,20 +1021,383 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
+
+                  {/* Workflow Settings */}
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
+                    <h2 className="text-l font-semibold text-gray-900">
+                     Workflow Setup
+                    </h2>
+                  </div>{/* <div className="w-full flex flex-col gap-4 bg-white border rounded shadow-sm py-6 px-6 mt-2"> */}
+            {/* <h1 className="font-semibold">Workflow Setup</h1> */}
+             <div className="bg-gray-50 rounded-lg p-2">
+                    <div className="space-y-2">
+            <div className="flex justify-end">
+              <button
+                onClick={addRow}
+                className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+              >
+                Add New
+              </button>
+            </div>
+            <table className="w-full border-collapse border border-gray-300 text-sm">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2 text-left min-w-5">
+                    Level
+                  </th>
+                  <th className="border border-gray-300 p-2 text-left">Name</th>
+                  <th className="border border-gray-300 p-2 text-left">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, idx) => (
+                  <tr key={idx}>
+                    <td className="border border-gray-300 p-2 max-w-5">
+                      <input
+                        type="number"
+                        value={row.level}
+                        onChange={(e) =>
+                          handleInputChange(idx, "level", e.target.value)
+                        }
+                        className="w-full border px-1 py-0.5 rounded"
+                        disabled={
+                          editIdx !== idx &&
+                          !(row.workflowId === 0 || !row.workflowId)
+                        }
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      <input
+                        type="text"
+                        value={row.name}
+                        onChange={(e) =>
+                          handleInputChange(idx, "name", e.target.value)
+                        }
+                        className="w-full border px-1 py-0.5 rounded"
+                        disabled={
+                          editIdx !== idx &&
+                          !(row.workflowId === 0 || !row.workflowId)
+                        }
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-2 flex gap-2">
+                      {/* NEW ROW: Always show Cancel & Save */}
+                      {!row.workflowId || row.workflowId === 0 ? (
+                        <>
+                          <button
+                            onClick={() => handleCancel(idx)}
+                            className="px-2 py-0.5 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                            aria-label="Cancel"
+                            title="Cancel"
+                          >
+                            <X size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleSaveWorkflow(idx)}
+                            title="Save"
+                            className="px-2 py-0.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          >
+                            <Save size={16} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          {/* If editing this row: show Cancel & Save */}
+                          {editIdx === idx ? (
+                            <>
+                              <button
+                                onClick={() => handleCancel(idx)}
+                                className="px-2 py-0.5 bg-gray-400 text-white rounded hover:bg-gray-500 transition"
+                                aria-label="Cancel"
+                                title="Cancel"
+                              >
+                                <X size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleUpdate(idx)}
+                                title="Save"
+                                className="px-2 py-0.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                              >
+                                <Save size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRow(idx)}
+                                title="Delete"
+                                className="px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              {/* Default: Edit and Delete */}
+                              <button
+                                onClick={() => handleEdit(idx)}
+                                title="Edit"
+                                className="px-2 py-0.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+                              >
+                                <Edit2 size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRow(idx)}
+                                title="Delete"
+                                className="px-2 py-0.5 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* </div> */}
+          </div>
+                  </div>
+              </div>
+
+               <div className="flex gap-6 w-full">
+                {/* Configure Timesheet Period Section */}
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
+                    <h2 className="text-l font-semibold text-gray-900">
+                      Configure Timesheet Period
+                    </h2>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <div className="space-y-2">
+                      {/* Timesheet Period*/}
+                      <div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Timesheet Period
+  </label>
+
+  <select
+    value={timesheetPeriod}
+    onChange={(e) => setTimesheetPeriod(e.target.value)}
+    disabled={loading}
+    className={`
+      w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent max-w-[300px]
+      ${timesheetPeriod !== originalValues.timesheetPeriod
+        ? "border-blue-500 focus:ring-blue-500"
+        : "border-gray-300 focus:ring-blue-500"}
+    `}
+  >
+    <option value="">Select timesheet period</option>
+    <option value="weekly">Weekly - 7 Days</option>
+    <option value="bi-weekly">Bi-weekly - 14 Days</option>
+    <option value="semi-monthly">Semi-Monthly - 15 days </option>
+    <option value="monthly">Monthly </option>
+  </select>
+
+  <p className="mt-1 text-xs text-gray-500">
+    Select how often timesheets are generated.
+  </p>
+</div>
+
+
+                      {/* Weekend */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">
+    Set Weekend
+    {weekendDays.length > 0 &&
+      weekendDays.join(", ") !== originalValues.weekendDays?.join(", ") && (
+        <span className="ml-2 text-xs text-blue-600 font-semibold">
+          (Modified)
+        </span>
+      )}
+  </label>
+
+  <div
+    className={`w-full max-w-[300px] border rounded-lg p-3 border-gray-300
+      focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/50
+      ${weekendDays.join(", ") !== originalValues.weekendDays?.join(", ")
+        ? "border-blue-500"
+        : ""}
+      ${loading ? "opacity-50 pointer-events-none" : ""}`}
+  >
+    <div className="flex flex-wrap gap-x-4 gap-y-2">
+      {WEEK_DAYS.map((day) => (
+        <label
+          key={day.value}
+          className="inline-flex items-center space-x-2 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            checked={weekendDays.includes(day.value)}
+            onChange={(e) => {
+              setWeekendDays(
+                e.target.checked
+                  ? [...weekendDays, day.value]
+                  : weekendDays.filter((d) => d !== day.value)
+              );
+            }}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            disabled={loading}
+          />
+          <span className="text-sm font-medium text-gray-700">
+            {day.label}
+          </span>
+        </label>
+      ))}
+    </div>
+  </div>
+
+  <p className="mt-1 text-xs text-gray-500">
+    Select days that count as weekend (single click to toggle).
+  </p>
+</div>
+
+                    </div>
+                  </div>
+                </div>
+
+                  {/* Hours Settings */}
+                  <div className="flex-1">
+  <div className="flex items-center mb-2">
+    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
+    <h2 className="text-l font-semibold text-gray-900">Configure Hours</h2>
+  </div>
+  
+  <div className="bg-gray-50 rounded-lg p-6 space-y-6">
+    {/* Hours per day */}
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Max Hours per day
+        {maxHoursPerDay !== originalValues.maxHoursPerDay && (
+          <span className="ml-2 text-xs text-blue-600 font-semibold">(Modified)</span>
+        )}
+      </label>
+      <input
+        type="number"
+        step="0.5"
+        min="1"
+        max="24"
+        value={maxHoursPerDay}
+        onChange={(e) => setMaxHoursPerDay(e.target.value)}
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent max-w-[300px] ${
+          maxHoursPerDay !== originalValues.maxHoursPerDay
+            ? "border-blue-500 focus:ring-blue-500"
+            : "border-gray-300 focus:ring-blue-500"
+        }`}
+        placeholder="8"
+        disabled={loading}
+      />
+      <p className="mt-1 text-xs text-gray-500">Standard working hours per day</p>
+    </div>
+
+    {/* Hard Edit Checkbox */}
+    <div>
+      <label className="flex items-center space-x-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={hardEdit}
+          onChange={(e) => setHardEdit(e.target.checked)}
+          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          disabled={loading}
+        />
+        <span className={`text-sm font-medium transition-colors ${
+          hardEdit !== originalValues.hardEdit 
+            ? "text-blue-900 font-semibold" 
+            : "text-gray-700"
+        }`}>
+          Hard Edit Mode
+          {hardEdit !== originalValues.hardEdit && (
+            <span className="ml-2 text-xs text-blue-600">(Modified)</span>
+          )}
+        </span>
+      </label>
+      <p className="mt-2 text-xs text-gray-500 ml-7">
+        Prevent editing after timesheet submission
+      </p>
+    </div>
+  </div>
+</div>
               </div>
 
               {/* Configure Workflow Section */}
+               <div className="flex gap-6 w-full">
+                {/* Configure Timesheet Period Section */}
+                <div className="flex-1"> 
+                     {/* Configure colour for weekend */}
+                               <div>
+  <div className="flex items-center mb-2">
+    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
+    <h2 className="text-l font-semibold text-gray-900">Configure Colour for Weekend</h2>
+  </div>
+  
+  <div className="bg-gray-50 rounded-lg p-6 space-y-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Weekend Colour
+        {weekendHighlightColor !== originalValues.weekendHighlightColor && (
+          <span className="ml-2 text-xs text-blue-600 font-semibold">(Modified)</span>
+        )}
+      </label>
+      
+      <div className="flex items-center space-x-4">
+        {/* Color Preview */}
+        <div className={`w-12 h-12 rounded-lg border-2 shadow-sm ${weekendHighlightColor !== originalValues.weekendHighlightColor ? 'ring-2 ring-blue-500 ring-offset-2' : 'border-gray-300'}`} 
+             style={{ backgroundColor: weekendHighlightColor }}>
+        </div>
+        
+        {/* Color Input */}
+        <input
+          type="color"
+          value={weekendHighlightColor}
+          onChange={(e) => setWeekendHighlightColor(e.target.value)}
+          className="w-12 h-12 rounded-lg border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer shadow-sm"
+          disabled={loading}
+          title="Click to change weekend highlight color"
+        />
+        
+        {/* Hex Value */}
+        <input
+          type="text"
+          value={weekendHighlightColor}
+          onChange={(e) => {
+            const hex = e.target.value.replace(/[^#a-fA-F0-9]/g, '');
+            if (hex) setWeekendHighlightColor(hex);
+          }}
+          className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent w-24 font-mono text-sm ${
+            weekendHighlightColor !== originalValues.weekendHighlightColor
+              ? "border-blue-500 focus:ring-blue-500"
+              : "border-gray-300 focus:ring-blue-500"
+          }`}
+          placeholder="#ef4444"
+          disabled={loading}
+        />
+      </div>
+      
+      <p className="mt-2 text-xs text-gray-500">
+        Color used to highlight weekend days in timesheets
+      </p>
+    </div>
+  </div>
+</div>
+</div>
+</div>
 
               {/* Save Button - Common for both sections */}
               <div className="flex justify-end">
                 <button
                   onClick={handleSaveConfig}
                   disabled={
-                    loading || !woPrefix.trim() || !woSuffixLength.trim()
+                     loading || !woPrefix.trim() || !woSuffixLength.trim()
                   }
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors duration-200 flex items-center space-x-2"
                 >
-                  {loading ? (
+                  {loadingWorkflow ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       <span>Saving...</span>
@@ -945,6 +1407,7 @@ const Settings = () => {
                       <Save className="h-4 w-4" />
                       <span>Save </span>
                     </>
+                    
                   )}
                 </button>
               </div>

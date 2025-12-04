@@ -133,7 +133,7 @@ export default function ExportTable() {
     "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
   const statusClass = (s) => {
     const su = String(s || "").toUpperCase();
-    if (su === "APPROVED") return `${baseStyle} bg-green-100 text-green-800`;
+    if (su === "PROCESSED") return `${baseStyle} bg-green-100 text-green-800`;
     if (su === "INVOICED") return `${baseStyle} bg-yellow-100 text-yellow-800`;
     if (su === "EXPORTED") return `${baseStyle} bg-blue-100 text-blue-800`;
     if (su === "SUBMITTED") return `${baseStyle} bg-purple-100 text-purple-800`;
@@ -291,7 +291,7 @@ export default function ExportTable() {
                 return 1;
               case "PENDING":
                 return 2;
-              case "APPROVED":
+              case "PROCESSED":
                 return 3;
               case "REJECTED":
                 return 4;
@@ -400,7 +400,7 @@ export default function ExportTable() {
         return;
       }
 
-      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=APPROVED&resourceId=${resourceId}`;
+      const apiUrl = `${backendUrl}/api/SubkTimesheet/GetDetailedTimesheetsByStatus?status=PROCESSED&resourceId=${resourceId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -414,7 +414,7 @@ export default function ExportTable() {
       if (Array.isArray(apiData) && apiData.length > 0) {
         // **FIXED: Use predefined columns instead of dynamic columns**
         const predefinedColumns = [
-          "Status",
+          // "Status",
           "Invoice Generated",
           "Work Order",
           "Employee ID",
@@ -674,7 +674,7 @@ export default function ExportTable() {
     if (statusFilter.approved) {
       filtered = filtered.filter((row) => {
         const isApproved =
-          (row.Status || row.status)?.toUpperCase() === "APPROVED";
+          (row.Status || row.status)?.toUpperCase() === "PROCESSED";
         const invoiceNotGenerated = !(
           row.originalItem?.invoiceGenerated === true ||
           row["Invoice Generated"] === "Y" ||
@@ -700,7 +700,7 @@ export default function ExportTable() {
     // Filter by date range (Start date and End date)
     if (startDate || endDate) {
       filtered = filtered.filter((row) => {
-        const rowDate = new Date(row.originalDate);
+        const rowDate = new Date(row["Hours Date"]);
         let inRange = true;
 
         if (startDate) {
@@ -836,10 +836,12 @@ export default function ExportTable() {
   //     setSelectAll(false);
   //   }
   // }, [filteredRows, selectedRows]);
+  
   // Check for rows that are approved AND have invoiceGenerated as false (N)
+  
   const hasApprovedRows = filteredRows.some(
     (row) =>
-      (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+      (row.Status || row.status || "").toUpperCase() === "PROCESSED" &&
       !(
         row.originalItem?.invoiceGenerated === true ||
         row["Invoice Generated"] === "Y" ||
@@ -856,7 +858,7 @@ export default function ExportTable() {
       const approvedRowIds = filteredRows
         .filter(
           (row) =>
-            (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+            (row.Status || row.status || "").toUpperCase() === "PROCESSED" &&
             !(
               row.originalItem?.invoiceGenerated === true ||
               row["Invoice Generated"] === "Y" ||
@@ -874,7 +876,7 @@ export default function ExportTable() {
   useEffect(() => {
     const approvedRows = filteredRows.filter(
       (row) =>
-        (row.Status || row.status || "").toUpperCase() === "APPROVED" &&
+        (row.Status || row.status || "").toUpperCase() === "PROCESSED" &&
         !(
           row.originalItem?.invoiceGenerated === true ||
           row["Invoice Generated"] === "Y" ||
@@ -994,6 +996,7 @@ export default function ExportTable() {
   // };
 
   // Add this function to ExportTable.jsx
+  
   const handleInvoiceSuccess = async (invoiceData) => {
     try {
       // Update local state immediately for better UX
@@ -2016,24 +2019,24 @@ export default function ExportTable() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-8 py-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-800 mb-2">
-                Access Denied
-              </h1>
-              <p className="text-gray-600">
-                Export functionality is only available for Admin accounts.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (!isAdmin) {
+  //   return (
+  //     <div className="min-h-screen bg-[#f9fafd] flex flex-col  pr-4">
+  //       <div className="flex-1 flex items-center justify-center">
+  //         <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-8 py-6">
+  //           <div className="text-center">
+  //             <h1 className="text-2xl font-bold text-gray-800 mb-2">
+  //               Access Denied
+  //             </h1>
+  //             <p className="text-gray-600">
+  //               Export functionality is only available for Admin accounts.
+  //             </p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   // if (loading) {
   //   return (
@@ -2174,22 +2177,22 @@ export default function ExportTable() {
               />
 
               {/* Employee ID Filter */}
-              <input
+              {/* <input
                 type="text"
                 value={searchEmployeeId}
                 onChange={(e) => setSearchEmployeeId(e.target.value)}
                 placeholder="Employee ID"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              /> */}
 
               {/* Employee Name Filter */}
-              <input
+              {/* <input
                 type="text"
                 value={searchEmployeeName}
                 onChange={(e) => setSearchEmployeeName(e.target.value)}
                 placeholder="Employee Name"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              /> */}
 
               {/* PO ID Filter */}
               <input
@@ -2210,16 +2213,17 @@ export default function ExportTable() {
               />
 
               {/* PO RELEASE NO Filter */}
-              <input
+              {/* <input
                 type="text"
                 value={searchPOReleaseNo}
                 onChange={(e) => setSearchPOReleaseNo(e.target.value)}
                 placeholder="PO Release Number"
                 className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+              /> */}
+
               {/* Status Filter */}
               <div className="flex items-center gap-3 mb-2">
-                <label className="flex items-center gap-1 text-xs">
+                {/* <label className="flex items-center gap-1 text-xs">
                   <input
                     type="checkbox"
                     checked={statusFilter.approved}
@@ -2228,7 +2232,7 @@ export default function ExportTable() {
                     }
                   />
                   Approved
-                </label>
+                </label> */}
                 <label className="flex items-center gap-1 text-xs">
                   <input
                     type="checkbox"
@@ -2522,7 +2526,7 @@ export default function ExportTable() {
                                     row.Status ||
                                     row.status ||
                                     ""
-                                  ).toUpperCase() !== "APPROVED" ||
+                                  ).toUpperCase() !== "PROCESSED" ||
                                   (
                                     row.Status ||
                                     row.status ||

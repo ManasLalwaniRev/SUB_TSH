@@ -703,7 +703,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   const isAdmin = currentUser?.role === "admin";
   const isUser = currentUser?.role === "user";
-  const isPM = currentUser?.role === "pm";
+  const isPM = currentUser?.role === "pm" || currentUser?.role === "supervisor";
 
   return (
     <div

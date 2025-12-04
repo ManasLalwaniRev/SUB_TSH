@@ -349,7 +349,10 @@ export default function Login() {
         // }, 1000);
         setTimeout(() => {
           switch (userInfo.role) {
-            case "pm":
+            case "pm"  :
+              navigate("/dashboard/approval");
+              break;
+            case "supervisor":
               navigate("/dashboard/approval");
               break;
             case "user":

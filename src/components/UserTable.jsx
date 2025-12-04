@@ -2437,7 +2437,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
       } else if (user.workflowId) {
         setFormData((prev) => ({
           ...prev,
-          workflowId: user.workflowId,
+          workflowId: users.workflowId,
         }));
       }
     }
@@ -3213,20 +3213,59 @@ export default function UserTable() {
     navigate("/");
   };
 
-  async function deleteUser(userId) {
-    try {
-      const response = await fetch(`${backendUrl}/api/User/${userId}`, {
-        method: "DELETE",
-      });
-      // if (!response.ok) throw new Error("Failed to delete user");
-      showToast("User deleted successfully");
-      setRefreshTrigger((t) => t + 1);
-    } catch (error) {
-      showToast("Failed to delete user");
-      console.error(error);
-    }
+  // async function deleteUser(userId) {
+  //   try {
+  //     const response = await fetch(`${backendUrl}/api/User/${userId}`, {
+  //       method: "DELETE",
+  //     });
+  //     // if (!response.ok) throw new Error("Failed to delete user");
+  //     showToast("User deleted successfully");
+  //     setRefreshTrigger((t) => t + 1);
+  //   } catch (error) {
+  //     showToast("Failed to delete user");
+  //     console.error(error);
+  //   }
+  // }
+
+//   const handleDeleteUser = async (userId) => {
+//   const confirmed = window.confirm("Are you sure you want to delete this user?");
+//   if (!confirmed) return; // user clicked "Cancel" (No), do nothing
+
+//   try {
+//     await fetch(`${backendUrl}/api/User/${userId}`, {
+//       method: "DELETE",
+//     });
+//     // refresh list or remove from state
+//     showToast("User deleted successfully");
+//     // setUsers((prev) => prev.filter((u) => u.id !== userId));
+//     setRefreshTrigger((t) => t + 1);
+//   } catch (err) {
+//     // console.error("Failed to delete user:", err);
+//     showToast("Failed to delete user");
+//   }
+// };
+const handleDeleteUser = async (userId) => {
+  // Block deleting the logged-in user (compare numeric ids)
+  if (currentUser && currentUser.userId === userId) {
+    showToast("You cannot delete your own user.", "error");
+    return;
   }
 
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this user?"
+  );
+  if (!confirmed) return;
+
+  try {
+    await fetch(`${backendUrl}/api/User/${userId}`, {
+      method: "DELETE",
+    });
+    showToast("User deleted successfully", "success");
+    setRefreshTrigger((t) => t + 1);
+  } catch (err) {
+    showToast("Failed to delete user", "error");
+  }
+};
   // --- Admin View ---
   if (isAdmin) {
     // More robust filtering logic
@@ -3335,9 +3374,9 @@ export default function UserTable() {
                       <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
                         Role
                       </th>
-                      {/* <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
+                      <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
                         Approval Level
-                      </th> */}
+                      </th>
                       <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
                         Status
                       </th>
@@ -3400,9 +3439,9 @@ export default function UserTable() {
                               {user.role}
                             </span>
                           </td>
-                          {/* <td className="px-2 py-2 whitespace-nowrap text-sm font-mono text-gray-700 text-center">
+                          <td className="px-2 py-2 whitespace-nowrap text-sm font-mono text-gray-700 text-center">
                             {user.levelNo} - {user.levelName}
-                          </td> */}
+                          </td>
                           <td className="px-2 py-2 whitespace-nowrap text-center">
                             <span
                               className={`px-3 py-1 text-xs leading-5 font-bold rounded-full ${
@@ -3483,7 +3522,7 @@ export default function UserTable() {
                               </button>
                               {currentUser?.role?.toLowerCase() === "admin" && (
                                 <button
-                                  onClick={() => deleteUser(user.userId)}
+                                  onClick={() => handleDeleteUser(user.userId)}
                                   className="text-red-500 hover:text-red-700 flex items-center gap-1.5 transition-colors"
                                   title="Delete"
                                 >

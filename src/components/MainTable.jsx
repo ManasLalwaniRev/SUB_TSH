@@ -255,6 +255,8 @@
 //     ) {
 //       // showToast('Only timesheets with "OPEN", "REJECTED", or "SUBMITTED" status can be submitted.', 'warning');
 //       showToast(
+
+
 //         'Only timesheets with "OPEN" or "REJECTED" status can be submitted.',
 //         "warning"
 //       );
@@ -1002,7 +1004,8 @@ export default function MainTable() {
 
     setIsNotifying(true);
     try {
-      const requesterId = currentUser.approvalUserId;
+      // const requesterId = currentUser.approvalUserId;
+      const requesterId = currentUser.userId;
       if (!requesterId) {
         throw new Error("Your user profile is missing an Approval User ID.");
       }
@@ -1588,6 +1591,7 @@ export default function MainTable() {
               resourceId={currentUser?.username}
               existingTimesheetDates={[...existingDatesForUser]}
               timesheetToEdit={timesheetToEdit}
+              isAdmin={userRole === "admin"}
             />
           </div>
         )}

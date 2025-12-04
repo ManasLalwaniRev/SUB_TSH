@@ -223,7 +223,7 @@ export default function GroupsTable() {
         const importResponse = await fetch(
           `${backendUrl}/api/PurchaseOrders/import-excel-s3?filename=${encodeURIComponent(
             selectedFile.name
-          )}&Username=${encodeURIComponent(currentUser?.name || "")}`,
+          )}&Username=${encodeURIComponent(currentUser?.username || "")}`,
           { method: "POST" }
         );
 
@@ -337,7 +337,7 @@ export default function GroupsTable() {
         const importResponse = await fetch(
           `${backendUrl}/api/PurchaseOrders/import-venor-master-s3?filename=${encodeURIComponent(
             selectedFile.name
-          )}&Username=${encodeURIComponent(currentUser?.name || "")}`,
+          )}&Username=${encodeURIComponent(currentUser?.username || "")}`,
           { method: "POST" }
         );
 
