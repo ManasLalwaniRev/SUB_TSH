@@ -1637,7 +1637,7 @@ const getStatusStyle = (status) => {
 
         {/* TimesheetDetailModal - Still renders below when a row is selected */}
         {selectedTimesheetData && (
-          <div className="w-full mt-6" data-timesheet-detail>
+          <div className="w-full max-w-[calc(100vw-220px)] mt-6" data-timesheet-detail>
             <TimesheetDetailModal
               timesheetData={selectedTimesheetData}
               onClose={handleCloseDetail}
