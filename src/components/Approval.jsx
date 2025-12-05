@@ -213,6 +213,7 @@ export default function Approval() {
 const [showHistory, setShowHistory] = useState(false);
 const [showRevision, setShowRevision] = useState(false);
 const [selectedTimesheetRows, setSelectedTimesheetRows] = useState([]);
+const [dateToLineNos, setDateToLineNos] = useState({});
 
   useEffect(() => {
     const today = new Date();
@@ -575,26 +576,17 @@ const [selectedTimesheetRows, setSelectedTimesheetRows] = useState([]);
 const handleRowClick = (rowData, event) => {
   if (event?.target?.type === "checkbox") return;
 
+  const clickedDate =
+    rowData.timesheetDateRaw || rowData.timesheet_Date; // e.g. "2025-11-02"
+
   setSelectedResourceId(rowData["Employee ID"]);
-  setSelectedTimesheetDate(rowData.timesheetDateRaw);
+  setSelectedTimesheetDate(clickedDate);
 
-  const clickedDate = rowData.timesheetDateRaw;
-
-  // ["2032","2033","2078", ...]
-  const linesForDate = rows
-    .filter((r) => r.timesheetDateRaw === clickedDate)
-    .map((r) => Number(r.lineNo));
-  
-    const rowsForDate = rows.filter(
-    r => (r.timesheetDateRaw || r.timesheet_Date) === clickedDate
-  );
-
-  setSelectedTimesheetRows(rowsForDate);
+  const linesForDate = dateToLineNos[clickedDate] || [];
 
   console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
 
   setSelectedTimesheetLines(linesForDate);
-
   setCurrentSelectedRowId(rowData.id);
 
   setTimeout(() => {
@@ -607,6 +599,8 @@ const handleRowClick = (rowData, event) => {
     }
   }, 100);
 };
+
+
 
   const handleCloseDetails = () => {
     setSelectedResourceId(null);
@@ -767,11 +761,49 @@ const handleRowClick = (rowData, event) => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const apiData = await response.json();
-      console.log("Raw API Response:", apiData);
+      // const apiData = await response.json();
+      // console.log("Raw API Response:", apiData);
 
-      // Transform the nested structure into flat rows
-      const flattenedData = [];
+      // // Transform the nested structure into flat rows
+      // const flattenedData = [];
+      const apiData = await response.json();
+console.log("Raw API Response:", apiData);
+
+// -----------------------------
+// Build date -> lineNos lookup
+// -----------------------------
+const dateToLineNos = {};
+
+if (Array.isArray(apiData)) {
+  apiData.forEach((ts) => {
+    const date = ts.timesheet_Date;
+    if (!date) return;
+
+    const hoursArray = Array.isArray(ts.timesheetHours)
+      ? ts.timesheetHours
+      : [];
+
+    const lineNosForEntry = hoursArray
+      .map((h) => Number(h.lineNo))
+      .filter((n) => !Number.isNaN(n));
+
+    if (!dateToLineNos[date]) dateToLineNos[date] = [];
+    dateToLineNos[date].push(...lineNosForEntry);
+  });
+}
+
+// dedupe line numbers per date
+Object.keys(dateToLineNos).forEach((d) => {
+  dateToLineNos[d] = [...new Set(dateToLineNos[d])];
+});
+
+setDateToLineNos(dateToLineNos);
+
+// -----------------------------
+// Transform the nested structure into flat rows (existing logic)
+// -----------------------------
+const flattenedData = [];
+
 
       if (Array.isArray(apiData)) {
         apiData.forEach((timesheetEntry, entryIndex) => {

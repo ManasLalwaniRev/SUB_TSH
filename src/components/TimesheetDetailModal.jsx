@@ -1557,6 +1557,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
 import { backendUrl } from "./config.jsx";
+import { comment } from "postcss";
 
 
 // --- SVG Icons ---
@@ -3147,6 +3148,7 @@ const handleSave = async (reason = "") => {
             lineNo: currentLine.id,
             CreatedBy: currentUserName, 
             UpdatedBy: currentUserName, 
+         comment: reason,
 
 
           };
