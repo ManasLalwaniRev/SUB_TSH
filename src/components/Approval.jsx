@@ -97,6 +97,21 @@ const ReasonModal = ({
     if (e.key === "Enter" && e.ctrlKey) handleConfirm();
     else if (e.key === "Escape") onCancel();
   };
+
+  const getActionLabel = (a) => {
+    if (!a) return "";
+    const upper = a.toUpperCase();
+
+    if (upper === "CORRECTED" || upper === "CORRECTION") return "Correct";
+    if (upper === "REJECTED" || upper === "REJECT") return "Reject";
+    if (upper === "APPROVED" || upper === "APPROVE") return "Approve";
+
+    // fallback: generic capitalize
+    return a.charAt(0).toUpperCase() + a.slice(1).toLowerCase();
+  };
+
+  const label = getActionLabel(action);
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -109,7 +124,7 @@ const ReasonModal = ({
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
             {/* {action === "approve" ? "Approve" : "Reject"}  */}
-            {action.charAt(0).toUpperCase() + action.slice(1)} Timesheets
+            {label} Timesheets
           </h3>
           <p className="text-sm text-gray-600">
             You are about to {action} {selectedCount} timesheet
@@ -121,9 +136,7 @@ const ReasonModal = ({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder={`Enter reason for ${
-              action.charAt(0).toUpperCase() + action.slice(1)
-            } these timesheets...`}
+            placeholder={`Enter reason for ${label.toLowerCase()} these timesheets...`}
             className="w-full h-24 p-3 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             maxLength={500}
             autoFocus
@@ -149,7 +162,8 @@ const ReasonModal = ({
                 : "bg-red-600 hover:bg-red-700"
             }`}
           >
-            {action.charAt(0).toUpperCase() + action.slice(1)} 
+            {/* {action.charAt(0).toUpperCase() + action.slice(1)}  */}
+              {label}
           </button>
         </div>
       </div>
@@ -198,6 +212,7 @@ export default function Approval() {
  
 const [showHistory, setShowHistory] = useState(false);
 const [showRevision, setShowRevision] = useState(false);
+const [selectedTimesheetRows, setSelectedTimesheetRows] = useState([]);
 
   useEffect(() => {
     const today = new Date();
@@ -568,7 +583,13 @@ const handleRowClick = (rowData, event) => {
   // ["2032","2033","2078", ...]
   const linesForDate = rows
     .filter((r) => r.timesheetDateRaw === clickedDate)
-    .map((r) => String(r.lineNo));
+    .map((r) => Number(r.lineNo));
+  
+    const rowsForDate = rows.filter(
+    r => (r.timesheetDateRaw || r.timesheet_Date) === clickedDate
+  );
+
+  setSelectedTimesheetRows(rowsForDate);
 
   console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
 
@@ -2192,7 +2213,7 @@ const handleRowClick = (rowData, event) => {
     {isAdmin && (
       <>
         {/* Approval History Panel */}
- {/* <button
+ <button
   onClick={() => setShowHistory(true)}
   disabled={!selectedTimesheetDate}
   className="
@@ -2202,13 +2223,13 @@ const handleRowClick = (rowData, event) => {
     bg-transparent
     px-2 py-2
     hover:text-blue-800
-    disabled:text-gray-400
-    disabled:no-underline
+    disabled:text-gray-400 
+    disabled:underline
     disabled:cursor-not-allowed
   "
 >
   Status
-</button> */}
+</button>
 
 {/* Revision Audit */}
 <button
@@ -2222,7 +2243,7 @@ const handleRowClick = (rowData, event) => {
     px-2 py-2
     hover:text-blue-800
     disabled:text-gray-400
-    disabled:no-underline
+    disabled:underline
     disabled:cursor-not-allowed
   "
 >
@@ -2306,7 +2327,7 @@ const handleRowClick = (rowData, event) => {
 {showHistory && (
   <TimesheetHistoryTable
     timesheetDate={selectedTimesheetDate}
-    lines={selectedTimesheetLines} 
+      lines={selectedTimesheetLines} 
     onClose={() => setShowHistory(false)}
   />
 )}

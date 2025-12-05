@@ -31,9 +31,11 @@ const TimesheetHistoryTable = ({ timesheetDate,lines, onClose }) => {
   }, [timesheetDate]);
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-4">
-        <div className="flex justify-between items-center mb-3">
+   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      
+      <div className="mt-24 w-full max-w-5xl px-4">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden ml-40">
+        <div className="flex justify-between items-center px-4 py-2 border-b">
           <h2 className="text-sm font-semibold text-gray-800">
             Approval History – {timesheetDate}
           </h2>
@@ -53,17 +55,17 @@ const TimesheetHistoryTable = ({ timesheetDate,lines, onClose }) => {
                   Status
                 </th>
                 <th className="px-3 py-2 text-left font-semibold text-blue-800">
-                  Approver ID
+                  Level No
                 </th>
                 <th className="px-3 py-2 text-left font-semibold text-blue-800">
-                  Approver Name
+                  Id
                 </th>
                 <th className="px-3 py-2 text-left font-semibold text-blue-800">
-                  Action Date
+                  Name
                 </th>
-                <th className="px-3 py-2 text-left font-semibold text-blue-800">
+                {/* <th className="px-3 py-2 text-left font-semibold text-blue-800">
                   Remarks
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody>
@@ -92,10 +94,10 @@ const TimesheetHistoryTable = ({ timesheetDate,lines, onClose }) => {
                     className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}
                   >
                     <td className="px-3 py-1">{r.status}</td>
-                    <td className="px-3 py-1">{r.approverId}</td>
-                    <td className="px-3 py-1">{r.approverName}</td>
-                    <td className="px-3 py-1">{r.actionDate}</td>
-                    <td className="px-3 py-1">{r.remarks}</td>
+                    <td className="px-3 py-1">{r.levelNo}</td>
+                    <td className="px-3 py-1">{r.username}</td>
+                    <td className="px-3 py-1">{r.fullName}</td>
+                    {/* <td className="px-3 py-1">{r.remarks}</td> */}
                   </tr>
                 ))
               )}
@@ -103,6 +105,7 @@ const TimesheetHistoryTable = ({ timesheetDate,lines, onClose }) => {
           </table>
         </div>
       </div>
+    </div>
     </div>
   );
 };

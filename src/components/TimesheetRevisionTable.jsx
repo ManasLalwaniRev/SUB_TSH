@@ -32,8 +32,11 @@ const TimesheetRevisionTable = ({ timesheetDate,lines, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-5xl w-full p-4">
-        <div className="flex justify-between items-center mb-3">
+     {/* <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/30"> */}
+      <div className="mt-24 w-full max-w-5xl px-4">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden ml-40">
+        <div className="flex justify-between items-center px-4 py-2 border-b">
+
           <h2 className="text-sm font-semibold text-gray-800">
             Revision Audit – {timesheetDate}
           </h2>
@@ -106,6 +109,7 @@ const TimesheetRevisionTable = ({ timesheetDate,lines, onClose }) => {
             </tbody>
           </table>
         </div>
+      </div>
       </div>
     </div>
   );
