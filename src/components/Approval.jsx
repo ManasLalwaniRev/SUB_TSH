@@ -13,6 +13,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import TimesheetApprovalModal from "./TimesheetApprovalModal";
 import { backendUrl } from "./config";
+import TimesheetHistoryTable from "./TimesheetHistoryTable";
+import TimesheetRevisionTable from "./TimesheetRevisionTable";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -192,8 +194,9 @@ export default function Approval() {
   const [filterYear, setFilterYear] = useState(currentYear);
   const [statusHoverRow, setStatusHoverRow] = useState(null);
   const [approvalPanelRow, setApprovalPanelRow] = useState(null);
-
-
+ 
+const [showHistory, setShowHistory] = useState(false);
+const [showRevision, setShowRevision] = useState(false);
 
   useEffect(() => {
     const today = new Date();
@@ -1197,7 +1200,7 @@ export default function Approval() {
       return;
     }
 
-    setPendingAction("reject");
+    setPendingAction("rejected");
     setShowReasonModal(true);
   };
 
@@ -2134,7 +2137,44 @@ export default function Approval() {
 
               </table>
             </div>
+
+            <div
+  className="flex justify-between items-center mt-2 w-full"
+  style={{ flexShrink: 0 }}
+>
+  {/* left content (if any) */}
+  <div className="flex-1" />
+
+  {/* right-side buttons */}
+  <div className="flex gap-2 ml-auto">
+    {isAdmin && (
+      <>
+        {/* Approval History Panel */}
+ {/* <button
+  onClick={() => setShowHistory(true)}
+  disabled={!selectedTimesheetDate}
+  className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Status
+</button> */}
+
+{/* Revision Audit */}
+{/* <button
+  onClick={() => setShowRevision(true)}
+  disabled={!selectedTimesheetDate}
+  className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  Revision
+</button> */}
+
+      </>
+    )}
+  </div>
+</div>
+
           </div>
+
+
 {approvalPanelRow && approvalPanelRow.approvalActions?.length > 0 && (
   <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/20">
     {/* backdrop click to close */}
@@ -2200,6 +2240,20 @@ export default function Approval() {
     </div>
   </div>
 )}
+
+{showHistory && (
+  <TimesheetHistoryTable
+    timesheetDate={selectedTimesheetDate}
+    onClose={() => setShowHistory(false)}
+  />
+)}
+
+{showRevision && (
+  <TimesheetRevisionTable
+    timesheetDate={selectedTimesheetDate}
+    onClose={() => setShowRevision(false)}
+  />
+)}  
 
 
           {selectedResourceId && (
