@@ -13,8 +13,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import TimesheetApprovalModal from "./TimesheetApprovalModal";
 import { backendUrl } from "./config";
-// import TimesheetHistoryTable from "./TimesheetHistoryTable";
-// import TimesheetRevisionTable from "./TimesheetRevisionTable";
+import TimesheetHistoryTable from "./TimesheetHistoryTable";
+import TimesheetRevisionTable from "./TimesheetRevisionTable";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -183,6 +183,7 @@ export default function Approval() {
   const [pendingAction, setPendingAction] = useState(null);
   const [userIpAddress, setUserIpAddress] = useState("");
   const [selectedTimesheetDate, setSelectedTimesheetDate] = useState(null);
+  const [selectedTimesheetLines, setSelectedTimesheetLines] = useState([]);
   // const [searchStatus, setSearchStatus] = useState("");
   const [searchStatus, setSearchStatus] = useState([]);
   const [correctionLoading, setCorrectionLoading] = useState(false);
@@ -527,23 +528,64 @@ const [showRevision, setShowRevision] = useState(false);
     }, 100);
   };
 
-  const handleRowClick = (rowData, event) => {
-    if (event?.target?.type === "checkbox") return;
+  // const handleRowClick = (rowData, event) => {
+  //   if (event?.target?.type === "checkbox") return;
 
-    setSelectedResourceId(rowData["Employee ID"]);
-    setSelectedTimesheetDate(rowData.originalDate); // Pass the specific date
-    setCurrentSelectedRowId(rowData.id);
+  //   setSelectedResourceId(rowData["Employee ID"]);
+  //   setSelectedTimesheetDate(rowData.timesheetDateRaw);
 
-    setTimeout(() => {
-      if (timesheetDetailsRef.current) {
-        timesheetDetailsRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-          inline: "nearest",
-        });
-      }
-    }, 100);
-  };
+  //    // collect ALL line numbers for this timesheet date
+  // const clickedDate = rowData.timesheetDateRaw; // ensure same format as in rows
+  // const linesForDate = rows
+  //   .filter(r => r.timesheetDateRaw === clickedDate)
+  //   .map(r => r.lineNo);
+
+  // console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
+  
+
+  // setSelectedTimesheetLines(linesForDate);   // [1,2,3,...] for that date
+  // setCurrentSelectedRowId(rowData.id);
+
+  //   setTimeout(() => {
+  //     if (timesheetDetailsRef.current) {
+  //       timesheetDetailsRef.current.scrollIntoView({
+  //         behavior: "smooth",
+  //         block: "start",
+  //         inline: "nearest",
+  //       });
+  //     }
+  //   }, 100);
+  // };
+
+const handleRowClick = (rowData, event) => {
+  if (event?.target?.type === "checkbox") return;
+
+  setSelectedResourceId(rowData["Employee ID"]);
+  setSelectedTimesheetDate(rowData.timesheetDateRaw);
+
+  const clickedDate = rowData.timesheetDateRaw;
+
+  // ["2032","2033","2078", ...]
+  const linesForDate = rows
+    .filter((r) => r.timesheetDateRaw === clickedDate)
+    .map((r) => String(r.lineNo));
+
+  console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
+
+  setSelectedTimesheetLines(linesForDate);
+
+  setCurrentSelectedRowId(rowData.id);
+
+  setTimeout(() => {
+    if (timesheetDetailsRef.current) {
+      timesheetDetailsRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+    }
+  }, 100);
+};
 
   const handleCloseDetails = () => {
     setSelectedResourceId(null);
@@ -753,7 +795,7 @@ const [showRevision, setShowRevision] = useState(false);
             "Approver ID": timesheetEntry.pm_User_Id || "",
             "Approver Name":
               timesheetEntry.pm_Name || timesheetEntry.pmName || "",
-
+            timesheetDateRaw: timesheetEntry.timesheet_Date,
             // Additional fields for operations
             originalDate: timesheetEntry.timesheet_Date,
             approverUserId: timesheetEntry.approverUserId,
@@ -2153,19 +2195,39 @@ const [showRevision, setShowRevision] = useState(false);
  {/* <button
   onClick={() => setShowHistory(true)}
   disabled={!selectedTimesheetDate}
-  className="bg-green-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-green-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+  className="
+    text-sm font-medium
+    text-blue-600
+    underline underline-offset-2
+    bg-transparent
+    px-2 py-2
+    hover:text-blue-800
+    disabled:text-gray-400
+    disabled:no-underline
+    disabled:cursor-not-allowed
+  "
 >
   Status
 </button> */}
 
 {/* Revision Audit */}
-{/* <button
+<button
   onClick={() => setShowRevision(true)}
   disabled={!selectedTimesheetDate}
-  className="bg-red-600 text-white px-4 py-1.5 rounded shadow-sm hover:bg-red-700 transition-colors text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+    className="
+    text-sm font-medium
+    text-blue-600
+    underline underline-offset-2
+    bg-transparent
+    px-2 py-2
+    hover:text-blue-800
+    disabled:text-gray-400
+    disabled:no-underline
+    disabled:cursor-not-allowed
+  "
 >
   Revision
-</button> */}
+</button>
 
       </>
     )}
@@ -2241,9 +2303,10 @@ const [showRevision, setShowRevision] = useState(false);
   </div>
 )}
 
-{/* {showHistory && (
+{showHistory && (
   <TimesheetHistoryTable
     timesheetDate={selectedTimesheetDate}
+    lines={selectedTimesheetLines} 
     onClose={() => setShowHistory(false)}
   />
 )}
@@ -2251,9 +2314,10 @@ const [showRevision, setShowRevision] = useState(false);
 {showRevision && (
   <TimesheetRevisionTable
     timesheetDate={selectedTimesheetDate}
+    lines={selectedTimesheetLines} 
     onClose={() => setShowRevision(false)}
   />
-)}   */}
+)}  
 
 
           {selectedResourceId && (

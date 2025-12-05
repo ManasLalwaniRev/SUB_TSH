@@ -1,3 +1,1559 @@
+// import React, { useState, useEffect, useMemo, useRef } from "react";
+
+// import { backendUrl } from "./config.jsx";
+
+
+// // --- SVG Icons ---
+
+// const PlusIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+
+//   </svg>
+
+// );
+
+// const CopyIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+
+//   </svg>
+
+// );
+
+// const TrashIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+
+//   </svg>
+
+// );
+
+// const EyeIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+
+//   </svg>
+
+// );
+
+// const XIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+
+//   </svg>
+
+// );
+
+// const MinusCircleIcon = ({ className = "h-4 w-4" }) => (
+
+//   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+//     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+//   </svg>
+
+// );
+
+
+// // --- ActionButton Component ---
+
+// const ActionButton = ({ children, onClick, variant = "secondary", icon, className = "", disabled = false }) => {
+
+//   const baseClasses = "inline-flex items-center justify-center px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150";
+
+//   const variants = {
+
+//     primary: "border-transparent text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 focus:ring-indigo-500",
+
+//     secondary: "border-gray-300 text-gray-800 bg-white hover:bg-gray-50 focus:ring-indigo-500 font-semibold",
+
+//   };
+
+//   return (
+
+//     <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variants[variant]} ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+
+//       {icon && <span className="mr-2">{icon}</span>}
+
+//       {children}
+
+//     </button>
+
+//   );
+
+// };
+
+
+// // --- Toast Notification (Updated Duration) ---
+
+// const showToast = (message, type = "info", duration = 3000) => {
+
+//   const toast = document.createElement("div");
+
+//   const typeClasses = { success: "bg-green-500", error: "bg-red-500", warning: "bg-yellow-500 text-black", info: "bg-blue-500" };
+
+//   toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses["info"]}`;
+
+//   toast.textContent = message;
+
+//   document.body.appendChild(toast);
+
+//   setTimeout(() => { if (document.body.contains(toast)) { document.body.removeChild(toast); } }, duration);
+
+// };
+
+
+// const createEmptyLine = (id, periodLength) => {
+
+//   const emptyHours = {};
+
+//   for (let i = 0; i < periodLength; i++) { emptyHours[i] = 0; }
+
+//   return {
+
+//     id, description: "", project: "", plc: "", workOrder: "", wa_Code: "", pmUserID: "", payType: "SR",
+
+//     poNumber: "", rlseNumber: "", poLineNumber: "", hours: emptyHours, hourIds: {}, isInvoiced: false,
+
+//   };
+
+// };
+
+
+// const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => (
+
+//   <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}>
+
+//     <option value="">Select {label}</option>
+
+//     {options.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+
+//   </select>
+
+// );
+
+
+// const formatDate = (dateInput) => {
+
+//   if (!dateInput) return "";
+
+//   let date;
+
+//   if (dateInput instanceof Date) { date = dateInput; }
+
+//   else {
+
+//     const dateOnlyString = String(dateInput).split("T")[0];
+
+//     const parts = dateOnlyString.split("-");
+
+//     if (parts.length !== 3) return dateInput;
+
+//     const year = parseInt(parts[0], 10);
+
+//     const month = parseInt(parts[1], 10) - 1;
+
+//     const day = parseInt(parts[2], 10);
+
+//     date = new Date(Date.UTC(year, month, day));
+
+//   }
+
+//   if (isNaN(date.getTime())) return "";
+
+//   return new Intl.DateTimeFormat("en-US", { timeZone: "UTC" }).format(date);
+
+// };
+
+
+// const getPeriodData = (endDateStr, frequency) => {
+
+//   const end = new Date(endDateStr);
+
+//   const dates = [];
+
+//   const freq = frequency ? frequency.toLowerCase() : 'weekly';
+
+
+//   const numOpt = { month: '2-digit', day: '2-digit', timeZone: 'UTC' };
+
+//   const txtOpt = { month: 'short', day: '2-digit', timeZone: 'UTC' };
+
+
+//   const getFmt = (d) => {
+
+//     if (freq === 'monthly' || freq === 'semi-monthly') return new Intl.DateTimeFormat('en-US', txtOpt).format(d);
+
+//     return new Intl.DateTimeFormat('en-US', numOpt).format(d);
+
+//   };
+
+//   const getApiFmt = (d) => d.toISOString().split('T')[0];
+
+
+//   let start = new Date(end);
+
+
+//   if (freq === 'weekly') {
+
+//     start.setDate(end.getDate() - 6);
+
+//   } else if (freq === 'bi-weekly') {
+
+//     start.setDate(end.getDate() - 13);
+
+//   } else if (freq === 'monthly') {
+
+//     start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+//   } else if (freq === 'semi-monthly') {
+
+//     if (end.getDate() <= 15) {
+
+//       start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+//     } else {
+
+//       start = new Date(end.getFullYear(), end.getMonth(), 16);
+
+//     }
+
+//   }
+
+
+//   for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+
+//     const currentDay = new Date(d);
+
+//     dates.push({ display: getFmt(currentDay), apiDate: getApiFmt(currentDay), obj: currentDay });
+
+//   }
+
+
+//   return dates;
+
+// };
+
+
+// const hideableColumns = [
+
+//   "Work Order", "Description", "Project", "PLC", "Pay Type",
+
+//   "PO Number", "RLSE Number", "PO Line Number", "PO Remaining Hours",
+
+// ];
+
+
+// export default function TimesheetDetailModal({
+
+//   timesheetData,
+
+//   onClose,
+
+//   onSave,
+
+//   isSaving,
+
+//   isAdmin = false,
+
+// }) {
+
+//   const [lines, setLines] = useState([]);
+
+//   const [selectedLines, setSelectedLines] = useState(new Set());
+
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   const [purchaseOrderData, setPurchaseOrderData] = useState([]);
+
+//   const [isEditable, setIsEditable] = useState(false);
+
+
+//   const [initialLines, setInitialLines] = useState([]);
+
+//   const [linesToDelete, setLinesToDelete] = useState([]);
+
+//   const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
+
+//   const [timesheetDetails, setTimesheetDetails] = useState(null);
+
+//   const [hiddenColumns, setHiddenColumns] = useState({
+
+//     "Work Order": false, "Description": false, "Project": false, "PLC": false, "Pay Type": false,
+
+//     "PO Number": false, "RLSE Number": false, "PO Line Number": false, "PO Remaining Hours": false,
+
+//   });
+
+
+//   // Config States
+
+//   const [periodType, setPeriodType] = useState("Weekly");
+
+//   const [configWeekends, setConfigWeekends] = useState([]);
+
+//   const [configHighlightColor, setConfigHighlightColor] = useState("");
+
+//   const [maxDailyHours, setMaxDailyHours] = useState(24);
+
+//   const [hardEdit, setHardEdit] = useState(false);
+
+
+//   // Dynamic Dates
+
+//   const periodDates = useMemo(() => {
+
+//     if(!timesheetData?.Date) return [];
+
+//     return getPeriodData(timesheetData.Date, periodType);
+
+//   }, [timesheetData, periodType]);
+
+
+//   const [remainingPoHours, setRemainingPoHours] = useState({});
+
+//   const [isLoadingRemainingHours, setIsLoadingRemainingHours] = useState(false);
+
+
+//   const nextId = useRef(0);
+
+
+//   // Global 'today' variable for future date check, set to midnight UTC
+//   // We keep this as UTC midnight for correct date part comparison.
+//   const today = useMemo(() => {
+
+//     const d = new Date();
+
+//     return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+
+//   }, []);
+
+
+//   // 1. Fetch Config (Updated)
+
+//   useEffect(() => {
+
+//     const fetchConfig = async () => {
+
+//       try {
+
+//         const response = await fetch("https://timesheet-subk-wa-approval-latest.onrender.com/api/ConfigValues");
+
+//         if (!response.ok) throw new Error("Failed to fetch config");
+
+//         const data = await response.json();
+
+
+//         const getConfigValue = (name) => data.find(item => item.name?.toLowerCase() === name)?.value;
+
+
+//         const periodConfig = getConfigValue("timesheet_period");
+
+//         const weekendConfig = getConfigValue("weekend");
+
+//         const colorConfig = getConfigValue("weekend_highlight_color");
+
+
+//         const maxDailyHoursConfig = getConfigValue("max_daily_hours");
+
+//         const hardEditConfig = getConfigValue("hard_edit");
+
+
+//         if (periodConfig) setPeriodType(periodConfig);
+
+//         if (weekendConfig) {
+
+//           const days = weekendConfig.split(',').map(d => d.trim().toLowerCase());
+
+//           setConfigWeekends(days);
+
+//         }
+
+//         if (colorConfig) setConfigHighlightColor(colorConfig);
+
+
+//         if (maxDailyHoursConfig) setMaxDailyHours(parseFloat(maxDailyHoursConfig) || 24);
+
+//         if (hardEditConfig) setHardEdit(hardEditConfig.toLowerCase() === 'true');
+
+//       } catch (error) {
+
+//         console.error("Config fetch error:", error);
+
+//         setPeriodType("Weekly"); // Fallback
+
+//         setConfigWeekends(["saturday", "sunday"]); // Fallback
+
+//         setConfigHighlightColor("#e5e7eb"); // Fallback
+
+//         setMaxDailyHours(24); // Fallback
+
+//         setHardEdit(false); // Fallback
+
+//       }
+
+//     };
+
+//     fetchConfig();
+
+//   }, []);
+
+
+//   // 2. Check Editability
+
+//   useEffect(() => {
+
+//     if (timesheetData) {
+
+//       const status = timesheetData.Status?.toUpperCase();
+
+//       setIsEditable(
+
+//         status === "OPEN" || status === "REJECTED" || status === "CORRECTION"
+
+//       );
+
+//     }
+
+//   }, [timesheetData]);
+
+
+//   // 3. Fetch PO Remaining Hours
+
+//   useEffect(() => {
+
+//     if (!timesheetData || !timesheetData["Employee ID"]) return;
+
+//     const fetchRemainingHours = async () => {
+
+//       setIsLoadingRemainingHours(true);
+
+//       const API_URL = `${backendUrl}/api/SubkTimesheet/GetRemainingPoHours?resourceId=${timesheetData["Employee ID"]}`;
+
+//       try {
+
+//         const response = await fetch(API_URL);
+
+//         if (!response.ok) throw new Error(`HTTP error!`);
+
+//         const data = await response.json();
+
+//         const hoursMap = {};
+
+//         if (Array.isArray(data)) {
+
+//           data.forEach((item) => {
+
+//             const poLineNum = String(item.poLineNumber || item.PoLineNumber || "").trim();
+
+//             if (poLineNum) hoursMap[poLineNum] = parseFloat(item.remainingHours || item.RemainingHours || 0);
+
+//           });
+
+//         }
+
+//         setRemainingPoHours(hoursMap);
+
+//       } catch (error) { } finally { setIsLoadingRemainingHours(false); }
+
+//     };
+
+//     fetchRemainingHours();
+
+//   }, [timesheetData]);
+
+
+//   // 4. Fetch Details & Map to Dynamic Period
+
+//   useEffect(() => {
+
+//     // Only fetch details once we have the correct Period Type loaded
+
+//     if(periodDates.length === 0) return;
+
+//     fetchTimesheetDetails();
+
+//   }, [periodDates]);
+
+
+//   const fetchTimesheetDetails = async () => {
+
+//     setIsLoading(true);
+
+//     try {
+
+//       const response = await fetch(`${backendUrl}/api/SubkTimesheet/ByResource/${timesheetData["Employee ID"]}`);
+
+//       if (!response.ok) throw new Error("Failed to fetch timesheet details");
+
+//       const data = await response.json();
+
+
+//       const poResponse = await fetch(`${backendUrl}/api/PurchaseOrders/ByResourceDetails/${timesheetData["Employee ID"]}`);
+
+//       if (!poResponse.ok) throw new Error("Failed to fetch purchase order details");
+
+//       const poData = await poResponse.json();
+
+//       const poDataArray = Array.isArray(poData) ? poData : [];
+
+//       setPurchaseOrderData(poDataArray);
+
+
+//       const dataArray = Array.isArray(data) ? data : [];
+
+//       const filteredData = dataArray.filter((item) => formatDate(item.timesheet_Date) === timesheetData.Date);
+
+
+//       if (filteredData.length > 0) {
+
+//         setTimesheetDetails(filteredData[0]);
+
+//       }
+
+
+//       const mappedLines = filteredData.map((item) => {
+
+//         const hoursData = {};
+
+//         const hourIdsData = {};
+
+
+//         periodDates.forEach((_, index) => { hoursData[index] = 0; });
+
+
+//         let isLineInvoiced = false;
+
+
+//         if (item.timesheetHours) {
+
+//           item.timesheetHours.forEach((hourEntry) => {
+
+//             if (hourEntry.invoiceGenerated === true) isLineInvoiced = true;
+
+
+//             const entryDateStr = hourEntry.ts_Date.split("T")[0];
+
+//             const dateIndex = periodDates.findIndex(d => d.apiDate === entryDateStr);
+
+
+//             if (dateIndex !== -1) {
+
+//               hoursData[dateIndex] = hourEntry.hours;
+
+//               hourIdsData[dateIndex] = hourEntry.id;
+
+//             }
+
+//           });
+
+//         }
+
+
+//         let fullWorkOrderString = "";
+
+//         const poEntry = poDataArray.find((po) => po.project?.includes(item.projId));
+
+//         if (poEntry) {
+
+//           const projectIndex = poEntry.project.indexOf(item.projId);
+
+//           if (projectIndex > -1) {
+
+//             fullWorkOrderString = `${poEntry.wa_Code} - ${poEntry.resourceDesc[projectIndex]}`;
+
+//           }
+
+//         }
+
+
+//         return {
+
+//           id: item.lineNo, description: item.description || "", project: item.projId || "",
+
+//           plc: item.plc || "", payType: item.payType || "SR", workOrder: fullWorkOrderString,
+
+//           wa_Code: poEntry?.wa_Code || "", pmUserID: poEntry?.pmUserId || "",
+
+//           poNumber: item.poNumber || "", rlseNumber: item.rlseNumber || "",
+
+//           poLineNumber: item.poLineNumber || "",
+
+//           hours: hoursData, hourIds: hourIdsData, isInvoiced: isLineInvoiced,
+
+//         };
+
+//       });
+
+
+//       setLines(mappedLines);
+
+//       setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
+
+//     } catch (error) {
+
+//       showToast(error.message, "error");
+
+//     } finally {
+
+//       setIsLoading(false);
+
+//     }
+
+//   };
+
+
+//   const handleSelectChange = (id, fieldName, value) => {
+
+//     setLines((currentLines) =>
+
+//       currentLines.map((line) => {
+
+//         if (line.id === id) {
+
+//           let updatedLine = { ...line, [fieldName]: value };
+
+//           if (fieldName === "workOrder") {
+
+//             if (!value) {
+
+//               const emptyLine = createEmptyLine(id, periodDates.length);
+
+//               return { ...emptyLine, id: line.id };
+
+//             }
+
+//             const splitIndex = value.indexOf(" - ");
+
+//             const waCode = splitIndex > -1 ? value.substring(0, splitIndex) : value;
+
+//             const desc = splitIndex > -1 ? value.substring(splitIndex + 3) : "";
+
+//             const selectedWorkOrderData = purchaseOrderData.find((item) => item.wa_Code === waCode && (item.resourceDesc || []).includes(desc));
+
+
+//             if (selectedWorkOrderData) {
+
+//               updatedLine.wa_Code = selectedWorkOrderData.wa_Code || "";
+
+//               updatedLine.pmUserID = selectedWorkOrderData.pmUserId || "";
+
+//               const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+
+//               if (descIndex > -1) {
+
+//                 updatedLine.description = desc || "";
+
+//                 updatedLine.project = selectedWorkOrderData.project[descIndex] || "";
+
+//                 updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || "";
+
+//                 updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || "";
+
+//                 updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || "";
+
+//                 updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || "";
+
+//               }
+
+//             } else {
+
+//               const emptyLine = createEmptyLine(id, periodDates.length);
+
+//               return { ...emptyLine, id: line.id };
+
+//             }
+
+//           }
+
+//           return updatedLine;
+
+//         }
+
+//         return line;
+
+//       })
+
+//     );
+
+//   };
+
+
+//   // --- UPDATED handleHourChange ---
+
+//   const handleHourChange = (id, dayIndex, value) => {
+
+//     // FIX: Preserve current value as empty string or 0 in state if input is empty
+
+//     if (value === "") {
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+
+//       return;
+
+//     }
+
+
+//     const numValue = parseFloat(value);
+
+//     let isValid = true;
+
+//     let toastMessage = "";
+
+//     let toastType = "warning";
+
+//     let isPOExceeded = false;
+
+//     let isMaxDailyExceeded = false;
+
+
+
+//     // VALIDATION 1: Basic hour constraints (0-24, 0.5 increments)
+
+//     if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+
+//       isValid = false;
+
+//       toastMessage = "Hours must be between 0 and 24.";
+
+//     } else if (numValue % 0.5 !== 0) {
+
+//       isValid = false;
+
+//       toastMessage = "Hours must be in 0.5 increments.";
+
+//     }
+
+
+//     if (isValid) {
+
+//       // VALIDATION 2: Max Daily Hours (Configurable)
+
+//       const otherLinesTotal = lines
+
+//         .filter((line) => line.id !== id)
+
+//         .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+
+
+//       if (otherLinesTotal + numValue > maxDailyHours) {
+
+//         isMaxDailyExceeded = true;
+
+//         toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+
+//       }
+
+//     }
+
+
+//     if (isValid) {
+
+//       // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
+
+//       const currentLine = lines.find((line) => line.id === id);
+
+//       if (currentLine && currentLine.poLineNumber) {
+
+//         const poLineNumber = String(currentLine.poLineNumber).trim();
+
+//         const remainingHours = remainingPoHours[poLineNumber];
+
+
+//         if (remainingHours !== undefined) {
+
+//           // Calculate the NEW hours being *added* across ALL lines for this PO
+
+
+//           // Create a temporary view of the lines with the new value applied
+
+//           const tempLines = lines.map(line =>
+
+//             line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+
+//           );
+
+
+//           const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
+
+
+//           const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+
+//             const initialLine = initialLines.find((init) => init.id === l.id);
+
+//             const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+
+//             const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+
+//             return sum + (currentUITotal - initialTotal);
+
+//           }, 0);
+
+
+//           if (totalNewHoursForPO > remainingHours) {
+
+//             isPOExceeded = true;
+
+
+//             if (!hardEdit) { // HARD STOP
+
+//               isValid = false;
+
+//               toastType = "error";
+
+//               toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+
+//             } else { // SOFT WARNING
+
+//               if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
+
+//                 toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+
+//               } else {
+
+//                 toastMessage += ` Also, PO hours exceeded.`;
+
+//               }
+
+//               toastType = "warning";
+
+//             }
+
+//           }
+
+//         }
+
+//       }
+
+//     }
+
+
+//     // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
+
+//     const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
+
+
+//     if (isValid) {
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
+
+//       if (isMaxDailyExceeded || isPOExceeded) {
+
+//         showToast(toastMessage, toastType, toastDuration);
+
+//       }
+
+//     } else {
+
+//       showToast(toastMessage, toastType, toastDuration);
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+//     }
+
+//   };
+
+
+//   const getRemainingHoursForLine = (line) => {
+
+//     if (!line.poLineNumber) return null;
+
+//     const poLineNumStr = String(line.poLineNumber).trim();
+
+//     const remaining = remainingPoHours[poLineNumStr];
+
+//     if (remaining === undefined) return null;
+
+
+//     const allLinesWithSamePO = lines.filter((l) => String(l.poLineNumber).trim() === poLineNumStr);
+
+//     const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+
+//       const initialLine = initialLines.find((init) => init.id === l.id);
+
+//       const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+
+//       const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+
+//       return sum + (currentUITotal - initialTotal);
+
+//     }, 0);
+
+
+//     return (remaining - totalNewHoursForPO).toFixed(2);
+
+//   };
+
+
+//   const addLine = () => setLines((prev) => [...prev, createEmptyLine(`temp-${Date.now()}`, periodDates.length)]);
+
+
+//   const handleSelectLine = (id) => {
+
+//     const newSelection = new Set(selectedLines);
+
+//     newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
+
+//     setSelectedLines(newSelection);
+
+//   };
+
+
+//   const deleteLines = () => {
+
+//     if (selectedLines.size === 0) { showToast("Please select lines to delete.", "warning"); return; }
+
+//     if (timesheetData.Status?.toUpperCase() === "REJECTED") {
+
+//       showToast("For rejected timesheets, hours will be zeroed out upon saving.", "info");
+
+//       setLines((currentLines) =>
+
+//         currentLines.map((line) =>
+
+//           selectedLines.has(line.id) ? { ...line, hours: Object.keys(line.hours).reduce((acc,k)=>({...acc, [k]:0}), {}) } : line
+
+//         )
+
+//       );
+
+//     } else {
+
+//       setLines((currentLines) => {
+
+//         const idsToDelete = [...selectedLines].filter((id) => typeof id === "number" || !String(id).startsWith("temp-"));
+
+//         if (idsToDelete.length > 0) setLinesToDelete((prev) => [...new Set([...prev, ...idsToDelete])]);
+
+//         return currentLines.filter((line) => !selectedLines.has(line.id));
+
+//       });
+
+//     }
+
+//     setSelectedLines(new Set());
+
+//   };
+
+
+//   // Correct Dynamic Totals
+
+//   const dailyTotals = useMemo(() => {
+
+//     if(periodDates.length === 0) return {};
+
+//     const totals = {};
+
+//     periodDates.forEach((_, index) => { totals[index] = 0; });
+
+//     lines.forEach((line) => {
+
+//       Object.keys(line.hours).forEach((idx) => {
+
+//         totals[idx] = (totals[idx] || 0) + (parseFloat(line.hours[idx]) || 0);
+
+//       });
+
+//     });
+
+//     return totals;
+
+//   }, [lines, periodDates]);
+
+
+//   const copyLines = () => {
+
+//     if (selectedLines.size === 0) { showToast("Please select lines to copy.", "warning"); return; }
+
+//     const linesToCopy = lines.filter((line) => selectedLines.has(line.id));
+
+//     const potentialTotals = { ...dailyTotals };
+
+//     let validationFailed = false;
+
+//     linesToCopy.forEach((lineToCopy) => {
+
+//       Object.keys(lineToCopy.hours).forEach((idx) => {
+
+//         potentialTotals[idx] = (potentialTotals[idx] || 0) + (parseFloat(lineToCopy.hours[idx]) || 0);
+
+//         if (potentialTotals[idx] > maxDailyHours) validationFailed = true;
+
+//       });
+
+//     });
+
+//     if (validationFailed) { showToast(`Cannot copy, as it would cause a daily total to exceed ${maxDailyHours} hours.`, "error"); return; }
+
+//     showToast("Line(s) copied.", "info");
+
+//     const newLines = linesToCopy.map((line, index) => ({
+
+//       ...line, hours: { ...line.hours }, id: `temp-${Date.now()}-${index}`, hourIds: {},
+
+//     }));
+
+//     setLines((prev) => [...prev, ...newLines]);
+
+//     setSelectedLines(new Set());
+
+//   };
+
+
+//   const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
+
+
+//   const toggleColumnVisibility = (columnName) => { setHiddenColumns((prev) => ({ ...prev, [columnName]: !prev[columnName] })); };
+
+//   const showAllHiddenColumns = () => {
+
+//     const allVisible = {}; Object.keys(hiddenColumns).forEach((col) => { allVisible[col] = false; }); setHiddenColumns(allVisible);
+
+//   };
+
+
+//   const handleSave = async () => {
+
+//     setIsCurrentlySaving(true);
+
+//     const invalidDay = Object.values(dailyTotals).find(val => val > maxDailyHours);
+
+//     if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); setIsCurrentlySaving(false); return; }
+
+
+//     const promises = [];
+
+//     const API_BASE_URL = backendUrl;
+
+//     const isOnlyDeletion = lines.length === 0 || linesToDelete.length > 0;
+
+
+//     if (!isOnlyDeletion && grandTotal === 0) { showToast("Cannot save a timesheet with zero hours.", "warning"); setIsCurrentlySaving(false); return; }
+
+
+//     const now = new Date().toISOString();
+
+//     const resourceId = timesheetData["Employee ID"];
+
+
+//     linesToDelete.forEach((id) => {
+
+//       if (typeof id === "number" || !id.startsWith("temp-")) {
+
+//         promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: "DELETE" }));
+
+//       }
+
+//     });
+
+
+//     lines.forEach((currentLine) => {
+
+//       const initialLine = initialLines.find((l) => l.id === currentLine.id);
+
+//       const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
+
+
+//       if (!initialLine) {
+
+//         if (totalHours > 0) {
+
+//           const payload = {
+
+//             Description: currentLine.description || "New Timesheet Line",
+
+//             ProjId: currentLine.project || "",
+
+//             Plc: currentLine.plc || "",
+
+//             PayType: currentLine.payType || "SR",
+
+//             PoNumber: currentLine.poNumber || "",
+
+//             RlseNumber: currentLine.rlseNumber || "0",
+
+//             Resource_Id: String(resourceId),
+
+//             WorkOrder: currentLine.wa_Code,
+
+//             Pm_User_Id: currentLine.pmUserID || "",
+
+//             PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+
+//             Timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
+
+//             CreatedBy: String(resourceId),
+
+//             UpdatedAt: now,
+
+//             UpdatedBy: String(resourceId),
+
+//             TimesheetHours: periodDates.map((dateInfo, idx) => {
+
+//               let hourValue = parseFloat(currentLine.hours[idx]);
+
+//               if (isNaN(hourValue)) hourValue = 0;
+
+//               return { Ts_Date: dateInfo.apiDate, Hours: hourValue };
+
+//             }),
+
+//           };
+
+//           promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
+
+//         }
+
+//         return;
+
+//       }
+
+
+//       const isLineChanged =
+
+//         currentLine.payType !== initialLine.payType ||
+
+//         currentLine.workOrder !== initialLine.workOrder ||
+
+//         currentLine.wa_Code !== initialLine.wa_Code ||
+
+//         currentLine.description !== initialLine.description;
+
+
+//       if (isLineChanged) {
+
+//         const updatePayload = {
+
+//           lineNo: currentLine.id,
+
+//           description: currentLine.description,
+
+//           projId: currentLine.project,
+
+//           plc: currentLine.plc,
+
+//           payType: currentLine.payType,
+
+//           poNumber: currentLine.poNumber,
+
+//           rlseNumber: currentLine.rlseNumber,
+
+//           resource_Id: String(resourceId),
+
+//           pm_User_Id: currentLine.pmUserID,
+
+//           poLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+
+//           rvsnNumber: 0,
+
+//           timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
+
+//           workOrder: currentLine.wa_Code,
+
+//           updatedAt: now,
+
+//           updatedBy: String(resourceId),
+
+//           createdBy: String(resourceId),
+
+//           createdAt: timesheetDetails?.createdAt || now,
+
+//           hours: 0,
+
+//           status: timesheetData.Status || "OPEN",
+
+//         };
+
+//         promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${currentLine.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatePayload) }));
+
+//       }
+
+
+//       Object.keys(currentLine.hours).forEach((idx) => {
+
+//         const initialHour = initialLine.hours[idx];
+
+//         const currentHour = currentLine.hours[idx];
+
+//         if (initialHour !== currentHour) {
+
+//           const hourId = currentLine.hourIds[idx];
+
+//           let hourValue = parseFloat(currentHour);
+
+//           if (isNaN(hourValue)) hourValue = 0;
+
+
+//           const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
+
+//           const payload = {
+
+//             id: hourId || 0,
+
+//             ts_Date: periodDates[idx].apiDate,
+
+//             hours: hourValue,
+
+//             lineNo: currentLine.id,
+
+//           };
+
+//           promises.push(fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
+
+//         }
+
+//       });
+
+//     });
+
+
+//     if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
+
+
+//     try {
+
+//       const responses = await Promise.all(promises);
+
+//       for (const response of responses) {
+
+//         if (!response.ok) {
+
+//           const errorText = await response.text();
+
+//           throw new Error(`Failed to save changes: ${errorText}`);
+
+//         }
+
+//       }
+
+//       showToast("Timesheet saved successfully!", "success");
+
+//       onSave();
+
+//       setIsCurrentlySaving(false);
+
+//     } catch (error) {
+
+//       showToast(error.message, "error");
+
+//       console.error("Save error:", error);
+
+//       setIsCurrentlySaving(false);
+
+//     }
+
+//   };
+
+
+//   const isLineDisabled = (line) => {
+
+//     if (!isEditable) return true;
+
+//     if (timesheetData?.Status?.toUpperCase() === "CORRECTION") return line.isInvoiced === true;
+
+//     return false;
+
+//   };
+
+
+//   if (isLoading) return <div className="text-center p-8">Loading...</div>;
+
+
+//   const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap((item) => (item.resourceDesc || []).map((desc) => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
+
+//   const availableHideableColumns = hideableColumns.filter((col) => col === "PO Remaining Hours" ? isAdmin : true);
+
+//   const hiddenCount = Object.entries(hiddenColumns).filter(([key, val]) => val && (key === "PO Remaining Hours" ? isAdmin : true)).length;
+
+//   const hiddenColumnsList = Object.entries(hiddenColumns).filter(([col, isHidden]) => isHidden && (col === "PO Remaining Hours" ? isAdmin : true)).map(([col]) => col);
+
+
+//   return (
+
+//     <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
+
+//       <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
+
+//         <div className="flex flex-col">
+
+//           {timesheetDetails && (
+
+//             <div className="flex gap-4 mt-2 text-sm text-gray-600">
+
+//               <div><span className="font-medium">Status:</span>   {timesheetData.Status
+
+//        ? timesheetData.Status.charAt(0).toUpperCase() +
+
+//          timesheetData.Status.slice(1).toLowerCase()
+
+//        : "N/A"}</div>
+
+//               <div><span className="font-medium">Date:</span> {timesheetDetails?.timesheet_Date ? formatDate(timesheetDetails.timesheet_Date) : "N/A"}</div>
+
+//               <div><span className="font-medium">Approved By:</span> {timesheetDetails?.approvedBy || "N/A"}</div>
+
+//               <div><span className="font-medium">Approved Date:</span> {timesheetDetails?.approvedDate ? formatDate(timesheetDetails.approvedDate) : "N/A"}</div>
+
+//             </div>
+
+//           )}
+
+//         </div>
+
+//         {isEditable && (
+
+//           <div className="flex items-center gap-2">
+
+//             <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
+
+//             <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
+
+//             {timesheetData?.Status?.toUpperCase() !== "CORRECTION" && (<ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>)}
+
+//           </div>
+
+//         )}
+
+//       </div>
+
+
+//       {hiddenCount > 0 && (
+
+//         <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+
+//           <div className="flex items-center gap-2"><EyeIcon className="h-4 w-4 text-blue-600" /><span className="text-sm font-medium text-gray-700">{hiddenCount} column{hiddenCount > 1 ? "s" : ""} hidden:</span></div>
+
+//           <div className="flex gap-2 flex-wrap">
+
+//             {hiddenColumnsList.map((col) => (
+
+//               <button key={col} onClick={() => toggleColumnVisibility(col)} className="inline-flex items-center px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-700 transition-colors shadow-sm cursor-pointer">{col}</button>
+
+//             ))}
+
+//             <button onClick={showAllHiddenColumns} className="inline-flex items-center px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 rounded-full text-xs font-medium transition-colors shadow-sm cursor-pointer">Show All</button>
+
+//           </div>
+
+//         </div>
+
+//       )}
+
+
+//       <div className="p-4 max-h-[65vh] overflow-auto">
+
+//         <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
+
+//           <table className="w-full text-sm min-w-[1600px]">
+
+//             <thead className="bg-slate-100/70 border-b border-gray-200/80 sticky top-0 z-10">
+
+//               <tr>
+
+//                 <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap"></th>
+
+//                 <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Line</th>
+
+//                 {availableHideableColumns.map((col) => !hiddenColumns[col] && (
+
+//                   <th key={col} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">
+
+//                     <div className="flex items-center justify-between gap-2 group">
+
+//                       <span>{col}</span>
+
+//                       <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col); }} className="p-1 hover:bg-gray-200 rounded-full transition-colors opacity-0 group-hover:opacity-100" title="Hide column" type="button">
+
+//                         <MinusCircleIcon className="h-4 w-4 text-gray-500 hover:text-gray-800" />
+
+//                       </button>
+
+//                     </div>
+
+//                   </th>
+
+//                 ))}
+
+//                 {periodDates.map((dateInfo) => (
+
+//                   <th key={dateInfo.apiDate} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{dateInfo.display}</th>
+
+//                 ))}
+
+//                 <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Total</th>
+
+//               </tr>
+
+//             </thead>
+
+//             <tbody className="divide-y divide-gray-200/80 bg-white/50">
+
+//               {lines.map((line, index) => {
+
+//                 const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
+
+//                 const isDisabled = isLineDisabled(line);
+
+//                 return (
+
+//                   <tr key={line.id} className="hover:bg-slate-50/50">
+
+//                     <td className="p-2 text-center">
+
+//                       <input type="checkbox" className={`rounded border-gray-300 ${!isEditable ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`} checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} />
+
+//                     </td>
+
+//                     <td className="p-3 text-center text-gray-500">{index + 1}</td>
+
+//                     {!hiddenColumns["Work Order"] && (<td className="p-2 min-w-[250px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={(e) => handleSelectChange(line.id, "workOrder", e.target.value)} disabled={isDisabled} /></td>)}
+
+//                     {!hiddenColumns["Description"] && (<td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {!hiddenColumns["Project"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {!hiddenColumns["PLC"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {!hiddenColumns["Pay Type"] && (<td className="p-2 min-w-[120px]"><select value={line.payType} onChange={(e) => handleSelectChange(line.id, "payType", e.target.value)} className={`w-full p-1.5 border border-gray-200 rounded-md ${isDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white text-gray-900"}`} disabled={isDisabled}><option value="SR">  Regular</option><option value="SO">Overtime</option></select></td>)}
+
+//                     {!hiddenColumns["PO Number"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {!hiddenColumns["RLSE Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {!hiddenColumns["PO Line Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+//                     {isAdmin && !hiddenColumns["PO Remaining Hours"] && (<td className="p-2 min-w-[120px]">{line.poLineNumber && remainingPoHours[String(line.poLineNumber).trim()] !== undefined ? (<div className="text-xs font-medium text-center"><span className={`font-semibold ${parseFloat(getRemainingHoursForLine(line)) < 0 ? "text-red-600" : "text-green-600"}`}>{getRemainingHoursForLine(line)} hrs</span></div>) : ( <div className="text-xs font-medium text-center text-gray-400">-</div> )}</td>)}
+
+
+//                     {/* --- DAILY HOURS COLUMN (with Future Date Check) --- */}
+
+//                     {periodDates.map((dateInfo, dayIndex) => {
+
+//                       const dayName = dateInfo.obj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+//                       const isWeekend = configWeekends.includes(dayName);
+
+
+//                       // FUTURE DATE LOGIC (MODIFIED): Compare UTC date parts to avoid millisecond/timezone issues.
+//                       // Date is "future" if the year, or (same year AND future month), or (same year/month AND future day)
+//                       const isFutureDate = 
+//                           dateInfo.obj.getUTCFullYear() > today.getUTCFullYear() ||
+//                           (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() > today.getUTCMonth()) ||
+//                           (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() === today.getUTCMonth() && dateInfo.obj.getUTCDate() > today.getUTCDate());
+
+//                       // COMBINED DISABILITY
+//                       const finalDisabled = isDisabled || isFutureDate;
+
+
+//                       // MAX DAILY HOURS HIGHLIGHT
+//                       const dayTotal = dailyTotals[dayIndex] || 0;
+//                       const exceededMax = dayTotal > maxDailyHours;
+
+//                       // Conditional styling based on status/config
+//                       let inputClasses = `w-20 text-right p-1.5 border rounded-md shadow-sm `;
+//                       let inputStyle = {};
+
+//                       if (exceededMax) {
+//                         inputClasses += 'bg-red-200 border-red-500 text-red-800';
+//                       } else if (finalDisabled) {
+//                         inputClasses += 'bg-gray-100 text-gray-500';
+//                       } else if (isWeekend && configHighlightColor) {
+//                         inputStyle.backgroundColor = configHighlightColor;
+//                         inputClasses += 'text-gray-900';
+//                       } else if (isWeekend && !configHighlightColor) {
+//                         inputClasses += 'bg-gray-100 text-gray-900';
+//                       } else {
+//                         inputClasses += 'bg-white text-gray-900';
+//                       }
+
+//                       if (finalDisabled) {
+//                         inputClasses += ' cursor-not-allowed';
+//                       }
+
+
+//                       return (
+//                         <td key={dateInfo.apiDate} className="p-2">
+//                           <input
+//                             type="number"
+//                             step="0.5"
+//                             // FIX: Conditionally show value if input is disabled and the value is not empty
+//                             value={line.hours[dayIndex] === 0 || line.hours[dayIndex] === "" ? "" : line.hours[dayIndex]}
+//                             onChange={(e) => handleHourChange(line.id, dayIndex, e.target.value)}
+//                             className={inputClasses}
+//                             style={inputStyle}
+//                             disabled={finalDisabled}
+//                           />
+//                         </td>
+//                       );
+//                     })}
+
+//                     <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
+
+//                   </tr>
+
+//                 );
+//               })}
+//             </tbody>
+
+//             <tfoot className="bg-slate-200/80 font-semibold sticky bottom-0">
+
+//               <tr className="border-t-2 border-gray-300">
+
+//                 <td colSpan={2 + availableHideableColumns.filter((col) => !hiddenColumns[col]).length} className="p-3 text-right text-gray-800">Total Hours</td>
+
+//                 {periodDates.map((_, idx) => (
+
+//                   <td key={idx} className="p-2 text-center">
+
+//                     <div className={`w-20 p-1.5 ${dailyTotals[idx] > maxDailyHours ? 'text-red-600 font-bold' : ''}`}>
+
+//                       {dailyTotals[idx] ? dailyTotals[idx].toFixed(2) : "0.00"}
+
+//                     </div>
+
+//                   </td>
+
+//                 ))}
+
+//                 <td className="p-3 text-right font-bold text-blue-700 pr-4">{grandTotal.toFixed(2)}</td>
+
+//               </tr>
+
+//             </tfoot>
+
+//           </table>
+
+//         </div>
+
+
+//       </div>
+
+//       <div className="mt-6 flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
+
+//         <button onClick={onClose} className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
+
+//         {isEditable && (<button onClick={handleSave} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSaving || isCurrentlySaving}>{isCurrentlySaving ? "Saving..." : "Save Changes"}</button>)}
+
+//       </div>
+
+//     </div>
+
+//   );
+
+// }
+
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
 import { backendUrl } from "./config.jsx";
@@ -7,63 +1563,63 @@ import { backendUrl } from "./config.jsx";
 
 const PlusIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
 
-  </svg>
+  </svg>
 
 );
 
 const CopyIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
 
-  </svg>
+  </svg>
 
 );
 
 const TrashIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 
-  </svg>
+  </svg>
 
 );
 
 const EyeIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 
-  </svg>
+  </svg>
 
 );
 
 const XIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 
-  </svg>
+  </svg>
 
 );
 
 const MinusCircleIcon = ({ className = "h-4 w-4" }) => (
 
-  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
 
-  </svg>
+  </svg>
 
 );
 
@@ -72,27 +1628,27 @@ const MinusCircleIcon = ({ className = "h-4 w-4" }) => (
 
 const ActionButton = ({ children, onClick, variant = "secondary", icon, className = "", disabled = false }) => {
 
-  const baseClasses = "inline-flex items-center justify-center px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150";
+  const baseClasses = "inline-flex items-center justify-center px-4 py-2 border rounded-lg shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-150";
 
-  const variants = {
+  const variants = {
 
-    primary: "border-transparent text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 focus:ring-indigo-500",
+    primary: "border-transparent text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:opacity-90 focus:ring-indigo-500",
 
-    secondary: "border-gray-300 text-gray-800 bg-white hover:bg-gray-50 focus:ring-indigo-500 font-semibold",
+    secondary: "border-gray-300 text-gray-800 bg-white hover:bg-gray-50 focus:ring-indigo-500 font-semibold",
 
-  };
+  };
 
-  return (
+  return (
 
-    <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variants[variant]} ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
+    <button onClick={onClick} disabled={disabled} className={`${baseClasses} ${variants[variant]} ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
 
-      {icon && <span className="mr-2">{icon}</span>}
+      {icon && <span className="mr-2">{icon}</span>}
 
-      {children}
+      {children}
 
-    </button>
+    </button>
 
-  );
+  );
 
 };
 
@@ -101,1455 +1657,1922 @@ const ActionButton = ({ children, onClick, variant = "secondary", icon, classNam
 
 const showToast = (message, type = "info", duration = 3000) => {
 
-  const toast = document.createElement("div");
+  const toast = document.createElement("div");
 
-  const typeClasses = { success: "bg-green-500", error: "bg-red-500", warning: "bg-yellow-500 text-black", info: "bg-blue-500" };
+  const typeClasses = { success: "bg-green-500", error: "bg-red-500", warning: "bg-yellow-500 text-black", info: "bg-blue-500" };
 
-  toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses["info"]}`;
+  toast.className = `fixed top-5 right-5 p-4 rounded-md text-white shadow-lg z-[10000] ${typeClasses[type] || typeClasses["info"]}`;
 
-  toast.textContent = message;
+  toast.textContent = message;
 
-  document.body.appendChild(toast);
+  document.body.appendChild(toast);
 
-  setTimeout(() => { if (document.body.contains(toast)) { document.body.removeChild(toast); } }, duration);
+  setTimeout(() => { if (document.body.contains(toast)) { document.body.removeChild(toast); } }, duration);
 
 };
 
 
 const createEmptyLine = (id, periodLength) => {
 
-  const emptyHours = {};
+  const emptyHours = {};
 
-  for (let i = 0; i < periodLength; i++) { emptyHours[i] = 0; }
+  for (let i = 0; i < periodLength; i++) { emptyHours[i] = 0; }
 
-  return {
+  return {
 
-    id, description: "", project: "", plc: "", workOrder: "", wa_Code: "", pmUserID: "", payType: "SR",
+    id, description: "", project: "", plc: "", workOrder: "", wa_Code: "", pmUserID: "", payType: "SR",
 
-    poNumber: "", rlseNumber: "", poLineNumber: "", hours: emptyHours, hourIds: {}, isInvoiced: false,
+    poNumber: "", rlseNumber: "", poLineNumber: "", hours: emptyHours, hourIds: {}, isInvoiced: false,
 
-  };
+  };
 
 };
 
 
 const CascadingSelect = ({ label, options, value, onChange, disabled = false }) => (
 
-  <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}>
+  <select value={value} onChange={onChange} disabled={disabled} className={`w-full bg-white p-1.5 border border-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}>
 
-    <option value="">Select {label}</option>
+    <option value="">Select {label}</option>
 
-    {options.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
+    {options.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
 
-  </select>
+  </select>
 
 );
 
 
 const formatDate = (dateInput) => {
 
-  if (!dateInput) return "";
+  if (!dateInput) return "";
 
-  let date;
+  let date;
 
-  if (dateInput instanceof Date) { date = dateInput; }
+  if (dateInput instanceof Date) { date = dateInput; }
 
-  else {
+  else {
 
-    const dateOnlyString = String(dateInput).split("T")[0];
+    const dateOnlyString = String(dateInput).split("T")[0];
 
-    const parts = dateOnlyString.split("-");
+    const parts = dateOnlyString.split("-");
 
-    if (parts.length !== 3) return dateInput;
+    if (parts.length !== 3) return dateInput;
 
-    const year = parseInt(parts[0], 10);
+    const year = parseInt(parts[0], 10);
 
-    const month = parseInt(parts[1], 10) - 1;
+    const month = parseInt(parts[1], 10) - 1;
 
-    const day = parseInt(parts[2], 10);
+    const day = parseInt(parts[2], 10);
 
-    date = new Date(Date.UTC(year, month, day));
+    date = new Date(Date.UTC(year, month, day));
 
-  }
+  }
 
-  if (isNaN(date.getTime())) return "";
+  if (isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC" }).format(date);
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC" }).format(date);
 
 };
 
 
 const getPeriodData = (endDateStr, frequency) => {
 
-  const end = new Date(endDateStr);
+  const end = new Date(endDateStr);
 
-  const dates = [];
+  const dates = [];
 
-  const freq = frequency ? frequency.toLowerCase() : 'weekly';
-
-
-  const numOpt = { month: '2-digit', day: '2-digit', timeZone: 'UTC' };
-
-  const txtOpt = { month: 'short', day: '2-digit', timeZone: 'UTC' };
+  const freq = frequency ? frequency.toLowerCase() : 'weekly';
 
 
-  const getFmt = (d) => {
+  const numOpt = { month: '2-digit', day: '2-digit', timeZone: 'UTC' };
 
-    if (freq === 'monthly' || freq === 'semi-monthly') return new Intl.DateTimeFormat('en-US', txtOpt).format(d);
-
-    return new Intl.DateTimeFormat('en-US', numOpt).format(d);
-
-  };
-
-  const getApiFmt = (d) => d.toISOString().split('T')[0];
+  const txtOpt = { month: 'short', day: '2-digit', timeZone: 'UTC' };
 
 
-  let start = new Date(end);
+  const getFmt = (d) => {
+
+    if (freq === 'monthly' || freq === 'semi-monthly') return new Intl.DateTimeFormat('en-US', txtOpt).format(d);
+
+    return new Intl.DateTimeFormat('en-US', numOpt).format(d);
+
+  };
+
+  const getApiFmt = (d) => d.toISOString().split('T')[0];
 
 
-  if (freq === 'weekly') {
-
-    start.setDate(end.getDate() - 6);
-
-  } else if (freq === 'bi-weekly') {
-
-    start.setDate(end.getDate() - 13);
-
-  } else if (freq === 'monthly') {
-
-    start = new Date(end.getFullYear(), end.getMonth(), 1);
-
-  } else if (freq === 'semi-monthly') {
-
-    if (end.getDate() <= 15) {
-
-      start = new Date(end.getFullYear(), end.getMonth(), 1);
-
-    } else {
-
-      start = new Date(end.getFullYear(), end.getMonth(), 16);
-
-    }
-
-  }
+  let start = new Date(end);
 
 
-  for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+  if (freq === 'weekly') {
 
-    const currentDay = new Date(d);
+    start.setDate(end.getDate() - 6);
 
-    dates.push({ display: getFmt(currentDay), apiDate: getApiFmt(currentDay), obj: currentDay });
+  } else if (freq === 'bi-weekly') {
 
-  }
+    start.setDate(end.getDate() - 13);
+
+  } else if (freq === 'monthly') {
+
+    start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+  } else if (freq === 'semi-monthly') {
+
+    if (end.getDate() <= 15) {
+
+      start = new Date(end.getFullYear(), end.getMonth(), 1);
+
+    } else {
+
+      start = new Date(end.getFullYear(), end.getMonth(), 16);
+
+    }
+
+  }
 
 
-  return dates;
+  for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+
+    const currentDay = new Date(d);
+
+    dates.push({ display: getFmt(currentDay), apiDate: getApiFmt(currentDay), obj: currentDay });
+
+  }
+
+
+  return dates;
 
 };
 
 
 const hideableColumns = [
 
-  "Work Order", "Description", "Project", "PLC", "Pay Type",
+  "Work Order", "Description", "Project", "PLC", "Pay Type",
 
-  "PO Number", "RLSE Number", "PO Line Number", "PO Remaining Hours",
+  "PO Number", "RLSE Number", "PO Line Number", "PO Remaining Hours",
 
 ];
 
 
 export default function TimesheetDetailModal({
 
-  timesheetData,
+  timesheetData,
 
-  onClose,
+  onClose,
 
-  onSave,
+  onSave,
 
-  isSaving,
+  isSaving,
 
-  isAdmin = false,
+  isAdmin = false,
 
 }) {
 
-  const [lines, setLines] = useState([]);
+  const [lines, setLines] = useState([]);
 
-  const [selectedLines, setSelectedLines] = useState(new Set());
+  const [selectedLines, setSelectedLines] = useState(new Set());
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [purchaseOrderData, setPurchaseOrderData] = useState([]);
+  const [purchaseOrderData, setPurchaseOrderData] = useState([]);
 
-  const [isEditable, setIsEditable] = useState(false);
+  const [isEditable, setIsEditable] = useState(false);
 
 
-  const [initialLines, setInitialLines] = useState([]);
+  const [initialLines, setInitialLines] = useState([]);
 
-  const [linesToDelete, setLinesToDelete] = useState([]);
+  const [linesToDelete, setLinesToDelete] = useState([]);
 
-  const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
+  const [isCurrentlySaving, setIsCurrentlySaving] = useState(false);
 
-  const [timesheetDetails, setTimesheetDetails] = useState(null);
+  const [timesheetDetails, setTimesheetDetails] = useState(null);
 
-  const [hiddenColumns, setHiddenColumns] = useState({
+  const [hiddenColumns, setHiddenColumns] = useState({
 
-    "Work Order": false, "Description": false, "Project": false, "PLC": false, "Pay Type": false,
+    "Work Order": false, "Description": false, "Project": false, "PLC": false, "Pay Type": false,
 
-    "PO Number": false, "RLSE Number": false, "PO Line Number": false, "PO Remaining Hours": false,
+    "PO Number": false, "RLSE Number": false, "PO Line Number": false, "PO Remaining Hours": false,
 
-  });
+  });
 
 
-  // Config States
+  // Config States
 
-  const [periodType, setPeriodType] = useState("Weekly");
+  const [periodType, setPeriodType] = useState("Weekly");
 
-  const [configWeekends, setConfigWeekends] = useState([]);
+  const [configWeekends, setConfigWeekends] = useState([]);
 
-  const [configHighlightColor, setConfigHighlightColor] = useState("");
+  const [configHighlightColor, setConfigHighlightColor] = useState("");
 
-  const [maxDailyHours, setMaxDailyHours] = useState(24);
+  const [maxDailyHours, setMaxDailyHours] = useState(24);
 
-  const [hardEdit, setHardEdit] = useState(false);
+  const [hardEdit, setHardEdit] = useState(false);
 
 
-  // Dynamic Dates
+  // Dynamic Dates
 
-  const periodDates = useMemo(() => {
+  const periodDates = useMemo(() => {
 
-    if(!timesheetData?.Date) return [];
+    if(!timesheetData?.Date) return [];
 
-    return getPeriodData(timesheetData.Date, periodType);
+    return getPeriodData(timesheetData.Date, periodType);
 
-  }, [timesheetData, periodType]);
+  }, [timesheetData, periodType]);
 
 
-  const [remainingPoHours, setRemainingPoHours] = useState({});
+  const [remainingPoHours, setRemainingPoHours] = useState({});
 
-  const [isLoadingRemainingHours, setIsLoadingRemainingHours] = useState(false);
+  const [isLoadingRemainingHours, setIsLoadingRemainingHours] = useState(false);
 
+  
+ 
 
-  const nextId = useRef(0);
+  const [showReasonPrompt, setShowReasonPrompt] = useState(false);
 
+  const [updateReason, setUpdateReason] = useState("");
 
-  // Global 'today' variable for future date check, set to midnight UTC
-  // We keep this as UTC midnight for correct date part comparison.
-  const today = useMemo(() => {
+  
+  const nextId = useRef(0);
 
-    const d = new Date();
 
-    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // Global 'today' variable for future date check, set to midnight UTC
+  // We keep this as UTC midnight for correct date part comparison.
+  const today = useMemo(() => {
 
-  }, []);
+    const d = new Date();
 
+    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 
-  // 1. Fetch Config (Updated)
+  }, []);
 
-  useEffect(() => {
 
-    const fetchConfig = async () => {
+  // 1. Fetch Config (Updated)
 
-      try {
+  useEffect(() => {
 
-        const response = await fetch("https://timesheet-subk-wa-approval-latest.onrender.com/api/ConfigValues");
+    const fetchConfig = async () => {
 
-        if (!response.ok) throw new Error("Failed to fetch config");
+      try {
 
-        const data = await response.json();
+        const response = await fetch(`${backendUrl}/api/ConfigValues`);
 
+        if (!response.ok) throw new Error("Failed to fetch config");
 
-        const getConfigValue = (name) => data.find(item => item.name?.toLowerCase() === name)?.value;
+        const data = await response.json();
 
 
-        const periodConfig = getConfigValue("timesheet_period");
+        const getConfigValue = (name) => data.find(item => item.name?.toLowerCase() === name)?.value;
 
-        const weekendConfig = getConfigValue("weekend");
 
-        const colorConfig = getConfigValue("weekend_highlight_color");
+        const periodConfig = getConfigValue("timesheet_period");
 
+        const weekendConfig = getConfigValue("weekend");
 
-        const maxDailyHoursConfig = getConfigValue("max_daily_hours");
+        const colorConfig = getConfigValue("weekend_highlight_color");
 
-        const hardEditConfig = getConfigValue("hard_edit");
 
+        const maxDailyHoursConfig = getConfigValue("max_daily_hours");
 
-        if (periodConfig) setPeriodType(periodConfig);
+        const hardEditConfig = getConfigValue("hard_edit");
 
-        if (weekendConfig) {
 
-          const days = weekendConfig.split(',').map(d => d.trim().toLowerCase());
+        if (periodConfig) setPeriodType(periodConfig);
 
-          setConfigWeekends(days);
+        if (weekendConfig) {
 
-        }
+          const days = weekendConfig.split(',').map(d => d.trim().toLowerCase());
 
-        if (colorConfig) setConfigHighlightColor(colorConfig);
+          setConfigWeekends(days);
 
+        }
 
-        if (maxDailyHoursConfig) setMaxDailyHours(parseFloat(maxDailyHoursConfig) || 24);
+        if (colorConfig) setConfigHighlightColor(colorConfig);
 
-        if (hardEditConfig) setHardEdit(hardEditConfig.toLowerCase() === 'true');
 
-      } catch (error) {
+        if (maxDailyHoursConfig) setMaxDailyHours(parseFloat(maxDailyHoursConfig) || 24);
 
-        console.error("Config fetch error:", error);
+        if (hardEditConfig) setHardEdit(hardEditConfig.toLowerCase() === 'true');
 
-        setPeriodType("Weekly"); // Fallback
+      } catch (error) {
 
-        setConfigWeekends(["saturday", "sunday"]); // Fallback
+        console.error("Config fetch error:", error);
 
-        setConfigHighlightColor("#e5e7eb"); // Fallback
+        setPeriodType("Weekly"); // Fallback
 
-        setMaxDailyHours(24); // Fallback
+        setConfigWeekends(["saturday", "sunday"]); // Fallback
 
-        setHardEdit(false); // Fallback
+        setConfigHighlightColor("#e5e7eb"); // Fallback
 
-      }
+        setMaxDailyHours(24); // Fallback
 
-    };
+        setHardEdit(false); // Fallback
 
-    fetchConfig();
+      }
 
-  }, []);
+    };
 
+    fetchConfig();
 
-  // 2. Check Editability
+  }, []);
 
-  useEffect(() => {
 
-    if (timesheetData) {
+  // 2. Check Editability
 
-      const status = timesheetData.Status?.toUpperCase();
+  useEffect(() => {
 
-      setIsEditable(
+    if (timesheetData) {
 
-        status === "OPEN" || status === "REJECTED" || status === "CORRECTION"
+      const status = timesheetData.Status?.toUpperCase();
 
-      );
+      setIsEditable(
 
-    }
+        status === "OPEN" || status === "REJECTED" || status === "CORRECTION"
 
-  }, [timesheetData]);
+      );
 
+    }
 
-  // 3. Fetch PO Remaining Hours
+  }, [timesheetData]);
 
-  useEffect(() => {
 
-    if (!timesheetData || !timesheetData["Employee ID"]) return;
+  // 3. Fetch PO Remaining Hours
 
-    const fetchRemainingHours = async () => {
+  useEffect(() => {
 
-      setIsLoadingRemainingHours(true);
+    if (!timesheetData || !timesheetData["Employee ID"]) return;
 
-      const API_URL = `${backendUrl}/api/SubkTimesheet/GetRemainingPoHours?resourceId=${timesheetData["Employee ID"]}`;
+    const fetchRemainingHours = async () => {
 
-      try {
+      setIsLoadingRemainingHours(true);
 
-        const response = await fetch(API_URL);
+      const API_URL = `${backendUrl}/api/SubkTimesheet/GetRemainingPoHours?resourceId=${timesheetData["Employee ID"]}`;
 
-        if (!response.ok) throw new Error(`HTTP error!`);
+      try {
 
-        const data = await response.json();
+        const response = await fetch(API_URL);
 
-        const hoursMap = {};
+        if (!response.ok) throw new Error(`HTTP error!`);
 
-        if (Array.isArray(data)) {
+        const data = await response.json();
 
-          data.forEach((item) => {
+        const hoursMap = {};
 
-            const poLineNum = String(item.poLineNumber || item.PoLineNumber || "").trim();
+        if (Array.isArray(data)) {
 
-            if (poLineNum) hoursMap[poLineNum] = parseFloat(item.remainingHours || item.RemainingHours || 0);
+          data.forEach((item) => {
 
-          });
+            const poLineNum = String(item.poLineNumber || item.PoLineNumber || "").trim();
 
-        }
+            if (poLineNum) hoursMap[poLineNum] = parseFloat(item.remainingHours || item.RemainingHours || 0);
 
-        setRemainingPoHours(hoursMap);
+          });
 
-      } catch (error) { } finally { setIsLoadingRemainingHours(false); }
+        }
 
-    };
+        setRemainingPoHours(hoursMap);
 
-    fetchRemainingHours();
+      } catch (error) { } finally { setIsLoadingRemainingHours(false); }
 
-  }, [timesheetData]);
+    };
 
+    fetchRemainingHours();
 
-  // 4. Fetch Details & Map to Dynamic Period
+  }, [timesheetData]);
 
-  useEffect(() => {
 
-    // Only fetch details once we have the correct Period Type loaded
+  // 4. Fetch Details & Map to Dynamic Period
 
-    if(periodDates.length === 0) return;
+  useEffect(() => {
 
-    fetchTimesheetDetails();
+    // Only fetch details once we have the correct Period Type loaded
 
-  }, [periodDates]);
+    if(periodDates.length === 0) return;
 
+    fetchTimesheetDetails();
 
-  const fetchTimesheetDetails = async () => {
+  }, [periodDates]);
 
-    setIsLoading(true);
 
-    try {
+  const fetchTimesheetDetails = async () => {
 
-      const response = await fetch(`${backendUrl}/api/SubkTimesheet/ByResource/${timesheetData["Employee ID"]}`);
+    setIsLoading(true);
 
-      if (!response.ok) throw new Error("Failed to fetch timesheet details");
+    try {
 
-      const data = await response.json();
+      const response = await fetch(`${backendUrl}/api/SubkTimesheet/ByResource/${timesheetData["Employee ID"]}`);
 
+      if (!response.ok) throw new Error("Failed to fetch timesheet details");
 
-      const poResponse = await fetch(`${backendUrl}/api/PurchaseOrders/ByResourceDetails/${timesheetData["Employee ID"]}`);
+      const data = await response.json();
 
-      if (!poResponse.ok) throw new Error("Failed to fetch purchase order details");
 
-      const poData = await poResponse.json();
+      const poResponse = await fetch(`${backendUrl}/api/PurchaseOrders/ByResourceDetails/${timesheetData["Employee ID"]}`);
 
-      const poDataArray = Array.isArray(poData) ? poData : [];
+      if (!poResponse.ok) throw new Error("Failed to fetch purchase order details");
 
-      setPurchaseOrderData(poDataArray);
+      const poData = await poResponse.json();
 
+      const poDataArray = Array.isArray(poData) ? poData : [];
 
-      const dataArray = Array.isArray(data) ? data : [];
+      setPurchaseOrderData(poDataArray);
 
-      const filteredData = dataArray.filter((item) => formatDate(item.timesheet_Date) === timesheetData.Date);
 
+      const dataArray = Array.isArray(data) ? data : [];
 
-      if (filteredData.length > 0) {
+      const filteredData = dataArray.filter((item) => formatDate(item.timesheet_Date) === timesheetData.Date);
 
-        setTimesheetDetails(filteredData[0]);
 
-      }
+      if (filteredData.length > 0) {
 
+        setTimesheetDetails(filteredData[0]);
 
-      const mappedLines = filteredData.map((item) => {
+      }
 
-        const hoursData = {};
 
-        const hourIdsData = {};
+      const mappedLines = filteredData.map((item) => {
 
+        const hoursData = {};
 
-        periodDates.forEach((_, index) => { hoursData[index] = 0; });
+        const hourIdsData = {};
 
 
-        let isLineInvoiced = false;
+        periodDates.forEach((_, index) => { hoursData[index] = 0; });
 
 
-        if (item.timesheetHours) {
+        let isLineInvoiced = false;
 
-          item.timesheetHours.forEach((hourEntry) => {
 
-            if (hourEntry.invoiceGenerated === true) isLineInvoiced = true;
+        if (item.timesheetHours) {
 
+          item.timesheetHours.forEach((hourEntry) => {
 
-            const entryDateStr = hourEntry.ts_Date.split("T")[0];
+            if (hourEntry.invoiceGenerated === true) isLineInvoiced = true;
 
-            const dateIndex = periodDates.findIndex(d => d.apiDate === entryDateStr);
 
+            const entryDateStr = hourEntry.ts_Date.split("T")[0];
 
-            if (dateIndex !== -1) {
+            const dateIndex = periodDates.findIndex(d => d.apiDate === entryDateStr);
 
-              hoursData[dateIndex] = hourEntry.hours;
 
-              hourIdsData[dateIndex] = hourEntry.id;
+            if (dateIndex !== -1) {
 
-            }
+              hoursData[dateIndex] = hourEntry.hours;
 
-          });
+              hourIdsData[dateIndex] = hourEntry.id;
 
-        }
+            }
 
+          });
 
-        let fullWorkOrderString = "";
+        }
 
-        const poEntry = poDataArray.find((po) => po.project?.includes(item.projId));
 
-        if (poEntry) {
+        let fullWorkOrderString = "";
 
-          const projectIndex = poEntry.project.indexOf(item.projId);
+        const poEntry = poDataArray.find((po) => po.project?.includes(item.projId));
 
-          if (projectIndex > -1) {
+        if (poEntry) {
 
-            fullWorkOrderString = `${poEntry.wa_Code} - ${poEntry.resourceDesc[projectIndex]}`;
+          const projectIndex = poEntry.project.indexOf(item.projId);
 
-          }
+          if (projectIndex > -1) {
 
-        }
+            fullWorkOrderString = `${poEntry.wa_Code} - ${poEntry.resourceDesc[projectIndex]}`;
 
+          }
 
-        return {
+        }
 
-          id: item.lineNo, description: item.description || "", project: item.projId || "",
 
-          plc: item.plc || "", payType: item.payType || "SR", workOrder: fullWorkOrderString,
+        return {
 
-          wa_Code: poEntry?.wa_Code || "", pmUserID: poEntry?.pmUserId || "",
+          id: item.lineNo, description: item.description || "", project: item.projId || "",
 
-          poNumber: item.poNumber || "", rlseNumber: item.rlseNumber || "",
+          plc: item.plc || "", payType: item.payType || "SR", workOrder: fullWorkOrderString,
 
-          poLineNumber: item.poLineNumber || "",
+          wa_Code: poEntry?.wa_Code || "", pmUserID: poEntry?.pmUserId || "",
 
-          hours: hoursData, hourIds: hourIdsData, isInvoiced: isLineInvoiced,
+          poNumber: item.poNumber || "", rlseNumber: item.rlseNumber || "",
 
-        };
+          poLineNumber: item.poLineNumber || "",
 
-      });
+          hours: hoursData, hourIds: hourIdsData, isInvoiced: isLineInvoiced,
 
+        };
 
-      setLines(mappedLines);
+      });
 
-      setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
 
-    } catch (error) {
+      setLines(mappedLines);
 
-      showToast(error.message, "error");
+      setInitialLines(JSON.parse(JSON.stringify(mappedLines)));
 
-    } finally {
+    } catch (error) {
 
-      setIsLoading(false);
+      showToast(error.message, "error");
 
-    }
+    } finally {
 
-  };
+      setIsLoading(false);
 
+    }
 
-  const handleSelectChange = (id, fieldName, value) => {
+  };
 
-    setLines((currentLines) =>
 
-      currentLines.map((line) => {
+  const handleSelectChange = (id, fieldName, value) => {
 
-        if (line.id === id) {
+    setLines((currentLines) =>
 
-          let updatedLine = { ...line, [fieldName]: value };
+      currentLines.map((line) => {
 
-          if (fieldName === "workOrder") {
+        if (line.id === id) {
 
-            if (!value) {
+          let updatedLine = { ...line, [fieldName]: value };
 
-              const emptyLine = createEmptyLine(id, periodDates.length);
+          if (fieldName === "workOrder") {
 
-              return { ...emptyLine, id: line.id };
+            if (!value) {
 
-            }
+              const emptyLine = createEmptyLine(id, periodDates.length);
 
-            const splitIndex = value.indexOf(" - ");
+              return { ...emptyLine, id: line.id };
 
-            const waCode = splitIndex > -1 ? value.substring(0, splitIndex) : value;
+            }
 
-            const desc = splitIndex > -1 ? value.substring(splitIndex + 3) : "";
+            const splitIndex = value.indexOf(" - ");
 
-            const selectedWorkOrderData = purchaseOrderData.find((item) => item.wa_Code === waCode && (item.resourceDesc || []).includes(desc));
+            const waCode = splitIndex > -1 ? value.substring(0, splitIndex) : value;
 
+            const desc = splitIndex > -1 ? value.substring(splitIndex + 3) : "";
 
-            if (selectedWorkOrderData) {
+            const selectedWorkOrderData = purchaseOrderData.find((item) => item.wa_Code === waCode && (item.resourceDesc || []).includes(desc));
 
-              updatedLine.wa_Code = selectedWorkOrderData.wa_Code || "";
 
-              updatedLine.pmUserID = selectedWorkOrderData.pmUserId || "";
+            if (selectedWorkOrderData) {
 
-              const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
+              updatedLine.wa_Code = selectedWorkOrderData.wa_Code || "";
 
-              if (descIndex > -1) {
+              updatedLine.pmUserID = selectedWorkOrderData.pmUserId || "";
 
-                updatedLine.description = desc || "";
+              const descIndex = selectedWorkOrderData.resourceDesc.indexOf(desc);
 
-                updatedLine.project = selectedWorkOrderData.project[descIndex] || "";
+              if (descIndex > -1) {
 
-                updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || "";
+                updatedLine.description = desc || "";
 
-                updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || "";
+                updatedLine.project = selectedWorkOrderData.project[descIndex] || "";
 
-                updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || "";
+                updatedLine.plc = selectedWorkOrderData.plcCd[descIndex] || "";
 
-                updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || "";
+                updatedLine.poNumber = selectedWorkOrderData.purchaseOrder[0] || "";
 
-              }
+                updatedLine.rlseNumber = selectedWorkOrderData.purchaseOrderRelease[0] || "";
 
-            } else {
+                updatedLine.poLineNumber = selectedWorkOrderData.poLineNumber[descIndex] || "";
 
-              const emptyLine = createEmptyLine(id, periodDates.length);
+              }
 
-              return { ...emptyLine, id: line.id };
+            } else {
 
-            }
+              const emptyLine = createEmptyLine(id, periodDates.length);
 
-          }
+              return { ...emptyLine, id: line.id };
 
-          return updatedLine;
+            }
 
-        }
+          }
 
-        return line;
+          return updatedLine;
 
-      })
+        }
 
-    );
+        return line;
 
-  };
+      })
 
+    );
 
-  // --- UPDATED handleHourChange ---
+  };
 
-  const handleHourChange = (id, dayIndex, value) => {
 
-    // FIX: Preserve current value as empty string or 0 in state if input is empty
+  // --- UPDATED handleHourChange ---
 
-    if (value === "") {
+  const handleHourChange = (id, dayIndex, value) => {
 
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+    // FIX: Preserve current value as empty string or 0 in state if input is empty
 
-      return;
+    if (value === "") {
 
-    }
+      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
 
+      return;
 
-    const numValue = parseFloat(value);
+    }
 
-    let isValid = true;
 
-    let toastMessage = "";
+    const numValue = parseFloat(value);
 
-    let toastType = "warning";
+    let isValid = true;
 
-    let isPOExceeded = false;
+    let toastMessage = "";
 
-    let isMaxDailyExceeded = false;
+    let toastType = "warning";
 
+    let isPOExceeded = false;
 
+    let isMaxDailyExceeded = false;
 
-    // VALIDATION 1: Basic hour constraints (0-24, 0.5 increments)
 
-    if (isNaN(numValue) || numValue < 0 || numValue > 24) {
 
-      isValid = false;
+    // VALIDATION 1: Basic hour constraints (0-24, 0.5 increments)
 
-      toastMessage = "Hours must be between 0 and 24.";
+    if (isNaN(numValue) || numValue < 0 || numValue > 24) {
 
-    } else if (numValue % 0.5 !== 0) {
+      isValid = false;
 
-      isValid = false;
+      toastMessage = "Hours must be between 0 and 24.";
 
-      toastMessage = "Hours must be in 0.5 increments.";
+    } else if (numValue % 0.5 !== 0) {
 
-    }
+      isValid = false;
 
+      toastMessage = "Hours must be in 0.5 increments.";
 
-    if (isValid) {
+    }
 
-      // VALIDATION 2: Max Daily Hours (Configurable)
 
-      const otherLinesTotal = lines
+    if (isValid) {
 
-        .filter((line) => line.id !== id)
+      // VALIDATION 2: Max Daily Hours (Configurable)
 
-        .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+      const otherLinesTotal = lines
 
+        .filter((line) => line.id !== id)
 
-      if (otherLinesTotal + numValue > maxDailyHours) {
+        .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
 
-        isMaxDailyExceeded = true;
 
-        toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+      if (otherLinesTotal + numValue > maxDailyHours) {
 
-      }
+        isMaxDailyExceeded = true;
 
-    }
+        toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
 
+      }
 
-    if (isValid) {
+    }
 
-      // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
 
-      const currentLine = lines.find((line) => line.id === id);
+    if (isValid) {
 
-      if (currentLine && currentLine.poLineNumber) {
+      // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
 
-        const poLineNumber = String(currentLine.poLineNumber).trim();
+      const currentLine = lines.find((line) => line.id === id);
 
-        const remainingHours = remainingPoHours[poLineNumber];
+      if (currentLine && currentLine.poLineNumber) {
 
+        const poLineNumber = String(currentLine.poLineNumber).trim();
 
-        if (remainingHours !== undefined) {
+        const remainingHours = remainingPoHours[poLineNumber];
 
-          // Calculate the NEW hours being *added* across ALL lines for this PO
 
+        if (remainingHours !== undefined) {
 
-          // Create a temporary view of the lines with the new value applied
+          // Calculate the NEW hours being *added* across ALL lines for this PO
 
-          const tempLines = lines.map(line =>
 
-            line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+          // Create a temporary view of the lines with the new value applied
 
-          );
+          const tempLines = lines.map(line =>
 
+            line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
 
-          const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
+          );
 
 
-          const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+          const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
 
-            const initialLine = initialLines.find((init) => init.id === l.id);
 
-            const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+          const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
 
-            const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+            const initialLine = initialLines.find((init) => init.id === l.id);
 
-            return sum + (currentUITotal - initialTotal);
+            const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
 
-          }, 0);
+            const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
 
+            return sum + (currentUITotal - initialTotal);
 
-          if (totalNewHoursForPO > remainingHours) {
+          }, 0);
 
-            isPOExceeded = true;
 
+          if (totalNewHoursForPO > remainingHours) {
 
-            if (!hardEdit) { // HARD STOP
+            isPOExceeded = true;
 
-              isValid = false;
 
-              toastType = "error";
+            if (!hardEdit) { // HARD STOP
 
-              toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+              isValid = false;
 
-            } else { // SOFT WARNING
+              toastType = "error";
 
-              if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
+              toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
 
-                toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+            } else { // SOFT WARNING
 
-              } else {
+              if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
 
-                toastMessage += ` Also, PO hours exceeded.`;
+                toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
 
-              }
+              } else {
 
-              toastType = "warning";
+                toastMessage += ` Also, PO hours exceeded.`;
 
-            }
+              }
 
-          }
+              toastType = "warning";
 
-        }
+            }
 
-      }
+          }
 
-    }
+        }
 
+      }
 
-    // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
+    }
 
-    const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
 
+    // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
 
-    if (isValid) {
+    const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
 
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
 
-      if (isMaxDailyExceeded || isPOExceeded) {
+    if (isValid) {
 
-        showToast(toastMessage, toastType, toastDuration);
+      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
 
-      }
+      if (isMaxDailyExceeded || isPOExceeded) {
 
-    } else {
+        showToast(toastMessage, toastType, toastDuration);
 
-      showToast(toastMessage, toastType, toastDuration);
+      }
 
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
-    }
+    } else {
 
-  };
+      showToast(toastMessage, toastType, toastDuration);
 
+      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+    }
 
-  const getRemainingHoursForLine = (line) => {
+  };
 
-    if (!line.poLineNumber) return null;
 
-    const poLineNumStr = String(line.poLineNumber).trim();
+  const getRemainingHoursForLine = (line) => {
 
-    const remaining = remainingPoHours[poLineNumStr];
+    if (!line.poLineNumber) return null;
 
-    if (remaining === undefined) return null;
+    const poLineNumStr = String(line.poLineNumber).trim();
 
+    const remaining = remainingPoHours[poLineNumStr];
 
-    const allLinesWithSamePO = lines.filter((l) => String(l.poLineNumber).trim() === poLineNumStr);
+    if (remaining === undefined) return null;
 
-    const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
 
-      const initialLine = initialLines.find((init) => init.id === l.id);
+    const allLinesWithSamePO = lines.filter((l) => String(l.poLineNumber).trim() === poLineNumStr);
 
-      const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+    const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
 
-      const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+      const initialLine = initialLines.find((init) => init.id === l.id);
 
-      return sum + (currentUITotal - initialTotal);
+      const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
 
-    }, 0);
+      const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
 
+      return sum + (currentUITotal - initialTotal);
 
-    return (remaining - totalNewHoursForPO).toFixed(2);
+    }, 0);
 
-  };
 
+    return (remaining - totalNewHoursForPO).toFixed(2);
 
-  const addLine = () => setLines((prev) => [...prev, createEmptyLine(`temp-${Date.now()}`, periodDates.length)]);
+  };
 
 
-  const handleSelectLine = (id) => {
+  const addLine = () => setLines((prev) => [...prev, createEmptyLine(`temp-${Date.now()}`, periodDates.length)]);
 
-    const newSelection = new Set(selectedLines);
 
-    newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
+  const handleSelectLine = (id) => {
 
-    setSelectedLines(newSelection);
+    const newSelection = new Set(selectedLines);
 
-  };
+    newSelection.has(id) ? newSelection.delete(id) : newSelection.add(id);
 
+    setSelectedLines(newSelection);
 
-  const deleteLines = () => {
+  };
 
-    if (selectedLines.size === 0) { showToast("Please select lines to delete.", "warning"); return; }
 
-    if (timesheetData.Status?.toUpperCase() === "REJECTED") {
+  const deleteLines = () => {
 
-      showToast("For rejected timesheets, hours will be zeroed out upon saving.", "info");
+    if (selectedLines.size === 0) { showToast("Please select lines to delete.", "warning"); return; }
 
-      setLines((currentLines) =>
+    if (timesheetData.Status?.toUpperCase() === "REJECTED") {
 
-        currentLines.map((line) =>
+      showToast("For rejected timesheets, hours will be zeroed out upon saving.", "info");
 
-          selectedLines.has(line.id) ? { ...line, hours: Object.keys(line.hours).reduce((acc,k)=>({...acc, [k]:0}), {}) } : line
+      setLines((currentLines) =>
 
-        )
+        currentLines.map((line) =>
 
-      );
+          selectedLines.has(line.id) ? { ...line, hours: Object.keys(line.hours).reduce((acc,k)=>({...acc, [k]:0}), {}) } : line
 
-    } else {
+        )
 
-      setLines((currentLines) => {
+      );
 
-        const idsToDelete = [...selectedLines].filter((id) => typeof id === "number" || !String(id).startsWith("temp-"));
+    } else {
 
-        if (idsToDelete.length > 0) setLinesToDelete((prev) => [...new Set([...prev, ...idsToDelete])]);
+      setLines((currentLines) => {
 
-        return currentLines.filter((line) => !selectedLines.has(line.id));
+        const idsToDelete = [...selectedLines].filter((id) => typeof id === "number" || !String(id).startsWith("temp-"));
 
-      });
+        if (idsToDelete.length > 0) setLinesToDelete((prev) => [...new Set([...prev, ...idsToDelete])]);
 
-    }
+        return currentLines.filter((line) => !selectedLines.has(line.id));
 
-    setSelectedLines(new Set());
+      });
 
-  };
+    }
 
+    setSelectedLines(new Set());
 
-  // Correct Dynamic Totals
+  };
 
-  const dailyTotals = useMemo(() => {
 
-    if(periodDates.length === 0) return {};
+  // Correct Dynamic Totals
 
-    const totals = {};
+  const dailyTotals = useMemo(() => {
 
-    periodDates.forEach((_, index) => { totals[index] = 0; });
+    if(periodDates.length === 0) return {};
 
-    lines.forEach((line) => {
+    const totals = {};
 
-      Object.keys(line.hours).forEach((idx) => {
+    periodDates.forEach((_, index) => { totals[index] = 0; });
 
-        totals[idx] = (totals[idx] || 0) + (parseFloat(line.hours[idx]) || 0);
+    lines.forEach((line) => {
 
-      });
+      Object.keys(line.hours).forEach((idx) => {
 
-    });
+        totals[idx] = (totals[idx] || 0) + (parseFloat(line.hours[idx]) || 0);
 
-    return totals;
+      });
 
-  }, [lines, periodDates]);
+    });
 
+    return totals;
 
-  const copyLines = () => {
+  }, [lines, periodDates]);
 
-    if (selectedLines.size === 0) { showToast("Please select lines to copy.", "warning"); return; }
 
-    const linesToCopy = lines.filter((line) => selectedLines.has(line.id));
+  const copyLines = () => {
 
-    const potentialTotals = { ...dailyTotals };
+    if (selectedLines.size === 0) { showToast("Please select lines to copy.", "warning"); return; }
 
-    let validationFailed = false;
+    const linesToCopy = lines.filter((line) => selectedLines.has(line.id));
 
-    linesToCopy.forEach((lineToCopy) => {
+    const potentialTotals = { ...dailyTotals };
 
-      Object.keys(lineToCopy.hours).forEach((idx) => {
+    let validationFailed = false;
 
-        potentialTotals[idx] = (potentialTotals[idx] || 0) + (parseFloat(lineToCopy.hours[idx]) || 0);
+    linesToCopy.forEach((lineToCopy) => {
 
-        if (potentialTotals[idx] > maxDailyHours) validationFailed = true;
+      Object.keys(lineToCopy.hours).forEach((idx) => {
 
-      });
+        potentialTotals[idx] = (potentialTotals[idx] || 0) + (parseFloat(lineToCopy.hours[idx]) || 0);
 
-    });
+        if (potentialTotals[idx] > maxDailyHours) validationFailed = true;
 
-    if (validationFailed) { showToast(`Cannot copy, as it would cause a daily total to exceed ${maxDailyHours} hours.`, "error"); return; }
+      });
 
-    showToast("Line(s) copied.", "info");
+    });
 
-    const newLines = linesToCopy.map((line, index) => ({
+    if (validationFailed) { showToast(`Cannot copy, as it would cause a daily total to exceed ${maxDailyHours} hours.`, "error"); return; }
 
-      ...line, hours: { ...line.hours }, id: `temp-${Date.now()}-${index}`, hourIds: {},
+    showToast("Line(s) copied.", "info");
 
-    }));
+    const newLines = linesToCopy.map((line, index) => ({
 
-    setLines((prev) => [...prev, ...newLines]);
+      ...line, hours: { ...line.hours }, id: `temp-${Date.now()}-${index}`, hourIds: {},
 
-    setSelectedLines(new Set());
+    }));
 
-  };
+    setLines((prev) => [...prev, ...newLines]);
 
+    setSelectedLines(new Set());
 
-  const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
+  };
 
 
-  const toggleColumnVisibility = (columnName) => { setHiddenColumns((prev) => ({ ...prev, [columnName]: !prev[columnName] })); };
+  const grandTotal = Object.values(dailyTotals).reduce((sum, total) => sum + total, 0);
 
-  const showAllHiddenColumns = () => {
 
-    const allVisible = {}; Object.keys(hiddenColumns).forEach((col) => { allVisible[col] = false; }); setHiddenColumns(allVisible);
+  const toggleColumnVisibility = (columnName) => { setHiddenColumns((prev) => ({ ...prev, [columnName]: !prev[columnName] })); };
 
-  };
+  const showAllHiddenColumns = () => {
 
+    const allVisible = {}; Object.keys(hiddenColumns).forEach((col) => { allVisible[col] = false; }); setHiddenColumns(allVisible);
 
-  const handleSave = async () => {
+  };
+  
+  
+ 
 
-    setIsCurrentlySaving(true);
+  const hasChangesToExistingData = useMemo(() => {
 
-    const invalidDay = Object.values(dailyTotals).find(val => val > maxDailyHours);
+    // Check for deletions of existing lines (lines with numeric IDs)
 
-    if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); setIsCurrentlySaving(false); return; }
+    if (linesToDelete.some(id => typeof id === "number" || !String(id).startsWith("temp-"))) {
 
+      return true;
 
-    const promises = [];
+    }
 
-    const API_BASE_URL = backendUrl;
 
-    const isOnlyDeletion = lines.length === 0 || linesToDelete.length > 0;
+    // Check for changes to existing lines or hours
 
+    for (const currentLine of lines) {
 
-    if (!isOnlyDeletion && grandTotal === 0) { showToast("Cannot save a timesheet with zero hours.", "warning"); setIsCurrentlySaving(false); return; }
+      // Only check lines that existed initially (non-temp IDs)
 
+      if (typeof currentLine.id === "number" || !String(currentLine.id).startsWith("temp-")) {
 
-    const now = new Date().toISOString();
+        const initialLine = initialLines.find((l) => l.id === currentLine.id);
 
-    const resourceId = timesheetData["Employee ID"];
+        
 
+        if (!initialLine) continue; // Should not happen for existing lines
 
-    linesToDelete.forEach((id) => {
 
-      if (typeof id === "number" || !id.startsWith("temp-")) {
+        // 1. Check line property changes
 
-        promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}`, { method: "DELETE" }));
+        const isLineChanged =
 
-      }
+          currentLine.payType !== initialLine.payType ||
 
-    });
+          currentLine.workOrder !== initialLine.workOrder ||
 
+          currentLine.wa_Code !== initialLine.wa_Code ||
 
-    lines.forEach((currentLine) => {
+          currentLine.description !== initialLine.description;
 
-      const initialLine = initialLines.find((l) => l.id === currentLine.id);
+        
 
-      const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
+        if (isLineChanged) return true;
 
 
-      if (!initialLine) {
+        // 2. Check hour changes
 
-        if (totalHours > 0) {
+        for (const idx of Object.keys(currentLine.hours)) {
 
-          const payload = {
+          // Use '===' comparison for primitive values after initial load normalization
 
-            Description: currentLine.description || "New Timesheet Line",
+          if (String(currentLine.hours[idx]) !== String(initialLine.hours[idx])) {
 
-            ProjId: currentLine.project || "",
+            return true;
 
-            Plc: currentLine.plc || "",
+          }
 
-            PayType: currentLine.payType || "SR",
+        }
 
-            PoNumber: currentLine.poNumber || "",
+      }
 
-            RlseNumber: currentLine.rlseNumber || "0",
+    }
 
-            Resource_Id: String(resourceId),
+    return false;
 
-            WorkOrder: currentLine.wa_Code,
+  }, [lines, initialLines, linesToDelete]);
 
-            Pm_User_Id: currentLine.pmUserID || "",
 
-            PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+ 
 
-            Timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
+  const handleSaveWithReasonPrompt = () => {
 
-            CreatedBy: String(resourceId),
+    const invalidDay = Object.values(dailyTotals).find(val => val > maxDailyHours);
 
-            UpdatedAt: now,
+    if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); return; }
 
-            UpdatedBy: String(resourceId),
 
-            TimesheetHours: periodDates.map((dateInfo, idx) => {
+    const linesToPost = lines.filter((line) => String(line.id).startsWith("temp-"));
 
-              let hourValue = parseFloat(currentLine.hours[idx]);
+    const isOnlyNewLines = linesToPost.length > 0 && lines.length === linesToPost.length && linesToDelete.length === 0;
 
-              if (isNaN(hourValue)) hourValue = 0;
+    
 
-              return { Ts_Date: dateInfo.apiDate, Hours: hourValue };
+    if (grandTotal === 0 && (lines.length > 0 || linesToDelete.length > 0)) { showToast("Cannot save a timesheet with zero hours (unless deleting all lines).", "warning"); return; }
 
-            }),
 
-          };
+    if (hasChangesToExistingData || linesToDelete.length > 0) {
 
-          promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
+      setShowReasonPrompt(true);
 
-        }
+    } else {
 
-        return;
+      // If only new lines are added, or no changes at all, proceed without reason
 
-      }
+      handleSave(""); 
 
+    }
 
-      const isLineChanged =
+  };
 
-        currentLine.payType !== initialLine.payType ||
 
-        currentLine.workOrder !== initialLine.workOrder ||
+ 
+//   const handleSave = async (reason = "") => {
 
-        currentLine.wa_Code !== initialLine.wa_Code ||
+//     setIsCurrentlySaving(true);
 
-        currentLine.description !== initialLine.description;
+//     setShowReasonPrompt(false); // Close prompt modal
 
+//     setUpdateReason(""); // Reset reason field
 
-      if (isLineChanged) {
 
-        const updatePayload = {
+//     const invalidDay = Object.values(dailyTotals).find(val => val > maxDailyHours);
 
-          lineNo: currentLine.id,
+//     if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); setIsCurrentlySaving(false); return; }
 
-          description: currentLine.description,
 
-          projId: currentLine.project,
+//     const promises = [];
 
-          plc: currentLine.plc,
+//     const API_BASE_URL = backendUrl;
 
-          payType: currentLine.payType,
+//     const isOnlyDeletion = lines.length === 0 && linesToDelete.length > 0;
 
-          poNumber: currentLine.poNumber,
 
-          rlseNumber: currentLine.rlseNumber,
+//     if (!isOnlyDeletion && grandTotal === 0) { showToast("Cannot save a timesheet with zero hours.", "warning"); setIsCurrentlySaving(false); return; }
 
-          resource_Id: String(resourceId),
 
-          pm_User_Id: currentLine.pmUserID,
+//     const now = new Date().toISOString();
 
-          poLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+//     const resourceId = timesheetData["Employee ID"];
 
-          rvsnNumber: 0,
 
-          timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
+//     // 1. Deletions
 
-          workOrder: currentLine.wa_Code,
+//     linesToDelete.forEach((id) => {
 
-          updatedAt: now,
+//       if (typeof id === "number" || !String(id).startsWith("temp-")) {
 
-          updatedBy: String(resourceId),
+//         promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}?reason=${encodeURIComponent(reason)}`, { method: "DELETE" })); 
 
-          createdBy: String(resourceId),
+//       }
 
-          createdAt: timesheetDetails?.createdAt || now,
+//     });
 
-          hours: 0,
 
-          status: timesheetData.Status || "OPEN",
+//     // 2. New Lines (POST) / Existing Lines (PUT/Hours Upsert)
 
-        };
+//     lines.forEach((currentLine) => {
 
-        promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${currentLine.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatePayload) }));
+//       const initialLine = initialLines.find((l) => l.id === currentLine.id);
 
-      }
+//       const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
 
 
-      Object.keys(currentLine.hours).forEach((idx) => {
+//       // A. New Line (POST)
 
-        const initialHour = initialLine.hours[idx];
+//       if (!initialLine) {
 
-        const currentHour = currentLine.hours[idx];
+//         if (totalHours > 0) {
 
-        if (initialHour !== currentHour) {
+//           const payload = {
 
-          const hourId = currentLine.hourIds[idx];
+//             Description: currentLine.description || "New Timesheet Line",
 
-          let hourValue = parseFloat(currentHour);
+//             ProjId: currentLine.project || "",
 
-          if (isNaN(hourValue)) hourValue = 0;
+//             Plc: currentLine.plc || "",
 
+//             PayType: currentLine.payType || "SR",
 
-          const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
+//             PoNumber: currentLine.poNumber || "",
 
-          const payload = {
+//             RlseNumber: currentLine.rlseNumber || "0",
 
-            id: hourId || 0,
+//             Resource_Id: String(resourceId),
 
-            ts_Date: periodDates[idx].apiDate,
+//             WorkOrder: currentLine.wa_Code,
 
-            hours: hourValue,
+//             Pm_User_Id: currentLine.pmUserID || "",
 
-            lineNo: currentLine.id,
+//             PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
 
-          };
+//             Timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
 
-          promises.push(fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
+//             CreatedBy: String(resourceId),
 
-        }
+//             UpdatedAt: now,
 
-      });
+//             UpdatedBy: String(resourceId),
 
-    });
+//             UpdateReason: reason, 
 
+//             TimesheetHours: periodDates.map((dateInfo, idx) => {
 
-    if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
+//               let hourValue = parseFloat(currentLine.hours[idx]);
 
+//               if (isNaN(hourValue)) hourValue = 0;
 
-    try {
+//               return { Ts_Date: dateInfo.apiDate, Hours: hourValue };
 
-      const responses = await Promise.all(promises);
+//             }),
 
-      for (const response of responses) {
+//           };
 
-        if (!response.ok) {
+//           promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
 
-          const errorText = await response.text();
+//         }
 
-          throw new Error(`Failed to save changes: ${errorText}`);
+//         return;
 
-        }
+//       }
 
-      }
 
-      showToast("Timesheet saved successfully!", "success");
+//       // B. Existing Line Property Change (PUT)
 
-      onSave();
+//       const isLineChanged =
 
-      setIsCurrentlySaving(false);
+//         currentLine.payType !== initialLine.payType ||
 
-    } catch (error) {
+//         currentLine.workOrder !== initialLine.workOrder ||
 
-      showToast(error.message, "error");
+//         currentLine.wa_Code !== initialLine.wa_Code ||
 
-      console.error("Save error:", error);
+//         currentLine.description !== initialLine.description;
 
-      setIsCurrentlySaving(false);
 
-    }
+//       if (isLineChanged) {
 
-  };
+//         const updatePayload = {
 
+//           lineNo: currentLine.id,
 
-  const isLineDisabled = (line) => {
+//           description: currentLine.description,
 
-    if (!isEditable) return true;
+//           projId: currentLine.project,
 
-    if (timesheetData?.Status?.toUpperCase() === "CORRECTION") return line.isInvoiced === true;
+//           plc: currentLine.plc,
 
-    return false;
+//           payType: currentLine.payType,
 
-  };
+//           poNumber: currentLine.poNumber,
 
+//           rlseNumber: currentLine.rlseNumber,
 
-  if (isLoading) return <div className="text-center p-8">Loading...</div>;
+//           resource_Id: String(resourceId),
 
+//           pm_User_Id: currentLine.pmUserID,
 
-  const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap((item) => (item.resourceDesc || []).map((desc) => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
+//           poLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
 
-  const availableHideableColumns = hideableColumns.filter((col) => col === "PO Remaining Hours" ? isAdmin : true);
+//           rvsnNumber: 0,
 
-  const hiddenCount = Object.entries(hiddenColumns).filter(([key, val]) => val && (key === "PO Remaining Hours" ? isAdmin : true)).length;
+//           timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
 
-  const hiddenColumnsList = Object.entries(hiddenColumns).filter(([col, isHidden]) => isHidden && (col === "PO Remaining Hours" ? isAdmin : true)).map(([col]) => col);
+//           workOrder: currentLine.wa_Code,
 
+//           updatedAt: now,
 
-  return (
+//           updatedBy: String(resourceId),
 
-    <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
+//           createdBy: String(resourceId),
 
-      <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
+//           createdAt: timesheetDetails?.createdAt || now,
 
-        <div className="flex flex-col">
+//           hours: 0,
 
-          {timesheetDetails && (
+//           status: timesheetData.Status || "OPEN",
 
-            <div className="flex gap-4 mt-2 text-sm text-gray-600">
+//           UpdateReason: reason, 
+//         };
 
-              <div><span className="font-medium">Status:</span>   {timesheetData.Status
+//         promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${currentLine.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatePayload) }));
 
-       ? timesheetData.Status.charAt(0).toUpperCase() +
+//       }
 
-         timesheetData.Status.slice(1).toLowerCase()
 
-       : "N/A"}</div>
+//       // C. Existing Hour Change (TimesheetHours upsert)
 
-              <div><span className="font-medium">Date:</span> {timesheetDetails?.timesheet_Date ? formatDate(timesheetDetails.timesheet_Date) : "N/A"}</div>
+//       Object.keys(currentLine.hours).forEach((idx) => {
 
-              <div><span className="font-medium">Approved By:</span> {timesheetDetails?.approvedBy || "N/A"}</div>
+//         const initialHour = initialLine.hours[idx];
 
-              <div><span className="font-medium">Approved Date:</span> {timesheetDetails?.approvedDate ? formatDate(timesheetDetails.approvedDate) : "N/A"}</div>
+//         const currentHour = currentLine.hours[idx];
 
-            </div>
+//         if (String(initialHour) !== String(currentHour)) {
 
-          )}
+//           const hourId = currentLine.hourIds[idx];
 
-        </div>
+//           let hourValue = parseFloat(currentHour);
 
-        {isEditable && (
+//           if (isNaN(hourValue)) hourValue = 0;
 
-          <div className="flex items-center gap-2">
 
-            <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
+//           const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
 
-            <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
+//           const payload = {
 
-            {timesheetData?.Status?.toUpperCase() !== "CORRECTION" && (<ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>)}
+//             id: hourId || 0,
 
-          </div>
+//             ts_Date: periodDates[idx].apiDate,
 
-        )}
+//             hours: hourValue,
 
-      </div>
+//             lineNo: currentLine.id,
 
+// //             UpdateReason: reason, 
 
-      {hiddenCount > 0 && (
+//           };
 
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+//           promises.push(fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
 
-          <div className="flex items-center gap-2"><EyeIcon className="h-4 w-4 text-blue-600" /><span className="text-sm font-medium text-gray-700">{hiddenCount} column{hiddenCount > 1 ? "s" : ""} hidden:</span></div>
+//         }
 
-          <div className="flex gap-2 flex-wrap">
+//       });
 
-            {hiddenColumnsList.map((col) => (
+//     });
 
-              <button key={col} onClick={() => toggleColumnVisibility(col)} className="inline-flex items-center px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-700 transition-colors shadow-sm cursor-pointer">{col}</button>
 
-            ))}
+//     if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
 
-            <button onClick={showAllHiddenColumns} className="inline-flex items-center px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 rounded-full text-xs font-medium transition-colors shadow-sm cursor-pointer">Show All</button>
 
-          </div>
+//     try {
 
-        </div>
+//       const responses = await Promise.all(promises);
 
-      )}
+//       for (const response of responses) {
 
+//         if (!response.ok) {
 
-      <div className="p-4 max-h-[65vh] overflow-auto">
+//           const errorText = await response.text();
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
+//           throw new Error(`Failed to save changes: ${errorText}`);
 
-          <table className="w-full text-sm min-w-[1600px]">
+//         }
 
-            <thead className="bg-slate-100/70 border-b border-gray-200/80 sticky top-0 z-10">
+//       }
 
-              <tr>
+//       showToast("Timesheet saved successfully!", "success");
 
-                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap"></th>
+//       onSave();
 
-                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Line</th>
+//       setIsCurrentlySaving(false);
 
-                {availableHideableColumns.map((col) => !hiddenColumns[col] && (
+//     } catch (error) {
 
-                  <th key={col} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">
+//       showToast(error.message, "error");
 
-                    <div className="flex items-center justify-between gap-2 group">
+//       console.error("Save error:", error);
 
-                      <span>{col}</span>
+//       setIsCurrentlySaving(false);
 
-                      <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col); }} className="p-1 hover:bg-gray-200 rounded-full transition-colors opacity-0 group-hover:opacity-100" title="Hide column" type="button">
+//     }
 
-                        <MinusCircleIcon className="h-4 w-4 text-gray-500 hover:text-gray-800" />
+//   };
 
-                      </button>
+const handleSave = async (reason = "") => {
 
-                    </div>
+    setIsCurrentlySaving(true);
 
-                  </th>
+    setShowReasonPrompt(false); // Close prompt modal
 
-                ))}
+    setUpdateReason(""); // Reset reason field
 
-                {periodDates.map((dateInfo) => (
 
-                  <th key={dateInfo.apiDate} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{dateInfo.display}</th>
+    const invalidDay = Object.values(dailyTotals).find(val => val > maxDailyHours);
 
-                ))}
+    if (invalidDay) { showToast(`Save failed: Total hours for one or more days exceed ${maxDailyHours}.`, "error"); setIsCurrentlySaving(false); return; }
 
-                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Total</th>
 
-              </tr>
+    const promises = [];
 
-            </thead>
+    const API_BASE_URL = backendUrl;
 
-            <tbody className="divide-y divide-gray-200/80 bg-white/50">
+    const isOnlyDeletion = lines.length === 0 && linesToDelete.length > 0;
 
-              {lines.map((line, index) => {
 
-                const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
+    if (!isOnlyDeletion && grandTotal === 0) { showToast("Cannot save a timesheet with zero hours.", "warning"); setIsCurrentlySaving(false); return; }
 
-                const isDisabled = isLineDisabled(line);
 
-                return (
+    const now = new Date().toISOString();
 
-                  <tr key={line.id} className="hover:bg-slate-50/50">
+    const resourceId = timesheetData["Employee ID"];
+  
+    const currentUserName = String(resourceId); 
 
-                    <td className="p-2 text-center">
 
-                      <input type="checkbox" className={`rounded border-gray-300 ${!isEditable ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`} checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} />
+    // 1. Deletions
 
-                    </td>
+    linesToDelete.forEach((id) => {
 
-                    <td className="p-3 text-center text-gray-500">{index + 1}</td>
+      if (typeof id === "number" || !String(id).startsWith("temp-")) {
 
-                    {!hiddenColumns["Work Order"] && (<td className="p-2 min-w-[250px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={(e) => handleSelectChange(line.id, "workOrder", e.target.value)} disabled={isDisabled} /></td>)}
+        promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${id}?reason=${encodeURIComponent(reason)}`, { method: "DELETE" })); 
 
-                    {!hiddenColumns["Description"] && (<td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+      }
 
-                    {!hiddenColumns["Project"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+    });
 
-                    {!hiddenColumns["PLC"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
 
-                    {!hiddenColumns["Pay Type"] && (<td className="p-2 min-w-[120px]"><select value={line.payType} onChange={(e) => handleSelectChange(line.id, "payType", e.target.value)} className={`w-full p-1.5 border border-gray-200 rounded-md ${isDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white text-gray-900"}`} disabled={isDisabled}><option value="SR">  Regular</option><option value="SO">Overtime</option></select></td>)}
+    // 2. New Lines (POST) / Existing Lines (PUT/Hours Upsert)
 
-                    {!hiddenColumns["PO Number"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+    lines.forEach((currentLine) => {
 
-                    {!hiddenColumns["RLSE Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+      const initialLine = initialLines.find((l) => l.id === currentLine.id);
 
-                    {!hiddenColumns["PO Line Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+      const totalHours = Object.values(currentLine.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0);
 
-                    {isAdmin && !hiddenColumns["PO Remaining Hours"] && (<td className="p-2 min-w-[120px]">{line.poLineNumber && remainingPoHours[String(line.poLineNumber).trim()] !== undefined ? (<div className="text-xs font-medium text-center"><span className={`font-semibold ${parseFloat(getRemainingHoursForLine(line)) < 0 ? "text-red-600" : "text-green-600"}`}>{getRemainingHoursForLine(line)} hrs</span></div>) : ( <div className="text-xs font-medium text-center text-gray-400">-</div> )}</td>)}
 
+      // A. New Line (POST)
 
-                    {/* --- DAILY HOURS COLUMN (with Future Date Check) --- */}
+      if (!initialLine) {
 
-                    {periodDates.map((dateInfo, dayIndex) => {
+        if (totalHours > 0) {
 
-                      const dayName = dateInfo.obj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+          const payload = {
 
-                      const isWeekend = configWeekends.includes(dayName);
+            Description: currentLine.description || "New Timesheet Line",
 
+            ProjId: currentLine.project || "",
 
-                      // FUTURE DATE LOGIC (MODIFIED): Compare UTC date parts to avoid millisecond/timezone issues.
-                      // Date is "future" if the year, or (same year AND future month), or (same year/month AND future day)
-                      const isFutureDate = 
-                          dateInfo.obj.getUTCFullYear() > today.getUTCFullYear() ||
-                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() > today.getUTCMonth()) ||
-                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() === today.getUTCMonth() && dateInfo.obj.getUTCDate() > today.getUTCDate());
+            Plc: currentLine.plc || "",
 
-                      // COMBINED DISABILITY
-                      const finalDisabled = isDisabled || isFutureDate;
+            PayType: currentLine.payType || "SR",
 
+            PoNumber: currentLine.poNumber || "",
 
-                      // MAX DAILY HOURS HIGHLIGHT
-                      const dayTotal = dailyTotals[dayIndex] || 0;
-                      const exceededMax = dayTotal > maxDailyHours;
+            RlseNumber: currentLine.rlseNumber || "0",
 
-                      // Conditional styling based on status/config
-                      let inputClasses = `w-20 text-right p-1.5 border rounded-md shadow-sm `;
-                      let inputStyle = {};
+            Resource_Id: String(resourceId),
 
-                      if (exceededMax) {
-                        inputClasses += 'bg-red-200 border-red-500 text-red-800';
-                      } else if (finalDisabled) {
-                        inputClasses += 'bg-gray-100 text-gray-500';
-                      } else if (isWeekend && configHighlightColor) {
-                        inputStyle.backgroundColor = configHighlightColor;
-                        inputClasses += 'text-gray-900';
-                      } else if (isWeekend && !configHighlightColor) {
-                        inputClasses += 'bg-gray-100 text-gray-900';
-                      } else {
-                        inputClasses += 'bg-white text-gray-900';
-                      }
+            WorkOrder: currentLine.wa_Code,
 
-                      if (finalDisabled) {
-                        inputClasses += ' cursor-not-allowed';
-                      }
+            Pm_User_Id: currentLine.pmUserID || "",
 
+            PoLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
 
-                      return (
-                        <td key={dateInfo.apiDate} className="p-2">
-                          <input
-                            type="number"
-                            step="0.5"
-                            // FIX: Conditionally show value if input is disabled and the value is not empty
-                            value={line.hours[dayIndex] === 0 || line.hours[dayIndex] === "" ? "" : line.hours[dayIndex]}
-                            onChange={(e) => handleHourChange(line.id, dayIndex, e.target.value)}
-                            className={inputClasses}
-                            style={inputStyle}
-                            disabled={finalDisabled}
-                          />
-                        </td>
-                      );
-                    })}
+            Timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
 
-                    <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
+            CreatedBy: String(resourceId), // Existing line property payload uses resourceId
 
-                  </tr>
+            UpdatedAt: now,
 
-                );
-              })}
-            </tbody>
+            UpdatedBy: String(resourceId), // Existing line property payload uses resourceId
 
-            <tfoot className="bg-slate-200/80 font-semibold sticky bottom-0">
+            UpdateReason: reason, 
 
-              <tr className="border-t-2 border-gray-300">
+            TimesheetHours: periodDates.map((dateInfo, idx) => {
 
-                <td colSpan={2 + availableHideableColumns.filter((col) => !hiddenColumns[col]).length} className="p-3 text-right text-gray-800">Total Hours</td>
+              let hourValue = parseFloat(currentLine.hours[idx]);
 
-                {periodDates.map((_, idx) => (
+              if (isNaN(hourValue)) hourValue = 0;
 
-                  <td key={idx} className="p-2 text-center">
+              return { Ts_Date: dateInfo.apiDate, Hours: hourValue, CreatedBy: currentUserName, UpdatedBy: currentUserName }; 
 
-                    <div className={`w-20 p-1.5 ${dailyTotals[idx] > maxDailyHours ? 'text-red-600 font-bold' : ''}`}>
+            }),
 
-                      {dailyTotals[idx] ? dailyTotals[idx].toFixed(2) : "0.00"}
+          };
 
-                    </div>
+          promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
 
-                  </td>
+        }
 
-                ))}
+        return;
 
-                <td className="p-3 text-right font-bold text-blue-700 pr-4">{grandTotal.toFixed(2)}</td>
+      }
 
-              </tr>
 
-            </tfoot>
+      // B. Existing Line Property Change (PUT)
 
-          </table>
+      const isLineChanged =
 
-        </div>
+        currentLine.payType !== initialLine.payType ||
 
+        currentLine.workOrder !== initialLine.workOrder ||
 
-      </div>
+        currentLine.wa_Code !== initialLine.wa_Code ||
 
-      <div className="mt-6 flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
+        currentLine.description !== initialLine.description;
 
-        <button onClick={onClose} className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
 
-        {isEditable && (<button onClick={handleSave} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSaving || isCurrentlySaving}>{isCurrentlySaving ? "Saving..." : "Save Changes"}</button>)}
+      if (isLineChanged) {
 
-      </div>
+        const updatePayload = {
 
-    </div>
+          lineNo: currentLine.id,
 
-  );
+          description: currentLine.description,
+
+          projId: currentLine.project,
+
+          plc: currentLine.plc,
+
+          payType: currentLine.payType,
+
+          poNumber: currentLine.poNumber,
+
+          rlseNumber: currentLine.rlseNumber,
+
+          resource_Id: String(resourceId),
+
+          pm_User_Id: currentLine.pmUserID,
+
+          poLineNumber: parseInt(currentLine.poLineNumber, 10) || 0,
+
+          rvsnNumber: 0,
+
+          timesheet_Date: new Date(timesheetData.Date).toISOString().split("T")[0],
+
+          workOrder: currentLine.wa_Code,
+
+          updatedAt: now,
+
+          updatedBy: String(resourceId),
+
+          createdBy: String(resourceId),
+
+          createdAt: timesheetDetails?.createdAt || now,
+
+          hours: 0,
+
+          status: timesheetData.Status || "OPEN",
+
+          UpdateReason: reason, 
+
+        };
+
+        promises.push(fetch(`${API_BASE_URL}/api/SubkTimesheet/${currentLine.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatePayload) }));
+
+      }
+
+
+      // C. Existing Hour Change (TimesheetHours upsert)
+
+      Object.keys(currentLine.hours).forEach((idx) => {
+
+        const initialHour = initialLine.hours[idx];
+
+        const currentHour = currentLine.hours[idx];
+
+        if (String(initialHour) !== String(currentHour)) {
+
+          const hourId = currentLine.hourIds[idx];
+
+          let hourValue = parseFloat(currentHour);
+
+          if (isNaN(hourValue)) hourValue = 0;
+
+
+          const url = `${API_BASE_URL}/api/TimesheetHours/upsert`;
+
+          const payload = {
+
+            id: hourId || 0,
+
+            ts_Date: periodDates[idx].apiDate,
+
+            hours: hourValue,
+
+            lineNo: currentLine.id,
+            CreatedBy: currentUserName, 
+            UpdatedBy: currentUserName, 
+
+
+          };
+
+          promises.push(fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }));
+
+        }
+
+      });
+
+    });
+
+
+    if (promises.length === 0) { showToast("No changes to save.", "info"); setIsCurrentlySaving(false); return; }
+
+
+    try {
+
+      const responses = await Promise.all(promises);
+
+      for (const response of responses) {
+
+        if (!response.ok) {
+
+          const errorText = await response.text();
+
+          throw new Error(`Failed to save changes: ${errorText}`);
+
+        }
+
+      }
+
+      showToast("Timesheet saved successfully!", "success");
+
+      onSave();
+
+      setIsCurrentlySaving(false);
+
+    } catch (error) {
+
+      showToast(error.message, "error");
+
+      console.error("Save error:", error);
+
+      setIsCurrentlySaving(false);
+
+    }
+
+  };
+
+
+  const isLineDisabled = (line) => {
+
+    if (!isEditable) return true;
+
+    if (timesheetData?.Status?.toUpperCase() === "CORRECTION") return line.isInvoiced === true;
+
+    return false;
+
+  };
+
+
+  if (isLoading) return <div className="text-center p-8">Loading...</div>;
+
+
+  const workOrderOptions = Array.from(new Map(purchaseOrderData.flatMap((item) => (item.resourceDesc || []).map((desc) => { const label = `${item.wa_Code} - ${desc}`; return [label, { value: label, label: label }]; }))).values());
+
+  const availableHideableColumns = hideableColumns.filter((col) => col === "PO Remaining Hours" ? isAdmin : true);
+
+  const hiddenCount = Object.entries(hiddenColumns).filter(([key, val]) => val && (key === "PO Remaining Hours" ? isAdmin : true)).length;
+
+  const hiddenColumnsList = Object.entries(hiddenColumns).filter(([col, isHidden]) => isHidden && (col === "PO Remaining Hours" ? isAdmin : true)).map(([col]) => col);
+
+
+  return (
+
+    <div className="bg-white rounded-lg shadow-xl border border-gray-300 overflow-hidden w-full max-w-[90vw]">
+      
+      {showReasonPrompt && ( 
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 z-[10001] flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-2xl w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reason for Timesheet Update</h3>
+{/*             <p className="text-sm text-gray-600 mb-4">Please provide a brief reason for modifying the existing timesheet entries or hours (required for changes to existing data).</p> */}
+            <textarea
+              rows="3"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              value={updateReason}
+              onChange={(e) => setUpdateReason(e.target.value)}
+              placeholder="E.g., Corrected hours for Monday, switched project code."
+            />
+            <div className="mt-4 flex justify-end gap-3">
+              <ActionButton onClick={() => { setShowReasonPrompt(false); setUpdateReason(""); setIsCurrentlySaving(false); }} variant="secondary">Cancel</ActionButton>
+              <ActionButton 
+                onClick={() => handleSave(updateReason)} 
+                variant="primary" 
+                disabled={!updateReason.trim() || isCurrentlySaving}
+              >
+                {isCurrentlySaving ? "Saving..." : "Confirm & Save"}
+              </ActionButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center p-4 border-b border-gray-300 bg-gray-100">
+
+        <div className="flex flex-col">
+
+          {timesheetDetails && (
+
+            <div className="flex gap-4 mt-2 text-sm text-gray-600">
+
+              <div><span className="font-medium">Status:</span>   {timesheetData.Status
+
+       ? timesheetData.Status.charAt(0).toUpperCase() +
+
+         timesheetData.Status.slice(1).toLowerCase()
+
+       : "N/A"}</div>
+
+              <div><span className="font-medium">Date:</span> {timesheetDetails?.timesheet_Date ? formatDate(timesheetDetails.timesheet_Date) : "N/A"}</div>
+
+              <div><span className="font-medium">Approved By:</span> {timesheetDetails?.approvedBy || "N/A"}</div>
+
+              <div><span className="font-medium">Approved Date:</span> {timesheetDetails?.approvedDate ? formatDate(timesheetDetails.approvedDate) : "N/A"}</div>
+
+            </div>
+
+          )}
+
+        </div>
+
+        {isEditable && (
+
+          <div className="flex items-center gap-2">
+
+            <ActionButton onClick={addLine} variant="primary" icon={<PlusIcon />}>Add Line</ActionButton>
+
+            <ActionButton onClick={copyLines} icon={<CopyIcon />}>Copy</ActionButton>
+
+            {timesheetData?.Status?.toUpperCase() !== "CORRECTION" && (<ActionButton onClick={deleteLines} icon={<TrashIcon />}>Delete</ActionButton>)}
+
+          </div>
+
+        )}
+
+      </div>
+
+
+      {hiddenCount > 0 && (
+
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+
+          <div className="flex items-center gap-2"><EyeIcon className="h-4 w-4 text-blue-600" /><span className="text-sm font-medium text-gray-700">{hiddenCount} column{hiddenCount > 1 ? "s" : ""} hidden:</span></div>
+
+          <div className="flex gap-2 flex-wrap">
+
+            {hiddenColumnsList.map((col) => (
+
+              <button key={col} onClick={() => toggleColumnVisibility(col)} className="inline-flex items-center px-2.5 py-1 bg-white hover:bg-blue-100 border border-blue-300 rounded-full text-xs font-medium text-blue-700 transition-colors shadow-sm cursor-pointer">{col}</button>
+
+            ))}
+
+            <button onClick={showAllHiddenColumns} className="inline-flex items-center px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white border border-blue-600 rounded-full text-xs font-medium transition-colors shadow-sm cursor-pointer">Show All</button>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      <div className="p-4 max-h-[65vh] overflow-auto">
+
+        <div className="overflow-x-auto rounded-lg border border-gray-200/80 shadow-sm">
+
+          <table className="w-full text-sm min-w-[1600px]">
+
+            <thead className="bg-slate-100/70 border-b border-gray-200/80 sticky top-0 z-10">
+
+              <tr>
+
+                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap"></th>
+
+                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Line</th>
+
+                {availableHideableColumns.map((col) => !hiddenColumns[col] && (
+
+                  <th key={col} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">
+
+                    <div className="flex items-center justify-between gap-2 group">
+
+                      <span>{col}</span>
+
+                      <button onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col); }} className="p-1 hover:bg-gray-200 rounded-full transition-colors opacity-0 group-hover:opacity-100" title="Hide column" type="button">
+
+                        <MinusCircleIcon className="h-4 w-4 text-gray-500 hover:text-gray-800" />
+
+                      </button>
+
+                    </div>
+
+                  </th>
+
+                ))}
+
+                {periodDates.map((dateInfo) => (
+
+                  <th key={dateInfo.apiDate} className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">{dateInfo.display}</th>
+
+                ))}
+
+                <th className="p-3 text-left font-semibold text-gray-600 whitespace-nowrap">Total</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody className="divide-y divide-gray-200/80 bg-white/50">
+
+              {lines.map((line, index) => {
+
+                const rowTotal = Object.values(line.hours).reduce((s, h) => s + (parseFloat(h) || 0), 0).toFixed(2);
+
+                const isDisabled = isLineDisabled(line);
+
+                return (
+
+                  <tr key={line.id} className="hover:bg-slate-50/50">
+
+                    <td className="p-2 text-center">
+
+                      <input type="checkbox" className={`rounded border-gray-300 ${!isEditable ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`} checked={selectedLines.has(line.id)} onChange={() => handleSelectLine(line.id)} disabled={!isEditable} />
+
+                    </td>
+
+                    <td className="p-3 text-center text-gray-500">{index + 1}</td>
+
+                    {!hiddenColumns["Work Order"] && (<td className="p-2 min-w-[250px]"><CascadingSelect label="Work Order" options={workOrderOptions} value={line.workOrder} onChange={(e) => handleSelectChange(line.id, "workOrder", e.target.value)} disabled={isDisabled} /></td>)}
+
+                    {!hiddenColumns["Description"] && (<td className="p-2 min-w-[200px]"><input type="text" value={line.description} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {!hiddenColumns["Project"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.project} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {!hiddenColumns["PLC"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.plc} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {!hiddenColumns["Pay Type"] && (<td className="p-2 min-w-[120px]"><select value={line.payType} onChange={(e) => handleSelectChange(line.id, "payType", e.target.value)} className={`w-full p-1.5 border border-gray-200 rounded-md ${isDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-white text-gray-900"}`} disabled={isDisabled}><option value="SR">  Regular</option><option value="SO">Overtime</option></select></td>)}
+
+                    {!hiddenColumns["PO Number"] && (<td className="p-2 min-w-[150px]"><input type="text" value={line.poNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {!hiddenColumns["RLSE Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.rlseNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {!hiddenColumns["PO Line Number"] && (<td className="p-2 min-w-[120px]"><input type="text" value={line.poLineNumber} className="w-full bg-gray-100 p-1.5 border border-gray-200 rounded-md text-gray-600" readOnly /></td>)}
+
+                    {isAdmin && !hiddenColumns["PO Remaining Hours"] && (<td className="p-2 min-w-[120px]">{line.poLineNumber && remainingPoHours[String(line.poLineNumber).trim()] !== undefined ? (<div className="text-xs font-medium text-center"><span className={`font-semibold ${parseFloat(getRemainingHoursForLine(line)) < 0 ? "text-red-600" : "text-green-600"}`}>{getRemainingHoursForLine(line)} hrs</span></div>) : ( <div className="text-xs font-medium text-center text-gray-400">-</div> )}</td>)}
+
+
+                    {/* --- DAILY HOURS COLUMN (with Future Date Check) --- */}
+
+                    {periodDates.map((dateInfo, dayIndex) => {
+
+                      const dayName = dateInfo.obj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+
+                      const isWeekend = configWeekends.includes(dayName);
+
+
+                      // FUTURE DATE LOGIC (MODIFIED): Compare UTC date parts to avoid millisecond/timezone issues.
+                      // Date is "future" if the year, or (same year AND future month), or (same year/month AND future day)
+                      const isFutureDate = 
+                          dateInfo.obj.getUTCFullYear() > today.getUTCFullYear() ||
+                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() > today.getUTCMonth()) ||
+                          (dateInfo.obj.getUTCFullYear() === today.getUTCFullYear() && dateInfo.obj.getUTCMonth() === today.getUTCMonth() && dateInfo.obj.getUTCDate() > today.getUTCDate());
+
+                      // COMBINED DISABILITY
+                      const finalDisabled = isDisabled || isFutureDate;
+
+
+                      // MAX DAILY HOURS HIGHLIGHT
+                      const dayTotal = dailyTotals[dayIndex] || 0;
+                      const exceededMax = dayTotal > maxDailyHours;
+
+                      // Conditional styling based on status/config
+//                       let inputClasses = `w-20 text-right p-1.5 border rounded-md shadow-sm `;
+//                       let inputStyle = {};
+
+//                       if (exceededMax) {
+//                         inputClasses += 'bg-red-200 border-red-500 text-red-800';
+//                       } else if (finalDisabled) {
+// //                         inputClasses += 'bg-gray-100 text-gray-500';
+//                         // Disabled styling: Remove previous background class (which was applied if no custom color was set in step 1)
+//                         inputClasses = inputClasses.replace('bg-gray-100', '').replace('bg-white', '');
+//                         
+//                         // If the highlight color was set via inputStyle, it remains. 
+//                         // If not (e.g., config was empty), we apply a default gray class.
+//                         if (!isWeekend || !configHighlightColor) {
+//                           inputClasses += 'bg-gray-100'; // Only apply default gray if it's NOT a custom colored weekend cell
+//                         }
+
+//                         inputClasses += ' text-gray-500'; // Apply muted text color
+//                       } else if (isWeekend && configHighlightColor) {
+//                         inputStyle.backgroundColor = configHighlightColor;
+//                         inputClasses += 'text-gray-900';
+//                       } else if (isWeekend && !configHighlightColor) {
+//                         inputClasses += 'bg-gray-100 text-gray-900';
+//                       } else {
+//                         inputClasses += 'bg-white text-gray-900';
+//                       }
+
+                       let inputClasses = `w-20 text-right p-1.5 border rounded-md shadow-sm `;
+                      let inputStyle = {};
+
+
+                      // 1. Apply Weekend Highlight Color first (Dynamically, via inputStyle)
+                      if (isWeekend && configHighlightColor) {
+                        inputStyle.backgroundColor = configHighlightColor;
+                      } 
+                      
+                      // 2. Determine base background class if not using custom inline style
+                      if (!inputStyle.backgroundColor && isWeekend) {
+                        inputClasses += 'bg-gray-100'; // Default gray for weekends if no color configured
+                      } else if (!inputStyle.backgroundColor) {
+                        inputClasses += 'bg-white';
+                      }
+
+
+                      // 3. Apply Disabled/Max Hours overrides (These must come last)
+
+                      if (exceededMax) {
+                        // Max exceeded styling takes priority
+                        inputStyle.backgroundColor = ''; // Clear custom background style
+                        inputClasses = inputClasses.replace('bg-gray-100', '').replace('bg-white', ''); // Remove base background
+                        inputClasses += 'bg-red-200 border-red-500 text-red-800';
+                      } else if (finalDisabled) {
+                        // Disabled styling (Muted Text/Cursor)
+                        inputClasses = inputClasses.replace('bg-white', ''); // Remove base white background class
+                        
+                        // Only replace existing gray class if we DIDN'T set a custom color
+                        if (isWeekend && configHighlightColor) {
+                          // Custom color is set via inputStyle, do nothing to background class, but mute text
+                          inputClasses = inputClasses.replace('bg-gray-100', ''); 
+                        } else {
+                          // Default gray background for disabled fields (this includes weekends without custom color config)
+                          inputStyle.backgroundColor = ''; // Ensure inline style is cleared if we use the class
+                          inputClasses += 'bg-gray-100';
+                        }
+
+                        inputClasses += ' text-gray-500 cursor-not-allowed';
+                      } else {
+                        // Ensure active fields have standard text color
+                        inputClasses += ' text-gray-900';
+                      }
+
+                      if (finalDisabled) {
+                        inputClasses += ' cursor-not-allowed';
+                      }
+
+
+                      return (
+                        <td key={dateInfo.apiDate} className="p-2">
+                          <input
+                            type="number"
+                            step="0.5"
+                            // FIX: Conditionally show value if input is disabled and the value is not empty
+                            value={line.hours[dayIndex] === 0 || line.hours[dayIndex] === "" ? "" : line.hours[dayIndex]}
+                            onChange={(e) => handleHourChange(line.id, dayIndex, e.target.value)}
+                            className={inputClasses}
+                            style={inputStyle}
+                            disabled={finalDisabled}
+                          />
+                        </td>
+                      );
+                    })}
+
+                    <td className="p-3 text-right font-semibold text-gray-800 pr-4">{rowTotal}</td>
+
+                  </tr>
+
+                );
+              })}
+            </tbody>
+
+            <tfoot className="bg-slate-200/80 font-semibold sticky bottom-0">
+
+              <tr className="border-t-2 border-gray-300">
+
+                <td colSpan={2 + availableHideableColumns.filter((col) => !hiddenColumns[col]).length} className="p-3 text-right text-gray-800">Total Hours</td>
+
+                {periodDates.map((_, idx) => (
+
+                  <td key={idx} className="p-2 text-center">
+
+                    <div className={`w-20 p-1.5 ${dailyTotals[idx] > maxDailyHours ? 'text-red-600 font-bold' : ''}`}>
+
+                      {dailyTotals[idx] ? dailyTotals[idx].toFixed(2) : "0.00"}
+
+                    </div>
+
+                  </td>
+
+                ))}
+
+                <td className="p-3 text-right font-bold text-blue-700 pr-4">{grandTotal.toFixed(2)}</td>
+
+              </tr>
+
+            </tfoot>
+
+          </table>
+
+        </div>
+
+
+      </div>
+
+      <div className="mt-6 flex justify-end gap-3 p-4 border-t border-gray-300 bg-gray-100">
+
+        <button onClick={onClose} className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium">Cancel</button>
+
+      
+
+        {isEditable && (<button onClick={handleSaveWithReasonPrompt} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled={isSaving || isCurrentlySaving}>{isCurrentlySaving ? "Saving..." : "Save Changes"}</button>)}
+
+      </div>
+
+    </div>
+
+  );
 
 }

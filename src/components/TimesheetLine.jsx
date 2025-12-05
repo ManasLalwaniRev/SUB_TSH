@@ -215,7 +215,7 @@ export default function TimesheetLine({
   useEffect(() => {
     const fetchConfig = async () => {
         try {
-            const response = await fetch("https://timesheet-subk-wa-approval-latest.onrender.com/api/ConfigValues");
+            const response = await fetch(`${backendUrl}/api/ConfigValues`);
             if (!response.ok) throw new Error("Failed to fetch config");
             const data = await response.json();
             const periodConfig = data.find(item => item.name?.toLowerCase() === "timesheet_period");
@@ -386,69 +386,138 @@ export default function TimesheetLine({
       }
   }, [selectedPeriod, isEditMode]);
 
-  const handleSelectChange = (id, fieldName, value) => {
-    setLines((currentLines) =>
-      currentLines.map((line) => {
-        if (line.id === id) {
-          const updatedLine = { ...line, [fieldName]: value };
-          if (fieldName === "workOrder") {
-            if (!value) {
-              // FIX 2: Ensure all derived fields are cleared only when Work Order is explicitly cleared
-              updatedLine.description = ""; updatedLine.project = ""; updatedLine.plc = "";
-              updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
-              updatedLine.wa_Code = ""; updatedLine.pmUserID = "";
-              return updatedLine;
-            }
-            // Use safe separator :::
-            const parts = value.split(":::");
-            const waCode = parts[0];
-            // Correctly re-join description parts if they contained the separator
-            const desc = parts.slice(1).join(":::"); 
+//   const handleSelectChange = (id, fieldName, value) => {
+//     setLines((currentLines) =>
+//       currentLines.map((line) => {
+//         if (line.id === id) {
+//           const updatedLine = { ...line, [fieldName]: value };
+//           if (fieldName === "workOrder") {
+//             if (!value) {
+//               // FIX 2: Ensure all derived fields are cleared only when Work Order is explicitly cleared
+//               updatedLine.description = ""; updatedLine.project = ""; updatedLine.plc = "";
+//               updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
+//               updatedLine.wa_Code = ""; updatedLine.pmUserID = "";
+//               return updatedLine;
+//             }
+//             // Use safe separator :::
+//             const parts = value.split(":::");
+//             const waCode = parts[0];
+//             // Correctly re-join description parts if they contained the separator
+//             const desc = parts.slice(1).join(":::"); 
 
-            // Find the corresponding PO data entry
-            const selectedPOEntry = purchaseOrderData.find((item) => {
-                if (item.wa_Code !== waCode) return false;
-                const descIndex = item.resourceDesc.findIndex(d => d === desc || d.trim() === desc.trim());
-                return descIndex > -1;
-            });
+//             // Find the corresponding PO data entry
+//             const selectedPOEntry = purchaseOrderData.find((item) => {
+//                 if (item.wa_Code !== waCode) return false;
+//                 const descIndex = item.resourceDesc.findIndex(d => d === desc || d.trim() === desc.trim());
+//                 return descIndex > -1;
+//             });
 
-            if (selectedPOEntry) {
-              updatedLine.wa_Code = selectedPOEntry.wa_Code;
-              updatedLine.pmUserID = selectedPOEntry.pmUserId || "";
-              
-              const descIndex = selectedPOEntry.resourceDesc.findIndex(d => d === desc || d.trim() === desc.trim());
-              
-              // FIX: Ensure fields are correctly mapped using the found index
-              if (descIndex > -1) {
-                updatedLine.description = selectedPOEntry.resourceDesc[descIndex] || "";
-                updatedLine.project = selectedPOEntry.project[descIndex] || "";
-                updatedLine.plc = selectedPOEntry.plcCd[descIndex] || "";
-                updatedLine.poNumber = selectedPOEntry.purchaseOrder[0] || "";
-                updatedLine.rlseNumber = selectedPOEntry.purchaseOrderRelease[0] || "";
-                updatedLine.poLineNumber = selectedPOEntry.poLineNumber[descIndex] || "";
-              } else {
-                updatedLine.description = desc;
-                // Clear derived fields if description index is missing/failed lookup
-                updatedLine.project = ""; updatedLine.plc = "";
-                updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
-              }
-            } else {
-                // If not found, clear all derived fields except the selected description and waCode
-                updatedLine.description = desc; 
-                updatedLine.project = ""; updatedLine.plc = "";
-                updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
-                updatedLine.wa_Code = waCode; updatedLine.pmUserID = "";
-            }
-          }
-          return updatedLine;
-        }
-        return line;
-      })
-    );
-  };
+//             if (selectedPOEntry) {
+//               updatedLine.wa_Code = selectedPOEntry.wa_Code;
+//               updatedLine.pmUserID = selectedPOEntry.pmUserId || "";
+//               
+//               const descIndex = selectedPOEntry.resourceDesc.findIndex(d => d === desc || d.trim() === desc.trim());
+//               
+//               // FIX: Ensure fields are correctly mapped using the found index
+//               if (descIndex > -1) {
+//                 updatedLine.description = selectedPOEntry.resourceDesc[descIndex] || "";
+//                 updatedLine.project = selectedPOEntry.project[descIndex] || "";
+//                 updatedLine.plc = selectedPOEntry.plcCd[descIndex] || "";
+//                 updatedLine.poNumber = selectedPOEntry.purchaseOrder[0] || "";
+//                 updatedLine.rlseNumber = selectedPOEntry.purchaseOrderRelease[0] || "";
+//                 updatedLine.poLineNumber = selectedPOEntry.poLineNumber[descIndex] || "";
+//               } else {
+//                 updatedLine.description = desc;
+//                 // Clear derived fields if description index is missing/failed lookup
+//                 updatedLine.project = ""; updatedLine.plc = "";
+//                 updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
+//               }
+//             } else {
+//                 // If not found, clear all derived fields except the selected description and waCode
+//                 updatedLine.description = desc; 
+//                 updatedLine.project = ""; updatedLine.plc = "";
+//                 updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
+//                 updatedLine.wa_Code = waCode; updatedLine.pmUserID = "";
+//             }
+//           }
+//           return updatedLine;
+//         }
+//         return line;
+//       })
+//     );
+//   };
 
   // --- IMMEDIATE VALIDATION LOGIC ---
-  const handleHourChange = (id, dayIndex, value) => {
+  
+const handleSelectChange = (id, fieldName, value) => {
+    setLines((currentLines) =>
+        currentLines.map((line) => {
+            if (line.id === id) {
+                const updatedLine = { ...line, [fieldName]: value };
+                
+                if (fieldName === "workOrder") {
+                    if (!value) {
+                        // Clear all derived fields if Work Order is cleared
+                        updatedLine.description = ""; updatedLine.project = ""; updatedLine.plc = "";
+                        updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
+                        updatedLine.wa_Code = ""; updatedLine.pmUserID = "";
+                        return updatedLine;
+                    }
+
+                    // 1. Robustly parse the value using the safe separator ':::'
+                    const parts = value.split(":::");
+                    const waCode = parts[0];
+                    // The rest is the description, correctly re-joined in case it contained ':::'
+                    const desc = parts.slice(1).join(":::"); 
+                    
+                    let selectedPOEntry = null;
+                    let descIndex = -1;
+
+                    // 2. Use explicit loop to find the exact PO data entry and the correct index
+                    for (const item of purchaseOrderData) {
+                        if (item.wa_Code === waCode) {
+                            // Find the precise index of the description within this PO entry
+                            const foundIndex = item.resourceDesc.findIndex(d => d === desc);
+                            if (foundIndex > -1) {
+                                selectedPOEntry = item;
+                                descIndex = foundIndex;
+                                break; // Found the match, stop searching
+                            }
+                        }
+                    }
+
+                    if (selectedPOEntry) {
+                        // 3. Map all derived fields using the discovered PO entry and index
+                        updatedLine.wa_Code = selectedPOEntry.wa_Code;
+                        updatedLine.pmUserID = selectedPOEntry.pmUserId || "";
+                        updatedLine.description = selectedPOEntry.resourceDesc[descIndex] || "";
+                        updatedLine.project = selectedPOEntry.project[descIndex] || "";
+                        updatedLine.plc = selectedPOEntry.plcCd[descIndex] || "";
+                        
+                        // PO/RLSE numbers are usually at index 0 for the parent PO entry
+                        updatedLine.poNumber = selectedPOEntry.purchaseOrder[0] || ""; 
+                        updatedLine.rlseNumber = selectedPOEntry.purchaseOrderRelease[0] || "";
+                        
+                        // The critical PO Line Number must use the correct index
+                        updatedLine.poLineNumber = selectedPOEntry.poLineNumber[descIndex] || "";
+                    } else {
+                        // 4. If no match is found (shouldn't happen if workOrderOptions is correct), clear the associated details
+                        console.warn(`Could not find matching PO details for value: ${value}`);
+                        updatedLine.description = desc; // Keep the selected description for context
+                        updatedLine.project = ""; updatedLine.plc = "";
+                        updatedLine.poNumber = ""; updatedLine.rlseNumber = ""; updatedLine.poLineNumber = "";
+                        updatedLine.wa_Code = waCode; updatedLine.pmUserID = "";
+                    }
+                }
+                return updatedLine;
+            }
+            return line;
+        })
+    );
+};
+
+
+const handleHourChange = (id, dayIndex, value) => {
     const cellKey = `${id}-${dayIndex}`;
     const currentLine = lines.find((line) => line.id === id);
     

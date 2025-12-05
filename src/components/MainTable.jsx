@@ -802,6 +802,7 @@ export default function MainTable() {
     "Hours",
     "Approver",
     "Approved Date",
+    "Comment",
     "Created Date",
   ];
 
@@ -996,6 +997,7 @@ const getStatusStyle = (status) => {
             "Approved Date": item.approvedDate
               ? formatDate(item.approvedDate)
               : " ",
+              "Comment": item.comment || "",
             "Created Date": item.createdAt ? formatDate(item.createdAt) : " ",
             allTimesheets: [item],
           });
