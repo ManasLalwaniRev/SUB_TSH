@@ -13,8 +13,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
 import TimesheetApprovalModal from "./TimesheetApprovalModal";
 import { backendUrl } from "./config";
-import TimesheetHistoryTable from "./TimesheetHistoryTable";
-import TimesheetRevisionTable from "./TimesheetRevisionTable";
+// import TimesheetHistoryTable from "./TimesheetHistoryTable";
+// import TimesheetRevisionTable from "./TimesheetRevisionTable";
 
 const showToast = (message, type = "info") => {
   const bgColor =
@@ -2241,7 +2241,7 @@ const [showRevision, setShowRevision] = useState(false);
   </div>
 )}
 
-{showHistory && (
+{/* {showHistory && (
   <TimesheetHistoryTable
     timesheetDate={selectedTimesheetDate}
     onClose={() => setShowHistory(false)}
@@ -2253,7 +2253,7 @@ const [showRevision, setShowRevision] = useState(false);
     timesheetDate={selectedTimesheetDate}
     onClose={() => setShowRevision(false)}
   />
-)}  
+)}   */}
 
 
           {selectedResourceId && (
