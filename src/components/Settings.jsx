@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -864,87 +865,65 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
                   </div>
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <Users className="h-4 w-4 text-purple-600 mr-3" />
-                    <h2 className="text-l font-semibold text-gray-900">
-                      Configure Workflow
-                      {/* {(workflowPM !== originalValues.workflowPM ||
-                      workflowSupervisor !==
-                        originalValues.workflowSupervisor) && (
-                      <span className="ml-2 text-sm text-orange-600 font-semibold">
-                        (Modified)
-                      </span>
-                    )} */}
-                    </h2>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="space-y-2">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-4">
-                          Select Workflow Roles
-                        </label>
-
-                        <div className="space-y-3">
-                          {/* PM Checkbox */}
-                          <div className="flex items-center">
-                            <input
-                              id="workflow-pm"
-                              type="checkbox"
-                              checked={workflowPM}
-                              onChange={(e) => setWorkflowPM(e.target.checked)}
-                              disabled={loading}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <label
-                              htmlFor="workflow-pm"
-                              className="ml-3 text-sm font-medium text-gray-700"
-                            >
-                              Project Manager (PM)
-                              {/* {workflowPM !== originalValues.workflowPM && (
-                              <span className="ml-2 text-xs text-orange-600 font-semibold">
-                                (Changed)
-                              </span>
-                            )} */}
-                            </label>
-                          </div>
-
-                          {/* Supervisor Checkbox */}
-                          <div className="flex items-center">
-                            <input
-                              id="workflow-supervisor"
-                              type="checkbox"
-                              checked={workflowSupervisor}
-                              onChange={(e) =>
-                                setWorkflowSupervisor(e.target.checked)
-                              }
-                              disabled={loading}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <label
-                              htmlFor="workflow-supervisor"
-                              className="ml-3 text-sm font-medium text-gray-700"
-                            >
-                              Supervisor
-                              {/* {workflowSupervisor !==
-                              originalValues.workflowSupervisor && (
-                              <span className="ml-2 text-xs text-orange-600 font-semibold">
-                                (Changed)
-                              </span>
-                            )} */}
-                            </label>
-                          </div>
-                        </div>
-
-                        <p className="mt-3 text-xs text-gray-500">
-                          Select the roles that should be included in the
-                          workflow process
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                                            <div className="flex-1"> 
+                     {/* Configure colour for weekend */}
+                               <div>
+  <div className="flex items-center mb-2">
+    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
+    <h2 className="text-l font-semibold text-gray-900">Configure Colour for Weekend</h2>
+  </div>
+  
+  <div className="bg-gray-50 rounded-lg p-6 space-y-6">
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Weekend Colour
+        {weekendHighlightColor !== originalValues.weekendHighlightColor && (
+          <span className="ml-2 text-xs text-blue-600 font-semibold">(Modified)</span>
+        )}
+      </label>
+      
+      <div className="flex items-center space-x-4">
+        {/* Color Preview */}
+        <div className={`w-12 h-12 rounded-lg border-2 shadow-sm ${weekendHighlightColor !== originalValues.weekendHighlightColor ? 'ring-2 ring-blue-500 ring-offset-2' : 'border-gray-300'}`} 
+             style={{ backgroundColor: weekendHighlightColor }}>
+        </div>
+        
+        {/* Color Input */}
+        <input
+          type="color"
+          value={weekendHighlightColor}
+          onChange={(e) => setWeekendHighlightColor(e.target.value)}
+          className="w-12 h-12 rounded-lg border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer shadow-sm"
+          disabled={loading}
+          title="Click to change weekend highlight color"
+        />
+        
+        {/* Hex Value */}
+        <input
+          type="text"
+          value={weekendHighlightColor}
+          onChange={(e) => {
+            const hex = e.target.value.replace(/[^#a-fA-F0-9]/g, '');
+            if (hex) setWeekendHighlightColor(hex);
+          }}
+          className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent w-24 font-mono text-sm ${
+            weekendHighlightColor !== originalValues.weekendHighlightColor
+              ? "border-blue-500 focus:ring-blue-500"
+              : "border-gray-300 focus:ring-blue-500"
+          }`}
+          placeholder="#ef4444"
+          disabled={loading}
+        />
+      </div>
+      
+      <p className="mt-2 text-xs text-gray-500">
+        Color used to highlight weekend days in timesheets
+      </p>
+    </div>
+  </div>
+</div>
+</div>
+                
               </div>
 
               <div className="flex gap-6 w-full">
@@ -1318,7 +1297,7 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
         </span>
       </label>
       <p className="mt-2 text-xs text-gray-500 ml-7">
-        Prevent editing after timesheet submission
+        Prevent enter hours beyond the maximum limit
       </p>
     </div>
   </div>
@@ -1328,64 +1307,7 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
               {/* Configure Workflow Section */}
                <div className="flex gap-6 w-full">
                 {/* Configure Timesheet Period Section */}
-                <div className="flex-1"> 
-                     {/* Configure colour for weekend */}
-                               <div>
-  <div className="flex items-center mb-2">
-    <SettingsIcon className="h-4 w-4 text-blue-600 mr-3" />
-    <h2 className="text-l font-semibold text-gray-900">Configure Colour for Weekend</h2>
-  </div>
-  
-  <div className="bg-gray-50 rounded-lg p-6 space-y-6">
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Weekend Colour
-        {weekendHighlightColor !== originalValues.weekendHighlightColor && (
-          <span className="ml-2 text-xs text-blue-600 font-semibold">(Modified)</span>
-        )}
-      </label>
-      
-      <div className="flex items-center space-x-4">
-        {/* Color Preview */}
-        <div className={`w-12 h-12 rounded-lg border-2 shadow-sm ${weekendHighlightColor !== originalValues.weekendHighlightColor ? 'ring-2 ring-blue-500 ring-offset-2' : 'border-gray-300'}`} 
-             style={{ backgroundColor: weekendHighlightColor }}>
-        </div>
-        
-        {/* Color Input */}
-        <input
-          type="color"
-          value={weekendHighlightColor}
-          onChange={(e) => setWeekendHighlightColor(e.target.value)}
-          className="w-12 h-12 rounded-lg border border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer shadow-sm"
-          disabled={loading}
-          title="Click to change weekend highlight color"
-        />
-        
-        {/* Hex Value */}
-        <input
-          type="text"
-          value={weekendHighlightColor}
-          onChange={(e) => {
-            const hex = e.target.value.replace(/[^#a-fA-F0-9]/g, '');
-            if (hex) setWeekendHighlightColor(hex);
-          }}
-          className={`px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent w-24 font-mono text-sm ${
-            weekendHighlightColor !== originalValues.weekendHighlightColor
-              ? "border-blue-500 focus:ring-blue-500"
-              : "border-gray-300 focus:ring-blue-500"
-          }`}
-          placeholder="#ef4444"
-          disabled={loading}
-        />
-      </div>
-      
-      <p className="mt-2 text-xs text-gray-500">
-        Color used to highlight weekend days in timesheets
-      </p>
-    </div>
-  </div>
-</div>
-</div>
+
 </div>
 
               {/* Save Button - Common for both sections */}
