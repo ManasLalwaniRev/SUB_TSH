@@ -67,6 +67,8 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
+
+
 export default function GroupsTable() {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
@@ -83,6 +85,7 @@ export default function GroupsTable() {
   const [importLoading, setImportLoading] = useState(false);
   const [userLoading, setUserLoading] = useState(false);
   const [selectedUserFile, setSelectedUserFile] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const poInfoFileInputRef = useRef(null);
   const vendorMasterFileInputRef = useRef(null);
@@ -152,20 +155,6 @@ export default function GroupsTable() {
     setUserLoaded(false);
     navigate("/");
   };
-
-  const processedRows = rows.filter((row) => {
-    return (
-      (row["Purchase Order"] || "")
-        .toLowerCase()
-        .includes(searchPO.trim().toLowerCase()) &&
-      (row["Resource ID"] || "")
-        .toLowerCase()
-        .includes(searchResourceId.trim().toLowerCase()) &&
-      (row["Resource Name"] || "")
-        .toLowerCase()
-        .includes(searchResourceName.trim().toLowerCase())
-    );
-  });
 
 const handleExportExcel = () => {
   if (!processedRows.length) {
@@ -439,6 +428,76 @@ const handleExportExcel = () => {
     URL.revokeObjectURL(url);
   }
 
+ // 1) keep your processedRows as-is
+const processedRows = rows.filter((row) => {
+  return (
+    (row["Purchase Order"] || "")
+      .toLowerCase()
+      .includes(searchPO.trim().toLowerCase()) &&
+    (row["Resource ID"] || "")
+      .toLowerCase()
+      .includes(searchResourceId.trim().toLowerCase()) &&
+    (row["Resource Name"] || "")
+      .toLowerCase()
+      .includes(searchResourceName.trim().toLowerCase())
+  );
+});
+
+const getSortIcon = (columnKey) => {
+  if (columnKey === "Select") return null;
+  if (sortConfig.key === columnKey) {
+    return sortConfig.direction === "asc" ? " ↑" : " ↓";
+  }
+  return " ⇅";
+};
+
+// 2) new getSortedRows – NO getFilteredRows reference
+const getSortedRows = () => {
+  const filtered = [...processedRows]; // clone
+
+  if (sortConfig.key && sortConfig.key !== "Select") {
+    filtered.sort((a, b) => {
+      const aRaw = a[sortConfig.key];
+      const bRaw = b[sortConfig.key];
+
+      // numeric first (for Hourly Rate etc.)
+      const aNum = parseFloat(String(aRaw).replace(/[^0-9.-]/g, ""));
+      const bNum = parseFloat(String(bRaw).replace(/[^0-9.-]/g, ""));
+      const bothNumeric = !isNaN(aNum) && !isNaN(bNum);
+
+      let cmp;
+      if (bothNumeric) {
+        cmp = aNum === bNum ? 0 : aNum < bNum ? -1 : 1;
+      } else {
+        const aVal = String(aRaw ?? "").toLowerCase();
+        const bVal = String(bRaw ?? "").toLowerCase();
+        cmp = aVal === bVal ? 0 : aVal < bVal ? -1 : 1;
+      }
+
+      return sortConfig.direction === "asc" ? cmp : -cmp;
+    });
+  }
+
+  return filtered;
+};
+
+// 3) keep handleSort like this
+const handleSort = (key) => {
+  if (key === "Select") return;
+  setSortConfig((prev) => {
+    if (prev.key === key) {
+      return { key, direction: prev.direction === "asc" ? "desc" : "asc" };
+    }
+    return { key, direction: "asc" };
+  });
+};
+
+// 4) use in render
+const sortedRows = getSortedRows();
+
+
+
+
   return (
     <div className="min-h-screen bg-grey-200 flex flex-col pr-4 mx-auto">
       <div className="flex-1 flex flex-col items-center justify-start pt-8 pb-8 px-6 py-4">
@@ -532,14 +591,27 @@ const handleExportExcel = () => {
                 <table className="w-full text-xs border-collapse">
                   <thead className="sticky top-0 bg-blue-50">
                     <tr>
-                      {groupColumns.map((col) => (
+                      {/* {groupColumns.map((col) => (
                         <th
                           key={col}
                           className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-blue-50 cursor-pointer select-none"
+                          onClick={() => handleSort(col)}
                         >
-                          <span>{col}</span>
+                          <span>{col}
+                            {getSortIcon(col)}
+                          </span>
                         </th>
-                      ))}
+                        
+                      ))} */}
+                      {groupColumns.map((col) => (
+  <th
+    key={col}
+    className="border p-2 font-bold text-blue-800 text-center whitespace-nowrap bg-blue-50 cursor-pointer select-none"
+    onClick={() => handleSort(col)}
+  >
+    {col} {getSortIcon(col)}
+  </th>
+))}
                     </tr>
                   </thead>
 
@@ -553,8 +625,8 @@ const handleExportExcel = () => {
                           Loading...
                         </td>
                       </tr>
-                    ) : processedRows.length > 0 ? (
-                      processedRows.map((row) => (
+                    ) : sortedRows.length > 0 ? (
+                      sortedRows.map((row) => (
                         <tr key={row.id} className="bg-white hover:bg-gray-50">
                           {groupColumns.map((col) => (
                             <td
