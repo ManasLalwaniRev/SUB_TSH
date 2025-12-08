@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import InvoiceViewer from "./InvoiceViewer";
@@ -8,7 +9,33 @@ import jsPDF from "jspdf";
 import logoImg from "../assets/image.png";
 import { backendUrl } from "./config";
 
+const showToast = (message, type = "info") => {
+  const bgColor =
+    type === "success"
+      ? "#4ade80"
+      : type === "error"
+      ? "#ef4444"
+      : type === "warning"
+      ? "#f59e0b"
+      : "#3b82f6";
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  toast.style.cssText = `
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    background: ${bgColor}; color: white; padding: 12px 16px;
+    border-radius: 6px; font-size: 14px; max-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s ease;
+    `;
+  document.body.appendChild(toast);
+  const displayTime = 3000;
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => document.body.removeChild(toast), 300);
+  }, displayTime);
+};
+
 export default function InvoiceExport() {
+  const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [filteredInvoices, setFilteredInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +49,8 @@ export default function InvoiceExport() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [exportCount, setExportCount] = useState(0);
+  const [userLoaded,setUserLoaded] = useState(false)
 
   // Table dimensions matching ExportTable
   const colWidth = 120;
@@ -139,41 +168,80 @@ export default function InvoiceExport() {
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
     if (checked) {
-      // Only select invoices that are not exported (isExported: false)
-      const allSelectableIds = new Set(
-        selectableInvoices.map(
+      // Select ALL invoices (both exported and non-exported)
+      const allIds = new Set(
+        filteredInvoices.map(
           (invoice, index) =>
-            invoice.invoiceId || filteredInvoices.indexOf(invoice)
+            invoice.invoiceId || invoice.id || filteredInvoices.indexOf(invoice)
         )
       );
-      setSelectedInvoices(allSelectableIds);
+      setSelectedInvoices(allIds);
+      // Update export count to only count non-exported ones
+      const nonExportedCount = filteredInvoices.filter(inv => !inv.isExported).length;
+      setExportCount(nonExportedCount);
     } else {
       setSelectedInvoices(new Set());
+      setExportCount(0);
     }
   };
 
   // Handle individual checkbox
+  // const handleSelectInvoice = (invoiceId, checked, invoice) => {
+  //   // Prevent selection if invoice is exported
+  //   if (invoice && invoice.isExported) return;
+  //   setSelectedInvoices((prev) => {
+  //     const newSelected = new Set(prev);
+  //     if (checked) {
+  //       newSelected.add(invoiceId);
+  //     } else {
+  //       newSelected.delete(invoiceId);
+  //     }
+  //     // Update select all state - check if all selectable invoices are selected
+  //     const allSelectableSelected =
+  //       selectableInvoices.length > 0 &&
+  //       selectableInvoices.every((inv) => {
+  //         const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+  //         return newSelected.has(id);
+  //       });
+  //     setSelectAll(allSelectableSelected);
+  //     return newSelected;
+  //   });
+  // };
+
+
+  // Handle individual checkbox - allow selection of all invoices
+  // but only count non-exported ones for the export button
   const handleSelectInvoice = (invoiceId, checked, invoice) => {
-    // Prevent selection if invoice is exported
-    if (invoice && invoice.isExported) return;
     setSelectedInvoices((prev) => {
       const newSelected = new Set(prev);
-      if (checked) {
-        newSelected.add(invoiceId);
-      } else {
-        newSelected.delete(invoiceId);
-      }
-      // Update select all state - check if all selectable invoices are selected
+
+      if (checked) newSelected.add(invoiceId);
+      else newSelected.delete(invoiceId);
+
+      // Export count: only count non-exported invoices in the selection
+      const nonExportedCount = Array.from(newSelected).filter((id) => {
+        const inv = filteredInvoices.find(
+          (x) => (x.invoiceId || x.id) === id
+        );
+        return inv && !inv.isExported;
+      }).length;
+
+      setExportCount(nonExportedCount);
+
+      // Check if all selectable (non-exported) invoices are selected
       const allSelectableSelected =
         selectableInvoices.length > 0 &&
         selectableInvoices.every((inv) => {
-          const id = inv.invoiceId || filteredInvoices.indexOf(inv);
+          const id = inv.invoiceId || inv.id || filteredInvoices.indexOf(inv);
           return newSelected.has(id);
         });
       setSelectAll(allSelectableSelected);
+
       return newSelected;
     });
   };
+
+
 
   // Handle unexport (reopen) invoice - only for admin
   const handleUnexport = async (invoice) => {
@@ -1089,21 +1157,21 @@ export default function InvoiceExport() {
             </button>
 
             {/* Export Button */}
-            {/* Export Button */}
             <button
               onClick={exportToCSV}
-              disabled={selectedInvoices.size === 0 || isExporting}
+              disabled={exportCount === 0 || isExporting}
               data-export-button
               className={`flex items-center px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm text-sm ${
-                selectedInvoices.size === 0 || isExporting
+                exportCount === 0 || isExporting
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
+              title={exportCount === 0 ? "Select invoices to export (exported invoices can only be downloaded)" : ""}
             >
               <FileDown className="h-4 w-4 mr-2" />
               {isExporting
                 ? "Exporting..."
-                : `Export (${selectedInvoices.size})`}
+                : `Export (${exportCount})`}
             </button>
           </div>
         </div>
@@ -1208,7 +1276,7 @@ export default function InvoiceExport() {
                           type="checkbox"
                           checked={selectAll}
                           onChange={(e) => handleSelectAll(e.target.checked)}
-                          disabled={selectableInvoices.length === 0}
+                          disabled={filteredInvoices.length === 0}
                           className="cursor-pointer"
                         />
                         <span
@@ -1411,12 +1479,8 @@ export default function InvoiceExport() {
                                 invoice
                               )
                             }
-                            disabled={invoice.isExported}
-                            className={`cursor-pointer ${
-                              invoice.isExported
-                                ? "opacity-50 cursor-not-allowed"
-                                : ""
-                            }`}
+                            className="cursor-pointer"
+                            title={invoice.isExported ? "This invoice is exported. Downloads only." : ""}
                           />
                         </td>
                         <td

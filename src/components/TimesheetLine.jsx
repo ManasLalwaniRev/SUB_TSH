@@ -616,7 +616,7 @@ const handleHourChange = (id, dayIndex, value) => {
                 exceedsMaxDailyHours = true;
                 // Hard Block if Max Daily Hours is exceeded
                 isValid = false;
-                const maxDailyError = `Hard Block: Daily total (${newColumnTotal.toFixed(1)} hrs) exceeds the maximum limit of ${maxDailyHours} hours.`;
+                const maxDailyError = `Daily total (${newColumnTotal.toFixed(1)} hrs) exceeds the maximum limit of ${maxDailyHours} hours.`;
                 
                 // Set the overall toast message to the hard error, 
                 // appending previous PO warning if it existed and was overridden by the Max Daily check.
@@ -652,11 +652,12 @@ const handleHourChange = (id, dayIndex, value) => {
         // Input blocked (Max Daily exceeded, hardEdit false PO limit exceeded, or base validation failure)
         
         // Revert to the old value
-        setLines((currentLines) =>
-            currentLines.map((line) =>
-            line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: currentLine.hours[dayIndex] } } : line
-            )
-        );
+//         setLines((currentLines) =>
+//             currentLines.map((line) =>
+//             line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: currentLine.hours[dayIndex] } } : line
+//             )
+//         );
+         setLines((currentLines) => currentLines.map((line) => line.id === id ? currentLine : line));
         
         // If the error was NOT due to exceeding maxDaily, make sure to clear highlight
         if (!exceedsMaxDailyHours) {
@@ -842,8 +843,19 @@ const handleHourChange = (id, dayIndex, value) => {
     return Array.from(uniqueOptions.values());
   }, [purchaseOrderData]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+
+const today = useMemo(() => {
+    const d = new Date();
+    // Get the current UTC date components
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+    const date = d.getUTCDate();
+    
+    // Create a new Date object representing the start of the current UTC calendar day
+    return new Date(Date.UTC(year, month, date));
+}, []);
 
   // Only show PO Remaining Hours column if isAdmin is true AND it's not hidden
   const availableHideableColumns = hideableColumns.filter(col => col === "PO Remaining Hours" ? isAdmin : true);

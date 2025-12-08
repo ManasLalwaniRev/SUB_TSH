@@ -640,6 +640,7 @@ import {
   CheckCircle,
   BadgeCheck,
   Signal,
+  FileText 
 } from "lucide-react";
 
 // Individual Sidebar Item Component for cleaner code
@@ -822,14 +823,27 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           {(isAdmin || isPM || isUser) && (
             <SidebarItem
               icon={<Users className="h-5 w-5" />}
-              text={isUser ? "User Profile" : "Users"}
+              text={isAdmin ? "Users" : "User Profile"}
               to="/dashboard/users"
               selectedPage={pathname}
               handleLinkClick={handleLinkClick}
               isCollapsed={!sidebarOpen}
             />
           )}
+
+          {(isAdmin) && (
+            <SidebarItem
+              icon={<FileText  className="h-5 w-5" />}
+              text= "Reports"
+              to="/dashboard/reports"
+              selectedPage={pathname}
+              handleLinkClick={handleLinkClick}
+              isCollapsed={!sidebarOpen}
+            />
+          )}
         </div>
+
+
 
         <div className="pt-2 mt-auto border-t border-green-200">
           {/* <div

@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "./datepicker.css";
+import * as XLSX from 'xlsx';
 import { CheckSquare } from "lucide-react";
 import { backendUrl } from "./config";
 
@@ -44,8 +45,8 @@ const groupColumns = [
   "PLC Desc",
   "Email ID",
   "Project",
-  "PM USER_ID",
-  "PM NAME",
+  "PM User_Id",
+  "PM Name",
   "Vendor ID",
   "Vendor Name",
   "Hourly Rate",
@@ -127,8 +128,8 @@ export default function GroupsTable() {
             "PLC Desc": item.plcDesc || "",
             "Email ID": item.emailId || "",
             Project: item.project || "",
-            "PM USER_ID": item.pmUserId || "",
-            "PM NAME": item.pmName || "",
+            "PM User_Id": item.pmUserId || "",
+            "PM Name": item.pmName || "",
             "Vendor ID": item.vendorId || "",
             "Vendor Name": item.vendorName || "",
             "Hourly Rate": formatCurrency(item.hourlyRate),
@@ -165,6 +166,36 @@ export default function GroupsTable() {
         .includes(searchResourceName.trim().toLowerCase())
     );
   });
+
+const handleExportExcel = () => {
+  if (!processedRows.length) {
+    showToast("No data to export", "warning");
+    return;
+  }
+
+  const headers = groupColumns;
+  
+  // Create worksheet data with headers
+  const wsData = [headers, ...processedRows.map((row) =>
+    headers.map((header) => row[header] ?? "")
+  )];
+
+  // Create workbook and worksheet
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Groups");
+
+  // Set column widths for better readability
+  ws['!cols'] = headers.map(() => ({ wch: 20 }));
+
+  // Download the file
+  const filename = `groups_${Date.now()}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  
+  showToast("Excel file exported successfully", "success");
+};
+
+
 
   const handleImportPOInfo = async (e) => {
     e.preventDefault();
@@ -485,6 +516,15 @@ export default function GroupsTable() {
               >
                 {userLoading ? "Processing..." : "Import-Vendor-Master"}
               </button>
+
+              {/* export button */}
+              <button
+  type="button"
+  onClick={handleExportExcel}
+  className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+>
+  Export Excel
+</button>
             </div>
 
             <div className="relative">

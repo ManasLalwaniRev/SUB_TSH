@@ -1557,7 +1557,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 
 import { backendUrl } from "./config.jsx";
-import { comment } from "postcss";
 
 
 // --- SVG Icons ---
@@ -1897,13 +1896,24 @@ export default function TimesheetDetailModal({
 
   // Global 'today' variable for future date check, set to midnight UTC
   // We keep this as UTC midnight for correct date part comparison.
-  const today = useMemo(() => {
+//   const today = useMemo(() => {
 
+//     const d = new Date();
+
+//     return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+
+//   }, []);
+
+const today = useMemo(() => {
     const d = new Date();
-
-    return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-
-  }, []);
+    // Get the current UTC date components
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+    const date = d.getUTCDate();
+    
+    // Create a new Date object representing the start of the current UTC calendar day
+    return new Date(Date.UTC(year, month, date));
+}, []);
 
 
   // 1. Fetch Config (Updated)
@@ -2258,176 +2268,542 @@ export default function TimesheetDetailModal({
 
   // --- UPDATED handleHourChange ---
 
-  const handleHourChange = (id, dayIndex, value) => {
+//   const handleHourChange = (id, dayIndex, value) => {
 
+//     // FIX: Preserve current value as empty string or 0 in state if input is empty
+
+//     if (value === "") {
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+
+//       return;
+
+//     }
+
+
+//     const numValue = parseFloat(value);
+
+//     let isValid = true;
+
+//     let toastMessage = "";
+
+//     let toastType = "warning";
+
+//     let isPOExceeded = false;
+
+//     let isMaxDailyExceeded = false;
+
+
+
+//     // VALIDATION 1: Basic hour constraints (0-24, 0.5 increments)
+
+// //     if (isNaN(numValue) || numValue < 0 || numValue > 24) {
+
+// //       isValid = false;
+
+// //       toastMessage = "Hours must be between 0 and 24.";
+
+// //     } else if (numValue % 0.5 !== 0) {
+
+// //       isValid = false;
+
+// //       toastMessage = "Hours must be in 0.5 increments.";
+
+// //     }
+
+// if (isNaN(numValue)) { // Still check if it's a number
+//       isValid = false;
+//       toastMessage = "Invalid hour value."; // Updated message
+//     } else if (numValue < 0) { // Still check for negative hours
+//       isValid = false;
+//       toastMessage = "Hours cannot be negative."; // Updated message
+//     } else if (numValue % 0.5 !== 0) {
+//       isValid = false;
+//       toastMessage = "Hours must be in 0.5 increments.";
+//     }
+
+
+//     if (isValid) {
+
+//       // VALIDATION 2: Max Daily Hours (Configurable)
+
+//       const otherLinesTotal = lines
+
+//         .filter((line) => line.id !== id)
+
+//         .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+
+
+//       if (otherLinesTotal + numValue > maxDailyHours) {
+
+//         isMaxDailyExceeded = true;
+
+//         toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+
+//       }
+
+//     }
+
+
+//     if (isValid) {
+
+//       // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
+
+//       const currentLine = lines.find((line) => line.id === id);
+
+//       if (currentLine && currentLine.poLineNumber) {
+
+//         const poLineNumber = String(currentLine.poLineNumber).trim();
+
+//         const remainingHours = remainingPoHours[poLineNumber];
+
+
+//         if (remainingHours !== undefined) {
+
+//           // Calculate the NEW hours being *added* across ALL lines for this PO
+
+
+//           // Create a temporary view of the lines with the new value applied
+
+//           const tempLines = lines.map(line =>
+
+//             line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+
+//           );
+
+
+//           const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
+
+
+//           const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+
+//             const initialLine = initialLines.find((init) => init.id === l.id);
+
+//             const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+
+//             const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+
+//             return sum + (currentUITotal - initialTotal);
+
+//           }, 0);
+
+
+//           if (totalNewHoursForPO > remainingHours) {
+
+//             isPOExceeded = true;
+
+
+//             if (!hardEdit) { // HARD STOP
+
+//               isValid = false;
+
+//               toastType = "error";
+
+//               toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+
+//             } else { // SOFT WARNING
+
+//               if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
+
+//                 toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+
+//               } else {
+
+//                 toastMessage += ` Also, PO hours exceeded.`;
+
+//               }
+
+//               toastType = "warning";
+
+//             }
+
+//           }
+
+//         }
+
+//       }
+
+//     }
+
+
+//     // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
+
+//     const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
+
+
+//     if (isValid) {
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
+
+//       if (isMaxDailyExceeded || isPOExceeded) {
+
+//         showToast(toastMessage, toastType, toastDuration);
+
+//       }
+
+//     } else {
+
+//       showToast(toastMessage, toastType, toastDuration);
+
+//       setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+//     }
+
+//   };
+
+// --- UPDATED handleHourChange ---
+
+// const handleHourChange = (id, dayIndex, value) => {
+//     // FIX: Preserve current value as empty string or 0 in state if input is empty
+//     if (value === "") {
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+//         return;
+//     }
+
+//     const numValue = parseFloat(value);
+//     let isValid = true;
+//     let toastMessage = "";
+//     let toastType = "warning"; // Default to warning for soft checks
+//     let isPOExceeded = false;
+//     let isMaxDailyExceeded = false;
+//     
+//     const currentLine = lines.find((line) => line.id === id);
+
+//     // VALIDATION 1: Basic hour constraints (0.5 increments, non-negative)
+//     // NOTE: Removed the 0-24 hour check as requested previously.
+//     if (isNaN(numValue) || numValue < 0) {
+//         isValid = false;
+//         toastType = "error";
+//         toastMessage = "Hours must be a positive number.";
+//     } else if (numValue % 0.5 !== 0) {
+//         isValid = false;
+//         toastType = "error";
+//         toastMessage = "Hours must be in 0.5 increments.";
+//     }
+
+//     // Only proceed to complex checks if base validation passed
+//     if (isValid) {
+//         
+//         // **VALIDATION 2: PO Remaining Hours (Conditional based on hardEdit) - CHECKED FIRST**
+//         if (currentLine && currentLine.poLineNumber) {
+//             const poLineNumber = String(currentLine.poLineNumber).trim();
+//             const remainingHours = remainingPoHours[poLineNumber];
+
+//             if (remainingHours !== undefined) {
+//                 // Calculate the NEW hours being *added* across ALL lines for this PO
+//                 
+//                 // Create a temporary view of the lines with the new value applied
+//                 const tempLines = lines.map(line =>
+//                     line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+//                 );
+
+//                 const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
+
+//                 const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+//                     const initialLine = initialLines.find((init) => init.id === l.id);
+//                     // Calculate difference between current UI total and initial saved total
+//                     const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+//                     const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+//                     return sum + (currentUITotal - initialTotal);
+//                 }, 0);
+
+
+//                 if (totalNewHoursForPO > remainingHours) {
+//                     isPOExceeded = true;
+
+//                     if (!hardEdit) { // HARD STOP
+//                         isValid = false;
+//                         toastType = "error";
+//                         toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+//                     } else { // SOFT WARNING
+//                         toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+//                         toastType = "warning";
+//                     }
+//                 }
+//             }
+//         }
+
+//         // **VALIDATION 3: Max Daily Hours (Configurable) - CHECKED SECOND**
+//         
+//         // Check only if we haven't hit a hard stop already (isValid is still true)
+//         if (isValid) {
+//             const otherLinesTotal = lines
+//                 .filter((line) => line.id !== id)
+//                 .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+
+//             if (otherLinesTotal + numValue > maxDailyHours) {
+//                 isMaxDailyExceeded = true;
+//                 
+//                 // Hard Block for Max Daily Hours
+//                 isValid = false;
+//                 toastType = "error";
+//                 
+//                 const maxDailyError = `Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+//                 
+// //                 if (isPOExceeded && hardEdit) {
+// //                     // If PO was soft-warned (hardEdit=true) but Max Daily hard-failed, combine the messages
+// //                     toastMessage = `Warning: ${maxDailyError} Also, PO hours exceeded.`;
+// //                 } else {
+// //                     toastMessage = `Disabled: ${maxDailyError}`;
+// //                 }
+//                 if (isPOExceeded) {
+//                 // If PO was also exceeded (regardless of hardEdit setting), combine the message
+//                 toastMessage = `Disabled: ${maxDailyError} Also, PO hours exceeded.`;
+//             } else {
+//                 toastMessage = `Disabled: ${maxDailyError}`;
+//             }
+//             }
+//         }
+//     }
+
+
+//     // Determine toast duration (5 seconds if hardEdit is true and a soft warning is triggered)
+//     // Note: Only set long duration for WARN-type toasts (i.e., when hardEdit is true and PO is exceeded)
+//     const toastDuration = (isValid && isPOExceeded && hardEdit) ? 5000 : 3000;
+
+
+//     if (isValid) {
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
+//         // Show soft warning if either check exceeded the limit but the input was allowed (e.g., hardEdit=true for PO limit)
+//         if (isPOExceeded && hardEdit) {
+//             showToast(toastMessage, toastType, toastDuration);
+//         }
+//     } else {
+//         // Revert value since it was blocked by a hard-error (Base validation, hardEdit=false PO block, or Max Daily block)
+//         showToast(toastMessage, toastType, toastDuration);
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+//     }
+// };
+
+const handleHourChange = (id, dayIndex, value) => {
     // FIX: Preserve current value as empty string or 0 in state if input is empty
-
     if (value === "") {
-
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
-
-      return;
-
+        setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+        return;
     }
-
 
     const numValue = parseFloat(value);
-
     let isValid = true;
-
     let toastMessage = "";
-
-    let toastType = "warning";
-
+    let toastType = "warning"; // Default for soft checks
     let isPOExceeded = false;
-
     let isMaxDailyExceeded = false;
+    
+    const currentLine = lines.find((line) => line.id === id);
 
-
-
-    // VALIDATION 1: Basic hour constraints (0-24, 0.5 increments)
-
-    if (isNaN(numValue) || numValue < 0 || numValue > 24) {
-
-      isValid = false;
-
-      toastMessage = "Hours must be between 0 and 24.";
-
+    // VALIDATION 1: Basic hour constraints (0.5 increments, non-negative)
+    if (isNaN(numValue) || numValue < 0) {
+        isValid = false;
+        toastType = "error";
+        toastMessage = "Hours must be a positive number.";
     } else if (numValue % 0.5 !== 0) {
+        isValid = false;
+        toastType = "error";
+        toastMessage = "Hours must be in 0.5 increments.";
+    } else { // Start complex checks only if base validation passed
+        
+        // **VALIDATION 2: PO Remaining Hours (Conditional based on hardEdit) - CHECKED FIRST**
+        if (currentLine && currentLine.poLineNumber) {
+            const poLineNumber = String(currentLine.poLineNumber).trim();
+            const remainingHours = remainingPoHours[poLineNumber];
 
-      isValid = false;
+            if (remainingHours !== undefined) {
+                // Calculate the impact of the new hour value (synchronized calculation)
+                
+                const tempLines = lines.map(line =>
+                    line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+                );
+                const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
 
-      toastMessage = "Hours must be in 0.5 increments.";
-
-    }
-
-
-    if (isValid) {
-
-      // VALIDATION 2: Max Daily Hours (Configurable)
-
-      const otherLinesTotal = lines
-
-        .filter((line) => line.id !== id)
-
-        .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
-
-
-      if (otherLinesTotal + numValue > maxDailyHours) {
-
-        isMaxDailyExceeded = true;
-
-        toastMessage = `Warning: Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
-
-      }
-
-    }
+                const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+                    const initialLine = initialLines.find((init) => init.id === l.id);
+                    const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+                    const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+                    return sum + (currentUITotal - initialTotal);
+                }, 0);
 
 
-    if (isValid) {
+                if (totalNewHoursForPO > remainingHours) {
+                    isPOExceeded = true;
 
-      // VALIDATION 3: PO Remaining Hours (Conditional based on hardEdit)
-
-      const currentLine = lines.find((line) => line.id === id);
-
-      if (currentLine && currentLine.poLineNumber) {
-
-        const poLineNumber = String(currentLine.poLineNumber).trim();
-
-        const remainingHours = remainingPoHours[poLineNumber];
-
-
-        if (remainingHours !== undefined) {
-
-          // Calculate the NEW hours being *added* across ALL lines for this PO
-
-
-          // Create a temporary view of the lines with the new value applied
-
-          const tempLines = lines.map(line =>
-
-            line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
-
-          );
-
-
-          const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
-
-
-          const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
-
-            const initialLine = initialLines.find((init) => init.id === l.id);
-
-            const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
-
-            const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
-
-            return sum + (currentUITotal - initialTotal);
-
-          }, 0);
-
-
-          if (totalNewHoursForPO > remainingHours) {
-
-            isPOExceeded = true;
-
-
-            if (!hardEdit) { // HARD STOP
-
-              isValid = false;
-
-              toastType = "error";
-
-              toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
-
-            } else { // SOFT WARNING
-
-              if (!isMaxDailyExceeded) { // Only set PO message if Max Daily wasn't already set
-
-                toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
-
-              } else {
-
-                toastMessage += ` Also, PO hours exceeded.`;
-
-              }
-
-              toastType = "warning";
-
+                    if (!hardEdit) { // HARD STOP (Blocking entry)
+                        isValid = false;
+                        toastType = "error";
+                        toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+                    } else { // SOFT WARNING (Allowing entry)
+                        // Set initial soft warning message
+                        toastMessage = `PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+                        toastType = "warning";
+                    }
+                }
             }
-
-          }
-
         }
 
-      }
+        // **VALIDATION 3: Max Daily Hours (Configurable) - CHECKED SECOND**
+        
+        // Check only if we haven't hit a hard stop already (isValid is still true from base/PO check)
+        if (isValid) {
+            const otherLinesTotal = lines
+                .filter((line) => line.id !== id)
+                .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
 
+            const newDailyTotal = otherLinesTotal + numValue;
+
+            if (newDailyTotal > maxDailyHours) {
+                isMaxDailyExceeded = true;
+                
+                // Max Daily limit is always a hard block
+                isValid = false;
+                toastType = "error";
+                
+                // SYNCED MESSAGE LOGIC:
+                const maxDailyError = `Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+                
+                if (isPOExceeded && hardEdit) {
+                    // PO was soft-warned, but Max Daily is a hard fail. Use the Warning structure from Line component.
+                    // The hard fail (isValid=false) means this message will be shown as an ERROR toast.
+                    toastMessage = `${maxDailyError} Also, PO hours exceeded.`;
+                } else {
+                    // Max Daily is the only issue, or PO was already a hard fail.
+                    toastMessage = `Disabled: ${maxDailyError}`;
+                }
+            }
+        }
     }
 
 
-    // Determine toast duration (5 seconds if hardEdit is true and a warning is triggered)
-
-    const toastDuration = (hardEdit && (isMaxDailyExceeded || isPOExceeded)) ? 5000 : 3000;
+    // Determine toast duration (5 seconds for soft warnings, 3 seconds for blocks)
+    const toastDuration = (isValid && isPOExceeded && hardEdit) ? 5000 : 3000;
 
 
     if (isValid) {
-
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
-
-      if (isMaxDailyExceeded || isPOExceeded) {
-
-        showToast(toastMessage, toastType, toastDuration);
-
-      }
-
+        setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
+        
+        // Show soft warning if an input was allowed but exceeded a soft limit (hardEdit=true PO limit)
+        if (isPOExceeded && hardEdit) {
+            showToast(toastMessage, toastType, toastDuration);
+        }
     } else {
-
-      showToast(toastMessage, toastType, toastDuration);
-
-      setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+        // Input blocked by a hard-error
+        showToast(toastMessage, toastType, toastDuration);
+        
+        // Revert value to the previous state
+        setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
     }
+};
 
-  };
+// const handleHourChange = (id, dayIndex, value) => {
+//     // FIX: Preserve current value as empty string or 0 in state if input is empty
+//     if (value === "") {
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: "" } } : line));
+//         return;
+//     }
+
+//     const numValue = parseFloat(value);
+//     let isValid = true;
+//     let toastMessage = "";
+//     let toastType = "warning"; // Default for soft checks
+//     let isPOExceeded = false;
+//     let isMaxDailyExceeded = false;
+
+//     const currentLine = lines.find((line) => line.id === id);
+
+
+//     // VALIDATION 1: Basic hour constraints (0.5 increments, non-negative)
+//     if (isNaN(numValue) || numValue < 0) {
+//         isValid = false;
+//         toastType = "error";
+//         toastMessage = "Hours must be a positive number.";
+//     } else if (numValue % 0.5 !== 0) {
+//         isValid = false;
+//         toastType = "error";
+//         toastMessage = "Hours must be in 0.5 increments.";
+//     } else {
+//         
+//         // **2. PO Remaining Hours Check - CHECKED FIRST**
+//         if (currentLine && currentLine.poLineNumber) {
+//             const poLineNumber = String(currentLine.poLineNumber).trim();
+//             const remainingHours = remainingPoHours[poLineNumber];
+
+//             if (remainingHours !== undefined) {
+//                 // Calculate the NEW hours being *added* across ALL lines for this PO (similar calculation to existing)
+//                 const tempLines = lines.map(line =>
+//                     line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line
+//                 );
+//                 const allLinesWithSamePO = tempLines.filter((l) => String(l.poLineNumber).trim() === poLineNumber);
+
+//                 const totalNewHoursForPO = allLinesWithSamePO.reduce((sum, l) => {
+//                     const initialLine = initialLines.find((init) => init.id === l.id);
+//                     const currentUITotal = Object.values(l.hours).reduce((s, h) => s + (parseFloat(h)||0), 0);
+//                     const initialTotal = initialLine ? Object.values(initialLine.hours).reduce((s, h) => s + (parseFloat(h)||0), 0) : 0;
+//                     return sum + (currentUITotal - initialTotal);
+//                 }, 0);
+
+
+//                 if (totalNewHoursForPO > remainingHours) {
+//                     isPOExceeded = true;
+
+//                     if (!hardEdit) { // HARD STOP (If hardEdit is false, we block entry)
+//                         isValid = false;
+//                         toastType = "error";
+//                         toastMessage = `Disabled: Cannot exceed remaining PO hours (${remainingHours.toFixed(2)} available for PO Line ${poLineNumber}).`;
+//                     } else { // SOFT WARNING (If hardEdit is true, we allow entry but warn)
+//                         toastMessage = `Warning: PO hours exceeded. ${remainingHours.toFixed(2)} hours available for PO Line ${poLineNumber}.`;
+//                         toastType = "warning";
+//                     }
+//                 }
+//             }
+//         }
+
+//         // **3. Max Daily Hours Check - CHECKED SECOND**
+//         if (isValid) {
+//             const otherLinesTotal = lines
+//                 .filter((line) => line.id !== id)
+//                 .reduce((sum, line) => sum + (parseFloat(line.hours[dayIndex]) || 0), 0);
+
+//             const newDailyTotal = otherLinesTotal + numValue;
+
+//             if (newDailyTotal > maxDailyHours) {
+//                 isMaxDailyExceeded = true;
+//                 
+//                 // Max Daily limit is always a hard block
+//                 isValid = false;
+//                 toastType = "error";
+//                 
+//                 // Set the base error message
+//                 let errorMsg = `Daily total hours exceed the maximum limit of ${maxDailyHours}.`;
+//                 
+//                 if (isPOExceeded && hardEdit) {
+//                     // If PO was soft-warned (hardEdit=true) but Max Daily hard-failed, combine for the error message
+//                     toastMessage = `Warning: ${errorMsg} Also, PO hours exceeded.`;
+//                     // We keep the toastType as 'error' for the hard block.
+//                 } else {
+//                     // If Max Daily is the only error, or if PO was already a hard block (hardEdit=false)
+//                     toastMessage = `Disabled: ${errorMsg}`;
+//                 }
+//             }
+//         }
+//     }
+
+
+//     // Determine toast duration (5 seconds for soft warnings, 3 seconds for blocks)
+//     const toastDuration = (isValid && isPOExceeded && hardEdit) ? 5000 : 3000;
+
+
+//     if (isValid) {
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: numValue } } : line));
+//         
+//         // Show soft warning if an input was allowed but exceeded a soft limit (hardEdit=true PO limit)
+//         if (isPOExceeded && hardEdit) {
+//             showToast(toastMessage, toastType, toastDuration);
+//         }
+//     } else {
+//         // Input blocked by a hard-error
+//         showToast(toastMessage, toastType, toastDuration);
+//         
+//         // Revert value to the previous state
+//         setLines((currentLines) => currentLines.map((line) => line.id === id ? { ...line, hours: { ...line.hours, [dayIndex]: line.hours[dayIndex] } } : line));
+//     }
+// };
 
 
   const getRemainingHoursForLine = (line) => {
@@ -3148,7 +3524,6 @@ const handleSave = async (reason = "") => {
             lineNo: currentLine.id,
             CreatedBy: currentUserName, 
             UpdatedBy: currentUserName, 
-         comment: reason,
 
 
           };

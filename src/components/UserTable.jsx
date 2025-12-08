@@ -3461,7 +3461,7 @@ const handleDeleteUser = async (userId) => {
                                     <button
                                       onClick={() => handleActivateUser(user)}
                                       disabled={activationLoading[user.userId]}
-                                      className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed rounded-md transition-colors"
+                                      // className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed rounded-md transition-colors"
                                       title="Activate User"
                                     >
                                       {activationLoading[user.userId] ? (
@@ -3475,8 +3475,9 @@ const handleDeleteUser = async (userId) => {
                                         </>
                                       ) : (
                                         <>
-                                          <FaPlay size={10} />
+                                          {/* <FaPlay size={10} /> */}
                                           {/* <span>Activate</span> */}
+                                          <span className="text-sm">✔</span>
                                         </>
                                       )}
                                     </button>
@@ -3484,7 +3485,7 @@ const handleDeleteUser = async (userId) => {
                                     <button
                                       onClick={() => handleDeactivateUser(user)}
                                       disabled={activationLoading[user.userId]}
-                                      className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed rounded-md transition-colors"
+                                      // className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed rounded-md transition-colors"
                                       title="Deactivate User"
                                     >
                                       {activationLoading[user.userId] ? (
@@ -3498,8 +3499,9 @@ const handleDeleteUser = async (userId) => {
                                         </>
                                       ) : (
                                         <>
-                                          <FaPause size={10} />
+                                          {/* <FaPause size={10} /> */}
                                           {/* <span>Deactivate</span> */}
+                                          <span className="text-sm">❌</span>
                                         </>
                                       )}
                                     </button>

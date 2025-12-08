@@ -13,6 +13,7 @@ import InvoiceExport from "../components/InvoiceExport";
 import DashboardGraphs from "../components/DashboardGraphs";
 import POStatusTable from "../components/POStatus";
 import Settings from "../components/Settings";
+import Report from "../components/Report";
 
 export default function Dashboard() {
   const { pathname } = useLocation();
@@ -69,7 +70,10 @@ export default function Dashboard() {
           <POStatusTable />
         ) : pathname === "/dashboard/settings" ? (
           <Settings />
-        ) : (
+        ) : pathname === "/dashboard/reports" ? (
+           <Report />
+        ) :
+        (
           <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-6 py-12 w-96 max-w-md transform hover:shadow-xl transition-all duration-300 animate-fade-in">
               <div className="text-center">

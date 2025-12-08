@@ -573,20 +573,59 @@ const [dateToLineNos, setDateToLineNos] = useState({});
   //   }, 100);
   // };
 
+// const handleRowClick = (rowData, event) => {
+//   if (event?.target?.type === "checkbox") return;
+
+//   const clickedDate =
+//     rowData.timesheetDateRaw || rowData.timesheet_Date; // e.g. "2025-11-02"
+
+//   setSelectedResourceId(rowData["Employee ID"]);
+//   setSelectedTimesheetDate(clickedDate);
+
+//   const linesForDate = dateToLineNos[clickedDate] || [];
+
+//   console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
+
+//   setSelectedTimesheetLines(linesForDate);
+//   setCurrentSelectedRowId(rowData.id);
+
+//   setTimeout(() => {
+//     if (timesheetDetailsRef.current) {
+//       timesheetDetailsRef.current.scrollIntoView({
+//         behavior: "smooth",
+//         block: "start",
+//         inline: "nearest",
+//       });
+//     }
+//   }, 100);
+// };
+
 const handleRowClick = (rowData, event) => {
   if (event?.target?.type === "checkbox") return;
 
   const clickedDate =
     rowData.timesheetDateRaw || rowData.timesheet_Date; // e.g. "2025-11-02"
 
-  setSelectedResourceId(rowData["Employee ID"]);
+  const employeeId = String(rowData["Employee ID"]).trim();
+  const approverId = String(rowData["Approver ID"]).trim();
+
+  // Composite key must match the one used when building dateToLineNos
+  const key = `${employeeId}|${approverId}|${clickedDate}`;
+
+  const linesForKey = dateToLineNos[key] || [];
+
+  console.log(
+    "Row click -> key:",
+    key,
+    "date:",
+    clickedDate,
+    "lines:",
+    linesForKey
+  );
+
+  setSelectedResourceId(employeeId);
   setSelectedTimesheetDate(clickedDate);
-
-  const linesForDate = dateToLineNos[clickedDate] || [];
-
-  console.log("Row click -> date:", clickedDate, "lines:", linesForDate);
-
-  setSelectedTimesheetLines(linesForDate);
+  setSelectedTimesheetLines(linesForKey);
   setCurrentSelectedRowId(rowData.id);
 
   setTimeout(() => {
@@ -599,7 +638,6 @@ const handleRowClick = (rowData, event) => {
     }
   }, 100);
 };
-
 
 
   const handleCloseDetails = () => {
@@ -772,30 +810,67 @@ console.log("Raw API Response:", apiData);
 // -----------------------------
 // Build date -> lineNos lookup
 // -----------------------------
+// const dateToLineNos = {};
+
+// if (Array.isArray(apiData)) {
+//   apiData.forEach((ts) => {
+//     const date = ts.timesheet_Date;
+//     if (!date) return;
+
+//     const hoursArray = Array.isArray(ts.timesheetHours)
+//       ? ts.timesheetHours
+//       : [];
+
+//     const lineNosForEntry = hoursArray
+//       .map((h) => Number(h.lineNo))
+//       .filter((n) => !Number.isNaN(n));
+
+//     if (!dateToLineNos[date]) dateToLineNos[date] = [];
+//     dateToLineNos[date].push(...lineNosForEntry);
+//   });
+// }
+
+// // dedupe line numbers per date
+// Object.keys(dateToLineNos).forEach((d) => {
+//   dateToLineNos[d] = [...new Set(dateToLineNos[d])];
+// });
+
+// setDateToLineNos(dateToLineNos);
 const dateToLineNos = {};
 
 if (Array.isArray(apiData)) {
   apiData.forEach((ts) => {
     const date = ts.timesheet_Date;
-    if (!date) return;
+    const employeeId = ts.resource_Id || ts.resourceId;
+    const approverId = ts.pm_User_Id || ts.pmUserId || ts.approverUserId;
 
-    const hoursArray = Array.isArray(ts.timesheetHours)
-      ? ts.timesheetHours
-      : [];
+    if (!date || !employeeId || !approverId) {
+      console.log('Skipping entry - missing required fields:', { date, employeeId, approverId });
+      return;
+    }
 
+    const hoursArray = Array.isArray(ts.timesheetHours) ? ts.timesheetHours : [];
+    
     const lineNosForEntry = hoursArray
       .map((h) => Number(h.lineNo))
       .filter((n) => !Number.isNaN(n));
 
-    if (!dateToLineNos[date]) dateToLineNos[date] = [];
-    dateToLineNos[date].push(...lineNosForEntry);
+    const key = `${employeeId}|${approverId}|${date}`;
+
+    if (!dateToLineNos[key]) dateToLineNos[key] = [];
+    dateToLineNos[key].push(...lineNosForEntry);
+
+    // Debug log INSIDE the loop - variables are in scope here
+    console.log('Processing ts:', { date, employeeId, approverId, lineNosForEntry, key });
   });
 }
 
-// dedupe line numbers per date
-Object.keys(dateToLineNos).forEach((d) => {
-  dateToLineNos[d] = [...new Set(dateToLineNos[d])];
+// Deduplicate line numbers per composite key
+Object.keys(dateToLineNos).forEach((key) => {
+  dateToLineNos[key] = [...new Set(dateToLineNos[key])];
 });
+
+console.log('Final dateToLineNos:', dateToLineNos);
 
 setDateToLineNos(dateToLineNos);
 
