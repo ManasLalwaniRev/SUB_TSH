@@ -3365,12 +3365,16 @@ const handleDeleteUser = async (userId) => {
                 <table className="border-collapse table-auto min-w-[650px] w-full">
                   <thead className="sticky top-0 bg-gray-50 z-10 border-b-2 border-gray-200">
                     <tr>
-                      <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
-                        User
+                        <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
+                        User Id
                       </th>
                       <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
-                        Username
+                        Name
                       </th>
+                      <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
+                        Email
+                      </th>
+                    
                       <th className="x-2 py-2 text-center text-sm font-bold text-blue-900 uppercase tracking-wider">
                         Role
                       </th>
@@ -3407,24 +3411,15 @@ const handleDeleteUser = async (userId) => {
                           key={user.userId}
                           className="hover:bg-sky-50 transition-colors"
                         >
-                          <td className="px-2 py-2 whitespace-nowrap">
-                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600 text-sm">
-                                {getInitials(user.fullName) || ""}
-                              </div>
-                              <div>
-                                <div className="text-sm font-semibold text-gray-900">
-                                  {user.fullName}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {user.email}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
 
                           <td className="px-2 py-2 whitespace-nowrap text-sm font-mono text-gray-700 text-center">
                             {user.username}
+                          </td>
+                          <td className="px-2 py-2 whitespace-nowrap text-sm font-mono text-gray-700 text-center">
+                            {user.fullName}
+                          </td>
+                          <td className="px-2 py-2 whitespace-nowrap text-sm font-mono text-gray-700 text-center">
+                             {user.email}
                           </td>
                           <td className="px-2 py-2 whitespace-nowrap text-center">
                             <span
