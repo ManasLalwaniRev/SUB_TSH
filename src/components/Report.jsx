@@ -180,6 +180,145 @@ const handleToggleAll = () => {
     navigate("/");
   };
 
+// const downloadExcel = (allRows) => {
+//   if (!allRows || allRows.length === 0) return;
+
+//   const filteredRows =
+//     selectedEmployees.size === 0
+//       ? allRows
+//       : allRows.filter((r) => selectedEmployees.has(getRowKey(r)));
+
+//   if (filteredRows.length === 0) {
+//     showToast("No employees selected to download", "warning");
+//     return;
+//   }
+
+//   const wb = XLSX.utils.book_new();
+//   const ws = XLSX.utils.aoa_to_sheet([]);
+//   let rowIdx = 0;
+
+//   // 1) Summary headers (top row)
+//   const summaryHeaders = [
+//     "Employee ID",
+//     "Employee Name",
+//     "Vendor",
+//     "Project",
+//     "PLC",
+//     "PO Number",
+//     "Total Hours",
+//   ];
+
+//   // 2) Detail headers (start at column 0 too, but in a separate row)
+//   const detailHeaders = [
+//     "Timesheet Date",
+//     "Description",
+//     "Work Order",
+//     "Pay Type",
+//     "Hours",
+//   ];
+
+//   ws["!cols"] = [
+//     { wch: 12 }, // Employee ID
+//     { wch: 20 }, // Employee Name
+//     { wch: 25 }, // Vendor
+//     { wch: 25 }, // Project
+//     { wch: 10 }, // PLC
+//     { wch: 15 }, // PO Number
+//     { wch: 12 }, // Total Hours
+//     { wch: 15 }, // Timesheet Date
+//     { wch: 30 }, // Description
+//     { wch: 15 }, // Work Order
+//     { wch: 10 }, // Pay Type
+//     { wch: 8 },  // Hours
+//   ];
+
+//   // --- SUMMARY HEADER ROW (row 0) ---
+//   summaryHeaders.forEach((h, i) => {
+//     const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+//     ws[cellRef] = {
+//       t: "s",
+//       v: h,
+//       s: {
+//         font: { bold: true },
+//         // no fill color to match your screenshot
+//       },
+//     };
+//   });
+
+//   // --- SUMMARY VALUES ROW (row 1: first employee only) ---
+//   const first = filteredRows[0];
+//   const summaryValues = [
+//     first?.employeeId ?? "",
+//     first?.employeeName ?? "",
+//     first?.vendorName ?? "",
+//     first?.projectId ?? "",
+//     first?.plc ?? "",
+//     first?.poNumber ?? "",
+//     first?.totalHours ?? "",
+//   ];
+
+//   summaryValues.forEach((val, i) => {
+//     const cellRef = XLSX.utils.encode_cell({ r: 1, c: i });
+//     ws[cellRef] = {
+//       t: typeof val === "number" ? "n" : "s",
+//       v: val,
+//     };
+//   });
+
+//   // --- DETAIL HEADER ROW (row 3) ---
+//   // row 2 is intentionally left blank
+//   rowIdx = 3;
+//   detailHeaders.forEach((h, i) => {
+//     const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: i });
+//     ws[cellRef] = {
+//       t: "s",
+//       v: h,
+//       s: {
+//         font: { bold: true },
+//       },
+//     };
+//   });
+
+//   // --- DETAIL DATA ROWS (row 4+) ---
+//   rowIdx = 4;
+
+//   if (Array.isArray(first?.details) && first.details.length > 0) {
+//     first.details.forEach((d) => {
+//       const rowData = [
+//         d.timesheetDate,
+//         d.description,
+//         d.workOrder,
+//         d.payType,
+//         d.hours,
+//       ];
+
+//       rowData.forEach((val, colIdx) => {
+//         const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+//         ws[cellRef] = {
+//           t: typeof val === "number" ? "n" : "s",
+//           v: val,
+//         };
+//       });
+
+//       rowIdx++;
+//     });
+//   }
+
+//   // Set sheet bounds
+//   ws["!ref"] = XLSX.utils.encode_range({
+//     s: { r: 0, c: 0 },
+//     e: { r: rowIdx - 1, c: 6 + detailHeaders.length - 1 },
+//   });
+
+//   XLSX.utils.book_append_sheet(wb, ws, "Employee Hours");
+//   XLSX.writeFile(wb, "employee-hours-report.xlsx");
+
+//   showToast(
+//     `Downloaded ${filteredRows.length} employee(s) successfully!`,
+//     "success"
+//   );
+// };
+
 const downloadExcel = (allRows) => {
   if (!allRows || allRows.length === 0) return;
 
@@ -193,22 +332,80 @@ const downloadExcel = (allRows) => {
     return;
   }
 
-  // Create workbook and worksheet
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([]);
 
+  // ========== SHEET 1: SUMMARY ==========
+  const wsSummary = XLSX.utils.aoa_to_sheet([]);
   let rowIdx = 0;
 
-  // Add column headers once at the top
-  const headers = [
+  const summaryHeaders = [
     "Employee ID",
     "Employee Name",
-    "Vendor ID",
-    "Vendor Name",
-    "Project ID",
+    "Vendor",
+    "Project",
     "PLC",
     "PO Number",
     "Total Hours",
+  ];
+
+  // Add summary header (row 0)
+  summaryHeaders.forEach((h, i) => {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
+    wsSummary[cellRef] = {
+      t: "s",
+      v: h,
+      s: {
+        font: { bold: true },
+      },
+    };
+  });
+
+  // Add all employee summary rows (row 1+)
+  rowIdx = 1;
+  filteredRows.forEach((emp) => {
+    const summaryValues = [
+      emp.employeeId ?? "",
+      emp.employeeName ?? "",
+      emp.vendorName ?? "",
+      emp.projectId ?? "",
+      emp.plc ?? "",
+      emp.poNumber ?? "",
+      emp.totalHours ?? "",
+    ];
+
+    summaryValues.forEach((val, i) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: i });
+      wsSummary[cellRef] = {
+        t: typeof val === "number" ? "n" : "s",
+        v: val,
+      };
+    });
+
+    rowIdx++;
+  });
+
+  wsSummary["!cols"] = [
+    { wch: 12 }, // Employee ID
+    { wch: 20 }, // Employee Name
+    { wch: 25 }, // Vendor
+    { wch: 25 }, // Project
+    { wch: 10 }, // PLC
+    { wch: 15 }, // PO Number
+    { wch: 12 }, // Total Hours
+  ];
+
+  wsSummary["!ref"] = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: rowIdx - 1, c: 6 },
+  });
+
+  // ========== SHEET 2: DETAILS ==========
+  const wsDetails = XLSX.utils.aoa_to_sheet([]);
+  rowIdx = 0;
+
+  const detailHeaders = [
+    "Employee ID",
+    "Employee Name",
     "Timesheet Date",
     "Description",
     "Work Order",
@@ -216,88 +413,66 @@ const downloadExcel = (allRows) => {
     "Hours",
   ];
 
-  ws["!cols"] = [
-    { wch: 12 }, // employeeId
-    { wch: 15 }, // employeeName
-    { wch: 12 }, // vendorId
-    { wch: 20 }, // vendorName
-    { wch: 18 }, // projectId
-    { wch: 10 }, // plc
-    { wch: 12 }, // poNumber
-    { wch: 12 }, // totalHours
-    { wch: 12 }, // timesheetDate
-    { wch: 30 }, // description
-    { wch: 12 }, // workOrder
-    { wch: 10 }, // payType
-    { wch: 8 }, // hours
-  ];
-
-  // Add headers
-  ws["A1"] = { t: "s", v: headers[0] };
-  headers.forEach((h, i) => {
+  // Add detail header (row 0)
+  detailHeaders.forEach((h, i) => {
     const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-    ws[cellRef] = { t: "s", v: h, s: { font: { bold: true }, fill: { fgColor: { rgb: "CCCCCC" } } } };
+    wsDetails[cellRef] = {
+      t: "s",
+      v: h,
+      s: {
+        font: { bold: true },
+      },
+    };
   });
 
+  // Add all detail rows (row 1+)
   rowIdx = 1;
-
-  // Add employee data grouped with details
-  filteredRows.forEach((r) => {
-    if (Array.isArray(r.details) && r.details.length > 0) {
-      r.details.forEach((d, dIdx) => {
-        const rowData = [
-          r.employeeId,
-          r.employeeName,
-          r.vendorId,
-          r.vendorName,
-          r.projectId,
-          r.plc,
-          r.poNumber,
-          dIdx === 0 ? r.totalHours : "", // Show totalHours only in first detail row
-          d.timesheetDate,
-          d.description,
-          d.workOrder,
-          d.payType,
-          d.hours,
+  filteredRows.forEach((emp) => {
+    if (Array.isArray(emp.details) && emp.details.length > 0) {
+      emp.details.forEach((d) => {
+        const detailValues = [
+          emp.employeeId ?? "",
+          emp.employeeName ?? "",
+          d.timesheetDate ?? "",
+          d.description ?? "",
+          d.workOrder ?? "",
+          d.payType ?? "",
+          d.hours ?? "",
         ];
-        rowData.forEach((val, colIdx) => {
-          const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-          ws[cellRef] = { t: typeof val === "number" ? "n" : "s", v: val };
+
+        detailValues.forEach((val, i) => {
+          const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: i });
+          wsDetails[cellRef] = {
+            t: typeof val === "number" ? "n" : "s",
+            v: val,
+          };
         });
+
         rowIdx++;
       });
-    } else {
-      // No details, just employee row
-      const rowData = [
-        r.employeeId,
-        r.employeeName,
-        r.vendorId,
-        r.vendorName,
-        r.projectId,
-        r.plc,
-        r.poNumber,
-        r.totalHours,
-        "",
-        "",
-        "",
-        "",
-        "",
-      ];
-      rowData.forEach((val, colIdx) => {
-        const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-        ws[cellRef] = { t: typeof val === "number" ? "n" : "s", v: val };
-      });
-      rowIdx++;
     }
   });
 
-  // Finalize sheet dimensions
-  ws["!ref"] = XLSX.utils.encode_range({
+  wsDetails["!cols"] = [
+    { wch: 12 }, // Employee ID
+    { wch: 20 }, // Employee Name
+    { wch: 15 }, // Timesheet Date
+    { wch: 30 }, // Description
+    { wch: 15 }, // Work Order
+    { wch: 10 }, // Pay Type
+    { wch: 8 },  // Hours
+  ];
+
+  wsDetails["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
-    e: { r: rowIdx - 1, c: 12 },
+    e: { r: rowIdx - 1, c: 6 },
   });
 
-  XLSX.utils.book_append_sheet(wb, ws, "Employee Hours");
+  // ========== ADD SHEETS TO WORKBOOK ==========
+  XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+  XLSX.utils.book_append_sheet(wb, wsDetails, "Details");
+
+  // Download file
   XLSX.writeFile(wb, "employee-hours-report.xlsx");
 
   showToast(
@@ -305,7 +480,6 @@ const downloadExcel = (allRows) => {
     "success"
   );
 };
-
 
 
 
