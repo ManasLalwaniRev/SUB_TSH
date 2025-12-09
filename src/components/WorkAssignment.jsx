@@ -349,16 +349,16 @@ const WorkAssignment = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
-        <div className="text-center">
-          <Package className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading work orders...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
+  //       <div className="text-center">
+  //         <Package className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+  //         <p className="text-lg text-gray-600">Loading work orders...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const sortedRows = getSortedRows();
   const availableRowsCount = sortedRows.filter(
@@ -456,6 +456,11 @@ const WorkAssignment = () => {
               className="flex-1 overflow-y-auto overflow-x-hidden"
               style={{ maxHeight: "calc(100vh - 250px)" }}
             >
+              { loading ? (
+                 <div className="text-center">
+          <Package className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+          <p className="text-lg text-gray-600">Loading work orders...</p>
+        </div> ): (
               <table className="w-full border-collapse text-sm">
                 {/* Sticky Header */}
                 <thead className="sticky top-0 z-10 bg-blue-50">
@@ -568,6 +573,7 @@ const WorkAssignment = () => {
                   )}
                 </tbody>
               </table>
+              )}
             </div>
           </div>
         </div>

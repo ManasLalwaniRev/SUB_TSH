@@ -1033,16 +1033,16 @@ export default function InvoiceExport() {
     navigate("/");
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
-        <div className="text-center">
-          <Receipt className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading invoices...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-f9fafd flex items-center justify-center pl-44 pr-4">
+  //       <div className="text-center">
+  //         <Receipt className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+  //         <p className="text-lg text-gray-600">Loading invoices...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -1177,7 +1177,7 @@ export default function InvoiceExport() {
         </div>
 
         {/* Table Container - Matching ExportTable style */}
-        {filteredInvoices.length === 0 ? (
+        {/* {filteredInvoices.length === 0 ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center text-gray-500">
               <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -1185,7 +1185,7 @@ export default function InvoiceExport() {
               <p className="text-sm">Try adjusting your filter criteria</p>
             </div>
           </div>
-        ) : (
+        ) : ( */}
           <div
             className="border border-gray-300 rounded bg-white shadow"
             style={{
@@ -1232,6 +1232,24 @@ export default function InvoiceExport() {
                 borderRadius: "4px",
               }}
             >
+              {loading ? (
+        // Loading state just for table area
+        <div className="flex items-center justify-center py-10">
+          <div className="text-center">
+            <Receipt className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+            <p className="text-lg text-gray-600">Loading invoices...</p>
+          </div>
+        </div>
+      ) : filteredInvoices.length === 0 ? (
+        // Empty / error state for table area
+        <div className="flex items-center justify-center py-10">
+          <div className="text-center text-gray-600">
+            <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">No Invoices</p>
+            {/* <p className="text-sm">{error}</p> */}
+          </div>
+        </div>
+      ) : (
               <table
                 style={{
                   borderCollapse: "collapse",
@@ -1680,9 +1698,10 @@ export default function InvoiceExport() {
                   })}
                 </tbody>
               </table>
+      )}
             </div>
           </div>
-        )}
+        
       </div>
 
       {/* Preview Modal */}

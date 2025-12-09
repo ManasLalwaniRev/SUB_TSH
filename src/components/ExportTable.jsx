@@ -2053,16 +2053,16 @@ export default function ExportTable() {
 
   // Add this before your return statement
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
-        <div className="text-center">
-          <Download className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading export data...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-f9fafd flex items-center justify-center pr-4">
+  //       <div className="text-center">
+  //         <Download className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+  //         <p className="text-lg text-gray-600">Loading export data...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const anyInvoiceGenerated = rows.some(
     (row) =>
@@ -2424,6 +2424,12 @@ export default function ExportTable() {
                 borderRadius: "4px",
               }}
             >
+              {loading ? (
+                      <div className="text-center">
+         <Download className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+         <p className="text-lg text-gray-600">Loading export data...</p>
+        </div>
+              ):(
               <table
                 style={{
                   borderCollapse: "collapse",
@@ -2584,6 +2590,7 @@ export default function ExportTable() {
                   )}
                 </tbody>
               </table>
+              )}
             </div>
           </div>
         </div>

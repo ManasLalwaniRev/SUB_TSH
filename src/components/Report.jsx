@@ -48,6 +48,7 @@ const Report = () => {
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [selectedEmployees, setSelectedEmployees] = useState(new Set());
 const [selectAll, setSelectAll] = useState(false);
+const [status, setStatus] = useState("");
 
 
   // filters that map to EmployeeHoursReportRequest
@@ -134,6 +135,7 @@ const [selectAll, setSelectAll] = useState(false);
       vendorId: vendorId || null,
       resourceId: resourceId || null,
       poNumber: poNumber || null,
+      status: status || null, 
     };
   };
 
@@ -521,6 +523,27 @@ return (
                 className=" w-32 h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="PO Number"
               />
+            </div>
+            <div className="flex flex-col">
+              
+  {/* <label className="text-xs font-semibold text-gray-600">
+    Status
+  </label> */}
+  <select
+    value={status}
+    onChange={(e) => setStatus(e.target.value)}
+    className="w-32 h-7 border border-gray-300 rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+    placeholder="Status"
+  >
+    <option value="">All</option>
+    <option value="Submitted">Submitted</option>
+    <option value="Approved">Approved</option>
+    <option value="Correction">Correction</option>
+    <option value="Rejected">Rejected</option>
+    <option value="Pending">Pending</option>
+  </select>
+
+
             </div>
             <button
               onClick={handleFetchReport}

@@ -1625,24 +1625,16 @@ const flattenedData = [];
     );
   }
 
-  if (loading) {
-    return (
-      // <div className="min-h-screen bg-[#f9fafd] flex flex-col pl-44 pr-4">
-      //   <div className="flex-1 flex items-center justify-center">
-      //     <div className="flex items-center">
-      //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      //       <span className="ml-2">Loading approval data...</span>
-      //     </div>
-      //   </div>
-      // </div>
-      <div className="min-h-screen bg-f9fafd flex items-center justify-center ">
-        <div className="text-center">
-          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-lg text-gray-600">Loading data.....</p>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-f9fafd flex items-center justify-center ">
+  //       <div className="text-center">
+  //         <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+  //         <p className="text-lg text-gray-600">Loading data.....</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-[#f9fafd] flex flex-col overflow-auto">
@@ -2001,6 +1993,14 @@ const flattenedData = [];
                 scrollBehavior: "smooth",
               }}
             >
+               {loading ? (
+        <div className="flex items-center justify-center py-10">
+          <div className="text-center">
+           <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+          <p className="text-lg text-gray-600">Loading data.....</p>
+        </div>
+        </div>
+      ): (
               <table
                 style={{
                   borderCollapse: "collapse",
@@ -2306,6 +2306,7 @@ const flattenedData = [];
 </tbody>
 
               </table>
+      )}
             </div>
 
             <div

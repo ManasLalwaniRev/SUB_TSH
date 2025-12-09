@@ -759,18 +759,18 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
     navigate("/");
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#f9fafd] flex flex-col pr-4">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2">Loading Setting...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="min-h-screen bg-[#f9fafd] flex flex-col pr-4">
+  //       <div className="flex-1 flex items-center justify-center">
+  //         <div className="flex items-center">
+  //           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //           <span className="ml-2">Loading Setting...</span>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="h-screen bg-[#f9fafd] flex flex-col pr-4 overflow-hidden">
@@ -793,6 +793,14 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
         {/* Main Content Area */}
         <div className="px-4 pb-4" style={{ height: "calc(100vh - 120px)" }}>
           <div className="h-full border border-gray-300 rounded-2xl bg-white shadow flex flex-col overflow-y-auto">
+            {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+          <div className="flex items-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2">Loading Setting...</span>
+          </div>
+        </div>
+        ) : (
             <div className="p-4 space-y-5">
               <div className="flex gap-6 w-full">
                 {/* configure notification */}
@@ -1334,6 +1342,7 @@ if (weekendHighlightColor !== originalValues.weekendHighlightColor) {
                 </button>
               </div>
             </div>
+        )}
           </div>
         </div>
       </div>
