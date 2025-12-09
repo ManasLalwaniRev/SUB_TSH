@@ -536,11 +536,12 @@ return (
     placeholder="Status"
   >
     <option value="">All</option>
+     <option value="Open">Open</option>
     <option value="Submitted">Submitted</option>
     <option value="Approved">Approved</option>
-    <option value="Correction">Correction</option>
     <option value="Rejected">Rejected</option>
-    <option value="Pending">Pending</option>
+    <option value="Correction">Correction</option>
+   
   </select>
 
 
