@@ -683,7 +683,7 @@ const sortedRows = getSortedRows();
                       <tr>
                         <td
                           colSpan={groupColumns.length}
-                          className="text-center p-5 italic text-gray-500"
+                          className="text-left p-5 italic text-gray-500"
                         >
                           Loading...
                         </td>

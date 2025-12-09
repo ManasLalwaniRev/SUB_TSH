@@ -347,15 +347,22 @@ export default function TimesheetApprovalView({
             <div className="flex gap-4 mt-2 text-sm text-gray-600">
               <div>
                 <span className="font-medium">Status:</span>{" "}
-                {timesheetDetails.status || "N/A"}
+                
+                <span className="text-gray-700" style={{ textTransform: 'none' }}>
+                  {timesheetDetails.status
+                    ? timesheetDetails.status.charAt(0).toUpperCase() +
+                      timesheetDetails.status.slice(1).toLowerCase()
+                    : "N/A"}
+                </span>
+               
               </div>
               <div>
-                <span className="font-medium">Date:</span>{" "}
+                <span className="font-medium">Timesheet Date:</span>{" "}
                 {timesheetDetails.timesheet_Date
                   ? formatDate(timesheetDetails.timesheet_Date)
                   : "N/A"}
               </div>
-              <div>
+              {/* <div>
                 <span className="font-medium">Approved By:</span>{" "}
                 {timesheetDetails.approvedBy ||
                   timesheetDetails.pm_User_Id ||
@@ -366,7 +373,23 @@ export default function TimesheetApprovalView({
                 {timesheetDetails.approvedDate
                   ? formatDate(timesheetDetails.approvedDate)
                   : "N/A"}
-              </div>
+              </div> */}
+              {timesheetDetails.status?.toLowerCase() !== "submitted" && (
+                <>
+                  <div>
+                    <span className="font-medium">Approved By:</span>{" "}
+                    {timesheetDetails.approvedBy ||
+                      timesheetDetails.pm_User_Id ||
+                      "N/A"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Approved Date:</span>{" "}
+                    {timesheetDetails.approvedDate
+                      ? formatDate(timesheetDetails.approvedDate)
+                      : "N/A"}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -543,8 +543,6 @@ return (
     <option value="Correction">Correction</option>
    
   </select>
-
-
             </div>
             <button
               onClick={handleFetchReport}
@@ -554,13 +552,14 @@ return (
               {loading ? "Loading..." : "Generate"}
             </button>
 
-              <button
+          <button
           onClick={() => downloadExcel(rows)}
           disabled={!rows || rows.length === 0}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-xs font-semibold shadow-sm disabled:opacity-50"
+          title="Download Excel"
         >
           {/* Download */}
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-4 w-4" />
         </button>
           </div>    
         </fieldset>
