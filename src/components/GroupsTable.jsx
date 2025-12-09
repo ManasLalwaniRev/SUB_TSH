@@ -37,18 +37,42 @@ const groupColumns = [
   "Purchase Order",
   "Release Number",
   "PO Line Number",
+  "Po Line Key",
   "Start date",
   "End date",
   "Resource ID",
   "Resource Name",
+  "Resource Line No",
+  "Resource Desc",
+  "No of Resources",
+  "Total Hours",
+  "Lab Rate Amt",
   "PLC CD",
   "PLC Desc",
-  "Email ID",
+  "GlC CD",
+  "GLC Desc",
+  "Resource Email ID",
   "Project",
+  "Project Name",
+  "Role CD",
   "PM User_Id",
   "PM Name",
+  "PM Email ID",
+  "Org ID",
+  "Org Name",
+  "Acct ID",
+  "Acct Name",
   "Vendor ID",
   "Vendor Name",
+  "Resource Manager Emp ID",
+  "Resource Manager Emp Name",
+  "Resource Manager Emp Email ID",
+  "Backup Supervisor",
+  "Backup Supervisor Name",
+  "Backup Supervisor Email ID",
+  "Supervisor Id",
+  // "Contact Name",
+  "Supervisor Email ID",
   "Hourly Rate",
 ];
 
@@ -117,27 +141,66 @@ export default function GroupsTable() {
       if (!response.ok) throw new Error("Network response failed");
       const apiData = await response.json();
 
-      const mappedData = Array.isArray(apiData)
-        ? apiData.map((item) => ({
-            id: item.id,
-            "Purchase Order": item.purchaseOrderNumber || "",
-            "Release Number": item.purchaseOrderRelease || "",
-            "PO Line Number": item.poLineNumber || "",
-            "Start date": formatDate(item.poLnStartDate),
-            "End date": formatDate(item.poLnEndDate),
-            "Resource ID": item.resourceId || "",
-            "Resource Name": item.resourceName || "",
-            "PLC CD": item.plcCd || "",
-            "PLC Desc": item.plcDesc || "",
-            "Email ID": item.emailId || "",
-            Project: item.project || "",
-            "PM User_Id": item.pmUserId || "",
-            "PM Name": item.pmName || "",
-            "Vendor ID": item.vendorId || "",
-            "Vendor Name": item.vendorName || "",
-            "Hourly Rate": formatCurrency(item.hourlyRate),
-          }))
-        : [];
+    const mappedData = Array.isArray(apiData)
+  ? apiData.map((item) => ({
+      id: item.id,
+      "Purchase Order": item.purchaseOrderNumber || "",
+      "Release Number": item.purchaseOrderRelease || "",
+      "PO Line Number": item.poLineNumber || "",
+      "Po Line Key": item.poLnKey || "",
+      "Start date": formatDate(item.poLnStartDate),
+      "End date": formatDate(item.poLnEndDate),
+
+      "Resource ID": item.resourceId || "",
+      "Resource Name": item.resourceName || "",
+      "Resource Line No": item.resourceLine || "",
+      "Resource Desc": item.resourceDesc || "",
+      "No of Resources": item.noOfResources ?? "",
+      "Total Hours": item.totalHours ?? "",
+      "Lab Rate Amt": item.extendedCost ?? "",
+
+      "Hourly Rate": formatCurrency(item.hourlyRate),
+      "PLC CD": item.plcCd || "",
+      "PLC Desc": item.plcDesc || "",
+      "GlC CD": item.glcCd || "",
+      "GLC Desc": item.glcDesc || "",
+
+      "Email ID": item.emailId || "",
+      "Resource Email ID": item.emailId || "",
+
+      Project: item.project || "",
+      "Project Name": item.projectDesc || "",
+
+      "Role CD": item.roleCd || "",
+      "PM User_Id": item.pmUserId || "",
+      "PM Name": item.pmName || "",
+      "PM Email ID": item.pmEmailId || "",
+
+      "Org ID": item.organization || "",
+      "Org Name": item.organizationName || "",
+      "Acct ID": item.accountId || "",
+      "Acct Name": item.accountName || "",
+
+      "Vendor ID": item.vendorId || "",
+      "Vendor Name": item.vendorName || "",
+
+      "Resource Manager Emp ID": item.managerIdVendor || "",
+      "Resource Manager Emp Name": item.managerNameVendor || "",
+      "Resource Manager Emp Email ID": item.managerEmailId || "",
+
+      "Backup Supervisor": item.backupSupervisor || "",
+      "Backup Supervisor Name": item.backupSupervisorFName || "",
+      "Backup Supervisor Last Name": item.backupSupervisorLName || "",
+      "Backup Supervisor Email ID": item.backupSupervisorEmail || "",
+
+      "Supervisor Id": item.supervisorId || "",
+      "Supervisor FName": item.supervisorFName || "",
+      "Supervisor LName": item.supervisorLName || "",
+      "Supervisor Email ID": item.supervisorEmail || "",
+      "Contact Name": item.vendorName || "",
+    }))
+  : [];
+
 
       setRows(mappedData);
     } catch (error) {

@@ -315,6 +315,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
               )}
             </div>
           </div>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Role
@@ -326,14 +327,15 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
               className="w-full mt-1 px-3 py-2 border rounded-lg bg-white border-gray-300"
             >
               <option value="">----Select Level----</option>
-              <option value="User">User</option>
+              <option value="user">User</option>
               <option value="supervisor"> Supervisor</option>
               {/* <option value="pm">PM</option> */}
               <option value="project_manager">Project Manager</option>
               <option value="backup_supervisor">Backup Supervisor</option>
-              <option value="Admin">Admin</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
+          {formData.role !== "user" && (
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Level No
@@ -352,6 +354,7 @@ const CreateUserModal = ({ onClose, onUserCreated }) => {
               ))}
             </select>
           </div>
+          )}
           {serverError && (
             <p className="text-sm text-red-600 text-center">{serverError}</p>
           )}
@@ -402,6 +405,13 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
         setRows([]);
       });
   }, []);
+
+  useEffect(() => {
+  if (formData.role === "user") {
+    setFormData(prev => ({ ...prev, workflowId: "0" }));
+  }
+}, [formData.role]);
+
 
   // After loading rows, update formData.workflowId if necessary
   useEffect(() => {
@@ -509,12 +519,12 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
                 onChange={handleChange}
                 className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
               >
-                <option value="User">User</option>
+                <option value="user">User</option>
                 <option value="supervisor"> Supervisor</option>
                 {/* <option value="pm">PM</option> */}
                 <option value="project_manager">Project Manager</option>
                 <option value="backup_supervisor">Backup Supervisor</option>
-                <option value="Admin">Admin</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
             <div>
@@ -532,24 +542,32 @@ const EditUserModal = ({ user, onClose, onUserUpdated }) => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Level
-              </label>
-              <select
-                name="workflowId"
-                value={formData.workflowId}
-                onChange={handleChange}
-                className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
-              >
-                <option value="">Select Level</option>
-                {rows.map(({ workflowId, level, name }) => (
-                  <option key={workflowId} value={workflowId}>
-                    {`${level} - ${name}`}
-                  </option>
-                ))}
-              </select>
-            </div>
+
+{user.role !== "user" || formData.role !== "user" ? (
+  <>
+    <div>
+      <label className="block text-sm font-medium text-gray-700">
+        Level
+      </label>
+      <select
+        name="workflowId"
+        value={formData.workflowId}
+        onChange={handleChange}
+        className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
+      >
+        <option value="0">Select Level</option>
+        {rows.map(({ workflowId, level, name }) => (
+          <option key={workflowId} value={workflowId}>
+            {`${level} - ${name}`}
+          </option>
+        ))}
+      </select>
+    </div>
+  </>
+) : null}
+
+
+
           </div>
 
           {error && <p className="text-sm text-red-600 text-center">{error}</p>}

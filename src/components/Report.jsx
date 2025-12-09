@@ -77,6 +77,44 @@ const [selectAll, setSelectAll] = useState(false);
     }
   }, [navigate]);
 
+
+  const getStatusStyle = (status) => {
+  const baseStyle =
+    "px-2.5 py-1 text-xs font-semibold rounded-full text-center inline-block";
+
+  if (!status) return `${baseStyle} bg-gray-100 text-gray-800`;
+
+  const s = status.toString().toUpperCase().trim();
+
+  switch (s) {
+    case "OPEN":
+      return `${baseStyle} bg-blue-100 text-blue-800`;
+    case "APPROVED":
+      return `${baseStyle} bg-green-100 text-green-800`;
+    case "REJECTED":
+      return `${baseStyle} bg-pink-100 text-pink-700`;
+    case "PENDING":
+      return `${baseStyle} bg-yellow-100 text-yellow-800`;
+    case "SUBMITTED":
+      return `${baseStyle} bg-indigo-100 text-indigo-800`;
+    case "PROCESSED":
+      return `${baseStyle} bg-violet-100 text-violet-800`;
+    case "NOTIFIED":
+      return `${baseStyle} bg-blue-100 text-blue-800`;
+    case "UN-NOTIFIED":
+    case "UNNOTIFIED":
+      return `${baseStyle} bg-green-100 text-green-800`;
+    case "CORRECTION":
+      return `${baseStyle} bg-orange-100 text-orange-800`;
+    case "INVOICED":
+      return `${baseStyle} bg-amber-100 text-amber-800`;
+    case "EXPORTED":
+      return `${baseStyle} bg-sky-100 text-sky-800`;
+    default:
+      return `${baseStyle} bg-gray-100 text-gray-800`;
+  }
+};
+
   // optional config load hook you already had
   useEffect(() => {
     if (userLoaded && currentUser) {
@@ -182,17 +220,14 @@ const handleToggleAll = () => {
   };
 
 const downloadExcel = (allRows) => {
-if(selectedEmployees.size === 0) {
-  showToast("No employess selected to download", "warning");
-  return;
-}
+  if (selectedEmployees.size === 0) {
+    showToast("No employees selected to download", "warning");
+    return;
+  }
 
   if (!allRows || allRows.length === 0) return;
 
-  const filteredRows =
-    selectedEmployees.size === 0
-      ? allRows
-      : allRows.filter((r) => selectedEmployees.has(getRowKey(r)));
+  const filteredRows = allRows.filter((r) => selectedEmployees.has(getRowKey(r)));
 
   if (filteredRows.length === 0) {
     showToast("No employees selected to download", "warning");
@@ -206,6 +241,7 @@ if(selectedEmployees.size === 0) {
   let rowIdx = 0;
 
   const summaryHeaders = [
+    "Status",
     "Employee ID",
     "Employee Name",
     "Vendor",
@@ -215,6 +251,15 @@ if(selectedEmployees.size === 0) {
     "Total Hours",
   ];
 
+  // Status color mapping (add more statuses as needed)
+  const statusColors = {
+    Correction: "FFE699", // Yellow
+    Submitted: "C6E0B4", // Green
+    Approved: "92D050", // Dark Green
+    Rejected: "FF6B6B", // Red
+    Pending: "D9D9D9",  // Gray
+  };
+
   // Add summary header (row 0)
   summaryHeaders.forEach((h, i) => {
     const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
@@ -222,7 +267,9 @@ if(selectedEmployees.size === 0) {
       t: "s",
       v: h,
       s: {
-        font: { bold: true },
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "366092" } }, // Dark blue header
+        alignment: { horizontal: "center", vertical: "center" },
       },
     };
   });
@@ -230,21 +277,34 @@ if(selectedEmployees.size === 0) {
   // Add all employee summary rows (row 1+)
   rowIdx = 1;
   filteredRows.forEach((emp) => {
+    const status = emp.status ?? "";
+    const statusBgColor = statusColors[status] || "FFFFFF";
+
     const summaryValues = [
+      status,
       emp.employeeId ?? "",
       emp.employeeName ?? "",
       emp.vendorName ?? "",
       emp.projectId ?? "",
       emp.plc ?? "",
       emp.poNumber ?? "",
-      emp.totalHours ?? "",
+      emp.totalHours ?? "", // Total Hours column
     ];
 
     summaryValues.forEach((val, i) => {
       const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: i });
+      
+      // Apply status styling only to Status column (column 0)
+      const cellStyle = i === 0 ? {
+        fill: { fgColor: { rgb: statusBgColor } },
+        font: { bold: true, color: { rgb: "000000" } },
+        alignment: { horizontal: "center", vertical: "center" },
+      } : {};
+
       wsSummary[cellRef] = {
         t: typeof val === "number" ? "n" : "s",
         v: val,
+        s: cellStyle,
       };
     });
 
@@ -252,6 +312,7 @@ if(selectedEmployees.size === 0) {
   });
 
   wsSummary["!cols"] = [
+    { wch: 12 }, // Status
     { wch: 12 }, // Employee ID
     { wch: 20 }, // Employee Name
     { wch: 25 }, // Vendor
@@ -263,7 +324,7 @@ if(selectedEmployees.size === 0) {
 
   wsSummary["!ref"] = XLSX.utils.encode_range({
     s: { r: 0, c: 0 },
-    e: { r: rowIdx - 1, c: 6 },
+    e: { r: rowIdx - 1, c: 7 }, // 8 columns (0-7)
   });
 
   // ========== SHEET 2: DETAILS ==========
@@ -287,7 +348,9 @@ if(selectedEmployees.size === 0) {
       t: "s",
       v: h,
       s: {
-        font: { bold: true },
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "366092" } },
+        alignment: { horizontal: "center", vertical: "center" },
       },
     };
   });
@@ -350,6 +413,7 @@ if(selectedEmployees.size === 0) {
 
 
 
+
   if (!userLoaded || !currentUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -357,142 +421,6 @@ if(selectedEmployees.size === 0) {
       </div>
     );
   }
-//     <div className="h-screen bg-[#f9fafd] flex flex-col pr-4 overflow-hidden">
-//       <div className="flex-1 flex flex-col pt-6 pb-6">
-//       {/* Header */}
-//       <div className="flex justify-between items-center mb-6 px-9">
-//           <div className="flex items-center">
-//             <FileText className="h-8 w-8 text-green-600 mr-3" />
-//             <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-//           </div>
-
-//           <button
-//             onClick={handleLogout}
-//             className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1.5 rounded text-sm font-normal shadow transition"
-//           >
-//             Logout
-//           </button>
-//         </div>
-
-//       {/* Filters */}
-    //   <div className="px-8 pt-4 pb-2">
-    //     <fieldset className="border border-gray-300 rounded-md p-4 bg-white shadow-sm">
-    //       <legend className="text-sm font-semibold text-gray-600 px-2">
-    //         Filters
-    //       </legend>
-    //       <div className="flex flex-wrap gap-4 items-end">
-    //         <div className="flex flex-col">
-    //           <label className="text-xs font-semibold text-gray-600">
-    //             Start Date
-    //           </label>
-    //           <input
-    //             type="date"
-    //             value={startDate}
-    //             onChange={(e) => setStartDate(e.target.value)}
-    //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-    //           />
-    //         </div>
-    //         <div className="flex flex-col">
-    //           <label className="text-xs font-semibold text-gray-600">
-    //             End Date
-    //           </label>
-    //           <input
-    //             type="date"
-    //             value={endDate}
-    //             onChange={(e) => setEndDate(e.target.value)}
-    //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-    //           />
-    //         </div>
-    //         <div className="flex flex-col">
-    //           <label className="text-xs font-semibold text-gray-600">
-    //             Vendor Id
-    //           </label>
-    //           <input
-    //             type="text"
-    //             value={vendorId}
-    //             onChange={(e) => setVendorId(e.target.value)}
-    //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-    //           />
-    //         </div>
-    //         <div className="flex flex-col">
-    //           <label className="text-xs font-semibold text-gray-600">
-    //             Resource Id
-    //           </label>
-    //           <input
-    //             type="text"
-    //             value={resourceId}
-    //             onChange={(e) => setResourceId(e.target.value)}
-    //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-    //           />
-    //         </div>
-    //         <div className="flex flex-col">
-    //           <label className="text-xs font-semibold text-gray-600">
-    //             PO Number
-    //           </label>
-    //           <input
-    //             type="text"
-    //             value={poNumber}
-    //             onChange={(e) => setPoNumber(e.target.value)}
-    //             className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-    //           />
-    //         </div>
-    //         <button
-    //           onClick={handleFetchReport}
-    //           disabled={loading}
-    //           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-semibold shadow-sm disabled:opacity-50"
-    //         >
-    //           {loading ? "Loading..." : "Run Report"}
-    //         </button>
-    //       </div>
-    //     </fieldset>
-    //   </div>
-
-//       {/* Table */}
-//       <div className="flex-1 px-8 pb-8">
-//         <div className="border border-gray-300 rounded bg-white shadow-sm overflow-auto">
-//           {loading ? (
-//             <div className="p-4 text-sm text-gray-600">Loading...</div>
-//           ) : rows.length === 0 ? (
-//             <div className="p-4 text-sm text-gray-600">No data available</div>
-//           ) : (
-//             <table className="min-w-full text-xs table-auto">
-//               <thead className="bg-gray-100">
-//                 <tr>
-//                   {columns.map((col) => (
-//                     <th
-//                       key={col}
-//                       className="px-3 py-2 text-left font-semibold text-gray-700 border-b"
-//                     >
-//                       {col}
-//                     </th>
-//                   ))}
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {rows.map((row, idx) => (
-//                   <tr key={idx} className="hover:bg-gray-50">
-//                     {columns.map((col) => (
-//                       <td
-//                         key={col}
-//                         className="px-3 py-1.5 border-b text-gray-800"
-//                       >
-//                         {row[col]}
-//                       </td>
-//                     ))}
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//     </div>
-//   );
-
-// ...imports, showToast, user loading, filters, handleFetchReport stay as you have now...
-
-// Replace only the JSX return where the table is rendered:
 
 return (
   <div className="min-h-screen bg-[#f9fafd] flex flex-col overflow-auto">
@@ -636,6 +564,9 @@ return (
         className="cursor-pointer"
       />
     </th>
+    <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b">
+                  Status
+                </th>
                 <th className="px-3 py-2 text-left font-semibold text-gray-700 border-b">
                   Employee ID
                 </th>
@@ -679,6 +610,12 @@ return (
       className="cursor-pointer"
     />
   </td>
+  <td className="px-3 py-1.5 border-b text-gray-800">
+     <span className={getStatusStyle(row.status)}>
+    {row.status}
+  </span>
+
+          </td>
           <td className="px-3 py-1.5 border-b text-gray-800">
             {row.employeeId}
           </td>
@@ -707,9 +644,9 @@ return (
         {/* Detail row shown only when expanded */}
         {isOpen && (
           <tr>
-            <td colSpan={7} className="px-3 pb-2 pt-1 border-b bg-white">
+            <td colSpan={7} className="px-3 pb-2 pt-1 pl-10 border-b bg-white">
               {row.details && row.details.length > 0 ? (
-                <table className="w-full text-[11px] table-fixed border border-gray-200">
+                <table className="w-full text-[11px] border border-gray-200">
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-2 py-1 text-left font-semibold text-gray-700 border-b">
