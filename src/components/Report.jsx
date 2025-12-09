@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import * as XLSX from 'xlsx';   
 import { useNavigate } from "react-router-dom";
+import { Receipt, Filter, Download, X, Eye, FileDown } from "lucide-react";
 import { FileText } from "lucide-react";
 import { backendUrl } from "./config";
 
@@ -179,145 +180,6 @@ const handleToggleAll = () => {
     setUserLoaded(false);
     navigate("/");
   };
-
-// const downloadExcel = (allRows) => {
-//   if (!allRows || allRows.length === 0) return;
-
-//   const filteredRows =
-//     selectedEmployees.size === 0
-//       ? allRows
-//       : allRows.filter((r) => selectedEmployees.has(getRowKey(r)));
-
-//   if (filteredRows.length === 0) {
-//     showToast("No employees selected to download", "warning");
-//     return;
-//   }
-
-//   const wb = XLSX.utils.book_new();
-//   const ws = XLSX.utils.aoa_to_sheet([]);
-//   let rowIdx = 0;
-
-//   // 1) Summary headers (top row)
-//   const summaryHeaders = [
-//     "Employee ID",
-//     "Employee Name",
-//     "Vendor",
-//     "Project",
-//     "PLC",
-//     "PO Number",
-//     "Total Hours",
-//   ];
-
-//   // 2) Detail headers (start at column 0 too, but in a separate row)
-//   const detailHeaders = [
-//     "Timesheet Date",
-//     "Description",
-//     "Work Order",
-//     "Pay Type",
-//     "Hours",
-//   ];
-
-//   ws["!cols"] = [
-//     { wch: 12 }, // Employee ID
-//     { wch: 20 }, // Employee Name
-//     { wch: 25 }, // Vendor
-//     { wch: 25 }, // Project
-//     { wch: 10 }, // PLC
-//     { wch: 15 }, // PO Number
-//     { wch: 12 }, // Total Hours
-//     { wch: 15 }, // Timesheet Date
-//     { wch: 30 }, // Description
-//     { wch: 15 }, // Work Order
-//     { wch: 10 }, // Pay Type
-//     { wch: 8 },  // Hours
-//   ];
-
-//   // --- SUMMARY HEADER ROW (row 0) ---
-//   summaryHeaders.forEach((h, i) => {
-//     const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-//     ws[cellRef] = {
-//       t: "s",
-//       v: h,
-//       s: {
-//         font: { bold: true },
-//         // no fill color to match your screenshot
-//       },
-//     };
-//   });
-
-//   // --- SUMMARY VALUES ROW (row 1: first employee only) ---
-//   const first = filteredRows[0];
-//   const summaryValues = [
-//     first?.employeeId ?? "",
-//     first?.employeeName ?? "",
-//     first?.vendorName ?? "",
-//     first?.projectId ?? "",
-//     first?.plc ?? "",
-//     first?.poNumber ?? "",
-//     first?.totalHours ?? "",
-//   ];
-
-//   summaryValues.forEach((val, i) => {
-//     const cellRef = XLSX.utils.encode_cell({ r: 1, c: i });
-//     ws[cellRef] = {
-//       t: typeof val === "number" ? "n" : "s",
-//       v: val,
-//     };
-//   });
-
-//   // --- DETAIL HEADER ROW (row 3) ---
-//   // row 2 is intentionally left blank
-//   rowIdx = 3;
-//   detailHeaders.forEach((h, i) => {
-//     const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: i });
-//     ws[cellRef] = {
-//       t: "s",
-//       v: h,
-//       s: {
-//         font: { bold: true },
-//       },
-//     };
-//   });
-
-//   // --- DETAIL DATA ROWS (row 4+) ---
-//   rowIdx = 4;
-
-//   if (Array.isArray(first?.details) && first.details.length > 0) {
-//     first.details.forEach((d) => {
-//       const rowData = [
-//         d.timesheetDate,
-//         d.description,
-//         d.workOrder,
-//         d.payType,
-//         d.hours,
-//       ];
-
-//       rowData.forEach((val, colIdx) => {
-//         const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
-//         ws[cellRef] = {
-//           t: typeof val === "number" ? "n" : "s",
-//           v: val,
-//         };
-//       });
-
-//       rowIdx++;
-//     });
-//   }
-
-//   // Set sheet bounds
-//   ws["!ref"] = XLSX.utils.encode_range({
-//     s: { r: 0, c: 0 },
-//     e: { r: rowIdx - 1, c: 6 + detailHeaders.length - 1 },
-//   });
-
-//   XLSX.utils.book_append_sheet(wb, ws, "Employee Hours");
-//   XLSX.writeFile(wb, "employee-hours-report.xlsx");
-
-//   showToast(
-//     `Downloaded ${filteredRows.length} employee(s) successfully!`,
-//     "success"
-//   );
-// };
 
 const downloadExcel = (allRows) => {
   if (!allRows || allRows.length === 0) return;
@@ -628,7 +490,7 @@ const downloadExcel = (allRows) => {
 // Replace only the JSX return where the table is rendered:
 
 return (
-  <div className="min-h-screen bg-[#f9fafd] flex flex-col">
+  <div className="min-h-screen bg-[#f9fafd] flex flex-col overflow-auto">
     {/* Header */}
     <div className="flex items-center justify-between px-8 py-4 pt-8 ">
       <div className="flex items-center gap-3">
@@ -724,9 +586,10 @@ return (
           disabled={!rows || rows.length === 0}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-xs font-semibold shadow-sm disabled:opacity-50"
         >
-          Download
+          {/* Download */}
+          <Download className="h-4 w-4 mr-2" />
         </button>
-          </div>
+          </div>    
         </fieldset>
       </div>
 
