@@ -182,6 +182,11 @@ const handleToggleAll = () => {
   };
 
 const downloadExcel = (allRows) => {
+if(selectedEmployees.size === 0) {
+  showToast("No employess selected to download", "warning");
+  return;
+}
+
   if (!allRows || allRows.length === 0) return;
 
   const filteredRows =
@@ -517,60 +522,76 @@ return (
           <legend className="text-sm font-semibold text-gray-600 px-2">
             Filters
           </legend>
-          <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex flex-wrap gap-2 items-end">
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-600">
+              {/* <label className="text-xs font-semibold text-gray-600">
                 Start Date
-              </label>
+              </label> */}
+               
               <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+  type="text"
+  value={startDate}
+  onChange={(e) => setStartDate(e.target.value)}
+  onFocus={(e) => (e.target.type = "date")}
+  onBlur={(e) => {
+    if (!e.target.value) e.target.type = "text";
+  }}
+  className=" w-32 h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+  placeholder="Start date"
+/>
+
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-600">
+              {/* <label className="text-xs font-semibold text-gray-600">
                 End Date
-              </label>
+              </label> */}
+
               <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-              />
+  type="text"
+  value={endDate}
+  onChange={(e) => setEndDate(e.target.value)}
+  onFocus={(e) => (e.target.type = "date")}
+  onBlur={(e) => {
+    if (!e.target.value) e.target.type = "text";
+  }}
+  className=" w-32 h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+  placeholder="End date"
+/>
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-600">
+              {/* <label className="text-xs font-semibold text-gray-600">
                 Vendor Id
-              </label>
+              </label> */}
               <input
                 type="text"
                 value={vendorId}
                 onChange={(e) => setVendorId(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className=" w-32  h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Vendor Id"
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-600">
+              {/* <label className="text-xs font-semibold text-gray-600">
                 Resource Id
-              </label>
+              </label> */}
               <input
                 type="text"
                 value={resourceId}
                 onChange={(e) => setResourceId(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className=" w-32 h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Resource Id"
               />
             </div>
             <div className="flex flex-col">
-              <label className="text-xs font-semibold text-gray-600">
+              {/* <label className="text-xs font-semibold text-gray-600">
                 PO Number
-              </label>
+              </label> */}
               <input
                 type="text"
                 value={poNumber}
                 onChange={(e) => setPoNumber(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className=" w-32 h-7 border border-gray-300 rounded px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="PO Number"
               />
             </div>
             <button
@@ -578,7 +599,7 @@ return (
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-semibold shadow-sm disabled:opacity-50"
             >
-              {loading ? "Loading..." : "Run Report"}
+              {loading ? "Loading..." : "Generate"}
             </button>
 
               <button
